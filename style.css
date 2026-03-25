@@ -49,7 +49,6 @@ body {
   max-width: var(--max-w);
   margin: 0 auto;
   -webkit-font-smoothing: antialiased;
-  padding-top: env(safe-area-inset-top);
   overflow-x: hidden;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
@@ -94,8 +93,8 @@ body {
 .page-header {
   background: var(--white);
   border-bottom: 1px solid var(--gray-200);
-  padding: 16px 20px 14px;
-  position: sticky; top: env(safe-area-inset-top); z-index: 100;
+  padding: calc(16px + env(safe-area-inset-top)) 20px 14px;
+  position: sticky; top: 0; z-index: 100;
 }
 .page-header h2 {
   font-size: 18px; font-weight: 700; letter-spacing: -0.02em;
@@ -107,10 +106,12 @@ body {
 /* ══════════════════════════════════════
    HOME PAGE
 ══════════════════════════════════════ */
-#page-home { display: block; }
+#page-home {
+  padding-top: env(safe-area-inset-top); display: block; }
 
 .logo-banner {
   width: 100%;
+  margin-top: env(safe-area-inset-top);
   aspect-ratio: 2000 / 1341;
   overflow: hidden;
   border-bottom: 1px solid var(--gray-200);
@@ -558,10 +559,10 @@ body {
 ══════════════════════════════════════ */
 .sub-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 16px;
+  padding: calc(14px + env(safe-area-inset-top)) 16px 14px;
   background: var(--white);
   border-bottom: 1px solid var(--gray-200);
-  position: sticky; top: env(safe-area-inset-top); z-index: 100;
+  position: sticky; top: 0; z-index: 100;
 }
 .sub-header-title {
   font-size: 17px; font-weight: 700; letter-spacing: -0.02em;
