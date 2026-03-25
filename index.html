@@ -238,38 +238,35 @@
       <div id="addons-body" style="display:none;">
         <div class="addons-note" id="addons-note-box"><span class="addons-note-icon">💡</span><span id="addons-note-text">염모제 입력 후 총량이 계산됩니다</span></div>
 
-        <!-- 기본 추가제품 -->
+        <!-- 기본 추가제품 (이름 자동, % 입력만) -->
         <div class="extra-default-list">
           <div class="extra-row-default">
             <label class="extra-check-wrap">
-              <input type="checkbox" id="ctrl-check" data-label="컨트롤컬러"/>
+              <input type="checkbox" id="ctrl-check"/>
               <span class="extra-check-label">컨트롤컬러</span>
             </label>
-            <input class="calc-input extra-name default-extra-input" id="ctrl-name" type="text" placeholder="이름" disabled/>
             <div class="extra-pct-wrap">
-              <input class="calc-input extra-pct default-extra-input" id="ctrl-pct" type="number" placeholder="%" min="0" inputmode="decimal" disabled/>
+              <input class="calc-input extra-pct" id="ctrl-pct" type="number" placeholder="%" min="0" inputmode="decimal" disabled/>
               <span class="pct-label">%</span>
             </div>
           </div>
           <div class="extra-row-default">
             <label class="extra-check-wrap">
-              <input type="checkbox" id="clear-check" data-label="클리어"/>
+              <input type="checkbox" id="clear-check"/>
               <span class="extra-check-label">클리어</span>
             </label>
-            <input class="calc-input extra-name default-extra-input" id="clear-name" type="text" placeholder="이름" disabled/>
             <div class="extra-pct-wrap">
-              <input class="calc-input extra-pct default-extra-input" id="clear-pct" type="number" placeholder="%" min="0" inputmode="decimal" disabled/>
+              <input class="calc-input extra-pct" id="clear-pct" type="number" placeholder="%" min="0" inputmode="decimal" disabled/>
               <span class="pct-label">%</span>
             </div>
           </div>
           <div class="extra-row-default">
             <label class="extra-check-wrap">
-              <input type="checkbox" id="ampl-check" data-label="앰플/본드"/>
+              <input type="checkbox" id="ampl-check"/>
               <span class="extra-check-label">앰플/본드</span>
             </label>
-            <input class="calc-input extra-name default-extra-input" id="ampl-name" type="text" placeholder="이름" disabled/>
             <div class="extra-pct-wrap">
-              <input class="calc-input extra-pct default-extra-input" id="ampl-pct" type="number" placeholder="%" min="0" inputmode="decimal" disabled/>
+              <input class="calc-input extra-pct" id="ampl-pct" type="number" placeholder="%" min="0" inputmode="decimal" disabled/>
               <span class="pct-label">%</span>
             </div>
           </div>

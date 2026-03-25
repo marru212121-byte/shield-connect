@@ -92,18 +92,16 @@ function calcBindEvents() {
     el.addEventListener('input', calcRender);
   });
 
-  /* 체크박스 toggle → input enable/disable */
-  [['ctrl-check','ctrl-name','ctrl-pct'],
-   ['clear-check','clear-name','clear-pct'],
-   ['ampl-check','ampl-name','ampl-pct']].forEach(function(ids) {
-    var chk  = document.getElementById(ids[0]);
-    var name = document.getElementById(ids[1]);
-    var pct  = document.getElementById(ids[2]);
+  /* 체크박스 toggle → pct input enable/disable (이름은 자동) */
+  [['ctrl-check','ctrl-pct','컨트롤컬러'],
+   ['clear-check','clear-pct','클리어'],
+   ['ampl-check','ampl-pct','앰플/본드']].forEach(function(ids) {
+    var chk = document.getElementById(ids[0]);
+    var pct = document.getElementById(ids[1]);
     if (!chk) return;
     function syncDisabled() {
-      name.disabled = !chk.checked;
-      pct.disabled  = !chk.checked;
-      if (!chk.checked) { name.value = ''; pct.value = ''; }
+      pct.disabled = !chk.checked;
+      if (!chk.checked) { pct.value = ''; }
     }
     chk.addEventListener('change', function() { syncDisabled(); calcRender(); });
     syncDisabled();
@@ -162,8 +160,12 @@ function toggleAddons() {
   calcRender();
 }
 
-/* ── 커스텀 추가제품 행 추가 ── */
+/* ── 커스텀 추가제품 행 추가 (최대 2개) ── */
 function addExtraRow() {
+  if (CalcState.extras.length >= 2) {
+    showToast('직접 추가는 최대 2개까지 가능합니다');
+    return;
+  }
   CalcState.extraIdSeed++;
   var id = 'extra-' + CalcState.extraIdSeed;
   CalcState.extras.push({ id: id, name: '', pct: '', enabled: true });
@@ -245,17 +247,16 @@ function calcRender() {
 
   /* 기본 추가제품 */
   var defaults = [
-    { checkId: 'ctrl-check', nameId: 'ctrl-name', pctId: 'ctrl-pct' },
-    { checkId: 'clear-check',nameId: 'clear-name',pctId: 'clear-pct' },
-    { checkId: 'ampl-check', nameId: 'ampl-name', pctId: 'ampl-pct'  }
+    { checkId: 'ctrl-check',  pctId: 'ctrl-pct',  label: '컨트롤컬러' },
+    { checkId: 'clear-check', pctId: 'clear-pct', label: '클리어' },
+    { checkId: 'ampl-check',  pctId: 'ampl-pct',  label: '앰플/본드' }
   ];
   defaults.forEach(function(d) {
     var check = document.getElementById(d.checkId);
     if (check && check.checked) {
-      var name = (document.getElementById(d.nameId).value || check.dataset.label || '').trim();
-      var pct  = parseFloat(document.getElementById(d.pctId).value) || 0;
+      var pct = parseFloat(document.getElementById(d.pctId).value) || 0;
       if (pct > 0) {
-        extraItems.push({ name: name || d.checkId, pct: pct, gram: rnd(mainTotal * pct / 100) });
+        extraItems.push({ name: d.label, pct: pct, gram: rnd(mainTotal * pct / 100) });
       }
     }
   });
