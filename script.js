@@ -1,3 +1,9 @@
+/* ── 금액 포맷: 천 단위 콤마 ── */
+function fmtMoney(n) {
+  if (!n && n !== 0) return '0원';
+  return Number(n).toLocaleString('ko-KR') + '원';
+}
+
 /* ══════════════════════════════════════
    SHIELD DESIGNER CONNECT — script.js
 ══════════════════════════════════════ */
