@@ -50,13 +50,14 @@ function navigate(page) {
 
   // 성분사전 페이지는 하단 네비 숨김 (뒤로가기 버튼으로 홈 복귀)
   var nav = document.getElementById('bottomNav');
-  if (nav) nav.style.display = page === 'ingredient' ? 'none' : 'flex';
+  if (nav) nav.style.display = (page === 'ingredient' || page === 'reels') ? 'none' : 'flex';
 
   if (page === 'sales')      renderCalendar();
   if (page === 'stats')      renderStats();
   if (page === 'settings')   renderSettings();
   if (page === 'ingredient') renderList();
   if (page === 'calculator') { setTimeout(initCalc, 50); }
+  if (page === 'reels') { renderReels(); }
 }
 
 /* ══════════════════════════════════════

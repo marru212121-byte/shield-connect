@@ -54,15 +54,15 @@
       <span class="menu-label">성분사전</span>
     </a>
 
-    <!-- 릴스 업로드 -->
-    <a class="menu-card" href="#" onclick="return false;">
+    <!-- 영상 보기 -->
+    <a class="menu-card" href="#" onclick="navigate('reels');return false;">
       <div class="menu-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="2" y="7" width="15" height="10" rx="2"/>
-          <path d="m17 9 5-3v10l-5-3"/>
+          <circle cx="12" cy="12" r="10"/>
+          <polygon points="10,8 16,12 10,16" fill="currentColor" stroke="none"/>
         </svg>
       </div>
-      <span class="menu-label">릴스 업로드</span>
+      <span class="menu-label">영상 보기</span>
     </a>
 
     <!-- 비율 계산기 -->
@@ -535,5 +535,6 @@
 <script src="./script.js"></script>
 <script src="./ingredient.js"></script>
 <script src="./calculator.js"></script>
+<script src="./reels.js"></script>
 </body>
 </html>
