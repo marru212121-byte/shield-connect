@@ -235,50 +235,29 @@
     <!-- ③ 추가 제품 -->
     <div class="calc-card">
       <button class="addons-toggle" id="addons-toggle-btn">+ 추가 제품</button>
-      <div id="addons-body" style="display:none;">
-        <div class="addons-note" id="addons-note-box"><span class="addons-note-icon">💡</span><span id="addons-note-text">염모제 입력 후 총량이 계산됩니다</span></div>
+       <div id="addons-body" style="display:none;">
 
-        <!-- 기본 추가제품 (이름 자동, % 입력만) -->
-        <div class="extra-default-list">
-          <div class="extra-row-default">
-            <label class="extra-check-wrap">
-              <input type="checkbox" id="ctrl-check"/>
-              <span class="extra-check-label">컨트롤컬러</span>
-            </label>
-            <div class="extra-pct-wrap">
-              <input class="calc-input extra-pct" id="ctrl-pct" type="number" placeholder="%" min="0" inputmode="decimal" disabled/>
-              <span class="pct-label">%</span>
-            </div>
-          </div>
-          <div class="extra-row-default">
-            <label class="extra-check-wrap">
-              <input type="checkbox" id="clear-check"/>
-              <span class="extra-check-label">클리어</span>
-            </label>
-            <div class="extra-pct-wrap">
-              <input class="calc-input extra-pct" id="clear-pct" type="number" placeholder="%" min="0" inputmode="decimal" disabled/>
-              <span class="pct-label">%</span>
-            </div>
-          </div>
-          <div class="extra-row-default">
-            <label class="extra-check-wrap">
-              <input type="checkbox" id="ampl-check"/>
-              <span class="extra-check-label">앰플/본드</span>
-            </label>
-            <div class="extra-pct-wrap">
-              <input class="calc-input extra-pct" id="ampl-pct" type="number" placeholder="%" min="0" inputmode="decimal" disabled/>
-              <span class="pct-label">%</span>
-            </div>
-          </div>
-        </div>
+         <!-- 안내 박스 -->
+         <div class="addons-note-box" id="addons-note-box">
+           <div class="addons-note-top">
+             <span class="addons-note-icon">💡</span>
+             <span class="addons-note-title">추가 제품 계산 안내</span>
+           </div>
+           <div class="addons-note-body" id="addons-note-text">
+             컨트롤컬러, 클리어, 앰플/본드 등<br>
+             제품명과 비율(%)을 입력하면<br>
+             메인 염모제 기준으로 자동 계산됩니다
+           </div>
+         </div>
 
-        <!-- 커스텀 추가제품 -->
-        <div id="extra-custom-list"></div>
-        <button class="calc-add-row-btn" id="add-extra-btn" style="margin-top:8px;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          직접 추가
-        </button>
-      </div>
+         <!-- 추가제품 입력 (최대 3개) -->
+         <div id="extra-custom-list"></div>
+
+         <button class="calc-add-row-btn" id="add-extra-btn" style="margin-top:8px;">
+           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+           추가 (최대 3개)
+         </button>
+       </div>
     </div>
 
     <!-- ④ 산화제 비율 -->
