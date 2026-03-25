@@ -81,31 +81,9 @@ function calcBindEvents() {
   /* 추가 제품 항목 추가 */
   document.getElementById('add-extra-btn').addEventListener('click', addExtraRow);
 
-  /* 기본 추가제품 체크박스 */
-  ['ctrl-check','clear-check','ampl-check'].forEach(function(id) {
-    var el = document.getElementById(id);
-    if (el) el.addEventListener('change', function() { calcRender(); });
-  });
+  /* 기본 추가제품 없음 - 커스텀만 사용 */
 
-  /* 기본 추가제품 입력 변경 */
-  document.querySelectorAll('.default-extra-input').forEach(function(el) {
-    el.addEventListener('input', calcRender);
-  });
-
-  /* 체크박스 toggle → pct input enable/disable (이름은 자동) */
-  [['ctrl-check','ctrl-pct','컨트롤컬러'],
-   ['clear-check','clear-pct','클리어'],
-   ['ampl-check','ampl-pct','앰플/본드']].forEach(function(ids) {
-    var chk = document.getElementById(ids[0]);
-    var pct = document.getElementById(ids[1]);
-    if (!chk) return;
-    function syncDisabled() {
-      pct.disabled = !chk.checked;
-      if (!chk.checked) { pct.value = ''; }
-    }
-    chk.addEventListener('change', function() { syncDisabled(); calcRender(); });
-    syncDisabled();
-  });
+  /* 체크박스 없음 */
 
 }
 
@@ -162,8 +140,8 @@ function toggleAddons() {
 
 /* ── 커스텀 추가제품 행 추가 (최대 2개) ── */
 function addExtraRow() {
-  if (CalcState.extras.length >= 2) {
-    showToast('직접 추가는 최대 2개까지 가능합니다');
+  if (CalcState.extras.length >= 3) {
+    showToast('추가 제품은 최대 3개까지 가능합니다');
     return;
   }
   CalcState.extraIdSeed++;
@@ -245,21 +223,7 @@ function calcRender() {
   /* 추가제품 계산 */
   var extraItems = [];
 
-  /* 기본 추가제품 */
-  var defaults = [
-    { checkId: 'ctrl-check',  pctId: 'ctrl-pct',  label: '컨트롤컬러' },
-    { checkId: 'clear-check', pctId: 'clear-pct', label: '클리어' },
-    { checkId: 'ampl-check',  pctId: 'ampl-pct',  label: '앰플/본드' }
-  ];
-  defaults.forEach(function(d) {
-    var check = document.getElementById(d.checkId);
-    if (check && check.checked) {
-      var pct = parseFloat(document.getElementById(d.pctId).value) || 0;
-      if (pct > 0) {
-        extraItems.push({ name: d.label, pct: pct, gram: rnd(mainTotal * pct / 100) });
-      }
-    }
-  });
+  /* 기본 추가제품 없음 */
 
   /* 커스텀 추가제품 */
   CalcState.extras.forEach(function(e) {
@@ -279,12 +243,15 @@ function calcRender() {
   if (noteEl) {
     if (mainTotal > 0) {
       noteEl.innerHTML =
-        '추가 제품은 <strong>메인 염모제 ' + mainTotal + 'g</strong> 기준으로 계산됩니다<br>' +
+        '컨트롤컬러, 클리어, 앰플/본드 등<br>' +
+        '제품명과 비율(%)을 입력하면<br>' +
+        '<strong>메인 염모제 ' + mainTotal + 'g 기준</strong>으로 자동 계산됩니다<br>' +
         '<span class="addons-note-example">예시: 10% = ' + rnd(mainTotal * 0.1) + 'g &nbsp;/&nbsp; 20% = ' + rnd(mainTotal * 0.2) + 'g</span>';
-      document.getElementById('addons-note-box').classList.add('has-value');
     } else {
-      noteEl.innerHTML = '염모제를 먼저 입력하면 기준 그람수가 표시됩니다';
-      document.getElementById('addons-note-box').classList.remove('has-value');
+      noteEl.innerHTML =
+        '컨트롤컬러, 클리어, 앰플/본드 등<br>' +
+        '제품명과 비율(%)을 입력하면<br>' +
+        '메인 염모제 기준으로 자동 계산됩니다';
     }
   }
 
