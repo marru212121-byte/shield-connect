@@ -50,7 +50,7 @@ function navigate(page) {
 
   // 성분사전 페이지는 하단 네비 숨김 (뒤로가기 버튼으로 홈 복귀)
   var nav = document.getElementById('bottomNav');
-  if (nav) nav.style.display = (page === 'ingredient' || page === 'reels') ? 'none' : 'flex';
+  if (nav) nav.style.display = (page === 'ingredient' || page === 'reels' || page === 'timer' || page === 'memo' || page === 'feedback') ? 'none' : 'flex';
 
   if (page === 'sales')      renderCalendar();
   if (page === 'stats')      renderStats();
@@ -58,6 +58,7 @@ function navigate(page) {
   if (page === 'ingredient') renderList();
   if (page === 'calculator') { setTimeout(initCalc, 50); }
   if (page === 'reels') { renderReels(); }
+  if (page === 'memo') { memoRender(); }
 }
 
 /* ══════════════════════════════════════
@@ -464,3 +465,122 @@ document.addEventListener('DOMContentLoaded', () => {
     navigator.serviceWorker.register('./service-worker.js').catch(() => {});
   }
 });
+
+
+/* ══════════════════════════════════════
+   TIMER
+══════════════════════════════════════ */
+var timerInterval = null;
+var timerTotal = 0;
+var timerRemain = 0;
+var timerRunning = false;
+
+function setTimerMin(min) {
+  document.getElementById('timerInput').value = min;
+  document.querySelectorAll('.timer-preset-btn').forEach(function(b) {
+    b.classList.toggle('active', parseInt(b.textContent) === min);
+  });
+  timerReset();
+}
+
+function timerToggle() {
+  if (!timerRunning) {
+    var min = parseInt(document.getElementById('timerInput').value) || 0;
+    if (min < 1) { document.getElementById('timerStatus').textContent = '시간을 설정해주세요'; return; }
+    if (timerRemain === 0) {
+      timerTotal = min * 60;
+      timerRemain = timerTotal;
+    }
+    timerRunning = true;
+    document.getElementById('timerStartBtn').textContent = '일시정지';
+    document.getElementById('timerStatus').textContent = '시술 중...';
+    timerInterval = setInterval(timerTick, 1000);
+  } else {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    document.getElementById('timerStartBtn').textContent = '재개';
+    document.getElementById('timerStatus').textContent = '일시정지됨';
+  }
+}
+
+function timerTick() {
+  timerRemain--;
+  timerUpdate();
+  if (timerRemain <= 0) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    document.getElementById('timerStartBtn').textContent = '시작';
+    document.getElementById('timerStatus').textContent = '✅ 시술 완료!';
+    // 진동
+    if (navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 500]);
+    // 알림
+    if (Notification && Notification.permission === 'granted') {
+      new Notification('쉴드 커넥트', { body: '시술 타이머가 종료되었습니다!' });
+    }
+  }
+}
+
+function timerUpdate() {
+  var m = Math.floor(timerRemain / 60);
+  var s = timerRemain % 60;
+  document.getElementById('timerDisplay').textContent =
+    String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  // arc
+  var pct = timerTotal > 0 ? timerRemain / timerTotal : 1;
+  var circ = 553;
+  document.getElementById('timerArc').style.strokeDashoffset = circ * (1 - pct);
+}
+
+function timerReset() {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  timerRemain = 0;
+  document.getElementById('timerDisplay').textContent = '00:00';
+  document.getElementById('timerStartBtn').textContent = '시작';
+  document.getElementById('timerStatus').textContent = '';
+  document.getElementById('timerArc').style.strokeDashoffset = 0;
+}
+
+// 알림 권한 요청
+if (Notification && Notification.permission === 'default') {
+  Notification.requestPermission();
+}
+
+/* ══════════════════════════════════════
+   MEMO
+══════════════════════════════════════ */
+function memoSave() {
+  var text = (document.getElementById('memoInput').value || '').trim();
+  if (!text) return;
+  var memos = JSON.parse(localStorage.getItem('shield_memos') || '[]');
+  memos.unshift({ id: Date.now(), text: text, date: new Date().toLocaleDateString('ko-KR') });
+  localStorage.setItem('shield_memos', JSON.stringify(memos));
+  document.getElementById('memoInput').value = '';
+  memoRender();
+}
+
+function memoDelete(id) {
+  var memos = JSON.parse(localStorage.getItem('shield_memos') || '[]');
+  memos = memos.filter(function(m) { return m.id !== id; });
+  localStorage.setItem('shield_memos', JSON.stringify(memos));
+  memoRender();
+}
+
+function memoRender() {
+  var list = document.getElementById('memoList');
+  if (!list) return;
+  var memos = JSON.parse(localStorage.getItem('shield_memos') || '[]');
+  if (!memos.length) {
+    list.innerHTML = '<div class="memo-empty">저장된 메모가 없습니다</div>';
+    return;
+  }
+  list.innerHTML = memos.map(function(m) {
+    return '<div class="memo-item">' +
+      '<div style="flex:1">' +
+        '<div class="memo-item-text">' + m.text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>' +
+        '<div class="memo-item-meta">' + m.date + '</div>' +
+      '</div>' +
+      '<button class="memo-del-btn" onclick="memoDelete(' + m.id + ')">×</button>' +
+    '</div>';
+  }).join('');
+}
