@@ -1089,3 +1089,46 @@ body {
 .result-extra-basis strong {
   color: var(--black); font-weight: 800;
 }
+
+/* ── 추가제품 안내 박스 재디자인 ── */
+.addons-note-box {
+  background: #EEF3FF;
+  border: 1.5px solid #C0CFEE;
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin: 12px 0 14px;
+}
+.addons-note-top {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #C0CFEE;
+}
+.addons-note-icon { font-size: 18px; flex-shrink: 0; }
+.addons-note-title {
+  font-size: 14px; font-weight: 800;
+  color: #1A1814; letter-spacing: -0.02em;
+}
+.addons-note-body {
+  font-size: 13px; line-height: 1.8;
+  color: #334466;
+}
+.addons-note-body strong {
+  display: block;
+  background: #fff;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 8px 0 6px;
+  text-align: center;
+  color: #1A1814;
+  font-size: 16px;
+  border: 1px solid #C0CFEE;
+}
+.addons-note-example {
+  display: block;
+  font-size: 12px;
+  color: #5566AA;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 4px;
+}

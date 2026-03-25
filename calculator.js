@@ -243,15 +243,15 @@ function calcRender() {
   if (noteEl) {
     if (mainTotal > 0) {
       noteEl.innerHTML =
-        '컨트롤컬러, 클리어, 앰플/본드 등<br>' +
-        '제품명과 비율(%)을 입력하면<br>' +
-        '<strong>메인 염모제 ' + mainTotal + 'g 기준</strong>으로 자동 계산됩니다<br>' +
-        '<span class="addons-note-example">예시: 10% = ' + rnd(mainTotal * 0.1) + 'g &nbsp;/&nbsp; 20% = ' + rnd(mainTotal * 0.2) + 'g</span>';
+        '컨트롤컬러, 클리어, 앰플/본드 등 추가 제품의<br>' +
+        '제품명과 비율(%)을 입력하세요<br><br>' +
+        '<strong style="font-size:15px;color:#1A1814">기준량 : ' + mainTotal + 'g</strong><br>' +
+        '<span class="addons-note-example">10% = ' + rnd(mainTotal * 0.1) + 'g &nbsp;·&nbsp; 20% = ' + rnd(mainTotal * 0.2) + 'g &nbsp;·&nbsp; 30% = ' + rnd(mainTotal * 0.3) + 'g</span>';
     } else {
       noteEl.innerHTML =
-        '컨트롤컬러, 클리어, 앰플/본드 등<br>' +
-        '제품명과 비율(%)을 입력하면<br>' +
-        '메인 염모제 기준으로 자동 계산됩니다';
+        '컨트롤컬러, 클리어, 앰플/본드 등 추가 제품의<br>' +
+        '제품명과 비율(%)을 입력하세요<br>' +
+        '<span class="addons-note-example">염모제를 먼저 입력하면 기준량이 표시됩니다</span>';
     }
   }
 
