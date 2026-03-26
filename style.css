@@ -1444,6 +1444,11 @@ body {
    REELS NOTICE 주의 문구
 ══════════════════════════════════════ */
 .reels-notice {
+   position: fixed;
+   top: 0;
+   left: 0;
+   right: 0;
+   z-index: 200;
   display: flex;
   align-items: flex-start;
   gap: 10px;
