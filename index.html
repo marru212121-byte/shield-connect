@@ -592,13 +592,14 @@
     <div style="width:34px"></div>
   </div>
 
-  <!-- 주의 문구 -->
-  <div class="reels-notice">
+  <!-- 주의 문구 (sticky + X 닫기 + 스크롤 감지) -->
+  <div class="reels-notice" id="reels-notice">
     <span class="reels-notice-icon">⚠️</span>
     <div class="reels-notice-text">
       <strong>원하는 영상이 안 열리나요?</strong><br>
       인스타그램 앱을 완전히 종료한 후 다시 눌러주세요.
     </div>
+    <button class="reels-notice-close" onclick="closeReelsNotice()">✕</button>
   </div>
 
   <div class="reels-hero">
@@ -853,5 +854,33 @@
 <script src="./ingredient.js"></script>
 <script src="./calculator.js"></script>
 <script src="./reels.js"></script>
+<script>
+/* ── 주의바 닫기 + 스크롤 상단 복귀 시 재표시 ── */
+var _noticeClosed = false;
+
+function closeReelsNotice() {
+  _noticeClosed = true;
+  var n = document.getElementById('reels-notice');
+  if (n) n.classList.add('hidden');
+}
+
+(function() {
+  var page = document.getElementById('page-reels');
+  if (!page) return;
+
+  page.addEventListener('scroll', function() {
+    if (_noticeClosed) return;
+  }, { passive: true });
+
+  /* page-reels 가 보일 때마다 notice 다시 표시 */
+  new MutationObserver(function() {
+    if (page.style.display !== 'none') {
+      _noticeClosed = false;
+      var n = document.getElementById('reels-notice');
+      if (n) n.classList.remove('hidden');
+    }
+  }).observe(page, { attributes: true, attributeFilter: ['style'] });
+})();
+</script>
 </body>
 </html>
