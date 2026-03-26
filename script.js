@@ -63,6 +63,7 @@ function navigate(page) {
   if (page === 'settings')   renderSettings();
   if (page === 'ingredient') renderList();
   if (page === 'calculator') { setTimeout(initCalc, 50); }
+  if (page === 'perm-calc') { setTimeout(initPermCalc, 50); }
   if (page === 'reels') { renderReels(); }
   if (page === 'memo') { memoRender(); }
 }
@@ -183,10 +184,10 @@ function openModal(y, m, d) {
   document.getElementById('modalTitle').textContent =
     `${m+1}월 ${d}일 (${days[dow]}) 매출 입력`;
 
-  document.getElementById('inp-cut').value    = dayData.cut    || '';
-  document.getElementById('inp-color').value  = dayData.color  || '';
-  document.getElementById('inp-perm').value   = dayData.perm   || '';
-  document.getElementById('inp-clinic').value = dayData.clinic || '';
+  document.getElementById('inp-cut').value    = dayData.cut    ? fmt(dayData.cut)    : '';
+  document.getElementById('inp-color').value  = dayData.color  ? fmt(dayData.color)  : '';
+  document.getElementById('inp-perm').value   = dayData.perm   ? fmt(dayData.perm)   : '';
+  document.getElementById('inp-clinic').value = dayData.clinic ? fmt(dayData.clinic) : '';
 
   updateModalTotal();
 
@@ -202,21 +203,23 @@ function closeModal() {
 }
 
 function updateModalTotal() {
-  const vals = ['cut','color','perm','clinic'].map(
-    id => Number(document.getElementById('inp-'+id).value || 0)
-  );
+  const vals = ['cut','color','perm','clinic'].map(id => {
+    const raw = (document.getElementById('inp-'+id).value || '').replace(/,/g,'');
+    return Number(raw) || 0;
+  });
   const total = vals.reduce((a,b) => a+b, 0);
-  document.getElementById('modalTotalVal').textContent = fmt(total) + '원';
+  const el = document.getElementById('modalTotalVal');
+  if (el) el.textContent = fmtMoney(total);
 }
 
 function saveModal(y, m, d) {
   const k    = dateKey(y, m, d);
   const data = Storage.getData();
 
-  const cut    = Number(document.getElementById('inp-cut').value    || 0);
-  const color  = Number(document.getElementById('inp-color').value  || 0);
-  const perm   = Number(document.getElementById('inp-perm').value   || 0);
-  const clinic = Number(document.getElementById('inp-clinic').value || 0);
+  const cut    = Number((document.getElementById('inp-cut').value    || '0').replace(/,/g,''));
+  const color  = Number((document.getElementById('inp-color').value  || '0').replace(/,/g,''));
+  const perm   = Number((document.getElementById('inp-perm').value   || '0').replace(/,/g,''));
+  const clinic = Number((document.getElementById('inp-clinic').value || '0').replace(/,/g,''));
 
   if (cut + color + perm + clinic === 0) {
     delete data[k];
@@ -589,4 +592,172 @@ function memoRender() {
       '<button class="memo-del-btn" onclick="memoDelete(' + m.id + ')">×</button>' +
     '</div>';
   }).join('');
+}
+
+
+/* ══════════════════════════════════════
+   PERM CALCULATOR (펌제 비율 계산기)
+══════════════════════════════════════ */
+var permState = {
+  totalGram: 120,
+  roundUnit: 1,
+  extraCount: 0
+};
+
+function initPermCalc() {
+  permState = { totalGram: 120, roundUnit: 1, extraCount: 0 };
+
+  // 총량 버튼
+  document.querySelectorAll('.perm-gram-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (Number(btn.dataset.gram) === permState.totalGram) btn.classList.add('active');
+    btn.onclick = function() {
+      document.querySelectorAll('.perm-gram-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      permState.totalGram = Number(this.dataset.gram);
+      document.getElementById('perm-custom-input').value = '';
+      document.getElementById('perm-selected-gram-display').textContent = permState.totalGram + 'g';
+      permCalcUpdate();
+    };
+  });
+
+  // 직접 입력
+  const permCustom = document.getElementById('perm-custom-input');
+  if (permCustom) {
+    permCustom.oninput = function() {
+      const v = parseFloat(this.value);
+      if (v > 0) {
+        document.querySelectorAll('.perm-gram-btn').forEach(b => b.classList.remove('active'));
+        permState.totalGram = v;
+        document.getElementById('perm-selected-gram-display').textContent = v + 'g';
+        permCalcUpdate();
+      }
+    };
+  }
+
+  // 약제 추가 버튼
+  const addColorBtn = document.getElementById('perm-add-color-btn');
+  if (addColorBtn) {
+    addColorBtn.onclick = function() {
+      const list = document.getElementById('perm-color-list');
+      const rows = list.querySelectorAll('.color-row');
+      if (rows.length >= 3) { alert('최대 3개까지 추가 가능합니다.'); return; }
+      const idx = rows.length + 1;
+      const row = document.createElement('div');
+      row.className = 'color-row';
+      row.dataset.idx = idx;
+      row.innerHTML = '<div class="color-row-inner">' +
+        '<input class="calc-input color-name" type="text" placeholder="예) 중, 약산성펌"/>' +
+        '<div class="ratio-wrap"><span class="ratio-sep"></span>' +
+        '<input class="calc-input ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div>' +
+        '<button class="color-row-del" onclick="this.closest('.color-row').remove();permCalcUpdate();">✕</button>' +
+        '</div>';
+      list.appendChild(row);
+      row.querySelectorAll('input').forEach(inp => inp.oninput = permCalcUpdate);
+    };
+  }
+
+  // 기존 행 이벤트
+  document.querySelectorAll('#perm-color-list input').forEach(inp => {
+    inp.oninput = permCalcUpdate;
+  });
+
+  // 추가제품 토글
+  const permToggle = document.getElementById('perm-addons-toggle-btn');
+  if (permToggle) {
+    permToggle.onclick = function() {
+      const body = document.getElementById('perm-addons-body');
+      body.style.display = body.style.display === 'none' ? 'block' : 'none';
+    };
+  }
+
+  // 추가제품 추가
+  const permAddExtra = document.getElementById('perm-add-extra-btn');
+  if (permAddExtra) {
+    permAddExtra.onclick = function() {
+      if (permState.extraCount >= 3) { alert('최대 3개'); return; }
+      permState.extraCount++;
+      const list = document.getElementById('perm-extra-custom-list');
+      const row = document.createElement('div');
+      row.className = 'extra-row';
+      row.innerHTML = '<div class="color-row-inner">' +
+        '<input class="calc-input color-name" type="text" placeholder="제품명 (예: 크리닉)"/>' +
+        '<div class="ratio-wrap"><span class="ratio-sep"></span>' +
+        '<input class="calc-input ratio-input" type="number" placeholder="%" min="0" inputmode="decimal"/>' +
+        '<span class="gram-unit">%</span></div>' +
+        '<button class="color-row-del" onclick="this.closest('.extra-row').remove();permState.extraCount--;permCalcUpdate();">✕</button>' +
+        '</div>';
+      list.appendChild(row);
+      row.querySelectorAll('input').forEach(inp => inp.oninput = permCalcUpdate);
+    };
+  }
+
+  // 반올림 버튼
+  document.querySelectorAll('.perm-round-btn').forEach(btn => {
+    btn.onclick = function() {
+      document.querySelectorAll('.perm-round-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      permState.roundUnit = Number(this.dataset.round);
+      permCalcUpdate();
+    };
+  });
+
+  permCalcUpdate();
+}
+
+function permRound(val) {
+  const u = permState.roundUnit;
+  return Math.round(val / u) * u;
+}
+
+function permCalcUpdate() {
+  const total = permState.totalGram;
+  const rows = document.querySelectorAll('#perm-color-list .color-row');
+  const agents = [];
+  rows.forEach(row => {
+    const name = row.querySelector('.color-name')?.value?.trim() || '';
+    const ratio = parseFloat(row.querySelector('.ratio-input')?.value) || 0;
+    if (name) agents.push({ name, ratio });
+  });
+
+  if (agents.length === 0) {
+    document.getElementById('perm-calc-result').innerHTML =
+      '<div class="result-empty"><span class="result-empty-icon">💊</span><span>펌제를 입력하면<br>실시간으로 계산됩니다</span></div>';
+    return;
+  }
+
+  const totalRatio = agents.reduce((a, c) => a + c.ratio, 0);
+  let html = '';
+  let agentTotalGram = 0;
+
+  agents.forEach((a, i) => {
+    const r = totalRatio > 0 ? a.ratio / totalRatio : 1 / agents.length;
+    const g = permRound(total * r);
+    agentTotalGram += g;
+    const pct = Math.round(r * 100);
+    html += '<div class="result-row">' +
+      '<span class="result-name">' + (a.name || '약제 ' + (i+1)) + '</span>' +
+      '<span class="result-gram">' + g + 'g</span>' +
+      '<span class="result-pct">(' + pct + '%)</span></div>';
+  });
+
+  // 추가제품
+  const extraRows = document.querySelectorAll('#perm-extra-custom-list .extra-row');
+  if (extraRows.length > 0) {
+    html += '<div class="result-divider"></div>';
+    extraRows.forEach(row => {
+      const name = row.querySelector('.color-name')?.value?.trim() || '추가제품';
+      const pct = parseFloat(row.querySelector('.ratio-input')?.value) || 0;
+      if (pct > 0 && name) {
+        const g = permRound(total * pct / 100);
+        html += '<div class="result-row result-row-extra">' +
+          '<span class="result-name">+ ' + name + '</span>' +
+          '<span class="result-gram">' + g + 'g</span>' +
+          '<span class="result-pct">(' + pct + '%)</span></div>';
+      }
+    });
+  }
+
+  html += '<div class="result-total-row"><span>합계</span><span>' + total + 'g</span></div>';
+  document.getElementById('perm-calc-result').innerHTML = html;
 }
