@@ -176,20 +176,33 @@ function calNextMonth() {
 function openModal(y, m, d) {
   const data    = Storage.getData();
   const k       = dateKey(y, m, d);
-  const dayData = data[k] || { cut:0, color:0, perm:0, clinic:0 };
+  const dayData = data[k] || null;
+  const hasData = dayData && ((dayData.cut||0)+(dayData.color||0)+(dayData.perm||0)+(dayData.clinic||0)) > 0;
 
   const days = ['일','월','화','수','목','금','토'];
   const dow  = new Date(y, m, d).getDay();
 
   document.getElementById('modalTitle').textContent =
-    `${m+1}월 ${d}일 (${days[dow]}) 매출 입력`;
+    `${m+1}월 ${d}일 (${days[dow]}) ${hasData ? '매출 수정' : '매출 입력'}`;
 
-  document.getElementById('inp-cut').value    = dayData.cut    ? fmt(dayData.cut)    : '';
-  document.getElementById('inp-color').value  = dayData.color  ? fmt(dayData.color)  : '';
-  document.getElementById('inp-perm').value   = dayData.perm   ? fmt(dayData.perm)   : '';
-  document.getElementById('inp-clinic').value = dayData.clinic ? fmt(dayData.clinic) : '';
+  const d2 = dayData || { cut:0, color:0, perm:0, clinic:0 };
+  document.getElementById('inp-cut').value    = d2.cut    ? fmt(d2.cut)    : '';
+  document.getElementById('inp-color').value  = d2.color  ? fmt(d2.color)  : '';
+  document.getElementById('inp-perm').value   = d2.perm   ? fmt(d2.perm)   : '';
+  document.getElementById('inp-clinic').value = d2.clinic ? fmt(d2.clinic) : '';
 
   updateModalTotal();
+
+  // 기존 데이터 있으면 삭제 버튼 표시
+  const delBtn = document.getElementById('modalDeleteBtn');
+  if (delBtn) {
+    if (hasData) {
+      delBtn.classList.remove('hidden');
+    } else {
+      delBtn.classList.add('hidden');
+    }
+    delBtn.onclick = () => deleteModal(y, m, d);
+  }
 
   // 저장 버튼
   document.getElementById('modalSaveBtn').onclick = () => saveModal(y, m, d);
@@ -230,6 +243,17 @@ function saveModal(y, m, d) {
   Storage.setData(data);
   closeModal();
   renderCalendar();
+}
+
+function deleteModal(y, m, d) {
+  if (!confirm(`${m+1}월 ${d}일 매출 데이터를 삭제할까요?`)) return;
+  const k    = dateKey(y, m, d);
+  const data = Storage.getData();
+  delete data[k];
+  Storage.setData(data);
+  closeModal();
+  renderCalendar();
+  showToast('매출 데이터가 삭제되었습니다');
 }
 
 /* ══════════════════════════════════════
@@ -758,6 +782,20 @@ function permCalcUpdate() {
     });
   }
 
-  html += '<div class="result-total-row"><span>합계</span><span>' + total + 'g</span></div>';
+  // 추가제품 g 합산
+  let extraTotalGram = 0;
+  extraRows.forEach(row => {
+    const pct2 = parseFloat(row.querySelector('.ratio-input')?.value) || 0;
+    const name2 = row.querySelector('.color-name')?.value?.trim() || '';
+    if (pct2 > 0 && name2) extraTotalGram += permRound(total * pct2 / 100);
+  });
+  const grandTotal = agentTotalGram + extraTotalGram;
+  html += '<div class="result-total-row"><span>펌제</span><span>' + agentTotalGram + 'g</span></div>';
+  if (extraTotalGram > 0) {
+    html += '<div class="result-total-row" style="color:#888;font-size:13px;"><span>추가제품</span><span>+ ' + extraTotalGram + 'g</span></div>';
+    html += '<div class="result-total-row" style="border-top:1.5px solid #ddd;margin-top:4px;padding-top:8px;font-weight:800;font-size:15px;"><span>합계</span><span>' + grandTotal + 'g</span></div>';
+  } else {
+    html += '<div class="result-total-row" style="font-weight:800;font-size:15px;"><span>합계</span><span>' + agentTotalGram + 'g</span></div>';
+  }
   document.getElementById('perm-calc-result').innerHTML = html;
 }

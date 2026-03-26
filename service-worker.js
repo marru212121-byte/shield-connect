@@ -1,4 +1,4 @@
-const CACHE_NAME = 'shield-v3';
+const CACHE_NAME = 'shield-v4';
 
 // 설치: 빈 캐시로 시작
 self.addEventListener('install', e => {
