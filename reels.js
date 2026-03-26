@@ -7,75 +7,75 @@
 
 const REELS_DATA = [
   {
-    thumb: './images/reels/hotperm.png',
+    thumb: './images/hotperm.png',
     url:   'https://www.instagram.com/reel/교체해주세요1/',
     episode: 'EP.01',
-    title: '핫펌의 모든 것',
-    desc:  '열을 이용해 웨이브를 만드는 핫펌. 시술 원리부터 주의사항까지 실사로 풀어봤어요.',
+    title: '열펌',
+    desc:  '열펌을 하면 머리카락 속에서는 어떤 일이 일어날까요?',
     tag:   '펌'
   },
   {
-    thumb: './images/reels/coldperm.png',
+    thumb: './images/coldperm.png',
     url:   'https://www.instagram.com/reel/교체해주세요2/',
     episode: 'EP.02',
-    title: '콜드펌 vs 핫펌',
-    desc:  '약제만으로 웨이브를 만드는 콜드펌. 두 가지의 결정적 차이를 비교해봐요.',
+    title: '일반펌',
+    desc:  '일반펌을 하면 머리카락 속에서는 어떤 일이 일어날까요?',
     tag:   '펌'
   },
   {
-    thumb: './images/reels/bleach.jpeg',
+    thumb: './images/bleach.jpeg',
     url:   'https://www.instagram.com/reel/교체해주세요3/',
     episode: 'EP.03',
-    title: '블리치 작용 원리',
-    desc:  '모발 속 멜라닌을 분해하는 블리치. 레벨별 리프트가 어떻게 달라지는지 알아봐요.',
+    title: '탈색',
+    desc:  '탈색을 하면 머리카락 속에서는 어떤 일이 일어날까요?',
     tag:   '탈색'
   },
   {
-    thumb: './images/reels/color.png',
+    thumb: './images/color.png',
     url:   'https://www.instagram.com/reel/교체해주세요4/',
     episode: 'EP.04',
-    title: '염모제 발색의 과학',
-    desc:  '색소가 모발 속으로 파고드는 과정을 실사 기반으로 시각화했어요.',
+    title: '염색',
+    desc:  '염색을 하면 머리카락 속에서는 어떤 일이 일어날까요?',
     tag:   '염색'
   },
   {
-    thumb: './images/reels/neutralize.jpeg',
+    thumb: './images/neutralize.jpeg',
     url:   'https://www.instagram.com/reel/교체해주세요5/',
     episode: 'EP.05',
-    title: '보색 중화 완벽 정리',
-    desc:  '노란기, 붉은기, 초록기… 각각 어떤 색으로 중화해야 하는지 한눈에 봐요.',
+    title: '보색 중화',
+    desc:  '보색 중화를 하면 머리카락 속에서는 어떤 일이 일어날까요?',
     tag:   '컬러'
   },
   {
-    thumb: './images/reels/smell.png',
+    thumb: './images/smell.png',
     url:   'https://www.instagram.com/reel/교체해주세요6/',
     episode: 'EP.06',
-    title: '펌 냄새의 정체',
-    desc:  '시술 후 남는 그 냄새, 어디서 오는 걸까요? 성분부터 제거 방법까지 알아봐요.',
-    tag:   '펌'
+    title: '미용실 특유의 냄새',
+    desc:  '미용실에서 나는 특유의 냄새는 무엇일까요?',
+    tag:   '상식'
   },
   {
-    thumb: './images/reels/growth.png',
+    thumb: './images/growth.png',
     url:   'https://www.instagram.com/reel/교체해주세요7/',
     episode: 'EP.07',
-    title: '모발이 자라나는 과정',
-    desc:  '두피 속에서 모발이 만들어지는 원리. 모낭 구조부터 성장 주기까지 파헤쳐요.',
+    title: '모발 성장',
+    desc:  '머리카락은 어떻게 자라날까요?',
     tag:   '두피'
   },
   {
-    thumb: './images/reels/clinic.jpeg',
+    thumb: './images/clinic.jpeg',
     url:   'https://www.instagram.com/reel/교체해주세요8/',
     episode: 'EP.08',
-    title: '크리닉 제대로 쓰기',
-    desc:  '그냥 바르면 의미없는 크리닉. 성분별 작용 부위와 올바른 사용법을 알아봐요.',
+    title: '크리닉',
+    desc:  '크리닉을 하면 머리카락에서 어떤 일이 일어날까요?',
     tag:   '크리닉'
   },
   {
-    thumb: './images/reels/dry.png',
+    thumb: './images/dry.png',
     url:   'https://www.instagram.com/reel/교체해주세요9/',
     episode: 'EP.09',
-    title: '드라이 기술의 핵심',
-    desc:  '드라이어 하나로 완성도가 달라지는 이유. 바람 방향과 온도의 원리를 파헤쳐요.',
+    title: '드라이',
+    desc:  '드라이를 하면 머리카락에서 어떤 일이 일어날까요?',
     tag:   '스타일'
   },
 ];
