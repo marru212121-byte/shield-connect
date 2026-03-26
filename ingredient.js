@@ -2818,6 +2818,17 @@ function setFilter(cat, btn) {
 /* ══════════════════════════════════════
    RENDER LIST
 ══════════════════════════════════════ */
+
+/* 검색어 하이라이트 헬퍼 */
+function highlight(text, q) {
+  if (!text) return '';
+  if (!q) return esc(text);
+  var escaped = esc(text);
+  var escapedQ = esc(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return escaped.replace(new RegExp('(' + escapedQ + ')', 'gi'),
+    '<mark style="background:#9E7FBF33;color:#C4A0E8;border-radius:3px;padding:0 2px;">$1</mark>');
+}
+
 function renderList() {
   var q    = (document.getElementById('searchInput').value || '').trim().toLowerCase();
   var wrap = document.getElementById('listWrap');
@@ -2863,17 +2874,17 @@ function renderList() {
     card.innerHTML =
       '<div class="card-top">' +
         '<div>' +
-          '<div class="card-ko">' + esc(item.ko) + customBadge + '</div>' +
-          (item.en ? '<div class="card-en">' + esc(item.en) + '</div>' : '') +
+          '<div class="card-ko">' + highlight(item.ko, q) + customBadge + '</div>' +
+          (item.en ? '<div class="card-en">' + highlight(item.en, q) + '</div>' : '') +
         '</div>' +
         '<div class="card-badges">' +
           (item.cat ? '<span class="badge badge-cat" data-cat="' + esc(item.cat) + '">' + esc(item.cat) + '</span>' : '') +
           (item.strength ? '<span style="font-size:10px;font-weight:700;color:' + strColor + '">강도 ' + esc(item.strength) + '</span>' : '') +
         '</div>' +
       '</div>' +
-      (item.role ? '<div class="card-role">' + esc(item.role) + '</div>' : '') +
+      (item.role ? '<div class="card-role">' + highlight(item.role, q) + '</div>' : '') +
       '<div class="card-sub-row">' +
-        (item.mid ? '<span class="card-mid">' + esc(item.mid) + '</span>' : '') +
+        (item.mid ? '<span class="card-mid">' + highlight(item.mid, q) + '</span>' : '') +
         '<span class="card-arrow">›</span>' +
       '</div>';
 
