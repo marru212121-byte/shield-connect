@@ -855,32 +855,21 @@
 <script src="./calculator.js"></script>
 <script src="./reels.js"></script>
 <script>
-/* ── 주의바 닫기 + 스크롤 상단 복귀 시 재표시 ── */
 var _noticeClosed = false;
 
 function closeReelsNotice() {
   _noticeClosed = true;
   var n = document.getElementById('reels-notice');
-  if (n) n.classList.add('hidden');
+  if (n) n.style.display = 'none';
 }
 
-(function() {
-  var page = document.getElementById('page-reels');
-  if (!page) return;
-
-  page.addEventListener('scroll', function() {
-    if (_noticeClosed) return;
-  }, { passive: true });
-
-  /* page-reels 가 보일 때마다 notice 다시 표시 */
-  new MutationObserver(function() {
-    if (page.style.display !== 'none') {
-      _noticeClosed = false;
-      var n = document.getElementById('reels-notice');
-      if (n) n.classList.remove('hidden');
-    }
-  }).observe(page, { attributes: true, attributeFilter: ['style'] });
-})();
+window.addEventListener('scroll', function() {
+  if (window.scrollY < 10) {
+    _noticeClosed = false;
+    var n = document.getElementById('reels-notice');
+    if (n) n.style.display = 'flex';
+  }
+});
 </script>
 </body>
 </html>
