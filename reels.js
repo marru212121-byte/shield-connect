@@ -39,7 +39,7 @@ const REELS_DATA = [
     tag:   '염색'
   },
   {
-    thumb: './images/neutralize.jpeg',
+    thumb: './images/color.png',
     url:   'https://www.instagram.com/reel/교체해주세요5/',
     episode: 'EP.05',
     title: '보색 중화',
