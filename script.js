@@ -650,7 +650,7 @@ function initPermCalc() {
         '<input class="calc-input color-name" type="text" placeholder="예) 중, 약산성펌"/>' +
         '<div class="ratio-wrap"><span class="ratio-sep"></span>' +
         '<input class="calc-input ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div>' +
-        '<button class="color-row-del" onclick="this.closest('.color-row').remove();permCalcUpdate();">✕</button>' +
+        '<button class="color-row-del" onclick="this.closest(".color-row").remove();permCalcUpdate();">✕</button>' +
         '</div>';
       list.appendChild(row);
       row.querySelectorAll('input').forEach(inp => inp.oninput = permCalcUpdate);
@@ -685,7 +685,7 @@ function initPermCalc() {
         '<div class="ratio-wrap"><span class="ratio-sep"></span>' +
         '<input class="calc-input ratio-input" type="number" placeholder="%" min="0" inputmode="decimal"/>' +
         '<span class="gram-unit">%</span></div>' +
-        '<button class="color-row-del" onclick="this.closest('.extra-row').remove();permState.extraCount--;permCalcUpdate();">✕</button>' +
+        '<button class="color-row-del" onclick="this.closest(".extra-row").remove();permState.extraCount--;permCalcUpdate();">✕</button>' +
         '</div>';
       list.appendChild(row);
       row.querySelectorAll('input').forEach(inp => inp.oninput = permCalcUpdate);
