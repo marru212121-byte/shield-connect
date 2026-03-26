@@ -1,4 +1,10 @@
-/* ── 금액 포맷: 천 단위 콤마 ── */
+/* ══════════════════════════════════════
+   REELS NOTICE — 닫기 + 페이지 재진입시 재표시
+══════════════════════════════════════ */
+function closeReelsNotice() {
+  var n = document.getElementById('reels-notice');
+  if (n) n.style.display = 'none';
+}
 function fmtMoney(n) {
   if (!n && n !== 0) return '0원';
   return Number(n).toLocaleString('ko-KR') + '원';
@@ -64,7 +70,7 @@ function navigate(page) {
   if (page === 'ingredient') renderList();
   if (page === 'calculator') { setTimeout(initCalc, 50); }
   if (page === 'perm-calc') { setTimeout(initPermCalc, 50); }
-  if (page === 'reels') { renderReels(); }
+  if (page === 'reels') { renderReels(); var n = document.getElementById('reels-notice'); if(n) n.style.display='flex'; }
   if (page === 'memo') { memoRender(); }
 }
 
