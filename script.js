@@ -9,6 +9,11 @@ function closeReelsNotice() {
   if (n) n.style.display = 'none';
 }
 
+function closeReelsNotice() {
+  var n = document.getElementById('reels-notice');
+  if (n) n.style.display = 'none';
+}
+
 /* ══════════════════════════════════════
    SHIELD DESIGNER CONNECT — script.js
 ══════════════════════════════════════ */
