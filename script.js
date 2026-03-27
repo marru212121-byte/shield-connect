@@ -4,9 +4,83 @@ function fmtMoney(n) {
   return Number(n).toLocaleString('ko-KR') + '원';
 }
 
+/* ── 릴스 주의바 닫기 ── */
 function closeReelsNotice() {
   var n = document.getElementById('reels-notice');
   if (n) n.style.display = 'none';
+}
+
+/* ════════════════════════════════
+   THEORY — 이론 슬라이드
+════════════════════════════════ */
+
+/* ── 데이터: 여기만 수정하면 됩니다 ──
+   image: './images/파일명.jpg'
+   text:  '카드 설명 텍스트'
+─────────────────────────────────── */
+var THEORY_HAIR_DATA = [
+  {
+    image: './images/quticle.jpeg',
+    title: '모발의 구조',
+    text: '모발은 바깥쪽부터 큐티클(Cuticle), 모피질(Cortex), 모수질(Medulla) 3겹으로 이루어져 있어요. 큐티클은 비늘처럼 겹쳐져 모발을 보호하고, 모피질은 색소와 수분을 담고 있어요.'
+  },
+  {
+    image: './images/ph.jpg',
+    title: '모발의 pH',
+    text: '건강한 모발의 pH는 4.5~5.5 (약산성)이에요. pH가 높아질수록(알칼리) 큐티클이 열리고, 낮아질수록(산성) 닫혀요. 펌·염색 후 산성 처리를 하는 이유가 바로 이것이에요.'
+  },
+  {
+    image: '',
+    title: '준비 중',
+    text: '다음 내용은 곧 업데이트됩니다.'
+  }
+];
+
+var theoryIdx = 0;
+
+function renderTheorySlider() {
+  var data = THEORY_HAIR_DATA;
+  var slider = document.getElementById('theory-slider');
+  var dots = document.getElementById('theory-dots');
+  var label = document.getElementById('theory-page-label');
+  if (!slider) return;
+
+  slider.innerHTML = data.map(function(card, i) {
+    return '<div style="min-width:100%;box-sizing:border-box;padding:20px;">' +
+      (card.image
+        ? '<img src="' + card.image + '" alt="' + card.title + '" ' +
+          'onclick="openTheoryImg(\'' + card.image + '\')" ' +
+          'style="width:100%;max-height:55vw;object-fit:contain;border-radius:10px;cursor:zoom-in;display:block;margin-bottom:16px;" ' +
+          'onerror="this.style.display=\'none\'"/>'
+        : '<div style="height:120px;background:#f0f0ee;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;color:#bbb;font-size:13px;">이미지 준비 중</div>') +
+      '<div style="font-size:16px;font-weight:700;color:#1A1814;margin-bottom:8px;">' + card.title + '</div>' +
+      '<div style="font-size:13px;color:#666;line-height:1.7;">' + card.text + '</div>' +
+    '</div>';
+  }).join('');
+
+  dots.innerHTML = data.map(function(_, i) {
+    return '<div style="width:' + (i === theoryIdx ? '18' : '6') + 'px;height:6px;border-radius:3px;background:' + (i === theoryIdx ? '#1A1814' : '#ddd') + ';transition:all 0.3s;"></div>';
+  }).join('');
+
+  label.textContent = (theoryIdx + 1) + ' / ' + data.length;
+  slider.style.transform = 'translateX(-' + (theoryIdx * 100) + '%)';
+}
+
+function theoryNext() {
+  if (theoryIdx < THEORY_HAIR_DATA.length - 1) { theoryIdx++; renderTheorySlider(); }
+}
+function theoryPrev() {
+  if (theoryIdx > 0) { theoryIdx--; renderTheorySlider(); }
+}
+
+function openTheoryImg(src) {
+  var modal = document.getElementById('theory-img-modal');
+  var img = document.getElementById('theory-img-full');
+  if (modal && img) { img.src = src; modal.style.display = 'flex'; }
+}
+function closeTheoryImg() {
+  var modal = document.getElementById('theory-img-modal');
+  if (modal) modal.style.display = 'none';
 }
 
 function closeReelsNotice() {
@@ -66,7 +140,7 @@ function navigate(page) {
 
   // 성분사전 페이지는 하단 네비 숨김 (뒤로가기 버튼으로 홈 복귀)
   var nav = document.getElementById('bottomNav');
-  if (nav) nav.style.display = (page === 'ingredient' || page === 'reels' || page === 'timer' || page === 'memo' || page === 'feedback') ? 'none' : 'flex';
+  if (nav) nav.style.display = (page === 'ingredient' || page === 'reels' || page === 'timer' || page === 'memo' || page === 'feedback' || page === 'theory' || page === 'theory-hair') ? 'none' : 'flex';
 
   if (page === 'sales')      renderCalendar();
   if (page === 'stats')      renderStats();
@@ -76,6 +150,7 @@ function navigate(page) {
   if (page === 'perm-calc') { setTimeout(initPermCalc, 50); }
   if (page === 'reels') { renderReels(); var n = document.getElementById('reels-notice'); if(n) n.style.display='flex'; }
   if (page === 'memo') { memoRender(); }
+  if (page === 'theory-hair') { theoryIdx = 0; renderTheorySlider(); }
 }
 
 /* ══════════════════════════════════════
