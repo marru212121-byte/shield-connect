@@ -24,7 +24,7 @@ const REELS_DATA = [
   },
   {
     thumb: './images/bleach.jpeg',
-    url:   'https://www.instagram.com/reel/교체해주세요3/',
+    url:   'https://www.instagram.com/reel/DVr9ljaD165/',
     episode: 'EP.03',
     title: '탈색',
     desc:  '탈색을 하면 머리카락 속에서는 어떤 일이 일어날까요?',
@@ -32,7 +32,7 @@ const REELS_DATA = [
   },
   {
     thumb: './images/color.png',
-    url:   'https://www.instagram.com/reel/교체해주세요4/',
+    url:   'https://www.instagram.com/reel/DU8VI0_D6ke/',
     episode: 'EP.04',
     title: '염색',
     desc:  '염색을 하면 머리카락 속에서는 어떤 일이 일어날까요?',
@@ -40,7 +40,7 @@ const REELS_DATA = [
   },
   {
     thumb: './images/neutralize.jpeg',
-    url:   'https://www.instagram.com/reel/교체해주세요5/',
+    url:   'https://www.instagram.com/reel/DVSWamFDyJE/',
     episode: 'EP.05',
     title: '보색 중화',
     desc:  '보색 중화를 하면 머리카락 속에서는 어떤 일이 일어날까요?',
@@ -48,7 +48,7 @@ const REELS_DATA = [
   },
   {
     thumb: './images/smell.png',
-    url:   'https://www.instagram.com/reel/교체해주세요6/',
+    url:   'https://www.instagram.com/reel/DV_E96ej0N-/',
     episode: 'EP.06',
     title: '미용실 특유의 냄새',
     desc:  '미용실에서 나는 특유의 냄새는 무엇일까요?',
@@ -56,7 +56,7 @@ const REELS_DATA = [
   },
   {
     thumb: './images/growth.png',
-    url:   'https://www.instagram.com/reel/교체해주세요7/',
+    url:   'https://www.instagram.com/reel/DWGRKGmj54p/',
     episode: 'EP.07',
     title: '모발 성장',
     desc:  '머리카락은 어떻게 자라날까요?',
@@ -64,7 +64,7 @@ const REELS_DATA = [
   },
   {
     thumb: './images/clinic.jpeg',
-    url:   'https://www.instagram.com/reel/교체해주세요8/',
+    url:   'https://www.instagram.com/reel/DWOI9jIj-yj/',
     episode: 'EP.08',
     title: '크리닉',
     desc:  '크리닉을 하면 머리카락에서 어떤 일이 일어날까요?',
@@ -72,7 +72,7 @@ const REELS_DATA = [
   },
   {
     thumb: './images/dry.png',
-    url:   'https://www.instagram.com/reel/교체해주세요9/',
+    url:   'https://www.instagram.com/reel/DVDWofYD-XU/',
     episode: 'EP.09',
     title: '드라이',
     desc:  '드라이를 하면 머리카락에서 어떤 일이 일어날까요?',
