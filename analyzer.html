@@ -176,29 +176,32 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <canvas id="crop-canvas" style="width:100%;border-radius:8px;display:block;"></canvas>
   </div>
 
-  <!-- 색상 분석 결과 -->
+  <!-- 색상 분석 결과 — 색감 중심 -->
   <div class="result-card">
     <div class="result-card-title">🔬 분석 결과 (참고용)</div>
-    <div class="level-display">
-      <div class="level-num" id="res-level">7</div>
-      <div class="level-info">
-        <div class="level-name" id="res-level-name">밝은 갈색</div>
-        <div class="level-sub">명도 레벨 추정값</div>
-      </div>
-    </div>
-    <div class="level-bar-wrap">
-      <div class="level-bar"><div class="level-bar-fill" id="res-level-bar" style="width:70%;background:linear-gradient(90deg,#8B5E3C,#D4A574);"></div></div>
-    </div>
-    <div style="display:flex;justify-content:space-between;font-size:10px;color:#555;margin-top:4px;margin-bottom:14px;"><span>Lv.1 (어두움)</span><span>Lv.20 (밝음)</span></div>
 
     <div class="color-swatch">
       <div class="swatch" id="res-swatch"></div>
       <div class="swatch-info">
-        <div class="swatch-name" id="res-color-name">노랑기 감지</div>
+        <div class="swatch-name" id="res-color-name">분석 중...</div>
         <div class="swatch-sub" id="res-color-sub">주요 잔류 색감</div>
       </div>
     </div>
-    <div class="tone-tags" id="res-tone-tags"></div>
+    <div class="tone-tags" id="res-tone-tags" style="margin-top:10px;"></div>
+
+    <!-- 색감 기반 명도 힌트 -->
+    <div id="res-level-hint" style="display:none;margin-top:14px;padding:12px;background:#1a1a2e;border-radius:10px;border-left:3px solid #9E7FBF;">
+      <div style="font-size:11px;color:#9E7FBF;font-weight:700;margin-bottom:6px;">🧬 색감 기반 명도 추정</div>
+      <div id="res-level-hint-text" style="font-size:12px;color:#aaa;line-height:1.7;"></div>
+    </div>
+
+    <!-- 디자이너 확인 요청 -->
+    <div style="margin-top:14px;padding:10px 12px;background:#111;border-radius:8px;border:1px solid #333;">
+      <div style="font-size:12px;color:#888;line-height:1.7;">
+        💬 <strong style="color:#ccc;">현재 명도 레벨이 어느 정도인가요?</strong><br>
+        아래에서 직접 선택해주시면 더 정확한 시술 방향을 알려드려요.
+      </div>
+    </div>
   </div>
 
   <div class="warning-box">
@@ -245,7 +248,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <!-- 사용자 수정 -->
   <div class="edit-card">
     <div class="edit-title">현재 상태가 맞나요? 직접 수정하세요</div>
-    <div class="edit-label">명도 레벨</div>
+    <div class="edit-title">명도 레벨을 알려주세요</div>
+    <div class="edit-label" style="color:#9E7FBF;">디자이너가 직접 보고 선택해주세요</div>
     <div class="level-btns" id="level-btns" style="grid-template-columns:repeat(5,1fr);">
       <button class="level-btn" data-lv="1" onclick="setLevel(1)">1</button>
       <button class="level-btn" data-lv="2" onclick="setLevel(2)">2</button>
@@ -268,7 +272,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <button class="level-btn" data-lv="19" onclick="setLevel(19)">19</button>
       <button class="level-btn" data-lv="20" onclick="setLevel(20)">20</button>
     </div>
-    <div class="edit-label">잔류 색감 (복수 선택 가능)</div>
+    <div class="edit-label" style="margin-top:4px;">잔류 색감 확인 (복수 선택 가능)</div>
     <div class="tone-btns">
       <button class="tone-btn yellow" data-tone="yellow" onclick="toggleTone('yellow')">노랑</button>
       <button class="tone-btn orange" data-tone="orange" onclick="toggleTone('orange')">주황</button>
@@ -511,9 +515,7 @@ var levelNames = {
 };
 
 function showResult(r) {
-  document.getElementById('res-level').textContent = r.level;
-  document.getElementById('res-level-name').textContent = levelNames[r.level] || r.level+'레벨';
-  document.getElementById('res-level-bar').style.width = (r.level/20*100)+'%';
+  /* 명도 표시 제거 — 색감만 표시 */
   document.getElementById('res-swatch').style.background = 'rgb('+r.r+','+r.g+','+r.b+')';
 
   var toneMap = {yellow:'노랑기',orange:'주황기',red:'붉은기',green:'초록기',pink:'핑크기',purple:'보라기'};
@@ -521,31 +523,21 @@ function showResult(r) {
 
   var tags = '';
 
-  /* 인공색 감지 뱃지 */
+  /* 인공색 뱃지 */
   if (r.isArtificial) {
     var artMsg = r.artificialType === 'blue'
-      ? '🔵 블루/하늘 기운 — 염색 잔류 가능 (자연 멜라닌 아님)'
+      ? '🔵 블루/하늘 기운 — 염색 잔류 가능'
       : r.artificialType === 'pastel'
-      ? '🎨 파스텔 기운 감지 — 염색 잔류 색소 가능성'
+      ? '🎨 파스텔 기운 — 염색 잔류 색소 가능성'
       : '✨ 쨍한 색감 — 인공 색소 잔류 가능성';
     tags += '<span class="tone-tag" style="background:rgba(100,150,255,0.15);color:#88AAFF;border:1px solid rgba(100,150,255,0.3);">' + artMsg + '</span>';
-  }
-
-  /* 멜라닌 구간 안내 */
-  var zoneMsg = {
-    dark:        '어두운 구간 — 색 방향 결정이 먼저예요',
-    redOrange:   '붉은빛·주황빛 구간 (레벨 6~10)',
-    yellowOrange:'노랑빛·주황빛 구간 (레벨 11~15)',
-    yellow:      '노랑빛·아이보리 구간 (레벨 16~20)'
-  };
-  if (r.melaninZone && zoneMsg[r.melaninZone]) {
-    tags += '<span class="tone-tag" style="background:rgba(200,160,80,0.12);color:#C8A060;border:1px solid rgba(200,160,80,0.25);">🧬 ' + zoneMsg[r.melaninZone] + '</span>';
   }
 
   /* 얼룩 뱃지 */
   if (r.isUneven) {
     tags += '<span class="tone-tag" style="background:rgba(255,100,100,0.15);color:#FF8080;border:1px solid rgba(255,100,100,0.3);">⚡ 색상 불균일 (얼룩 의심)</span>';
   }
+
   /* 매트 뱃지 */
   if (r.isMatte) {
     tags += '<span class="tone-tag" style="background:rgba(180,150,100,0.15);color:#C8A878;border:1px solid rgba(180,150,100,0.3);">🟤 매트 톤 감지</span>';
@@ -553,34 +545,68 @@ function showResult(r) {
 
   if (r.tones.length > 0) {
     document.getElementById('res-color-name').textContent = r.tones.map(function(t){return toneMap[t];}).join(' + ') + ' 감지';
-    tags += r.tones.map(function(t) {
+    tags += r.tones.map(function(t){
       return '<span class="tone-tag" style="background:'+toneColorMap[t]+'22;color:'+toneColorMap[t]+';border:1px solid '+toneColorMap[t]+'44;">'+toneMap[t]+'</span>';
     }).join('');
+  } else if (r.isArtificial) {
+    document.getElementById('res-color-name').textContent = '인공 색소 잔류 감지';
+    document.getElementById('res-color-sub').textContent = '자연 멜라닌 범위를 벗어난 색감';
   } else {
     document.getElementById('res-color-name').textContent = r.isMatte ? '매트 톤 (채도 낮음)' : '잔류 색감 없음';
     document.getElementById('res-color-sub').textContent = r.isMatte ? '탁한 노랑-주황 계열' : '채도가 낮거나 균형잡힌 색상';
   }
+
   document.getElementById('res-tone-tags').innerHTML = tags;
 
-  /* 얼룩 경고 */
-  var unevenWarn = document.getElementById('uneven-warning');
-  if (unevenWarn) {
-    unevenWarn.style.display = r.isUneven ? 'flex' : 'none';
+  /* ── 색감 기반 명도 힌트 ── */
+  var hint = '';
+  var hintEl = document.getElementById('res-level-hint');
+  var hintTextEl = document.getElementById('res-level-hint-text');
+
+  var mainTone = r.tones[0] || '';
+
+  if (r.isArtificial && r.artificialType === 'blue') {
+    hint = '블루·하늘 계열이 보이려면 레벨 17 이상이 필요해요.\n그 이하라면 인공 색소 잔류일 가능성이 높아요.';
+  } else if (r.isArtificial && (r.artificialType === 'pastel' || r.artificialType === 'vivid')) {
+    hint = '파스텔·선명한 색감이 보이면 레벨 15 이상에서 표현된 인공 색소예요.\n자연 멜라닌에서는 이 색감이 나오지 않아요.';
+  } else if (mainTone === 'red') {
+    hint = '붉은기가 감지됐어요.\n자연 멜라닌 기준으로 버진모~어두운 브라운 구간(레벨 5~10 추정)이거나,\n탈색 후 어두운 색을 입힌 경우일 수 있어요.\n탈색 이력이 없다면 레벨 14~15 이하로 보는 게 일반적이에요.';
+  } else if (mainTone === 'orange') {
+    hint = '주황기가 감지됐어요.\n자연 멜라닌 기준으로 레벨 8~12 구간에서 주로 나타나요.\n버진모라면 14~15레벨 이하일 가능성이 높아요.';
+  } else if (mainTone === 'yellow') {
+    hint = '노랑기가 감지됐어요.\n자연 멜라닌 기준으로 레벨 12~16 구간에서 주로 나타나요.\n버진모에서 이 색감이 보이면 어느 정도 밝은 상태예요.';
+  } else if (mainTone === 'pink' || mainTone === 'purple') {
+    hint = '핑크·보라 기운은 자연 멜라닌에 없는 색감이에요.\n레벨 15 이상에서 인공 색소로 표현된 경우예요.';
+  } else {
+    hint = '';
   }
 
-  setLevel(r.level);
+  if (hint) {
+    hintTextEl.textContent = hint;
+    hintEl.style.display = 'block';
+  } else {
+    hintEl.style.display = 'none';
+  }
+
+  /* 레벨은 미선택 상태로 초기화 */
+  userLevel = null;
+  document.querySelectorAll('.level-btn').forEach(function(btn){ btn.classList.remove('active'); });
+
+  /* 색감 버튼 자동 선택 */
   userTones = r.tones.slice();
-  document.querySelectorAll('.tone-btn').forEach(function(btn) {
-    btn.classList.remove('active');
-    if (userTones.includes(btn.dataset.tone)) btn.classList.add('active');
+  document.querySelectorAll('.tone-btn').forEach(function(btn){ btn.classList.remove('active'); });
+  userTones.forEach(function(t){
+    var btn = document.querySelector('.tone-btn[data-tone="'+t+'"]');
+    if (btn) btn.classList.add('active');
   });
   if (userTones.length === 0) {
-    document.querySelector('.tone-btn[data-tone="none"]').classList.add('active');
+    var noneBtn = document.querySelector('.tone-btn[data-tone="none"]');
+    if (noneBtn) noneBtn.classList.add('active');
   }
-
-  /* 매트 체크박스 자동 선택 */
-  var matteBtn = document.querySelector('.tone-btn[data-tone="matte"]');
-  if (matteBtn && r.isMatte) matteBtn.classList.add('active');
+  if (r.isMatte) {
+    var matteBtn = document.querySelector('.tone-btn[data-tone="matte"]');
+    if (matteBtn) matteBtn.classList.add('active');
+  }
 
   updateRecipe();
 }
@@ -589,7 +615,7 @@ function showResult(r) {
 function setLevel(lv) {
   userLevel = lv;
   document.querySelectorAll('.level-btn').forEach(function(btn) {
-    btn.classList.toggle('active', parseInt(btn.dataset.lv) === lv);
+    btn.classList.toggle('active', lv !== null && parseInt(btn.dataset.lv) === lv);
   });
   updateRecipe();
 }
