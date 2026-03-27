@@ -116,20 +116,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .level-btn.active{background:#fff;color:#000;border-color:#fff;}
 .level-btn:disabled{opacity:0.2;cursor:not-allowed;pointer-events:none;}
 
-.tone-btns{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
-.tone-btn{padding:8px 16px;border-radius:20px;border:1px solid #333;background:#111;color:#888;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;}
-.tone-btn.active{border-color:currentColor;box-shadow:0 0 0 1px currentColor;}
-.tone-btn.yellow{color:#F5C518;}.tone-btn.yellow.active{background:rgba(245,197,24,0.18);}
-.tone-btn.orange{color:#FF8C00;}.tone-btn.orange.active{background:rgba(255,140,0,0.18);}
-.tone-btn.red{color:#FF4444;}.tone-btn.red.active{background:rgba(255,68,68,0.18);}
-.tone-btn.none{color:#888;}.tone-btn.none.active{background:rgba(255,255,255,0.1);color:#fff;border-color:#fff;}
+/* 색감 보정 버튼 제거됨 */
 
 /* 목표 색감 버튼 강조 */
 .target-btn{padding:9px 16px;border-radius:20px;border:2px solid #333;background:#111;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;}
 .target-btn.active{border-width:2px;box-shadow:0 0 0 2px currentColor;background:rgba(255,255,255,0.06);}
 
 /* 색감 힌트 박스 */
-.tone-hint-box{font-size:11px;color:#666;line-height:1.6;margin-top:4px;margin-bottom:8px;padding:8px 10px;background:#111;border-radius:8px;border:1px solid #1e1e1e;}
+/* tone-hint-box 제거됨 */
 
 /* 레시피 추천 */
 .recipe-card{background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:14px;border:1px solid #2a2a4a;padding:16px;margin-bottom:12px;}
@@ -237,18 +231,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       </div>
     </div>
 
-    <!-- 색감 보정 -->
-    <div class="edit-label" style="margin-top:4px;">색감 확인 · 보정</div>
-    <div class="tone-hint-box" id="tone-hint-box">AI가 감지하지 못한 색감이 있다면 1가지 정도 추가로 선택해주세요.<br>(3개 이상 선택 시 얼룩으로 판단됩니다)</div>
-    <div class="tone-btns" id="tone-btns">
-      <button class="tone-btn yellow" data-tone="yellow" onclick="toggleTone('yellow')">노랑</button>
-      <button class="tone-btn orange" data-tone="orange" onclick="toggleTone('orange')">주황</button>
-      <button class="tone-btn red"    data-tone="red"    onclick="toggleTone('red')">붉은기</button>
-      <button class="tone-btn" data-tone="pink"   onclick="toggleTone('pink')"   style="color:#FF69B4;">핑크</button>
-      <button class="tone-btn" data-tone="purple" onclick="toggleTone('purple')" style="color:#9B59B6;">보라</button>
-      <button class="tone-btn" data-tone="matte"  onclick="toggleTone('matte')"  style="color:#C8A878;">매트</button>
-      <button class="tone-btn none" id="tone-none-btn" data-tone="none" onclick="toggleTone('none')">없음</button>
-    </div>
+    <!-- 색감 보정 섹션 제거 — 카메라 감지만 사용 -->
 
     <!-- 3단계: 목표 색감 (3계열) -->
     <div class="edit-label" style="margin-top:12px;">3단계 · 원하는 색감 방향</div>
@@ -442,12 +425,7 @@ function analyzeRegion(ctx, x, y, w, h) {
   valid.forEach(function(p){ totalR+=p[0]; totalG+=p[1]; totalB+=p[2]; });
   var r = totalR/valid.length, g = totalG/valid.length, b = totalB/valid.length;
 
-  /* 화이트 밸런스 — 밝은 영역만 */
-  var rawL = (Math.max(r,g,b) + Math.min(r,g,b)) / 2;
-  if (rawL > 60) {
-    var maxCh = Math.max(r,g,b);
-    if (maxCh > 0) { r = r/maxCh*220; g = g/maxCh*220; b = b/maxCh*220; }
-  }
+  /* 화이트밸런스 제거 — 날것 그대로 읽기 (인공색 감지 정확도 우선) */
 
   var hsl = rgbToHsl(r, g, b);
   var h = hsl[0], s = hsl[1], l = hsl[2];
@@ -609,36 +587,73 @@ function showResult(r) {
 
   document.getElementById('res-tone-tags').innerHTML = tags;
 
-  /* ── 현장 말투 색감 설명 ── */
+  /* ── 현장 말투 감지 설명 — 잔류 언더톤 기반 ── */
   var mainTone = r.tones[0] || '';
   var subTone  = r.tones[1] || '';
   var desc = '';
+  var minLevelHint = 1; /* 명도 질문 시작 레벨 힌트 */
 
-  if (r.isArtificial && r.artificialType === 'blue') {
-    desc = '푸른기나 하늘빛이 보이네요.\n이 색감은 레벨 17 이상의 밝은 명도에서 표현되는 색이에요.\n실제 명도가 어느 정도 되시나요?';
-  } else if (r.isArtificial) {
-    desc = '파스텔하거나 선명한 색감이 감지돼요.\n레벨 15 이상 밝은 명도에서 인공 색소로 표현된 경우예요.\n현재 명도 확인 부탁드려요.';
-  } else if (r.isUneven && (mainTone === 'yellow' || mainTone === 'orange')) {
-    desc = '노랑기와 주황기가 섞여서 얼룩진 느낌이 보여요.\n색 분포가 고르지 않은 상태예요.\n명도 선택 후 정리 방향을 알려드릴게요.';
-  } else if (mainTone === 'red' && subTone === 'orange') {
-    desc = '붉은기 베이스에 주황기가 같이 보이는 상태예요.\n전체적으로 따뜻하고 강한 색감이 남아있어요.\n명도에 따라 접근 방법이 달라지니 몇 레벨 정도 되시나요?';
-  } else if (mainTone === 'red') {
-    desc = '붉은기가 확실하게 보이는 상태예요.\n붉은기는 색의 힘이 강해서 명도에 따라 작업 난이도가 많이 달라져요.\n현재 명도가 어느 정도 되시나요?';
-  } else if (mainTone === 'orange' && subTone === 'yellow') {
-    desc = '주황기와 노랑기가 같이 보여서 전체적으로 따뜻한 느낌이에요.\n명도 선택하시면 어떻게 접근할지 알려드릴게요.';
-  } else if (mainTone === 'orange') {
-    desc = '주황기 베이스가 보여요.\n중간 정도 색의 힘을 가진 언더톤이에요.\n명도가 어느 정도 되시나요?';
-  } else if (mainTone === 'yellow') {
-    desc = '노랑기 베이스가 보여요.\n비교적 다루기 수월한 언더톤이에요.\n명도 선택하시면 방향 잡아드릴게요.';
-  } else if (mainTone === 'pink') {
-    desc = '핑크·마젠타 기운이 감지돼요.\n자연 멜라닌에는 없는 색이라 인공 색소 잔류예요.\n현재 명도가 어느 정도 되시나요?';
-  } else if (mainTone === 'purple') {
-    desc = '보라기가 보여요.\n인공 색소 잔류일 가능성이 높습니다.\n명도 확인 부탁드려요.';
+  /* 잔류 언더톤 4분류 판단 */
+  var undertone = 'none'; /* none / warm / cool / matte */
+  if (r.isArtificial || mainTone === 'pink' || mainTone === 'purple') {
+    undertone = 'cool';
+  } else if (r.artificialType === 'blue' || (mainTone === '' && r.isArtificial)) {
+    undertone = 'cool';
+  } else if (mainTone === 'red' || mainTone === 'orange' || mainTone === 'yellow') {
+    undertone = 'warm';
   } else if (r.isMatte) {
-    desc = '매트하고 탁한 느낌의 색감이에요.\n노랑기나 주황기가 채도 낮게 섞인 상태예요.\n명도 선택하시면 방향 잡아드릴게요.';
-  } else {
-    desc = '뚜렷한 색감 없이 비교적 중성적인 상태예요.\n명도 선택하시면 원하는 방향으로 바로 가이드해드릴게요.';
+    undertone = 'matte';
+  } else if (r.l < 18 && r.s < 15) {
+    undertone = 'dark'; /* 매우 어두운 상태 */
   }
+
+  /* 잔류 언더톤 → h값으로 세분화 */
+  var isBlueish  = (r.h >= 180 && r.h < 260) && r.s > 15;
+  var isPinkish  = (r.h >= 290 && r.h < 345) && r.s >= 15;
+  var isPurplish = (r.h >= 255 && r.h < 295) && r.s >= 15;
+  var isRedWine  = (r.h >= 330 || r.h < 15)  && r.s > 20;
+  var isDark     = (r.l < 18 && r.s < 20);
+
+  /* 감지 문구 + 명도 질문 */
+  if (isBlueish) {
+    desc = '🔵 청회색·파란 계열 잔류 색소가 보여요.\n\n조명·각도에 따라 실제보다 밝거나 어둡게 보일 수 있어요.\n파랑·네이비는 보통 레벨 14 이상에서 표현되는 색이에요.\n\n실제 명도가 어느 정도 되시나요?';
+    minLevelHint = 14;
+  } else if (isPinkish) {
+    desc = '🌸 핑크·마젠타 잔류 색소가 보여요.\n인공 색소 잔류로 판단돼요.\n\n핑크·파스텔 계열은 보통 레벨 14 이상에서 표현돼요.\n조명에 따라 채도 차이가 있을 수 있어요.\n\n실제 명도가 어느 정도 되시나요?';
+    minLevelHint = 14;
+  } else if (isPurplish) {
+    desc = '💜 보라·바이올렛 잔류 색소가 보여요.\n인공 색소 잔류로 판단돼요.\n\n보라 계열은 보통 레벨 9 이상에서 표현되는 색이에요.\n\n실제 명도가 어느 정도 되시나요?';
+    minLevelHint = 9;
+  } else if (isRedWine) {
+    desc = '🍷 적색·와인빛 잔류 색소가 보여요.\n\n적색·와인 계열은 레벨 5 이상에서 다양하게 표현돼요.\n버진모에서도 짙은 붉은기가 남아있을 수 있어요.\n\n실제 명도가 어느 정도 되시나요?';
+    minLevelHint = 5;
+  } else if (mainTone === 'red' || mainTone === 'orange') {
+    desc = '🔥 따뜻한 붉은기·주황 잔류 언더톤이 보여요.\n\n매장 조명이나 모발 광택에 따라 채도가 다르게 보일 수 있어요.\n붉은기·주황은 레벨 5~15까지 폭넓게 나타나요.\n\n실제 명도가 어느 정도 되시나요?';
+    minLevelHint = 5;
+  } else if (mainTone === 'yellow') {
+    desc = '🌟 노랑 잔류 언더톤이 보여요.\n\n노랑은 보통 레벨 11 이상 탈색 베이스에서 나타나요.\n\n실제 명도가 어느 정도 되시나요?';
+    minLevelHint = 11;
+  } else if (r.isMatte) {
+    desc = '🟤 매트하고 탁한 중성 톤이 보여요.\n노랑기가 채도 낮게 깔린 상태로 판단돼요.\n\n실제 명도가 어느 정도 되시나요?';
+    minLevelHint = 1;
+  } else if (isDark) {
+    desc = '⚫ 매우 어둡고 채도가 낮은 상태예요.\n\n버진모(자연 흑모)일 수 있고, 짙은 염색 후 상태일 수도 있어요.\n또는 밝은 모발에서 딥그레이·블루블랙을 입힌 상태일 수도 있어요.\n사진만으로는 정확히 가늠이 어려워요.\n\n실제 명도가 어느 정도 되시나요?';
+    minLevelHint = 1;
+  } else if (r.isUneven) {
+    desc = '⚡ 색상 분포가 고르지 않아요.\n노랑·주황이 얼룩진 상태로 보여요.\n\n실제 명도가 어느 정도 되시나요?';
+    minLevelHint = 1;
+  } else {
+    desc = '✨ 뚜렷한 잔류 색감 없이 중성적인 상태예요.\n\n매장 조명·각도에 따라 실제 명도는 다를 수 있어요.\n\n실제 명도가 어느 정도 되시나요?';
+    minLevelHint = 1;
+  }
+
+  /* undertone을 전역에 저장해서 레시피에서 활용 */
+  analysisResult.undertone = undertone;
+  analysisResult.minLevelHint = minLevelHint;
+  analysisResult.isBlueish = isBlueish;
+  analysisResult.isPinkish = isPinkish;
+  analysisResult.isPurplish = isPurplish;
+  analysisResult.isRedWine = isRedWine;
 
   var descEl = document.getElementById('res-natural-desc');
   var descTextEl = document.getElementById('res-natural-desc-text');
@@ -647,7 +662,7 @@ function showResult(r) {
     descEl.style.display = 'block';
   }
 
-  /* 레벨은 미선택 상태로 초기화 */
+  /* 레벨 미선택 초기화 */
   userLevel = null;
   userTarget = null;
   document.getElementById('slider-level-num').textContent = '—';
@@ -655,44 +670,6 @@ function showResult(r) {
   document.getElementById('level-thumb').style.left = '-999px';
   document.querySelectorAll('[data-target]').forEach(function(btn){ btn.classList.remove('active'); });
   applyLevelRestrictions();
-  clearRecipe();
-
-  /* 색감 버튼 자동 선택 */
-  userTones = r.tones.slice();
-  document.querySelectorAll('.tone-btn').forEach(function(btn){ btn.classList.remove('active'); });
-  userTones.forEach(function(t){
-    var btn = document.querySelector('.tone-btn[data-tone="'+t+'"]');
-    if (btn) btn.classList.add('active');
-  });
-
-  /* 감지된 색감 있으면 없음 버튼 숨김, 없으면 없음 선택 */
-  var noneBtn = document.getElementById('tone-none-btn');
-  if (userTones.length === 0 && !r.isMatte && !r.isArtificial) {
-    if (noneBtn) { noneBtn.style.display = ''; noneBtn.classList.add('active'); }
-  } else {
-    /* 색감 감지됐으면 없음 버튼 숨김 */
-    if (noneBtn) noneBtn.style.display = 'none';
-  }
-
-  if (r.isMatte) {
-    var matteBtn = document.querySelector('.tone-btn[data-tone="matte"]');
-    if (matteBtn) matteBtn.classList.add('active');
-  }
-
-  /* 블랙 감지 (명도 1~3, 채도 매우 낮음) - 특별 처리 */
-  var isBlack = (r.l < 20 && r.s < 15);
-  if (isBlack) {
-    var descEl2 = document.getElementById('res-natural-desc');
-    var descTxt2 = document.getElementById('res-natural-desc-text');
-    if (descEl2 && descTxt2) {
-      descTxt2.textContent = '매우 어두운 상태가 감지돼요.\n\n탈색 후 애쉬그레이를 어둡게 입힌 경우인가요?\n아니면 버진모(자연 흑모)인가요?\n\n아래에서 명도를 선택해주세요.\n버진모라면 1~3 / 탈색 후 어두운 색이라면 실제 언더톤 기준 선택';
-      descEl2.style.display = 'block';
-    }
-    /* 색감 태그도 업데이트 */
-    document.getElementById('res-color-name').textContent = '매우 어두운 상태';
-    document.getElementById('res-color-sub').textContent = '버진모 또는 어두운 염색 상태';
-  }
-
   clearRecipe();
 } /* showResult 끝 */
 
@@ -734,14 +711,15 @@ function onBarTouch(e) {
 }
 
 function getMinLevel() {
-  var hasBlueArt = analysisResult.isArtificial && (analysisResult.artificialType === 'blue' || analysisResult.artificialType === 'pastel' || analysisResult.artificialType === 'vivid');
-  var hasPu = userTones.includes('purple') || userTones.includes('pink');
-  var hasY  = userTones.includes('yellow');
-  var hasO  = userTones.includes('orange');
-  if (hasBlueArt || hasPu) return 16;
-  if (hasY)  return 11;
-  if (hasO)  return 8;
-  return 1;
+  /* 색감별 현실적 최소 명도 — 강제 차단 아닌 슬라이더 시작점 */
+  var ut = analysisResult.undertone || 'none';
+  var isPink = analysisResult.isPinkish || false;
+  var isBlue = analysisResult.isBlueish || false;
+  var isPurp = analysisResult.isPurplish || false;
+  if (isPink || isBlue) return 14;   /* 핑크·파랑 → 레벨 14부터 */
+  if (isPurp) return 9;              /* 보라 → 레벨 9부터 */
+  if (ut === 'warm' && analysisResult.isRedWine) return 5; /* 적색·와인 → 레벨 5부터 */
+  return 1;                          /* 나머지 → 제한 없음 */
 }
 
 function applyLevelRestrictions() {
@@ -791,26 +769,7 @@ function clearRecipe() {
 }
 
 /* ── 색감 선택 ── */
-function toggleTone(tone) {
-  var noneBtn = document.querySelector('.tone-btn[data-tone="none"]');
-  if (tone === 'none') {
-    userTones = [];
-    document.querySelectorAll('.tone-btn').forEach(function(b){ b.classList.remove('active'); });
-    if (noneBtn) noneBtn.classList.add('active');
-  } else {
-    if (noneBtn) noneBtn.classList.remove('active');
-    var idx = userTones.indexOf(tone);
-    if (idx > -1) { userTones.splice(idx, 1); }
-    else { userTones.push(tone); }
-    document.querySelectorAll('.tone-btn').forEach(function(btn){
-      if (btn.dataset.tone !== 'none') {
-        btn.classList.toggle('active', userTones.includes(btn.dataset.tone));
-      }
-    });
-  }
-  applyLevelRestrictions();
-  clearRecipe();
-}
+/* toggleTone 제거됨 — 색감 보정 버튼 없앰 */
 
 /* ════════════════════════════════════════
    컬러리스트 이론 기반 시술 방향 엔진
@@ -822,345 +781,199 @@ function toggleTone(tone) {
    노랑+애쉬 단독 = 카키 변질 주의
 ════════════════════════════════════════ */
 function updateRecipe() {
-  var hasY    = userTones.includes('yellow');
-  var hasO    = userTones.includes('orange');
-  var hasR    = userTones.includes('red');
-  var hasMatte= userTones.includes('matte');
-  var noTone  = userTones.length === 0 || userTones.includes('none');
-  var isUneven = analysisResult.isUneven;
-  var isBlack  = (analysisResult.l < 20 && analysisResult.s < 15);
-  var lv = userLevel || 0;
-
   if (!userLevel) {
-    showRecipe('명도를 선택해주세요', '슬라이더로 현재 명도를 선택한 뒤\n원하는 색감 방향까지 골라주세요.', '');
+    showRecipe('명도를 선택해주세요', '슬라이더로 현재 명도를 선택한 뒤\n원하는 색감 방향을 골라주세요.', '');
     return;
   }
-
-  /* 얼룩 — 3가지 색감 혼재 */
-  var activeTones = userTones.filter(function(t){ return t !== 'none'; });
-  if (activeTones.length >= 3) {
-    showRecipe('여러 색감 혼재 — 정리 먼저',
-      '노랑·주황·붉은기가 복합적으로 섞인 상태예요.\n\n[안정형] 뉴트럴한 따뜻한 브라운 계열로 전체 커버\n→ 색이 약간 탁해질 수 있어요\n\n[확실한 방법] 재탈색으로 균일하게 정리 후 시술\n→ 가장 깔끔한 결과',
-      '');
-    return;
-  }
-
-  /* 얼룩 — 색 분포 불균일 */
-  if (isUneven && (hasY || hasO)) {
-    showRecipe('색상 불균일 — 정리 필요',
-      '노랑·주황이 고르지 않게 퍼진 얼룩 상태예요.\n균일하게 정리하지 않으면 원하는 색이 얼룩져 나와요.\n\n[방법 1] 재탈색 후 균일 도포 — 가장 확실\n[방법 2] 따뜻한 뉴트럴 계열로 전체 커버',
-      '');
-    return;
-  }
-
-  /* 매우 어두운 상태 */
-  if (isBlack && lv <= 3 && noTone) {
-    if (!userTarget) {
-      showRecipe('매우 어두운 상태',
-        '버진모라면 어떤 색이든 탈색이 먼저예요.\n\n탈색 없이 → 짙은 청회색 계열만 가능\n밝게 원하신다면 → 탈색 필수\n탈색 후 어두운 색 입힌 상태라면 → 실제 언더톤 명도로 다시 선택해주세요.',
-        '');
-      return;
-    }
-    if (userTarget === 'blue-black' || userTarget === 'neutral-brown') {
-      showRecipe('바로 가능해요',
-        '이 명도에서 짙은 청회색 계열이나 따뜻한 브라운 계열은 바로 시술 가능해요.\n색 흡수가 빠를 수 있으니 방치 시간 체크하세요.',
-        '');
-      return;
-    }
-    showRecipe('탈색이 먼저예요',
-      '원하는 색을 표현하려면 탈색이 필수예요.\n흑 → 붉은기 → 주황 → 노랑 → 아이보리 순서로 진행돼요.',
-      '');
-    return;
-  }
-
-  /* 고명도 노랑 — 방향 미선택 */
-  if (hasY && lv >= 18 && !userTarget) {
-    showRecipe('밝은 노랑 — 토닝 단계',
-      '매우 밝은 노랑 상태예요.\n바이올렛 계열을 소량 먼저 섞어 노랑기를 부드럽게 눌러준 뒤\n베이지 계열로 토닝하면 깔끔하게 정리돼요.\n\n⚠️ 노랑에 차가운 계열을 바로 올리면 카키빛으로 변질될 수 있어요.',
-      '');
-    return;
-  }
-
-  /* 방향 미선택 — 현재 상태 힌트 */
   if (!userTarget) {
-    var hint = '';
-    if (isBlack || lv <= 3) {
-      hint = '매우 어두운 상태예요.\n탈색 없이는 짙은 청회색 계열만 가능해요.';
-    } else if (hasR && lv <= 7) {
-      hint = '어두운 명도 + 붉은기 — 난이도 높은 조합이에요.\n\n같은 레드·따뜻한 계열로 가면 바로 가능해요\n차가운 방향으로 바꾸려면 그린 계열 반복 중화 또는 탈색이 필요해요';
-    } else if (hasR) {
-      hint = '붉은기가 확실하게 있는 상태예요.\n그린 계열 보색으로 중화하면 차가운 방향으로 전환 가능해요\n레드·따뜻한 계열은 바로 가능해요';
-    } else if (hasO && lv <= 10) {
-      hint = '중간 명도 + 주황기 조합이에요.\n차가운 방향은 청회색 계열로 주황을 눌러주면서 올려야 해요\n따뜻한 방향은 바로 가능해요';
-    } else if (hasO) {
-      hint = '주황기가 있어요.\n차가운 계열로 가려면 청회색 계열로 주황 억제가 필요해요\n따뜻한 계열은 바로 가능해요';
-    } else if (hasMatte && hasY) {
-      hint = '매트한 노랑기예요.\n보라 단독으로 중화하면 탁해질 수 있어요.\n시나몬브라운 계열(애쉬 기반에 핑크 소량이 함께 있는, 따뜻하지도 차갑지도 않은 브라운)이 가장 안정적이에요.';
-    } else if (hasY) {
-      hint = '노랑기가 있어요.\n⚠️ 차가운 계열을 바로 올리면 카키빛으로 변질돼요.\n바이올렛 계열을 소량 먼저 섞어 노랑을 눌러준 뒤 원하는 색을 올려요.';
-    } else {
-      hint = '뚜렷한 잔류 색감 없이 깨끗한 상태예요.\n원하는 방향을 선택하시면 바로 안내해드릴게요.';
-    }
-    showRecipe('현재 상태', hint, '');
+    showRecipe('방향을 선택해주세요', '원하는 색감 방향 버튼을 눌러주세요.', '');
     return;
   }
 
-  var main = '', detail = '', risk = '';
+  var lv = userLevel;
+  var ut = analysisResult.undertone || 'none';
+  var isPink  = analysisResult.isPinkish  || false;
+  var isBlue  = analysisResult.isBlueish  || false;
+  var isPurp  = analysisResult.isPurplish || false;
+  var isRedW  = analysisResult.isRedWine  || false;
+  var isUneven = analysisResult.isUneven  || false;
 
-  /* ── 한색 계열 ── */
+  var coldTargets    = ['blue-black','ash-gray','ash-brown','cool-beige'];
+  var neutralTargets = ['neutral-brown','khaki','violet-brown','blue-violet'];
+  var warmTargets    = ['warm-brown','red-brown','copper','wine','pink-beige'];
+  var brightTargets  = ['blonde','pastel','bleach'];
 
-  if (userTarget === 'blue-black') {
-    main = '짙은 청회색 계열';
-    if (lv <= 5) {
-      detail = '어두운 명도라 바로 시술 가능해요.\n청회색 베이스에 짙은 남색 계열을 소량 더하면 자연스러운 청흑빛이 나와요.\n색 흡수가 빠를 수 있으니 방치 시간 체크하세요.';
-    } else if (lv <= 10) {
-      detail = '중간 명도에서 청회색 발색이 잘 나와요.\n어두운 베이스에 남색 계열을 충분히 혼합해야 청빛이 살아요.\n끝부분은 투명 계열로 희석하면 자연스럽게 연결돼요.';
-    } else {
-      detail = '명도가 있어서 색 흡수가 빠를 수 있어요.\n탈색 이력이 있다면 방치 시간을 특히 주의하세요.';
+  var tGroup = '';
+  if (coldTargets.indexOf(userTarget)    > -1) tGroup = 'cold';
+  if (neutralTargets.indexOf(userTarget) > -1) tGroup = 'neutral';
+  if (warmTargets.indexOf(userTarget)    > -1) tGroup = 'warm';
+  if (brightTargets.indexOf(userTarget)  > -1) tGroup = 'bright';
+
+  var targetName = {
+    'blue-black':'짙은 청회색','ash-gray':'차가운 애쉬','ash-brown':'애쉬브라운',
+    'cool-beige':'차가운 베이지','neutral-brown':'뉴트럴브라운','khaki':'카키브라운',
+    'violet-brown':'보라베이스 애쉬','blue-violet':'청보라','warm-brown':'따뜻한 브라운',
+    'red-brown':'레드브라운','copper':'코퍼','wine':'와인레드','pink-beige':'핑크베이지',
+    'blonde':'블론드','pastel':'파스텔','bleach':'탈색'
+  }[userTarget] || userTarget;
+
+  var lvDark   = lv <= 7;
+  var lvMid    = lv >= 8  && lv <= 14;
+  var lvBright = lv >= 15;
+
+  var main   = targetName;
+  var detail = '';
+  var risk   = '';
+
+  /* ═══════════════════════════════════
+     잔류 언더톤 × 목표 그룹 판단
+  ═══════════════════════════════════ */
+
+  /* ── 차가운 인공색 잔류 (핑크·보라·파랑) ── */
+  if (ut === 'cool' || isPink || isBlue || isPurp) {
+
+    if (tGroup === 'cold') {
+      if (isBlue) {
+        detail = '청회색·파란 계열이 남아있는 상태예요.\n같은 한색 방향이라 충돌은 없어요.';
+        if (lvDark)   detail += '\n\n이 명도에서는 네이비에 가깝게 나와요.\n베이지·브라운으로 바꾸려면 브라운 계열을 충분히 혼합해야 해요.';
+        if (lvBright) detail += '\n\n밝은 명도라 청회색 잔류가 약하게 섞일 수 있어요.\n탈색으로 정리하면 가장 깔끔해요.';
+        risk = '난색으로 바꿀 경우 청보라·청적색이 섞일 수 있어요.';
+      } else if (isPink) {
+        detail = '핑크·마젠타 잔류가 남아있는 상태예요.\n차가운 애쉬 방향으로 가려면 주의가 필요해요.\n\n추천:\n1. 탈색으로 핑크 제거 후 시술 — 가장 확실\n2. 탈색 없이 → 억제 계열을 진하게 혼합하면 탁한 애쉬로 표현 가능하지만 색이 죽을 수 있어요';
+        risk = '탈색 없이 바로 올리면 보라핑크·탁한 애쉬핑크가 나올 수 있어요.';
+      } else {
+        detail = '보라 잔류가 남아있는 상태예요.\n차가운 애쉬와 비슷한 계열이라 비교적 수월해요.\n\n보라가 애쉬와 만나면 약한 보라빛 애쉬가 나와요.\n더 맑게 원하신다면 탈색 후 시술이 깔끔해요.';
+      }
     }
-    if (hasR) detail += '\n\n붉은기가 있으면 오히려 청회색 계열이 보색으로 눌러줘서 유리해요.';
-    if (hasO) detail += '\n\n주황기도 청회색 계열이 억제해줘서 발색에 도움이 돼요.';
-  }
 
-  else if (userTarget === 'ash-gray') {
-    main = '차가운 애쉬 계열';
-    if (lv <= 5) {
-      detail = '어두운 명도에서는 차가운 계열이 거의 보이지 않아요.\n탈색으로 명도를 올린 후 시술해야 애쉬가 드러나요.';
-      risk = '⚠️ 탈색 없이는 그냥 어두운 색으로만 보여요';
-    } else if (hasR && lv <= 9) {
-      detail = '붉은기 + 어두운 명도 — 가장 어려운 조합이에요.\n\n그린 계열이 붉은기를 정확하게 잡아줘요.\n그린 계열을 먼저 써서 붉은기를 정리한 뒤, 차가운 계열을 올리는 순서가 중요해요.\n한 번에 안 될 수 있어서 반복 시술이 필요할 수 있어요.';
-      risk = '⚠️ 중화 없이 바로 차가운 계열 올리면 탁한 카키빛이 나와요';
-    } else if (hasR) {
-      detail = '붉은기 보색은 그린이에요.\n그린 계열을 소량 혼합해 붉은기를 정리하면서 차가운 계열을 올려요.\n소량이 핵심이에요 — 그린이 많으면 탁해져요.';
-    } else if (hasO && lv <= 11) {
-      detail = '주황기가 있는 중간 명도예요.\n차가운 계열로 명도를 조금 올리면서 동시에 색을 입히는 방식이 효과적이에요.\n올라오는 주황기가 차가운 계열과 만나 자연스러운 매트 애쉬브라운이 나와요.';
-    } else if (hasO) {
-      detail = '주황기는 청회색 계열이 부드럽게 억제해줘요.';
-    } else if (hasY) {
-      detail = '⚠️ 노랑기 위에 차가운 계열을 바로 올리면 카키빛으로 변질돼요.\n바이올렛 계열을 소량 먼저 섞어 노랑을 부드럽게 눌러준 뒤 차가운 계열을 올려요.';
-      risk = '⚠️ 노랑 + 차가운 계열 단독 = 카키 변질';
-    } else {
-      detail = '잔류 색감이 없어서 바로 가능해요.\n중간 명도 구간에서 가장 자연스러운 차가운 애쉬가 나와요.';
+    else if (tGroup === 'neutral') {
+      detail = '인공 색소 잔류 상태에서 중성 계열로 가는 방향이에요.\n\n추천:\n1. 탈색으로 잔류 제거 후 중성 계열 시술\n2. 탈색 없이 → 뉴트럴브라운은 잔류 위에서도 어느 정도 덮어줘요';
+      if (isPink) risk = '핑크 잔류 위에 중성 계열 시술 시 약한 보라핑크빛이 섞일 수 있어요.';
+      if (isBlue) risk = '파랑 잔류 위에 중성 계열 시술 시 청회색빛 브라운이 나올 수 있어요.';
     }
-  }
 
-  else if (userTarget === 'ash-brown') {
-    main = '애쉬브라운 계열';
-    if (hasR && lv <= 7) {
-      detail = '낮은 명도 + 붉은기 — 난이도가 높은 조합이에요.\n\n[방법 1] 그린 계열로 붉은기를 먼저 정리한 뒤 차가운 브라운을 올려요\n반복 시술이 필요할 수 있어요\n\n[방법 2] 탈색으로 균일하게 올린 뒤 시술 — 가장 확실해요';
-      risk = '⚠️ 동양인 모발은 붉은기가 반복 올라올 수 있어요';
-    } else if (hasR) {
-      detail = '붉은기는 그린 계열이 가장 정확하게 잡아줘요.\n그린을 소량 혼합하면서 차가운 브라운을 올려요.\n소량이 핵심 — 그린이 많으면 탁해져요.';
-    } else if (hasO && lv <= 10) {
-      detail = '주황기가 있는 중간 명도예요.\n차가운 계열로 명도를 올리면서 동시에 색을 입히는 방식이 효과적이에요.\n올라오는 주황과 차가운 계열이 만나 자연스러운 매트 애쉬브라운이 나와요.';
-    } else if (hasO) {
-      detail = '주황기는 청회색 계열 소량으로 억제하면서 차가운 브라운을 올려요.';
-    } else if (hasMatte && hasY) {
-      detail = '매트한 노랑기 — 보라 단독은 금물이에요.\n\n시나몬브라운 계열이 가장 안정적이에요.\n(애쉬 기반에 핑크 소량이 함께 있는 브라운 — 따뜻하지도 차갑지도 않아요)\n이 방향이 매트한 노랑기를 가장 자연스럽게 정리해줘요.';
-      risk = '⚠️ 보라 단독 사용 시 탁해져요';
-    } else if (hasY) {
-      detail = '⚠️ 노랑에 차가운 계열을 바로 올리면 카키빛으로 변질돼요.\n바이올렛 계열을 소량 먼저 섞어 노랑을 눌러준 뒤 차가운 브라운을 올려요.';
-      risk = '⚠️ 노랑 + 차가운 계열 단독 = 카키 변질';
-    } else {
-      detail = '잔류 색감이 없어서 바로 가능해요.\n차가운 계열 베이스에 베이지 계열을 혼합하면 따뜻하지도 차갑지도 않은 자연스러운 브라운이 나와요.';
+    else if (tGroup === 'warm') {
+      detail = '인공 색소 잔류와 난색 목표는 서로 충돌해요.\n\n추천:\n1. 탈색으로 잔류 제거 후 난색 시술 — 가장 확실\n2. 탈색 없이 → 탁하거나 섞인 색이 나올 가능성이 높아요';
+      if (isBlue) risk = '파랑 잔류 + 난색 = 청적색·보라빛이 섞일 수 있어요. 탈색 권장.';
+      if (isPink) risk = '핑크 잔류 + 따뜻한 계열 = 살구·코랄빛이 섞일 수 있어요.';
     }
-  }
 
-  else if (userTarget === 'cool-beige') {
-    main = '차가운 베이지 계열';
-    if (lv < 9) {
-      detail = '베이지빛이 드러나려면 명도가 어느 정도 있어야 해요.\n탈색으로 명도를 올린 후 시술하세요.';
-    } else if (hasR && lv <= 10) {
-      detail = '붉은기가 있으면 베이지가 살구·피치빛으로 치우쳐요.\n그린 계열 소량으로 붉은기를 정리한 뒤 차가운 베이지를 올려요.';
-    } else if (hasR) {
-      detail = '붉은기를 그린 소량으로 정리하면서 차가운 베이지를 올려요.';
-    } else if (hasY || hasMatte) {
-      detail = '노랑·매트함이 있으면 베이지가 카키빛으로 변질될 수 있어요.\n바이올렛 계열을 소량 먼저 섞어 노랑을 눌러준 뒤 차가운 베이지를 올려요.\n이 순서가 가장 맑고 자연스러운 차가운 베이지를 만들어줘요.';
-      risk = '⚠️ 노랑 + 베이지 단독 = 따뜻한 베이지 (차가운 느낌 안 나요)';
-    } else if (hasO) {
-      detail = '주황기는 청회색 계열이 잡아주면서 차가운 베이지를 올려요.';
-    } else {
-      detail = '잔류 색감이 없어서 바로 가능해요.\n차가운 베이지 계열이 가장 자연스러운 중성 베이지를 만들어줘요.';
-    }
-  }
-
-  /* ── 중성 계열 ── */
-
-  else if (userTarget === 'neutral-brown') {
-    main = '뉴트럴브라운 / 모카 계열';
-    if (lv <= 5) {
-      detail = '어두운 명도에서도 뉴트럴 계열은 바로 가능해요.\n어떤 잔류 색소가 있어도 크게 방해받지 않고 안정적으로 올라가요.';
-    } else if (hasR || hasO) {
-      detail = '붉은기·주황기가 있어도 뉴트럴 계열은 가장 안정적으로 올라와요.\n따뜻하면서도 정리된 느낌의 브라운이 나와요.\n차가운 계열을 소량 혼합하면 모카빛 중성 브라운으로 조절할 수 있어요.';
-    } else if (hasY) {
-      detail = '노랑기 위에 뉴트럴브라운은 약간 따뜻한 결과가 나와요.\n더 차갑게 원하신다면 차가운 계열 혼합 비율을 높이면 돼요.';
-    } else {
-      detail = '잔류 색감이 없어서 가장 부담 없이 가능해요.\n따뜻하고 정리된 모카 계열 방향도 같이 고려해볼 수 있어요.';
+    else if (tGroup === 'bright') {
+      if (userTarget === 'bleach') {
+        detail = '인공 색소 잔류 상태에서 탈색이에요.\n탈색하면 인공 색소도 함께 제거돼요.\n\n탈색 후 원하는 방향으로 시술 가능해요.';
+      } else {
+        detail = '인공 색소 잔류 상태에서 밝은 계열로 가려면 탈색이 먼저예요.\n\n탈색 후:\n- 파스텔 계열 가능\n- 블론드는 잔류 제거 정도에 따라 결과가 달라져요';
+        risk = '잔류 색소가 남은 채로 밝게 가면 얼룩지거나 탁하게 나올 수 있어요.';
+      }
     }
   }
 
-  else if (userTarget === 'khaki') {
-    main = '카키브라운 / 매트 계열';
-    if (hasR) {
-      detail = '붉은기 위에 그린 계열을 바로 올리면 탁한 결과가 나와요.\n먼저 붉은기를 그린 계열로 중화한 뒤, 그린 계열을 다시 올려야 해요.\n그린이 붉은기를 정확하게 잡는 보색이에요.';
-      risk = '⚠️ 붉은기 + 그린 계열 직접 = 탁함';
-    } else if (hasY) {
-      detail = '노랑기가 있으면 그린 계열과 만나서 자연스러운 카키가 표현돼요.\n탈색하면서 올라오는 노랑기와 그린 계열이 만나 라이트한 매트브라운이 나와요.\n이 언더톤이 오히려 카키·매트 방향에 유리해요.';
-    } else if (lv < 7) {
-      detail = '어두운 명도에서 카키는 그냥 어두운 브라운으로 보여요.\n레벨 9 이상에서 그린빛·카키감이 살아나요.';
-    } else {
-      detail = '그린 계열이 핵심이에요.\n그린 계열을 소량 혼합하면 채도가 빠지면서 자연스러운 카키·매트브라운이 나와요.';
+  /* ── 따뜻한 잔류 언더톤 (붉/주황/노랑) ── */
+  else if (ut === 'warm') {
+
+    if (tGroup === 'cold') {
+      detail = '따뜻한 잔류 언더톤과 차가운 목표색은 보색 관계예요.\n잔류 색소가 차가운 색을 방해해요.\n\n추천:\n1. 그린 계열로 붉은기 중화 후 차가운 계열 시술\n2. 탈색으로 균일하게 올린 후 시술 — 가장 확실';
+      if (lvDark) {
+        detail += '\n\n낮은 명도에서 한색으로 전환은 난이도가 높아요.\n반복 시술이 필요할 수 있어요.';
+        risk = '어두운 명도 + 따뜻한 언더톤에서 차가운 계열 단독 적용 시 탁한 카키·그린빛이 나올 수 있어요.';
+      }
+      if (lvBright) detail += '\n\n밝은 명도라면 중화 한 번으로도 효과적이에요.';
+    }
+
+    else if (tGroup === 'neutral') {
+      detail = '따뜻한 잔류 언더톤과 중성 계열은 어느 정도 어울려요.\n\n추천:\n1. 뉴트럴브라운·웜브라운 방향은 바로 가능해요\n2. 카키 방향은 그린 계열이 붉은기를 자연스럽게 억제해줘요';
+      if (isRedW) risk = '적색·와인 잔류가 강하면 중성 계열도 약간 따뜻하게 나올 수 있어요.';
+    }
+
+    else if (tGroup === 'warm') {
+      detail = '따뜻한 잔류 언더톤과 난색 목표색은 방향이 맞아요.\n언더톤을 활용하는 방식이라 발색도 좋고 유지력도 높아요.\n\n추천:\n1. 바로 시술 가능해요\n2. 더 선명하게 원하면 같은 계열 컨트롤 컬러 소량 추가';
+      if (lvDark) detail += '\n\n낮은 명도에서도 레드·웜브라운 방향은 바로 구현 가능해요.';
+    }
+
+    else if (tGroup === 'bright') {
+      if (userTarget === 'bleach') {
+        detail = '따뜻한 언더톤 상태에서 탈색이에요.\n탈색 시 붉은기 → 주황 → 노랑 순서로 올라와요.\n\n낮은 명도라면 탈색 횟수를 여유있게 잡으세요.';
+      } else {
+        detail = '밝은 계열로 가려면 탈색이 필요해요.\n\n탈색 후 잔류 노랑기가 남아있다면\n바이올렛 계열 소량으로 노랑을 눌러주고 토닝하면 깔끔해요.';
+        risk = '탈색 없이 밝게 가면 노랑·주황이 얼룩질 수 있어요.';
+      }
     }
   }
 
-  else if (userTarget === 'violet-brown') {
-    main = '보라베이스 애쉬 / 보라빛 브라운';
-    /*
-      보라베이스 애쉬 언더톤 민감성
-      레벨 5 이하(붉은기) → 보라가 붉게 치우쳐 와인빛
-      레벨 6~8(붉+주황 혼재) → 조심 구간, 뉴트럴 혼합 권장
-      레벨 8~15(주황~노랑) → 가장 안정 구간
-      레벨 16~17(밝은 노랑) → 노랑 억제하지만 보라빛 강해질 수 있음
-      레벨 18+(미색) → 보라빛 강하게 드러남
-    */
-    if (hasR && lv <= 8) {
-      detail = '붉은기 + 어두운 명도 + 보라계열 — 주의가 필요해요.\n\n붉은기가 있으면 보라 계열이 붉게 치우쳐서 강한 적보라·와인빛이 나와요.\n\n그린 계열로 붉은기를 먼저 정리한 뒤 보라 계열을 올리는 순서가 안전해요.\n또는 레드·와인 방향으로 전환도 고려해보세요.';
-      risk = '⚠️ 붉은기 + 보라 직접 = 강한 적보라·와인빛으로 치우침';
-    } else if (hasR) {
-      detail = '붉은기 위에 보라 계열은 적보라 느낌이 강해져요.\n와인레드처럼 보일 수 있어요.\n뉴트럴 계열을 소량 혼합해서 보라 강도를 조절하세요.';
-    } else if (hasY && lv >= 16) {
-      detail = '레벨 16 이상 밝은 명도에서 보라빛 계열은 보라가 강하게 드러나요.\n\n노랑기가 선명할수록 보라가 노랑을 억제하면서 상대적으로 보라빛이 강해 보여요.\n투명한 계열로 희석하거나 뉴트럴을 혼합해서 보라 강도를 낮춰야 해요.';
-      risk = '⚠️ 미색에 가까울수록 보라빛이 도드라지게 보여요';
-    } else if ((hasY || hasO) && lv >= 8 && lv <= 15) {
-      detail = '레벨 8~15의 노랑·주황 언더톤은 보라베이스 애쉬에 가장 안정적인 구간이에요.\n\n보라 계열이 노랑을 억제하면서 자연스럽게 적보라빛 브라운이 나와요.\n애쉬와 보라가 함께 있기 때문에 어느 정도의 노랑기부터 약한 붉은기까지도 함께 중화해줘요.';
-    } else if (lv <= 7) {
-      detail = '어두운 명도에서 보라빛은 거의 검은색으로 보여요.\n레벨 9 이상에서 보라빛이 드러나요.';
-    } else {
-      detail = '레벨 9~15 구간이 가장 안정적이에요.\n보라 계열은 노랑기부터 어느 정도의 붉은기까지 함께 중화하는 힘이 있어요.';
+  /* ── 매트 잔류 (탁한 중성) ── */
+  else if (ut === 'matte') {
+
+    if (tGroup === 'cold') {
+      detail = '매트하고 탁한 노랑기 위에 차가운 계열이에요.\n\n추천:\n1. 시나몬브라운 방향이 가장 안정적이에요\n   (애쉬 기반에 핑크 소량이 함께 있는 브라운 — 따뜻하지도 차갑지도 않아요)\n2. 탈색 후 차가운 계열 시술 — 가장 깔끔';
+      risk = '보라 단독 사용 시 탁한 결과가 나올 수 있어요.';
+    }
+
+    else if (tGroup === 'neutral') {
+      detail = '매트한 중성 톤에서 중성 계열로 가는 건 자연스러운 방향이에요.\n\n추천:\n1. 카키브라운 방향이 가장 어울려요\n   그린이 매트한 노랑기와 만나 자연스러운 카키가 나와요\n2. 뉴트럴브라운도 바로 가능해요';
+    }
+
+    else if (tGroup === 'warm') {
+      detail = '매트한 중성 톤에서 따뜻한 방향으로 가는 거예요.\n\n추천:\n1. 따뜻한 베이지브라운 방향은 자연스럽게 가능해요\n2. 레드·코퍼 방향은 채도를 올려줄 수 있어요';
+    }
+
+    else if (tGroup === 'bright') {
+      if (userTarget === 'bleach') {
+        detail = '매트 상태에서 탈색이에요.\n탈색하면 매트한 노랑기가 올라올 수 있어요.\n균일하게 탈색하는 게 중요해요.';
+      } else {
+        detail = '밝은 계열로 가려면 탈색이 필요해요.\n매트한 노랑기가 남으면 파스텔이 탁하게 나와요.\n탈색 후 잔류 노랑기를 바이올렛으로 눌러주세요.';
+        risk = '매트 노랑기 위에 파스텔 = 탁한 색으로 변질될 수 있어요.';
+      }
     }
   }
 
-  else if (userTarget === 'blue-violet') {
-    main = '청보라 계열';
-    if (lv < 13) {
-      detail = '청보라는 레벨 13 이상에서 제대로 보여요.\n현재 명도에서는 어두운 보라색으로만 보일 수 있어요.\n탈색 후 시술하세요.';
-      risk = '⚠️ 낮은 명도에서는 파랑이 거의 안 보여요';
-    } else if (hasY) {
-      detail = '노랑기 위에 블루를 바로 올리면 그린빛이 나와요.\n보라 계열을 함께 혼합해서 노랑을 눌러주면서 청보라를 올려요.\n\n청보라 계열도 보라와 청회색이 함께 있어서 노랑기부터 약한 붉은기까지 어느 정도 함께 중화해줘요.';
-    } else if (hasO) {
-      detail = '주황기가 있으면 청회색 계열이 오히려 주황을 억제해줘서 유리해요.\n보라 비율을 높여서 보라빛을 살리면 돼요.';
-    } else {
-      detail = '밝은 명도에서 청보라 바로 가능해요.\n발색이 강하니 투명한 계열로 희석해서 농도를 조절하세요.';
-    }
-  }
-
-  /* ── 난색 계열 ── */
-
-  else if (userTarget === 'warm-brown') {
-    main = '따뜻한 브라운 / 베이지브라운';
-    if (hasR || hasO) {
-      detail = '붉은기·주황기 언더톤이 따뜻한 브라운 방향과 딱 맞아요.\n언더톤을 그대로 활용하는 방식이라 발색도 좋고 유지력도 높아요.\n베이지 계열을 혼합하면 노랑기를 눌러주면서 자연스러운 따뜻한 브라운이 나와요.';
-    } else if (hasY) {
-      detail = '노랑 언더톤에 따뜻한 베이지브라운을 올리면 자연스러운 골든브라운이 나와요.';
-    } else {
-      detail = '잔류 색감이 없어서 바로 가능해요.\n골드 계열을 소량 혼합하면 온도감을 더 살릴 수 있어요.';
-    }
-  }
-
-  else if (userTarget === 'red-brown') {
-    main = '레드브라운 계열';
-    if (lv < 7) {
-      detail = '어두운 명도에서 레드가 충분히 발색되지 않아요.\n레벨 8 이상에서 레드빛이 선명하게 표현돼요.';
-      risk = '⚠️ 레벨 7 이하에서는 거의 어두운 브라운으로만 보여요';
-    } else if (hasR) {
-      detail = '붉은기 언더톤이 레드브라운과 방향이 맞아요.\n레드 계열에 붉은빛이 있는 보라 계열을 소량 혼합하면 깊이감 있는 레드브라운이 나와요.';
-    } else if (hasO) {
-      detail = '주황 언더톤에 레드를 올리면 레드오렌지브라운이 나와요.\n따뜻하고 활기찬 색감이에요.';
-    } else {
-      detail = '잔류 색감 없어서 바로 가능해요.';
-    }
-  }
-
-  else if (userTarget === 'copper') {
-    main = '코퍼 / 오렌지 계열';
-    if (hasO || hasY) {
-      detail = '주황·노랑 언더톤이 코퍼와 방향이 딱 맞아요.\n오렌지 계열에 오렌지를 선명하게 만들어주는 컨트롤 컬러를 소량 더하면 가장 선명한 코퍼가 나와요.\n언더톤을 활용하니 발색도 좋고 유지력도 높아요.';
-    } else if (hasR) {
-      detail = '붉은기가 있으면 레드오렌지 코퍼 느낌이 나와요.\n더 오렌지 방향으로 가려면 오렌지 계열 비율을 높여요.';
-    } else {
-      detail = '레벨 11~14 구간에서 가장 선명한 코퍼가 나와요.\n오렌지를 선명하게 만들어주는 컨트롤 컬러 소량으로 코퍼감을 살려요.';
-    }
-  }
-
-  else if (userTarget === 'wine') {
-    main = '와인레드 계열';
-    if (hasR && lv <= 10) {
-      detail = '붉은기 + 어두운 명도 = 와인레드에 가장 좋은 조건이에요.\n레드 계열에 보라를 혼합하면 깊고 고급스러운 와인이 나와요.';
-    } else if (lv <= 8) {
-      detail = '어두운 명도에서 와인레드 바로 가능해요.\n어두울수록 와인빛이 더 깊고 고급스럽게 나와요.';
-    } else if (lv <= 12) {
-      detail = '중간 명도에서 레드와 보라 혼합으로 선명한 와인레드가 나와요.';
-    } else {
-      detail = '명도가 밝을수록 와인이 붉어 보여요.\n레벨 8~12 구간이 와인레드에 가장 이상적이에요.';
-    }
-  }
-
-  else if (userTarget === 'pink-beige') {
-    main = '핑크베이지 / 살구빛 계열';
-    if (lv < 14) {
-      detail = '핑크베이지는 레벨 14 이상에서 표현돼요.\n탈색으로 명도를 올린 후 시술하세요.';
-      risk = '⚠️ 낮은 명도에서는 핑크빛이 거의 안 보여요';
-    } else if (hasY && lv >= 16) {
-      detail = '밝은 노랑 베이스에서 핑크베이지는 살구빛이 자연스럽게 나와요.\n끝부분으로 갈수록 투명 계열로 희석해서 그라데이션을 만들면 아름다워요.';
-    } else if (hasY) {
-      detail = '노랑 위에 핑크베이지는 자연스러운 살구빛이 나와요.';
-    } else {
-      detail = '밝은 명도에서 바로 가능해요.\n베이지 베이스에 핑크를 소량 혼합하는 게 자연스러워요.';
-    }
-  }
-
-  /* ── 고명도 / 탈색 ── */
-
-  else if (userTarget === 'blonde') {
-    main = '블론드 / 밝은 계열';
-    if (lv <= 8 && (hasR || hasO)) {
-      detail = '탈색이 필요해요.\n붉은기·주황기가 강해서 흑→붉은기→주황→노랑→아이보리 단계를 거쳐야 해요.\n2회 이상 탈색이 필요할 수 있어요.\n\n마지막에 바이올렛 계열을 소량 섞어 노랑기를 눌러줘야 깔끔하게 나와요.';
-    } else if (hasY && lv >= 16) {
-      detail = '이미 밝은 상태예요!\n바이올렛 계열 소량으로 노랑을 부드럽게 눌러준 뒤 베이지 계열로 토닝하면 깔끔해요.\n밝은 노랑을 살리고 싶다면 옐로우를 선명하게 만드는 컨트롤 컬러를 소량 혼합해요.';
-    } else if (lv >= 13) {
-      detail = '추가 탈색 한 번 또는 토너로 마무리 가능해요.';
-    } else {
-      detail = '탈색이 필요해요.\n흑→붉은기→주황→노랑→아이보리 순서로 진행돼요.';
-    }
-  }
-
-  else if (userTarget === 'pastel') {
-    main = '파스텔 계열';
-    if (lv < 17) {
-      detail = '파스텔은 아이보리에 가까운 매우 밝은 명도에서만 선명하게 표현돼요.\n노랑기가 남아있으면 파스텔이 탁하게 나와요.\n추가 탈색이 필요해요.';
-      risk = '⚠️ 노랑기 위에 파스텔 = 탁한 색으로 변질';
-    } else {
-      detail = '명도가 충분해요!\n노랑기가 조금 남아있다면 바이올렛 계열을 극소량 섞은 뒤 파스텔을 도포하세요.\n투명 계열로 희석해서 농도를 조절하는 게 핵심이에요.';
-    }
-  }
-
-  else if (userTarget === 'bleach') {
-    main = '탈색';
-    if (hasR && lv <= 7) {
-      detail = '붉은기가 강한 어두운 명도예요.\n중간 부분을 먼저 탈색하고, 이후 전체를 탈색하는 순서가 끝 손상을 줄여줘요.\n흑→붉은기→주황→노랑→아이보리 단계를 확인하면서 진행해요.';
-    } else if (hasO) {
-      detail = '주황기 상태에서 탈색하면 노랑 단계를 거쳐요.\n원하는 명도에서 멈추면 돼요.';
-    } else {
-      detail = '흑→붉은기→주황→노랑→아이보리→백금 순서로 진행돼요.\n원하는 목표 레벨까지 탈색 횟수를 조절하세요.';
-    }
-  }
-
+  /* ── 어두운 / 잔류 없음 ── */
   else {
-    main = '시술 방향';
-    detail = '선택한 색감으로 시술 가능해요.';
+
+    if (tGroup === 'cold') {
+      if (lvDark) {
+        detail = '어두운 명도에서 차가운 계열이에요.\n\n추천:\n1. 짙은 청회색·블루블랙 방향은 바로 가능해요\n2. 밝은 애쉬그레이로 가려면 탈색으로 명도를 먼저 올려야 해요\n\n버진모라면 한색 계열 사용 시 붉은기가 억제된 브라운 계열이 나와요.';
+      } else if (lvMid) {
+        detail = '중간 명도에서 차가운 계열이에요.\n잔류 색소가 없어서 비교적 수월해요.\n\n추천:\n1. 바로 시술 가능해요\n2. 더 맑고 차갑게 원하면 탈색 1회 후 시술';
+      } else {
+        detail = '밝은 명도에서 차가운 계열이에요.\n잔류 색소가 없어 깔끔하게 나와요.\n\n추천:\n1. 바로 시술 가능해요\n2. 노랑기가 조금 있다면 바이올렛 소량 혼합 후 시술';
+      }
+    }
+
+    else if (tGroup === 'neutral') {
+      detail = '잔류 색소 없는 상태에서 중성 계열이에요.\n가장 안정적이고 예측 가능한 조합이에요.\n\n추천:\n1. 바로 시술 가능해요\n2. 뉴트럴브라운은 어느 명도에서도 안정적으로 올라가요';
+    }
+
+    else if (tGroup === 'warm') {
+      if (lvDark) {
+        detail = '어두운 명도에서 따뜻한 계열이에요.\n\n버진모라면 자연 멜라닌이 따뜻한 방향이라 난색 계열은 바로 가능해요.\n레드·코퍼·웜브라운 방향 모두 구현 가능해요.\n\n쨍하고 선명한 색은 탈색 후에야 가능해요.';
+      } else {
+        detail = '잔류 색소 없는 상태에서 따뜻한 계열이에요.\n\n추천:\n1. 바로 시술 가능해요\n2. 골드·오렌지 컨트롤 컬러 소량으로 온도감을 더 살릴 수 있어요';
+      }
+    }
+
+    else if (tGroup === 'bright') {
+      if (userTarget === 'bleach') {
+        detail = '탈색이에요.\n흑 → 붉은기 → 주황 → 노랑 → 아이보리 → 백금 순서로 진행돼요.\n목표 레벨까지 탈색 횟수를 조절하세요.';
+      } else if (lvBright) {
+        detail = '이미 밝은 명도라 블론드·파스텔 방향이 수월해요.\n\n추천:\n1. 바이올렛 소량으로 노랑기를 눌러주고 토닝\n2. 파스텔은 아이보리 상태(레벨 17+)에서 가장 선명하게 나와요';
+      } else {
+        detail = '밝은 계열로 가려면 탈색이 필요해요.\n\n추천:\n1. 탈색 후 원하는 밝기에서 토닝\n2. 잔류 노랑기는 바이올렛으로 중화';
+        risk = '탈색 부족 시 노랑·주황이 얼룩질 수 있어요.';
+      }
+    }
   }
 
-  if (risk) detail = detail + '\n\n' + risk;
+  /* 명도 참고 문구 */
+  if (lvDark && tGroup !== 'warm') {
+    detail += '\n\n📌 현재 명도(' + lv + '레벨)에서는 밝거나 선명한 색상 표현에 한계가 있어요.';
+  } else if (lvBright && (tGroup === 'cold' || tGroup === 'neutral')) {
+    detail += '\n\n📌 밝은 명도(' + lv + '레벨)에서 차가운·중성 계열은 선명하게 표현돼요.';
+  }
+
+  if (!detail) {
+    detail = '선택한 방향으로 시술 가능해요.\n디자이너 판단을 참고해주세요.';
+  }
+  if (risk) detail = detail + '\n\n⚠️ ' + risk;
   showRecipe(main, detail, '');
 }
 function showRecipe(main, detail, ratio) {
