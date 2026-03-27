@@ -323,7 +323,8 @@ function capture() {
   /* 분석 */
   var result = analyzeRegion(ctx, gx, gy, gw, gh);
   analysisResult = result;
-  userLevel = result.level;
+  userLevel = null;  /* 명도는 디자이너가 직접 선택 */
+  userTarget = null;
   userTones = result.tones.slice();
 
   /* 크롭 미리보기 */
@@ -356,7 +357,7 @@ function analyzeRegion(ctx, x, y, w, h) {
   }
 
   if (pixels.length === 0) {
-    return { r:128, g:128, b:128, h:0, s:0, l:50, level:1, tones:[], isUneven:false, isMatte:false, naturalTone:'' };
+    return { r:128, g:128, b:128, h:0, s:0, l:50, level:1, tones:[], isUneven:false, isMatte:false, naturalTone:'', melaninZone:'', isArtificial:false, artificialType:'' };
   }
 
   /* 상하 10% 극단값 제거 */
@@ -552,10 +553,10 @@ function showResult(r) {
     hint = '';
   }
 
-  if (hint) {
+  if (hint && hintEl && hintTextEl) {
     hintTextEl.textContent = hint;
     hintEl.style.display = 'block';
-  } else {
+  } else if (hintEl) {
     hintEl.style.display = 'none';
   }
 
