@@ -170,16 +170,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <!-- 결과 화면 -->
 <div class="result-wrap" id="result-section">
 
-  <!-- 분석된 영역 미리보기 -->
+  <!-- 분석 영역 미리보기 -->
   <div class="result-card">
     <div class="result-card-title">📸 분석 영역</div>
     <canvas id="crop-canvas" style="width:100%;border-radius:8px;display:block;"></canvas>
   </div>
 
-  <!-- 색상 분석 결과 — 색감 중심 -->
+  <!-- 1단계: 색감 분석 결과 -->
   <div class="result-card">
-    <div class="result-card-title">🔬 분석 결과 (참고용)</div>
-
+    <div class="result-card-title">1단계 · 색감</div>
     <div class="color-swatch">
       <div class="swatch" id="res-swatch"></div>
       <div class="swatch-info">
@@ -189,77 +188,26 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     </div>
     <div class="tone-tags" id="res-tone-tags" style="margin-top:10px;"></div>
 
-    <!-- 색감 기반 명도 힌트 -->
-    <div id="res-level-hint" style="display:none;margin-top:14px;padding:12px;background:#1a1a2e;border-radius:10px;border-left:3px solid #9E7FBF;">
-      <div style="font-size:11px;color:#9E7FBF;font-weight:700;margin-bottom:6px;">🧬 색감 기반 명도 추정</div>
-      <div id="res-level-hint-text" style="font-size:12px;color:#aaa;line-height:1.7;"></div>
-    </div>
-
-    <!-- 디자이너 확인 요청 -->
-    <div style="margin-top:14px;padding:10px 12px;background:#111;border-radius:8px;border:1px solid #333;">
-      <div style="font-size:12px;color:#888;line-height:1.7;">
-        💬 <strong style="color:#ccc;">현재 명도 레벨이 어느 정도인가요?</strong><br>
-        아래에서 직접 선택해주시면 더 정확한 시술 방향을 알려드려요.
-      </div>
+    <!-- 현장 말투 색감 설명 -->
+    <div id="res-natural-desc" style="display:none;margin-top:14px;padding:14px;background:#181818;border-radius:10px;border-left:3px solid #9E7FBF;">
+      <div id="res-natural-desc-text" style="font-size:14px;color:#ddd;line-height:1.8;"></div>
     </div>
   </div>
 
-  <div class="warning-box">
-    <div class="warning-icon">⚠️</div>
-    <div class="warning-text">
-      <strong style="color:#ddd;display:block;margin-bottom:6px;">이 분석은 색감 방향 참고용입니다</strong>
-      최종 시술 판단은 반드시 디자이너가 직접 확인 후 결정하세요.
-    </div>
-  </div>
-
-  <!-- 상세 주의사항 -->
-  <div class="result-card" style="border-color:#2a2020;">
-    <div class="result-card-title" style="color:#cc8888;">🔴 이런 경우 분석 오차가 커요</div>
-
-    <div style="display:flex;flex-direction:column;gap:14px;">
-
-      <div style="padding:12px;background:#1e1515;border-radius:10px;border-left:3px solid #FF6B6B;">
-        <div style="font-size:13px;font-weight:700;color:#FF6B6B;margin-bottom:4px;">탈색 후 어두운 색을 입힌 경우</div>
-        <div style="font-size:12px;color:#999;line-height:1.7;">이미지상 레벨 4~5처럼 보여도 <strong style="color:#ddd;">실제 모발 명도는 이미 9~10 이상</strong>일 수 있어요. 표면 색상만 어둡게 입혀진 상태라 분석기가 낮은 레벨로 오인해요. 이 경우 추가 탈색 없이 보색 보정 중심으로 접근하세요.</div>
-      </div>
-
-      <div style="padding:12px;background:#1e1515;border-radius:10px;border-left:3px solid #FF8C00;">
-        <div style="font-size:13px;font-weight:700;color:#FF8C00;margin-bottom:4px;">검은 버진모 (자연모)</div>
-        <div style="font-size:12px;color:#999;line-height:1.7;">조명이 밝거나 반사광이 있으면 <strong style="color:#ddd;">검은 자연모도 레벨 5~6처럼 밝게 찍혀요.</strong> 실제로는 레벨 1~2인 경우가 많아요. 버진모 여부는 이미지로 판단 불가 — 반드시 손으로 모발 상태를 직접 확인하세요. 원하는 색이 밝다면 단계적 탈색이 필요할 수 있어요.</div>
-      </div>
-
-      <div style="padding:12px;background:#1e1515;border-radius:10px;border-left:3px solid #F5C518;">
-        <div style="font-size:13px;font-weight:700;color:#F5C518;margin-bottom:4px;">강한 인공 색소가 남아있는 경우</div>
-        <div style="font-size:12px;color:#999;line-height:1.7;">빨강·파랑·보라 등 <strong style="color:#ddd;">선명한 색으로 염색한 이력이 있으면</strong> 잔류 인공 색소가 분석에 크게 영향을 줘요. 이 경우 색감 방향 분석보다 실제 모발을 스트랜드 테스트로 확인하는 게 더 정확해요.</div>
-      </div>
-
-      <div style="padding:12px;background:#1e1515;border-radius:10px;border-left:3px solid #888;">
-        <div style="font-size:13px;font-weight:700;color:#aaa;margin-bottom:4px;">노란 조명 / 형광등 환경</div>
-        <div style="font-size:12px;color:#999;line-height:1.7;">매장 조명에 따라 <strong style="color:#ddd;">같은 모발도 완전히 다른 색으로 분석돼요.</strong> 노란 조명에서는 모든 모발이 노랑기 있게, 형광등에서는 초록기 있게 찍힐 수 있어요. 가능하면 자연광이나 중성광 조건에서 촬영하세요.</div>
-      </div>
-
-    </div>
-
-    <div style="margin-top:14px;padding:10px 12px;background:#111;border-radius:8px;font-size:11px;color:#666;line-height:1.7;text-align:center;">
-      이 분석기는 <strong style="color:#888;">색감 방향 힌트</strong>를 제공하는 보조 도구예요<br>명도 판단·시술 가능 여부는 디자이너가 직접 결정하세요
-    </div>
-  </div>
-
-  <!-- 사용자 수정 -->
+  <!-- 2단계: 명도 선택 -->
   <div class="edit-card">
-    <div class="edit-title">현재 상태가 맞나요? 직접 수정하세요</div>
-    <div class="edit-title">명도 레벨을 알려주세요</div>
-    <div class="edit-label" style="color:#9E7FBF;">디자이너가 직접 보고 선택해주세요</div>
+    <div class="edit-title">2단계 · 현재 명도</div>
+    <div class="edit-label" style="color:#9E7FBF;margin-bottom:12px;">직접 보고 선택해주세요</div>
     <div class="level-btns" id="level-btns" style="grid-template-columns:repeat(5,1fr);">
-      <button class="level-btn" data-lv="1" onclick="setLevel(1)">1</button>
-      <button class="level-btn" data-lv="2" onclick="setLevel(2)">2</button>
-      <button class="level-btn" data-lv="3" onclick="setLevel(3)">3</button>
-      <button class="level-btn" data-lv="4" onclick="setLevel(4)">4</button>
-      <button class="level-btn" data-lv="5" onclick="setLevel(5)">5</button>
-      <button class="level-btn" data-lv="6" onclick="setLevel(6)">6</button>
-      <button class="level-btn" data-lv="7" onclick="setLevel(7)">7</button>
-      <button class="level-btn" data-lv="8" onclick="setLevel(8)">8</button>
-      <button class="level-btn" data-lv="9" onclick="setLevel(9)">9</button>
+      <button class="level-btn" data-lv="1"  onclick="setLevel(1)">1</button>
+      <button class="level-btn" data-lv="2"  onclick="setLevel(2)">2</button>
+      <button class="level-btn" data-lv="3"  onclick="setLevel(3)">3</button>
+      <button class="level-btn" data-lv="4"  onclick="setLevel(4)">4</button>
+      <button class="level-btn" data-lv="5"  onclick="setLevel(5)">5</button>
+      <button class="level-btn" data-lv="6"  onclick="setLevel(6)">6</button>
+      <button class="level-btn" data-lv="7"  onclick="setLevel(7)">7</button>
+      <button class="level-btn" data-lv="8"  onclick="setLevel(8)">8</button>
+      <button class="level-btn" data-lv="9"  onclick="setLevel(9)">9</button>
       <button class="level-btn" data-lv="10" onclick="setLevel(10)">10</button>
       <button class="level-btn" data-lv="11" onclick="setLevel(11)">11</button>
       <button class="level-btn" data-lv="12" onclick="setLevel(12)">12</button>
@@ -272,38 +220,61 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <button class="level-btn" data-lv="19" onclick="setLevel(19)">19</button>
       <button class="level-btn" data-lv="20" onclick="setLevel(20)">20</button>
     </div>
-    <div class="edit-label" style="margin-top:4px;">잔류 색감 확인 (복수 선택 가능)</div>
+
+    <!-- 색감 보정 -->
+    <div class="edit-label" style="margin-top:16px;">색감 확인 · 보정 (복수 선택 가능)</div>
     <div class="tone-btns">
       <button class="tone-btn yellow" data-tone="yellow" onclick="toggleTone('yellow')">노랑</button>
       <button class="tone-btn orange" data-tone="orange" onclick="toggleTone('orange')">주황</button>
-      <button class="tone-btn red" data-tone="red" onclick="toggleTone('red')">붉은기</button>
-      <button class="tone-btn" data-tone="pink" onclick="toggleTone('pink')" style="color:#FF69B4;">핑크</button>
+      <button class="tone-btn red"    data-tone="red"    onclick="toggleTone('red')">붉은기</button>
+      <button class="tone-btn" data-tone="pink"   onclick="toggleTone('pink')"   style="color:#FF69B4;">핑크</button>
       <button class="tone-btn" data-tone="purple" onclick="toggleTone('purple')" style="color:#9B59B6;">보라</button>
-      <button class="tone-btn" data-tone="matte" onclick="toggleTone('matte')" style="color:#C8A878;">매트</button>
-      <button class="tone-btn none" data-tone="none" onclick="toggleTone('none')">없음</button>
+      <button class="tone-btn" data-tone="matte"  onclick="toggleTone('matte')"  style="color:#C8A878;">매트</button>
+      <button class="tone-btn none"   data-tone="none"   onclick="toggleTone('none')">없음</button>
     </div>
-    <button onclick="updateRecipe()" style="width:100%;padding:12px;border-radius:10px;background:#9E7FBF;border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">레시피 업데이트</button>
+
+    <!-- 3단계: 목표 색감 -->
+    <div class="edit-label" style="margin-top:16px;">3단계 · 원하는 색감 방향</div>
+    <div class="tone-btns" id="target-btns">
+      <button class="tone-btn" data-target="ash-brown"  onclick="setTarget('ash-brown')"  style="color:#aaa;">애쉬브라운</button>
+      <button class="tone-btn" data-target="warm-brown" onclick="setTarget('warm-brown')" style="color:#C8A878;">웜브라운</button>
+      <button class="tone-btn" data-target="red-brown"  onclick="setTarget('red-brown')"  style="color:#FF6B6B;">레드브라운</button>
+      <button class="tone-btn" data-target="blue-black" onclick="setTarget('blue-black')" style="color:#88AAFF;">블루블랙</button>
+      <button class="tone-btn" data-target="blonde"     onclick="setTarget('blonde')"     style="color:#F5C518;">블론드</button>
+      <button class="tone-btn" data-target="pastel"     onclick="setTarget('pastel')"     style="color:#FF69B4;">파스텔</button>
+      <button class="tone-btn" data-target="bleach"     onclick="setTarget('bleach')"     style="color:#fff;">탈색</button>
+    </div>
+
+    <button onclick="updateRecipe()" style="width:100%;padding:13px;border-radius:10px;background:#9E7FBF;border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer;margin-top:16px;">시술 방향 확인</button>
   </div>
 
-  <!-- 레시피 추천 -->
+  <!-- 레시피 -->
   <div class="recipe-card" id="recipe-card">
-    <div class="recipe-title">✨ 추천 레시피</div>
-    <div class="recipe-main" id="rec-main">보라 계열 추천</div>
-    <div class="recipe-detail" id="rec-detail">노랑기를 중화하기 위해 보라(violet) 계열을 사용하세요.</div>
-    <div class="recipe-ratio" id="rec-ratio"><strong>추천 비율:</strong> 메인컬러 8 : 보색 2</div>
+    <div class="recipe-title">✂️ 시술 방향</div>
+    <div class="recipe-main" id="rec-main"></div>
+    <div class="recipe-detail" id="rec-detail"></div>
+    <div class="recipe-ratio" id="rec-ratio"></div>
+  </div>
+
+  <!-- 최소화된 주의사항 -->
+  <div style="padding:12px 16px;background:#111;border-radius:12px;margin-bottom:12px;border:1px solid #222;">
+    <div style="font-size:12px;color:#555;line-height:1.7;text-align:center;">
+      이 분석은 색감 방향 힌트예요<br>최종 판단은 디자이너가 직접 하세요
+    </div>
   </div>
 
   <div class="bottom-btns">
     <button class="btn-retake" onclick="retake()">다시 촬영</button>
-    <button class="btn-apply" onclick="alert('레시피가 저장됐어요!')">레시피 저장</button>
+    <button class="btn-apply" onclick="alert('저장됐어요!')">저장</button>
   </div>
 </div>
 
 <script>
 var stream = null;
-var analysisResult = { level: 7, tones: [] };
-var userLevel = 7;
+var analysisResult = { level: 7, tones: [], isUneven: false, isMatte: false, isArtificial: false, artificialType: '' };
+var userLevel = null;
 var userTones = [];
+var userTarget = null;
 
 /* ── 카메라 시작 ── */
 async function startCamera() {
@@ -588,9 +559,49 @@ function showResult(r) {
     hintEl.style.display = 'none';
   }
 
+  /* ── 현장 말투 색감 설명 ── */
+  var mainTone = r.tones[0] || '';
+  var subTone  = r.tones[1] || '';
+  var desc = '';
+
+  if (r.isArtificial && r.artificialType === 'blue') {
+    desc = '푸른기나 하늘빛이 보이네요.\n이 색감은 레벨 17 이상의 밝은 명도에서 표현되는 색이에요.\n실제 명도가 어느 정도 되시나요?';
+  } else if (r.isArtificial) {
+    desc = '파스텔하거나 선명한 색감이 감지돼요.\n레벨 15 이상 밝은 명도에서 인공 색소로 표현된 경우예요.\n현재 명도 확인 부탁드려요.';
+  } else if (r.isUneven && (mainTone === 'yellow' || mainTone === 'orange')) {
+    desc = '노랑기와 주황기가 섞여서 얼룩진 느낌이 보여요.\n색 분포가 고르지 않은 상태예요.\n명도 선택 후 정리 방향을 알려드릴게요.';
+  } else if (mainTone === 'red' && subTone === 'orange') {
+    desc = '붉은기 베이스에 주황기가 같이 보이는 상태예요.\n전체적으로 따뜻하고 강한 색감이 남아있어요.\n명도에 따라 접근 방법이 달라지니 몇 레벨 정도 되시나요?';
+  } else if (mainTone === 'red') {
+    desc = '붉은기가 확실하게 보이는 상태예요.\n붉은기는 색의 힘이 강해서 명도에 따라 작업 난이도가 많이 달라져요.\n현재 명도가 어느 정도 되시나요?';
+  } else if (mainTone === 'orange' && subTone === 'yellow') {
+    desc = '주황기와 노랑기가 같이 보여서 전체적으로 따뜻한 느낌이에요.\n명도 선택하시면 어떻게 접근할지 알려드릴게요.';
+  } else if (mainTone === 'orange') {
+    desc = '주황기 베이스가 보여요.\n중간 정도 색의 힘을 가진 언더톤이에요.\n명도가 어느 정도 되시나요?';
+  } else if (mainTone === 'yellow') {
+    desc = '노랑기 베이스가 보여요.\n비교적 다루기 수월한 언더톤이에요.\n명도 선택하시면 방향 잡아드릴게요.';
+  } else if (mainTone === 'pink') {
+    desc = '핑크기가 감지돼요.\n자연 멜라닌이 아닌 인공 색소일 가능성이 높아요.\n명도 어느 정도 되세요?';
+  } else if (mainTone === 'purple') {
+    desc = '보라기가 보여요.\n인공 색소 잔류일 가능성이 높습니다.\n명도 확인 부탁드려요.';
+  } else if (r.isMatte) {
+    desc = '매트하고 탁한 느낌의 색감이에요.\n노랑기나 주황기가 채도 낮게 섞인 상태예요.\n명도 선택하시면 방향 잡아드릴게요.';
+  } else {
+    desc = '뚜렷한 색감 없이 비교적 중성적인 상태예요.\n명도 선택하시면 원하는 방향으로 바로 가이드해드릴게요.';
+  }
+
+  var descEl = document.getElementById('res-natural-desc');
+  var descTextEl = document.getElementById('res-natural-desc-text');
+  if (descEl && descTextEl) {
+    descTextEl.textContent = desc;
+    descEl.style.display = 'block';
+  }
+
   /* 레벨은 미선택 상태로 초기화 */
   userLevel = null;
+  userTarget = null;
   document.querySelectorAll('.level-btn').forEach(function(btn){ btn.classList.remove('active'); });
+  document.querySelectorAll('[data-target]').forEach(function(btn){ btn.classList.remove('active'); });
 
   /* 색감 버튼 자동 선택 */
   userTones = r.tones.slice();
@@ -608,7 +619,18 @@ function showResult(r) {
     if (matteBtn) matteBtn.classList.add('active');
   }
 
-  updateRecipe();
+  /* 레시피 초기화 */
+  document.getElementById('rec-main').textContent = '명도와 원하는 색감을 선택하면 시술 방향을 알려드릴게요.';
+  document.getElementById('rec-detail').textContent = '';
+  document.getElementById('rec-ratio').innerHTML = '';
+}
+
+/* ── 목표 색감 선택 ── */
+function setTarget(target) {
+  userTarget = target;
+  document.querySelectorAll('[data-target]').forEach(function(btn){
+    btn.classList.toggle('active', btn.dataset.target === target);
+  });
 }
 
 /* ── 레벨 선택 ── */
@@ -641,202 +663,178 @@ function toggleTone(tone) {
   updateRecipe();
 }
 
-/* ── 레시피 추천 ── */
+/* ── 시술 방향 (3단계: 현재색감 + 명도 + 목표색감) ── */
 function updateRecipe() {
   var main='', detail='', ratio='';
 
-  var hasY  = userTones.includes('yellow');
-  var hasO  = userTones.includes('orange');
-  var hasR  = userTones.includes('red');
-  var hasMatte = userTones.includes('matte');
-  var hasP  = userTones.includes('pink');
-  var hasPu = userTones.includes('purple');
-  var noTone = userTones.length === 0 || userTones.includes('none');
+  var hasY    = userTones.includes('yellow');
+  var hasO    = userTones.includes('orange');
+  var hasR    = userTones.includes('red');
+  var hasMatte= userTones.includes('matte');
+  var hasP    = userTones.includes('pink');
+  var hasPu   = userTones.includes('purple');
+  var noTone  = userTones.length === 0 || userTones.includes('none');
   var isUneven = analysisResult.isUneven;
-  var isArtificial = analysisResult.isArtificial;
-  var artificialType = analysisResult.artificialType;
+  var lv = userLevel || 0;
 
-  /* 인공색 감지 우선 안내 */
-  if (isArtificial && artificialType === 'blue') {
-    main = '🔵 블루/하늘 계열 — 염색 잔류 가능성';
-    detail =
-      '하늘색·블루 기운은 자연 멜라닌에서 나오지 않아요.\n' +
-      '이 색이 보이려면 레벨 17 이상이 필요하며, 그 이하라면 인공 색소 잔류예요.\n\n' +
-      '→ 잔류 블루가 강하다면: 탈색 또는 반복 중화 필요\n' +
-      '→ 소량 잔류라면: 골드/옐로우 계열 혼합으로 희석 가능\n' +
-      '→ 블루 위에 따뜻한 색을 올리면 탁해질 수 있어요';
-    ratio = '탈색 또는 골드 혼합 중화 권장';
+  /* 명도 또는 목표 미선택 시 */
+  if (!userLevel) {
+    document.getElementById('rec-main').textContent = '명도를 선택해주세요';
+    document.getElementById('rec-detail').textContent = '명도와 원하는 색감 방향까지 선택하시면\n시술 방향을 바로 알려드릴게요.';
+    document.getElementById('rec-ratio').innerHTML = '';
+    return;
+  }
+
+  /* ── 얼룩 우선 처리 ── */
+  if (isUneven && (hasY || hasO)) {
+    main = '얼룩 정리가 먼저예요';
+    detail = '지금 색 분포가 고르지 않아요.\n\n방법 1 — 재탈색: 가장 깔끔하게 정리돼요\n방법 2 — 뉴트럴 브라운 혼합: 시각적으로 완화 가능\n   단, 명도가 약간 탁해질 수 있어요';
+    ratio = '뉴트럴브라운 혼합: 메인 7 : 뉴트럴브라운 3';
     document.getElementById('rec-main').textContent = main;
     document.getElementById('rec-detail').textContent = detail;
-    document.getElementById('rec-ratio').innerHTML = '<strong>추천 비율:</strong> ' + ratio;
+    document.getElementById('rec-ratio').innerHTML = '<strong>방향:</strong> ' + ratio;
+    return;
+  }
+
+  /* ── 목표 색감 없으면 현재 색감 기반 보색만 안내 ── */
+  if (!userTarget) {
+    /* 붉은기 */
+    if (hasR && lv <= 14) {
+      main = '붉은기 + 낮은 명도 — 작업 난이도 높아요';
+      detail = '명도도 낮고 붉은기까지 있어서 방향을 바꾸려면 시간이 걸려요.\n\n같은 계열(레드브라운)로 가면 → 바로 가능\n애쉬·한색 브라운으로 가려면 → 카키·블루 애쉬로 반복 중화 또는 탈색 필요\n블리치가 목표라면 → 붉은기 먼저 제거 후 탈색 권장';
+      ratio = '원하는 방향을 위에서 선택해주세요';
+    } else if (hasR && lv >= 15) {
+      main = '명도는 밝은데 붉은기가 있어요';
+      detail = '밝은 명도라 보색 처리가 어두울 때보다 수월해요.\n카키·그린으로 중화하거나 애쉬 계열로 덮을 수 있어요.\n원하는 방향 선택하시면 더 정확히 안내드릴게요.';
+      ratio = '원하는 방향을 위에서 선택해주세요';
+    } else if (hasO) {
+      main = '주황기가 있어요';
+      detail = '블루 애쉬 계열로 중화하는 게 효과적이에요.\n원하는 색감 방향 선택하시면 바로 안내드릴게요.';
+      ratio = '원하는 방향을 위에서 선택해주세요';
+    } else if (hasY) {
+      main = '노랑기가 있어요';
+      detail = '비교적 다루기 쉬운 언더톤이에요.\n보라·바이올렛으로 중화 가능해요.\n원하는 방향 선택해주세요.';
+      ratio = '원하는 방향을 위에서 선택해주세요';
+    } else {
+      main = '뚜렷한 색감 없음';
+      detail = '잔류 색감이 거의 없는 상태예요.\n원하는 색감 방향 선택하시면 바로 가이드해드릴게요.';
+      ratio = '원하는 방향을 위에서 선택해주세요';
+    }
+    document.getElementById('rec-main').textContent = main;
+    document.getElementById('rec-detail').textContent = detail;
+    document.getElementById('rec-ratio').innerHTML = '<strong style="color:#9E7FBF;">' + ratio + '</strong>';
     return;
   }
 
   /* ════════════════════════════════
-     레벨 1~5: 어두운 구간 — 보색보다 방향 안내
-  ════════════════════════════════ */
-  if (userLevel <= 5) {
-    main = '현재 언더톤이 어두운 구간이에요';
-    detail =
-      '이 레벨에서는 보색 처리보다 원하는 색의 방향을 먼저 결정하는 게 중요해요.\n\n' +
-      '● 붉은기 없는 브라운 (한색 계열)\n' +
-      '   → 애쉬·블루·카키 계열 추천\n' +
-      '   → 동양인 자연 멜라닌이 붉은 편이라 한색 계열이 더 자연스럽고 세련돼요\n\n' +
-      '● 붉은기 있는 브라운 (따뜻한 계열)\n' +
-      '   → 핑크·레드·웜브라운 계열 추천\n' +
-      '   → 단, 동양인 특유의 붉은 멜라닌과 겹쳐 과하게 붉어질 수 있어요\n\n' +
-      '⚠️ 이 레벨에서 선명한 색상을 원한다면 단계적 톤업 후 시술을 권장해요.';
-    ratio = '한색계열 브라운 권장 (애쉬·블루·카키 베이스)';
-  }
-
-  /* ════════════════════════════════
-     얼룩 감지
-  ════════════════════════════════ */
-  else if (isUneven && (hasY || hasO || hasR)) {
-    main = '⚡ 얼룩 정리 우선 권장';
-    detail =
-      '색상 분포가 불균일해요. 노랑·주황이 얼룩진 상태입니다.\n\n' +
-      '방법 1 — 재탈색: 얼룩 영역을 균일하게 맞춘 후 시술 (가장 깔끔)\n' +
-      '방법 2 — 뉴트럴 브라운 혼합: 메인컬러에 뉴트럴 브라운을 혼합해 시각적으로 완화\n' +
-      '   단, 명도가 약간 탁해질 수 있어요';
-    ratio = '뉴트럴브라운 혼합: 메인컬러 7 : 뉴트럴브라운 3';
-  }
-
-  /* ════════════════════════════════
-     레벨 6 이상 — 감지 색감의 보색 추천
+     목표 색감 + 현재 상태 조합 레시피
   ════════════════════════════════ */
 
-  /* 매트 노랑 → 핑크 애쉬 브라운 */
-  else if (hasMatte && hasY) {
-    main = '핑크 애쉬 브라운 계열 추천';
-    detail =
-      '매트 노랑은 순수 보라로 덮으면 탁해져요.\n' +
-      '핑크 베이스 + 애쉬 + 브라운 혼합이 자연스러운 중화 효과를 내요.\n' +
-      '(헬시 헤이즐·플럼 메이플 계열이 이 원리)\n\n' +
-      '색 파워: 낮음 → 1회 시술로 중화 가능';
-    ratio = '메인브라운 6 : 핑크 2 : 애쉬 2';
+  if (userTarget === 'ash-brown') {
+    if (hasR && lv <= 10) {
+      main = '애쉬브라운 — 작업 난이도 높아요';
+      detail = '명도가 낮고 붉은기가 강해서 바로 애쉬로 가기 어려워요.\n\n방향 1 — 카키·블루 애쉬로 반복 중화 (2~3회)\n방향 2 — 탈색 후 애쉬브라운 시술 (가장 확실)\n\n동양인 멜라닌 특성상 시간이 지나면 붉은기가 다시 올라올 수 있어요.';
+      ratio = '블루애쉬로 반복 중화 or 탈색 권장';
+    } else if (hasR && lv >= 11) {
+      main = '애쉬브라운 — 중화 후 가능해요';
+      detail = '명도는 있는데 붉은기가 방해요소예요.\n카키·그린 계열로 중화하고 애쉬브라운을 올리면 돼요.\n1~2회 정도 필요할 수 있어요.';
+      ratio = '메인애쉬브라운 7 : 카키(그린) 3';
+    } else if (hasO) {
+      main = '애쉬브라운 — 블루 애쉬 혼합';
+      detail = '주황기를 블루 애쉬 계열로 중화하면서 애쉬브라운을 올리면 돼요.\n비교적 수월하게 갈 수 있어요.';
+      ratio = '애쉬브라운 8 : 블루애쉬 2';
+    } else if (hasY) {
+      main = '애쉬브라운 — 바이올렛 소량 혼합';
+      detail = '노랑기는 보라 소량 혼합으로 잡으면서 애쉬브라운을 올리면 깔끔해요.';
+      ratio = '애쉬브라운 9 : 바이올렛 1';
+    } else {
+      main = '애쉬브라운 — 바로 가능';
+      detail = '잔류 색감이 거의 없어서 바로 시술 가능해요.';
+      ratio = '애쉬브라운 100%';
+    }
   }
 
-  /* 매트 주황 → 블루 애쉬 */
-  else if (hasMatte && hasO) {
-    main = '블루 애쉬 계열 추천';
-    detail =
-      '매트 주황에는 부드러운 블루 애쉬가 효과적이에요.\n' +
-      '강한 블루보다 블루 베이스 애쉬로 자연스럽게 중화하세요.\n\n' +
-      '색 파워: 중간 → 1~2회 중화 필요할 수 있어요';
-    ratio = '메인컬러 7 : 블루애쉬 3';
+  else if (userTarget === 'warm-brown') {
+    if (hasR) {
+      main = '웜브라운 — 같은 방향이라 유리해요';
+      detail = '붉은기가 이미 있어서 웜브라운과 방향이 맞아요.\n강도에 따라 골드·웜 베이스 혼합만 해도 돼요.';
+      ratio = '웜브라운 9 : 골드 1';
+    } else if (hasO) {
+      main = '웜브라운 — 바로 가능';
+      detail = '주황기 베이스에 웜브라운은 잘 맞아요. 자연스럽게 올라갈 거예요.';
+      ratio = '웜브라운 100%';
+    } else {
+      main = '웜브라운 — 골드 베이스 추천';
+      detail = '따뜻한 느낌을 원하신다면 골드 베이스 웜브라운으로 가시면 돼요.';
+      ratio = '웜브라운 9 : 골드 1';
+    }
   }
 
-  /* 노랑 + 주황 */
-  else if (hasY && hasO) {
-    main = '청보라 계열 추천';
-    detail =
-      '노랑+주황 복합 잔류 → 블루 베이스 바이올렛으로 동시 중화.\n\n' +
-      '색 파워: 중간\n' +
-      '→ 노랑은 1회 중화 가능\n' +
-      '→ 주황은 1~2회 반복 필요할 수 있어요\n' +
-      '→ 추후 언더톤이 다시 올라올 수 있으니 중화 유지 관리 권장';
-    ratio = '메인컬러 7 : 블루바이올렛 3';
+  else if (userTarget === 'red-brown') {
+    if (hasR) {
+      main = '레드브라운 — 같은 방향, 바로 가능';
+      detail = '이미 붉은기가 있어서 레드브라운은 자연스럽게 표현돼요.';
+      ratio = '레드브라운 100%';
+    } else {
+      main = '레드브라운 — 바로 가능';
+      detail = '레드·코퍼 계열 베이스로 시술하시면 돼요.\n단, 동양인 멜라닌과 겹쳐 더 붉어 보일 수 있으니 농도 조절 필요해요.';
+      ratio = '레드브라운 9 : 웜골드 1';
+    }
   }
 
-  /* 노랑 + 붉은기 */
-  else if (hasY && hasR) {
-    main = '블루그린 계열 추천';
-    detail =
-      '노랑+붉은기 복합 → 블루+그린 혼합으로 동시 중화.\n\n' +
-      '색 파워: 강함 (붉은기 포함)\n' +
-      '→ 붉은기는 색 파워가 강해 1회 완전 중화가 어려울 수 있어요\n' +
-      '→ 반복 중화 또는 탈색 후 재시술 고려\n' +
-      '→ 동양인 멜라닌 특성상 붉은기가 다시 올라올 수 있어요';
-    ratio = '메인컬러 7 : 블루그린 3';
+  else if (userTarget === 'blue-black') {
+    main = '블루블랙';
+    if (lv <= 7) {
+      detail = '명도가 낮아서 블루블랙은 바로 가능해요.\n블루 베이스 블랙을 사용하면 자연스럽게 나와요.';
+      ratio = '5-블루문 + 블루블랙 10~20%';
+    } else {
+      detail = '명도가 있어서 블루블랙을 올리면 바로 어두워져요.\n단, 탈색 이력이 있다면 색 흡수가 빠를 수 있어요.';
+      ratio = '블루블랙 베이스 + 블루문 혼합';
+    }
   }
 
-  /* 주황 + 붉은기 */
-  else if (hasO && hasR) {
-    main = '블루 계열 추천';
-    detail =
-      '주황+붉은기 복합 → 강한 블루 계열로 중화.\n\n' +
-      '색 파워: 강함\n' +
-      '→ 붉은기가 강할수록 탈색 또는 반복 중화 필요\n' +
-      '→ 1회 시술 후 언더톤이 다시 올라올 가능성 높음\n' +
-      '→ 그린 애쉬 혼합으로 완화 가능';
-    ratio = '메인컬러 6 : 블루애쉬 4';
+  else if (userTarget === 'blonde') {
+    if (hasR && lv <= 12) {
+      main = '블론드 — 탈색 필수';
+      detail = '명도가 낮고 붉은기까지 있어서 블론드로 가려면 탈색이 필수예요.\n1회 탈색으로 주황·노랑 구간까지 올린 후 추가 탈색 또는 바이올렛으로 중화 필요해요.';
+      ratio = '탈색 2회 이상 → 바이올렛 토너';
+    } else if (hasO || hasY) {
+      main = '블론드 — 추가 탈색 or 토너';
+      detail = '주황·노랑기가 남아있어서 바이올렛 토너로 중화하거나 추가 탈색이 필요해요.';
+      ratio = '탈색 후 바이올렛 토너';
+    } else {
+      main = '블론드 — 토너만 올리면 돼요';
+      detail = '색감이 없거나 밝은 상태라 바이올렛·베이지 토너로 마무리하면 돼요.';
+      ratio = '바이올렛 or 베이지 토너';
+    }
   }
 
-  /* 노랑 단독 */
-  else if (hasY) {
-    main = '보라(Violet) 계열 추천';
-    detail =
-      '노랑기 → 보라/바이올렛으로 중화.\n\n' +
-      '색 파워: 낮음 → 가장 중화가 쉬운 언더톤이에요\n' +
-      '→ 1회 시술로 대부분 중화 가능\n' +
-      '→ 과하면 탁해지니 희석 비율 조절';
-    ratio = '메인컬러 8 : 바이올렛 2';
+  else if (userTarget === 'pastel') {
+    main = '파스텔 — 레벨 17 이상 필요';
+    if (lv < 17) {
+      detail = '파스텔은 레벨 17 이상 밝은 명도에서만 표현돼요.\n현재 명도에서 탈색이 더 필요해요.';
+      ratio = '추가 탈색 → 파스텔 토너';
+    } else {
+      detail = '명도가 충분해요! 원하는 파스텔 토너를 바로 올리면 돼요.\n발색이 강하니 희석해서 사용하세요.';
+      ratio = '파스텔 토너 (희석해서 사용)';
+    }
   }
 
-  /* 주황 단독 */
-  else if (hasO) {
-    main = '블루/애쉬 계열 추천';
-    detail =
-      '주황기 → 블루 베이스 애쉬로 중화.\n\n' +
-      '색 파워: 중간\n' +
-      '→ 1~2회 중화로 대부분 처리 가능\n' +
-      '→ 추후 언더톤이 다시 올라올 수 있으니 유지 관리 권장';
-    ratio = '메인컬러 8 : 블루애쉬 2';
-  }
-
-  /* 붉은기 단독 */
-  else if (hasR) {
-    main = '그린/카키 계열 추천';
-    detail =
-      '붉은기 → 그린/카키로 중화.\n\n' +
-      '색 파워: 강함 ⚠️\n' +
-      '→ 붉은기는 색 파워가 가장 강한 언더톤이에요\n' +
-      '→ 동양인 특성상 멜라닌 자체가 붉은 경우가 많아 반복 중화 필요\n' +
-      '→ 1회 중화 후에도 시간이 지나면 다시 올라올 수 있어요\n' +
-      '→ 탈색 후 재시술이 장기적으로 더 효과적';
-    ratio = '메인컬러 9 : 그린(카키) 1';
-  }
-
-  /* 핑크기 */
-  else if (hasP) {
-    main = '골드/옐로우 계열 추천';
-    detail =
-      '핑크기 → 골드/옐로우로 중화.\n\n' +
-      '→ 인공 색소(염색 잔류)로 인한 핑크라면 탈색 후 재시술 권장\n' +
-      '→ 자연 멜라닌 핑크라면 골드 소량 혼합으로 완화 가능';
-    ratio = '메인컬러 9 : 골드 1';
-  }
-
-  /* 보라기 */
-  else if (hasPu) {
-    main = '골드/옐로우 계열 추천';
-    detail =
-      '보라기 → 옐로우/골드로 중화.\n\n' +
-      '→ 보라가 강하게 남아있다면 탈색 후 재시술이 더 깔끔해요\n' +
-      '→ 소량 잔류라면 골드 혼합으로 자연스럽게 희석 가능';
-    ratio = '메인컬러 8 : 골드 2';
-  }
-
-  /* 색감 없음 */
-  else {
-    main = '보색 처리 불필요';
-    detail =
-      '잔류 색감이 없어 원하는 색상으로 바로 시술 가능해요.\n\n' +
-      '레벨 ' + userLevel + ' 기준으로 원하는 방향을 선택하세요:\n' +
-      '→ 한색 브라운: 애쉬·블루·카키 베이스\n' +
-      '→ 따뜻한 브라운: 골드·핑크·레드 베이스';
-    ratio = '메인컬러 100% 적용 가능';
-  }
-
-  /* 밝은 레벨 추가 안내 */
-  if (userLevel >= 16) {
-    detail += '\n\n※ 밝은 레벨(' + userLevel + ')에서는 소량으로도 발색이 강해요 — 희석 필수.';
+  else if (userTarget === 'bleach') {
+    if (hasR && lv <= 10) {
+      main = '탈색 — 붉은기 제거가 먼저예요';
+      detail = '탈색 전 붉은기를 어느 정도 중화하면 더 고르게 올라가요.\n1차 카키·블루 애쉬 중화 → 탈색 순서를 권장해요.';
+      ratio = '중화 후 탈색 권장';
+    } else {
+      main = '탈색';
+      detail = '탈색 시 멜라닌 용해 순서: 검정 → 붉은기 → 주황 → 노랑 → 아이보리\n현재 상태에서 목표 레벨까지 필요한 탈색 횟수를 계산하세요.';
+      ratio = '목표 명도 기준 탈색 횟수 조정';
+    }
   }
 
   document.getElementById('rec-main').textContent = main;
   document.getElementById('rec-detail').textContent = detail;
-  document.getElementById('rec-ratio').innerHTML = '<strong>추천 비율:</strong> ' + ratio;
+  document.getElementById('rec-ratio').innerHTML = '<strong>방향:</strong> ' + ratio;
 }
 
 /* ── 다시 촬영 ── */
