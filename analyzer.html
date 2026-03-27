@@ -437,13 +437,38 @@ function analyzeRegion(ctx, x, y, w, h) {
     if (h >= 80 && h < 150 && s > 30) toneScore.green = s/100;
   }
 
-  /* 멜라닌 이론 — 자연 색감 가중치 */
+  /* 멜라닌 구간 단순화 (5구간) */
   var naturalTone = '';
-  if (level >= 5  && level <= 7)  naturalTone = 'red';
-  if (level >= 8  && level <= 11) naturalTone = 'orange';
-  if (level >= 12 && level <= 18) naturalTone = 'yellow';
+  var melaninZone = '';
+  if (level >= 1  && level <= 5)  { naturalTone = 'red';    melaninZone = 'dark'; }
+  if (level >= 6  && level <= 10) { naturalTone = 'red';    melaninZone = 'redOrange'; }
+  if (level >= 11 && level <= 15) { naturalTone = 'orange'; melaninZone = 'yellowOrange'; }
+  if (level >= 16 && level <= 20) { naturalTone = 'yellow'; melaninZone = 'yellow'; }
   if (naturalTone && toneScore[naturalTone] > 0) {
     toneScore[naturalTone] = Math.min(1, toneScore[naturalTone] * 1.2);
+  }
+
+  /* ── 인공색 감지 ──
+     파스텔: 명도 높고(l>65) 채도 중간(s 25~55) → 염색 잔류 가능
+     쨍한색: 채도 매우 높고(s>60) Hue가 자연 멜라닌 범위 벗어남 → 인공색소
+  ── */
+  var isArtificial = false;
+  var artificialType = '';
+
+  /* 파스텔 감지: 밝은데 파랑/보라/핑크 기운 → 무조건 염색 잔류 */
+  if (l > 60 && s >= 20 && (h >= 180 && h < 330)) {
+    isArtificial = true;
+    artificialType = 'pastel';
+  }
+  /* 쨍한 색 감지: 채도 높고 자연 멜라닌 범위(노/주/붉) 완전 벗어남 */
+  if (s > 55 && (h >= 150 && h < 285)) {
+    isArtificial = true;
+    artificialType = 'vivid';
+  }
+  /* 블루/하늘: 레벨 17 미만인데 블루 기운 강하면 인공 */
+  if (level < 17 && h >= 180 && h < 260 && s > 20) {
+    isArtificial = true;
+    artificialType = 'blue';
   }
 
   /* 최대 2개 선택 */
@@ -456,7 +481,7 @@ function analyzeRegion(ctx, x, y, w, h) {
     }
   }
 
-  return { r:Math.round(r), g:Math.round(g), b:Math.round(b), h, s, l, level, tones, isUneven, isMatte, naturalTone };
+  return { r:Math.round(r), g:Math.round(g), b:Math.round(b), h, s, l, level, tones, isUneven, isMatte, naturalTone, melaninZone, isArtificial, artificialType };
 }
 
 function rgbToHsl(r, g, b) {
@@ -495,6 +520,27 @@ function showResult(r) {
   var toneColorMap = {yellow:'#F5C518',orange:'#FF8C00',red:'#FF4444',green:'#4CAF50',pink:'#FF69B4',purple:'#9B59B6'};
 
   var tags = '';
+
+  /* 인공색 감지 뱃지 */
+  if (r.isArtificial) {
+    var artMsg = r.artificialType === 'blue'
+      ? '🔵 블루/하늘 기운 — 염색 잔류 가능 (자연 멜라닌 아님)'
+      : r.artificialType === 'pastel'
+      ? '🎨 파스텔 기운 감지 — 염색 잔류 색소 가능성'
+      : '✨ 쨍한 색감 — 인공 색소 잔류 가능성';
+    tags += '<span class="tone-tag" style="background:rgba(100,150,255,0.15);color:#88AAFF;border:1px solid rgba(100,150,255,0.3);">' + artMsg + '</span>';
+  }
+
+  /* 멜라닌 구간 안내 */
+  var zoneMsg = {
+    dark:        '어두운 구간 — 색 방향 결정이 먼저예요',
+    redOrange:   '붉은빛·주황빛 구간 (레벨 6~10)',
+    yellowOrange:'노랑빛·주황빛 구간 (레벨 11~15)',
+    yellow:      '노랑빛·아이보리 구간 (레벨 16~20)'
+  };
+  if (r.melaninZone && zoneMsg[r.melaninZone]) {
+    tags += '<span class="tone-tag" style="background:rgba(200,160,80,0.12);color:#C8A060;border:1px solid rgba(200,160,80,0.25);">🧬 ' + zoneMsg[r.melaninZone] + '</span>';
+  }
 
   /* 얼룩 뱃지 */
   if (r.isUneven) {
@@ -581,6 +627,24 @@ function updateRecipe() {
   var hasPu = userTones.includes('purple');
   var noTone = userTones.length === 0 || userTones.includes('none');
   var isUneven = analysisResult.isUneven;
+  var isArtificial = analysisResult.isArtificial;
+  var artificialType = analysisResult.artificialType;
+
+  /* 인공색 감지 우선 안내 */
+  if (isArtificial && artificialType === 'blue') {
+    main = '🔵 블루/하늘 계열 — 염색 잔류 가능성';
+    detail =
+      '하늘색·블루 기운은 자연 멜라닌에서 나오지 않아요.\n' +
+      '이 색이 보이려면 레벨 17 이상이 필요하며, 그 이하라면 인공 색소 잔류예요.\n\n' +
+      '→ 잔류 블루가 강하다면: 탈색 또는 반복 중화 필요\n' +
+      '→ 소량 잔류라면: 골드/옐로우 계열 혼합으로 희석 가능\n' +
+      '→ 블루 위에 따뜻한 색을 올리면 탁해질 수 있어요';
+    ratio = '탈색 또는 골드 혼합 중화 권장';
+    document.getElementById('rec-main').textContent = main;
+    document.getElementById('rec-detail').textContent = detail;
+    document.getElementById('rec-ratio').innerHTML = '<strong>추천 비율:</strong> ' + ratio;
+    return;
+  }
 
   /* ════════════════════════════════
      레벨 1~5: 어두운 구간 — 보색보다 방향 안내
