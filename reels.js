@@ -78,6 +78,14 @@ const REELS_DATA = [
     desc:  '드라이를 하면 머리카락에서 어떤 일이 일어날까요?',
     tag:   '스타일'
   },
+   {
+    thumb: './images/colorbase.png',
+    url:   'https://www.instagram.com/reel/DVxzDZcD2bz/',
+    episode: 'EP.10',
+    title: '염색약속 성분',
+    desc:  '염색약 속에는 어떤것이 들어있을까요?',
+    tag:   '염색약성분'
+  },
 ];
 
 
