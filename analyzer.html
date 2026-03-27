@@ -315,15 +315,44 @@ var userLevel = null;
 var userTones = [];
 var userTarget = null;
 
+/* ── 스트림 완전 종료 (어디서든 호출 가능) ── */
+function stopStream() {
+  if (stream) {
+    stream.getTracks().forEach(function(t) { t.stop(); });
+    stream = null;
+  }
+  var video = document.getElementById('video');
+  if (video) { video.srcObject = null; }
+}
+
+/* ── 페이지 떠날 때 / 탭 닫을 때 카메라 반드시 종료 ── */
+window.addEventListener('beforeunload', stopStream);
+window.addEventListener('pagehide', stopStream);
+
+/* ── 탭이 백그라운드로 가면 카메라 끄기, 돌아오면 다시 켜기 ── */
+document.addEventListener('visibilitychange', function() {
+  var cameraSection = document.getElementById('camera-section');
+  var isShowingCamera = cameraSection && cameraSection.style.display !== 'none';
+  if (document.hidden) {
+    stopStream();
+  } else if (isShowingCamera) {
+    startCamera();
+  }
+});
+
 /* ── 카메라 시작 ── */
 async function startCamera() {
+  /* 기존 스트림 먼저 완전히 종료 */
+  stopStream();
   try {
     stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
     });
-    document.getElementById('video').srcObject = stream;
+    var video = document.getElementById('video');
+    if (video) video.srcObject = stream;
   } catch(e) {
-    document.getElementById('camera-section').innerHTML =
+    var sec = document.getElementById('camera-section');
+    if (sec) sec.innerHTML =
       '<div class="no-camera">' +
       '<div style="font-size:48px;margin-bottom:16px;">📷</div>' +
       '<p style="font-size:15px;font-weight:700;color:#ddd;margin-bottom:8px;">카메라 접근 권한이 필요해요</p>' +
@@ -343,6 +372,12 @@ function capture() {
   var video = document.getElementById('video');
   var canvas = document.getElementById('canvas');
   var guide = document.getElementById('guide-box');
+
+  if (!video || !video.videoWidth) {
+    alert('카메라가 준비되지 않았어요. 잠시 후 다시 시도해주세요.');
+    return;
+  }
+
   var videoRect = video.getBoundingClientRect();
   var guideRect = guide.getBoundingClientRect();
 
@@ -362,7 +397,7 @@ function capture() {
   /* 분석 */
   var result = analyzeRegion(ctx, gx, gy, gw, gh);
   analysisResult = result;
-  userLevel = null;  /* 명도는 디자이너가 직접 선택 */
+  userLevel = null;
   userTarget = null;
   userTones = result.tones.slice();
 
@@ -376,11 +411,10 @@ function capture() {
   /* 결과 표시 */
   showResult(result);
 
-  /* 화면 전환 */
+  /* 카메라 완전 종료 후 화면 전환 */
+  stopStream();
   document.getElementById('camera-section').style.display = 'none';
   document.getElementById('result-section').style.display = 'block';
-
-  if (stream) { stream.getTracks().forEach(t => t.stop()); }
 }
 
 /* ── 색상 분석 ── */
@@ -1151,8 +1185,9 @@ function showRecipe(main, detail, ratio) {
 
 /* ── 다시 촬영 ── */
 function retake() {
-  document.getElementById('camera-section').style.display = 'block';
+  stopStream();
   document.getElementById('result-section').style.display = 'none';
+  document.getElementById('camera-section').style.display = 'block';
   startCamera();
 }
 
