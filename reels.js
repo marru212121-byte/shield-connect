@@ -16,7 +16,7 @@ const REELS_DATA = [
   },
   {
     thumb: './images/coldperm.png',
-    url:   'https://www.instagram.com/reel/교체해주세요2/',
+    url:   'https://www.instagram.com/reel/DVL1O7DDz5p/',
     episode: 'EP.02',
     title: '일반펌',
     desc:  '일반펌을 하면 머리카락 속에서는 어떤 일이 일어날까요?',
