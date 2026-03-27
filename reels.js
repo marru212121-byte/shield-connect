@@ -8,7 +8,7 @@
 const REELS_DATA = [
   {
     thumb: './images/hotperm.png',
-    url:   'https://www.instagram.com/reel/DVll-u7jypR/?utm_source=ig_web_copy_link&igsh=NTc4MTIwNjQ2/',
+    url:   'https://www.instagram.com/reel/DVll-u7jypR/',
     episode: 'EP.01',
     title: '열펌',
     desc:  '열펌을 하면 머리카락 속에서는 어떤 일이 일어날까요?',
