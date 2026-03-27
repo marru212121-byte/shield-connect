@@ -383,9 +383,12 @@ function analyzeRegion(ctx, x, y, w, h) {
 
   var r = totalR/count, g = totalG/count, b = totalB/count;
 
-  /* 화이트 밸런스 보정 */
-  var maxCh = Math.max(r, g, b);
-  if (maxCh > 0) { r = r/maxCh*255; g = g/maxCh*255; b = b/maxCh*255; }
+  /* 화이트 밸런스 보정 — 밝은 영역에만 적용 (어두운 물체 오판 방지) */
+  var rawL = (Math.max(r,g,b) + Math.min(r,g,b)) / 2;
+  if (rawL > 60) { // 밝기 60 이상일 때만 보정
+    var maxCh = Math.max(r, g, b);
+    if (maxCh > 0) { r = r/maxCh*255; g = g/maxCh*255; b = b/maxCh*255; }
+  }
 
   /* HSL 변환 */
   var hsl = rgbToHsl(r, g, b);
