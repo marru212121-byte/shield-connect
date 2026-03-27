@@ -194,10 +194,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <!-- 결과 화면 -->
 <div class="result-wrap" id="result-section">
 
-  <!-- 분석 영역 미리보기 -->
-  <div class="result-card">
-    <div class="result-card-title">📸 분석 영역</div>
-    <canvas id="crop-canvas" style="width:100%;border-radius:8px;display:block;"></canvas>
+  <!-- 분석 영역 미리보기 — 작게 -->
+  <div class="result-card" style="padding:10px 12px;">
+    <div class="result-card-title" style="margin-bottom:8px;">📸 분석 영역</div>
+    <canvas id="crop-canvas" style="width:100%;max-height:120px;object-fit:cover;border-radius:8px;display:block;"></canvas>
   </div>
 
   <!-- 1단계: 색감 분석 결과 -->
@@ -465,8 +465,9 @@ function analyzeRegion(ctx, x, y, w, h) {
   /* 매트 감지 */
   var isMatte = s < 28 && s > 8 && h >= 20 && h < 65 && l < 75;
 
-  /* 퍼지 색감 점수 — 채도 25 이상만 */
+  /* 퍼지 색감 점수 — 핑크/보라는 채도 15 이상도 감지 (인공색소라 채도 낮을 수 있음) */
   var toneScore = { yellow:0, orange:0, red:0, pink:0, purple:0, green:0 };
+  var sThresh = 15; /* 핑크·보라는 낮은 채도도 감지 */
   if (s >= 25) {
     if (h >= 40 && h < 65)  toneScore.yellow = s/100;
     else if (h >= 30 && h < 40) toneScore.yellow = (s/100)*((h-30)/10);
@@ -479,11 +480,17 @@ function analyzeRegion(ctx, x, y, w, h) {
     else if (h >= 12 && h < 20) toneScore.red = (s/100)*((20-h)/8);
     else if (h >= 330 && h < 345) toneScore.red = (s/100)*((h-330)/15);
 
-    if (h >= 305 && h < 330) toneScore.pink = s/100;
-    else if (h >= 285 && h < 305) toneScore.pink = (s/100)*((h-285)/20);
-
-    if (h >= 255 && h < 290) toneScore.purple = s/100;
     if (h >= 80 && h < 150 && s > 30) toneScore.green = s/100;
+  }
+  /* 핑크·보라는 채도 15 이상부터 별도 감지 (인공 색소 특성) */
+  if (s >= sThresh) {
+    /* 핑크: H 290~345 (마젠타~붉은 핑크) */
+    if (h >= 310 && h < 345) toneScore.pink = (s/100) * 1.2; /* 핵심 핑크 구간 가중치 */
+    else if (h >= 290 && h < 310) toneScore.pink = (s/100)*((h-290)/20);
+    else if (h >= 345 && h <= 360) toneScore.pink = (s/100)*((360-h)/15); /* 붉은핑크 */
+    /* 보라: H 255~295 */
+    if (h >= 255 && h < 295) toneScore.purple = s/100;
+    else if (h >= 295 && h < 310) toneScore.purple = (s/100)*((310-h)/15);
   }
 
   /* 멜라닌 구간 단순화 (5구간) */
@@ -504,12 +511,17 @@ function analyzeRegion(ctx, x, y, w, h) {
   var isArtificial = false;
   var artificialType = '';
 
-  /* 파스텔 감지: 밝은데 파랑/보라/핑크 기운 → 무조건 염색 잔류 */
-  if (l > 60 && s >= 20 && (h >= 180 && h < 330)) {
+  /* 핑크·마젠타 영역(H 290~345)은 인공색 우선 표시 — 자연 멜라닌에 없는 색 */
+  if (h >= 290 && h < 345 && s >= 15) {
+    isArtificial = true;
+    artificialType = 'pastel'; /* pastel 타입으로 표시 (핑크 잔류) */
+  }
+  /* 파스텔: 밝은데 청색/보라 기운 */
+  if (l > 60 && s >= 20 && (h >= 180 && h < 290)) {
     isArtificial = true;
     artificialType = 'pastel';
   }
-  /* 쨍한 색 감지: 채도 높고 자연 멜라닌 범위(노/주/붉) 완전 벗어남 */
+  /* 쨍한 색: 채도 높고 자연 멜라닌 범위 완전 벗어남 */
   if (s > 55 && (h >= 150 && h < 285)) {
     isArtificial = true;
     artificialType = 'vivid';
@@ -520,12 +532,14 @@ function analyzeRegion(ctx, x, y, w, h) {
     artificialType = 'blue';
   }
 
-  /* 최대 2개 선택 */
+  /* tone 임계값: 핑크·보라는 0.15부터, 나머지는 0.25 */
   var sorted = Object.keys(toneScore).sort(function(a,b){ return toneScore[b]-toneScore[a]; });
   var tones = [];
-  if (toneScore[sorted[0]] >= 0.25) {
+  var primaryThresh = (sorted[0] === 'pink' || sorted[0] === 'purple') ? 0.15 : 0.25;
+  if (toneScore[sorted[0]] >= primaryThresh) {
     tones.push(sorted[0]);
-    if (sorted[1] && toneScore[sorted[1]] >= 0.20 && (toneScore[sorted[0]] - toneScore[sorted[1]]) <= 0.35) {
+    var secThresh = (sorted[1] === 'pink' || sorted[1] === 'purple') ? 0.12 : 0.20;
+    if (sorted[1] && toneScore[sorted[1]] >= secThresh && (toneScore[sorted[0]] - toneScore[sorted[1]]) <= 0.40) {
       tones.push(sorted[1]);
     }
   }
@@ -565,7 +579,7 @@ function showResult(r) {
     var artMsg = r.artificialType === 'blue'
       ? '🔵 블루/하늘 기운 — 염색 잔류 가능'
       : r.artificialType === 'pastel'
-      ? '🎨 파스텔 기운 — 염색 잔류 색소 가능성'
+      ? (r.tones.includes('pink') ? '🌸 핑크 기운 — 인공 색소 잔류' : '🎨 파스텔 기운 — 염색 잔류 색소 가능성')
       : '✨ 쨍한 색감 — 인공 색소 잔류 가능성';
     tags += '<span class="tone-tag" style="background:rgba(100,150,255,0.15);color:#88AAFF;border:1px solid rgba(100,150,255,0.3);">' + artMsg + '</span>';
   }
@@ -617,7 +631,7 @@ function showResult(r) {
   } else if (mainTone === 'yellow') {
     desc = '노랑기 베이스가 보여요.\n비교적 다루기 수월한 언더톤이에요.\n명도 선택하시면 방향 잡아드릴게요.';
   } else if (mainTone === 'pink') {
-    desc = '핑크기가 감지돼요.\n자연 멜라닌이 아닌 인공 색소일 가능성이 높아요.\n명도 어느 정도 되세요?';
+    desc = '핑크·마젠타 기운이 감지돼요.\n자연 멜라닌에는 없는 색이라 인공 색소 잔류예요.\n현재 명도가 어느 정도 되시나요?';
   } else if (mainTone === 'purple') {
     desc = '보라기가 보여요.\n인공 색소 잔류일 가능성이 높습니다.\n명도 확인 부탁드려요.';
   } else if (r.isMatte) {
