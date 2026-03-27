@@ -8,7 +8,7 @@
 const REELS_DATA = [
   {
     thumb: './images/hotperm.png',
-    url:   'https://www.instagram.com/reel/DVll-u7jypR/?utm_source=ig_web_copy_link&igsh=NTc4MTIwNjQ2YQ==/',
+    url:   'https://www.instagram.com/reel/교체해주세요1/',
     episode: 'EP.01',
     title: '열펌',
     desc:  '열펌을 하면 머리카락 속에서는 어떤 일이 일어날까요?',
@@ -39,7 +39,7 @@ const REELS_DATA = [
     tag:   '염색'
   },
   {
-    thumb: './images/color.png',
+    thumb: './images/neutralize.jpeg',
     url:   'https://www.instagram.com/reel/교체해주세요5/',
     episode: 'EP.05',
     title: '보색 중화',
@@ -133,10 +133,14 @@ function renderReels() {
 /* ── 인스타그램 앱 딥링크 ─────────────────────────────── */
 function reelCardClick(e, url) {
   e.preventDefault();
-  const appUrl = url.replace('https://www.instagram.com', 'instagram://');
-  const fallback = setTimeout(() => { window.location.href = url; }, 1200);
-  window.addEventListener('blur', () => clearTimeout(fallback), { once: true });
-  window.location.href = appUrl;
+  /* iOS: instagram:// 딥링크 시도 후 실패시 브라우저로 fallback */
+  var fallback = setTimeout(function() {
+    window.location.href = url;
+  }, 1500);
+  window.addEventListener('blur', function() {
+    clearTimeout(fallback);
+  }, { once: true });
+  window.location.href = url;
 }
 
 
