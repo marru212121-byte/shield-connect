@@ -25,7 +25,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   position:absolute;
   top:50%;left:50%;
   transform:translate(-50%,-50%);
-  width:88%;aspect-ratio:4/3;
+  width:72%;aspect-ratio:3/4;
   border:2px solid rgba(255,255,255,0.9);
   border-radius:8px;
   box-shadow:0 0 0 2000px rgba(0,0,0,0.45);
@@ -371,59 +371,92 @@ function capture() {
 /* ── 색상 분석 ── */
 function analyzeRegion(ctx, x, y, w, h) {
   var data = ctx.getImageData(x, y, w, h).data;
-  var totalR=0, totalG=0, totalB=0, count=0;
-  var samples = [];
+  var pixels = [];
 
-  /* 샘플링 */
   for (var i = 0; i < data.length; i += 40) {
-    var sr = data[i], sg = data[i+1], sb = data[i+2];
-    totalR += sr; totalG += sg; totalB += sb; count++;
-    samples.push([sr, sg, sb]);
+    var pr = data[i], pg = data[i+1], pb = data[i+2];
+    var pl = (Math.max(pr,pg,pb) + Math.min(pr,pg,pb)) / 2;
+    /* 반사광·그림자 픽셀 제거 */
+    if (pl > 15 && pl < 230) pixels.push([pr, pg, pb, pl]);
   }
 
-  var r = totalR/count, g = totalG/count, b = totalB/count;
+  if (pixels.length === 0) {
+    return { r:128, g:128, b:128, h:0, s:0, l:50, level:1, tones:[], isUneven:false, isMatte:false, naturalTone:'' };
+  }
 
-  /* 화이트 밸런스 보정 — 밝은 영역에만 적용 (어두운 물체 오판 방지) */
+  /* 상하 10% 극단값 제거 */
+  pixels.sort(function(a,b){ return a[3]-b[3]; });
+  var trim = Math.floor(pixels.length * 0.1);
+  var valid = pixels.slice(trim, pixels.length - trim);
+
+  var totalR=0, totalG=0, totalB=0;
+  valid.forEach(function(p){ totalR+=p[0]; totalG+=p[1]; totalB+=p[2]; });
+  var r = totalR/valid.length, g = totalG/valid.length, b = totalB/valid.length;
+
+  /* 화이트 밸런스 — 밝은 영역만 */
   var rawL = (Math.max(r,g,b) + Math.min(r,g,b)) / 2;
-  if (rawL > 60) { // 밝기 60 이상일 때만 보정
-    var maxCh = Math.max(r, g, b);
-    if (maxCh > 0) { r = r/maxCh*255; g = g/maxCh*255; b = b/maxCh*255; }
+  if (rawL > 60) {
+    var maxCh = Math.max(r,g,b);
+    if (maxCh > 0) { r = r/maxCh*220; g = g/maxCh*220; b = b/maxCh*220; }
   }
 
-  /* HSL 변환 */
   var hsl = rgbToHsl(r, g, b);
   var h = hsl[0], s = hsl[1], l = hsl[2];
 
-  /* 명도 레벨 추정 (1~20) */
+  /* 명도 레벨 (1~20) */
   var level = Math.round(l / 100 * 19) + 1;
   level = Math.max(1, Math.min(20, level));
 
-  /* ── 얼룩 감지: Hue 분산 계산 ── */
-  var hueList = samples.map(function(px) {
-    var hslPx = rgbToHsl(px[0], px[1], px[2]);
-    return hslPx[0];
-  });
-  var hMean = hueList.reduce(function(a,b){return a+b;},0) / hueList.length;
-  var hVariance = hueList.reduce(function(acc, hv) {
-    return acc + Math.pow(hv - hMean, 2);
-  }, 0) / hueList.length;
-  var isUneven = hVariance > 1800; // 임계값 높임 (배경 소량 섞임 허용)
+  /* 얼룩 감지 */
+  var hueList = valid.map(function(px){ return rgbToHsl(px[0],px[1],px[2])[0]; });
+  var hMean = hueList.reduce(function(a,b){return a+b;},0)/hueList.length;
+  var hVariance = hueList.reduce(function(acc,hv){return acc+Math.pow(hv-hMean,2);},0)/hueList.length;
+  var isUneven = hVariance > 2000;
 
-  /* ── 매트 감지 ── */
-  var isMatte = s < 30 && s > 8 && h >= 20 && h < 65 && l < 75;
+  /* 매트 감지 */
+  var isMatte = s < 28 && s > 8 && h >= 20 && h < 65 && l < 75;
 
-  /* ── 잔류 색감 판단 ── */
-  var tones = [];
-  if (s > 15) {
-    if (h >= 30 && h < 60)  tones.push('yellow');
-    if (h >= 10 && h < 30)  tones.push('orange');
-    if ((h >= 0 && h < 10) || h >= 330) tones.push('red');
-    if (h >= 280 && h < 330) tones.push('pink');    // 핑크/보라핑크
-    if (h >= 240 && h < 280) tones.push('purple');  // 보라/퍼플
-    if (h >= 60 && h < 150 && s > 20) tones.push('green');
+  /* 퍼지 색감 점수 — 채도 25 이상만 */
+  var toneScore = { yellow:0, orange:0, red:0, pink:0, purple:0, green:0 };
+  if (s >= 25) {
+    if (h >= 40 && h < 65)  toneScore.yellow = s/100;
+    else if (h >= 30 && h < 40) toneScore.yellow = (s/100)*((h-30)/10);
+
+    if (h >= 20 && h < 35)  toneScore.orange = s/100;
+    else if (h >= 35 && h < 45) toneScore.orange = (s/100)*((45-h)/10);
+    else if (h >= 10 && h < 20) toneScore.orange = (s/100)*((h-10)/10);
+
+    if ((h >= 0 && h < 12) || h >= 345) toneScore.red = s/100;
+    else if (h >= 12 && h < 20) toneScore.red = (s/100)*((20-h)/8);
+    else if (h >= 330 && h < 345) toneScore.red = (s/100)*((h-330)/15);
+
+    if (h >= 305 && h < 330) toneScore.pink = s/100;
+    else if (h >= 285 && h < 305) toneScore.pink = (s/100)*((h-285)/20);
+
+    if (h >= 255 && h < 290) toneScore.purple = s/100;
+    if (h >= 80 && h < 150 && s > 30) toneScore.green = s/100;
   }
 
-  return { r:Math.round(r), g:Math.round(g), b:Math.round(b), h, s, l, level, tones, isUneven, isMatte, hVariance:Math.round(hVariance) };
+  /* 멜라닌 이론 — 자연 색감 가중치 */
+  var naturalTone = '';
+  if (level >= 5  && level <= 7)  naturalTone = 'red';
+  if (level >= 8  && level <= 11) naturalTone = 'orange';
+  if (level >= 12 && level <= 18) naturalTone = 'yellow';
+  if (naturalTone && toneScore[naturalTone] > 0) {
+    toneScore[naturalTone] = Math.min(1, toneScore[naturalTone] * 1.2);
+  }
+
+  /* 최대 2개 선택 */
+  var sorted = Object.keys(toneScore).sort(function(a,b){ return toneScore[b]-toneScore[a]; });
+  var tones = [];
+  if (toneScore[sorted[0]] >= 0.25) {
+    tones.push(sorted[0]);
+    if (sorted[1] && toneScore[sorted[1]] >= 0.20 && (toneScore[sorted[0]] - toneScore[sorted[1]]) <= 0.35) {
+      tones.push(sorted[1]);
+    }
+  }
+
+  return { r:Math.round(r), g:Math.round(g), b:Math.round(b), h, s, l, level, tones, isUneven, isMatte, naturalTone };
 }
 
 function rgbToHsl(r, g, b) {
