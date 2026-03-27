@@ -25,7 +25,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   position:absolute;
   top:50%;left:50%;
   transform:translate(-50%,-50%);
-  width:65%;aspect-ratio:3/2;
+  width:88%;aspect-ratio:4/3;
   border:2px solid rgba(255,255,255,0.9);
   border-radius:8px;
   box-shadow:0 0 0 2000px rgba(0,0,0,0.45);
@@ -141,7 +141,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <div class="guide-corner tr"></div>
         <div class="guide-corner bl"></div>
         <div class="guide-corner br"></div>
-        <div class="guide-label">모발을 이 영역에 맞춰주세요</div>
+        <div class="guide-label">모발로 화면을 꽉 채워주세요 · 배경 노출 시 오류 가능</div>
       </div>
     </div>
   </div>
@@ -152,6 +152,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div class="shoot-guide-item"><span>✨</span><span>모발 반사광(윤기)이 없는 각도로 맞춰주세요 — 반사광은 명도를 실제보다 밝게 왜곡해요</span></div>
       <div class="shoot-guide-item"><span>💧</span><span>젖은 모발은 더 어둡게 찍히므로 반드시 건조 상태에서 촬영하세요</span></div>
       <div class="shoot-guide-item"><span>🎯</span><span>분석할 모발 부위(주로 중간~끝)를 가이드 박스 안에 꽉 채워주세요</span></div>
+      <div class="shoot-guide-item"><span>⚠️</span><span>배경(피부, 옷, 벽)이 조금이라도 보이면 얼룩으로 오인될 수 있어요 — 모발로만 화면을 채워주세요</span></div>
+      <div class="shoot-guide-item"><span>⚠️</span><span>배경(두피·피부·옷 등)이 조금이라도 찍히면 얼룩으로 오인될 수 있어요 — 모발로 화면을 최대한 가득 채우세요</span></div>
     </div>
   </div>
   <div class="capture-area">
@@ -187,7 +189,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="level-bar-wrap">
       <div class="level-bar"><div class="level-bar-fill" id="res-level-bar" style="width:70%;background:linear-gradient(90deg,#8B5E3C,#D4A574);"></div></div>
     </div>
-    <div style="display:flex;justify-content:space-between;font-size:10px;color:#555;margin-top:4px;margin-bottom:14px;"><span>Lv.1 (어두움)</span><span>Lv.10 (밝음)</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:#555;margin-top:4px;margin-bottom:14px;"><span>Lv.1 (어두움)</span><span>Lv.20 (밝음)</span></div>
 
     <div class="color-swatch">
       <div class="swatch" id="res-swatch"></div>
@@ -244,7 +246,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div class="edit-card">
     <div class="edit-title">현재 상태가 맞나요? 직접 수정하세요</div>
     <div class="edit-label">명도 레벨</div>
-    <div class="level-btns" id="level-btns">
+    <div class="level-btns" id="level-btns" style="grid-template-columns:repeat(5,1fr);">
+      <button class="level-btn" data-lv="1" onclick="setLevel(1)">1</button>
       <button class="level-btn" data-lv="2" onclick="setLevel(2)">2</button>
       <button class="level-btn" data-lv="3" onclick="setLevel(3)">3</button>
       <button class="level-btn" data-lv="4" onclick="setLevel(4)">4</button>
@@ -254,13 +257,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <button class="level-btn" data-lv="8" onclick="setLevel(8)">8</button>
       <button class="level-btn" data-lv="9" onclick="setLevel(9)">9</button>
       <button class="level-btn" data-lv="10" onclick="setLevel(10)">10</button>
-      <button class="level-btn" data-lv="11" onclick="setLevel(11)">11+</button>
+      <button class="level-btn" data-lv="11" onclick="setLevel(11)">11</button>
+      <button class="level-btn" data-lv="12" onclick="setLevel(12)">12</button>
+      <button class="level-btn" data-lv="13" onclick="setLevel(13)">13</button>
+      <button class="level-btn" data-lv="14" onclick="setLevel(14)">14</button>
+      <button class="level-btn" data-lv="15" onclick="setLevel(15)">15</button>
+      <button class="level-btn" data-lv="16" onclick="setLevel(16)">16</button>
+      <button class="level-btn" data-lv="17" onclick="setLevel(17)">17</button>
+      <button class="level-btn" data-lv="18" onclick="setLevel(18)">18</button>
+      <button class="level-btn" data-lv="19" onclick="setLevel(19)">19</button>
+      <button class="level-btn" data-lv="20" onclick="setLevel(20)">20</button>
     </div>
     <div class="edit-label">잔류 색감 (복수 선택 가능)</div>
     <div class="tone-btns">
       <button class="tone-btn yellow" data-tone="yellow" onclick="toggleTone('yellow')">노랑</button>
       <button class="tone-btn orange" data-tone="orange" onclick="toggleTone('orange')">주황</button>
       <button class="tone-btn red" data-tone="red" onclick="toggleTone('red')">붉은기</button>
+      <button class="tone-btn" data-tone="pink" onclick="toggleTone('pink')" style="color:#FF69B4;">핑크</button>
+      <button class="tone-btn" data-tone="purple" onclick="toggleTone('purple')" style="color:#9B59B6;">보라</button>
       <button class="tone-btn" data-tone="matte" onclick="toggleTone('matte')" style="color:#C8A878;">매트</button>
       <button class="tone-btn none" data-tone="none" onclick="toggleTone('none')">없음</button>
     </div>
@@ -377,9 +391,9 @@ function analyzeRegion(ctx, x, y, w, h) {
   var hsl = rgbToHsl(r, g, b);
   var h = hsl[0], s = hsl[1], l = hsl[2];
 
-  /* 명도 레벨 추정 */
-  var level = Math.round(l / 100 * 11) + 1;
-  level = Math.max(1, Math.min(12, level));
+  /* 명도 레벨 추정 (1~20) */
+  var level = Math.round(l / 100 * 19) + 1;
+  level = Math.max(1, Math.min(20, level));
 
   /* ── 얼룩 감지: Hue 분산 계산 ── */
   var hueList = samples.map(function(px) {
@@ -390,9 +404,9 @@ function analyzeRegion(ctx, x, y, w, h) {
   var hVariance = hueList.reduce(function(acc, hv) {
     return acc + Math.pow(hv - hMean, 2);
   }, 0) / hueList.length;
-  var isUneven = hVariance > 600; // 분산 임계값
+  var isUneven = hVariance > 1800; // 임계값 높임 (배경 소량 섞임 허용)
 
-  /* ── 매트 감지: 채도 낮고 탁한 노랑-주황 대역 ── */
+  /* ── 매트 감지 ── */
   var isMatte = s < 30 && s > 8 && h >= 20 && h < 65 && l < 75;
 
   /* ── 잔류 색감 판단 ── */
@@ -401,6 +415,8 @@ function analyzeRegion(ctx, x, y, w, h) {
     if (h >= 30 && h < 60)  tones.push('yellow');
     if (h >= 10 && h < 30)  tones.push('orange');
     if ((h >= 0 && h < 10) || h >= 330) tones.push('red');
+    if (h >= 280 && h < 330) tones.push('pink');    // 핑크/보라핑크
+    if (h >= 240 && h < 280) tones.push('purple');  // 보라/퍼플
     if (h >= 60 && h < 150 && s > 20) tones.push('green');
   }
 
@@ -425,16 +441,22 @@ function rgbToHsl(r, g, b) {
 }
 
 /* ── 결과 표시 ── */
-var levelNames = ['','1 (흑)','2 (매우 어두운 갈)','3 (어두운 갈)','4 (갈)','5 (중간 갈)','6 (밝은 갈)','7 (금갈)','8 (밝은 금)','9 (금)','10 (밝은 금)','11 (연금)','12 (백금)'];
+var levelNames = {
+  1:'1 (흑)', 2:'2 (매우 어두운 갈)', 3:'3 (어두운 갈)', 4:'4 (갈)',
+  5:'5 (중간 갈)', 6:'6 (밝은 갈)', 7:'7 (금갈)', 8:'8 (밝은 금갈)',
+  9:'9 (금)', 10:'10 (밝은 금)', 11:'11 (연한 금)', 12:'12 (밝은 연금)',
+  13:'13 (페일 골드)', 14:'14 (연한 크림)', 15:'15 (크림)', 16:'16 (밝은 크림)',
+  17:'17 (페일 옐로우)', 18:'18 (연한 노랑)', 19:'19 (매우 밝은 노랑)', 20:'20 (백금)'
+};
 
 function showResult(r) {
   document.getElementById('res-level').textContent = r.level;
-  document.getElementById('res-level-name').textContent = levelNames[Math.min(r.level, 12)] || r.level+'레벨';
-  document.getElementById('res-level-bar').style.width = (r.level/12*100)+'%';
+  document.getElementById('res-level-name').textContent = levelNames[r.level] || r.level+'레벨';
+  document.getElementById('res-level-bar').style.width = (r.level/20*100)+'%';
   document.getElementById('res-swatch').style.background = 'rgb('+r.r+','+r.g+','+r.b+')';
 
-  var toneMap = {yellow:'노랑기',orange:'주황기',red:'붉은기',green:'초록기'};
-  var toneColorMap = {yellow:'#F5C518',orange:'#FF8C00',red:'#FF4444',green:'#4CAF50'};
+  var toneMap = {yellow:'노랑기',orange:'주황기',red:'붉은기',green:'초록기',pink:'핑크기',purple:'보라기'};
+  var toneColorMap = {yellow:'#F5C518',orange:'#FF8C00',red:'#FF4444',green:'#4CAF50',pink:'#FF69B4',purple:'#9B59B6'};
 
   var tags = '';
 
@@ -519,6 +541,8 @@ function updateRecipe() {
   var hasO = userTones.includes('orange');
   var hasR = userTones.includes('red');
   var hasMatte = userTones.includes('matte');
+  var hasP = userTones.includes('pink');
+  var hasPu = userTones.includes('purple');
   var isUneven = analysisResult.isUneven;
 
   /* 얼룩 감지 시 우선 안내 */
@@ -578,6 +602,18 @@ function updateRecipe() {
     detail = '붉은기 중화에는 그린 또는 카키 계열 사용.\n과하면 칙칙해질 수 있으니 소량 혼합 권장.';
     ratio = '메인컬러 9 : 그린 1';
   }
+  /* 핑크기 */
+  else if (hasP) {
+    main = '옐로우/골드 계열 추천';
+    detail = '핑크기 중화에는 옐로우 또는 골드 계열이 효과적.\n단, 핑크가 인공 색소(염색 잔류)라면 탈색 후 재시술 권장.\n레벨 ' + userLevel + ' 기준 적용.';
+    ratio = '메인컬러 9 : 골드 1';
+  }
+  /* 보라기 */
+  else if (hasPu) {
+    main = '옐로우/골드 계열 추천';
+    detail = '보라기 중화에는 옐로우 계열이 효과적.\n보라가 강하게 남아있다면 탈색 후 재시술이 더 깔끔해요.\n레벨 ' + userLevel + ' 기준 적용.';
+    ratio = '메인컬러 8 : 골드 2';
+  }
   /* 색감 없음 */
   else {
     main = '보색 처리 불필요';
@@ -587,8 +623,8 @@ function updateRecipe() {
 
   /* 레벨별 추가 안내 */
   var levelNote = '';
-  if (userLevel <= 4) levelNote = '\n\n※ 어두운 레벨(' + userLevel + ')에서는 보색 효과가 제한적. 탈색 이력 확인 필수.';
-  if (userLevel >= 10) levelNote = '\n\n※ 밝은 레벨(' + userLevel + ')에서는 소량으로도 발색 강함 — 희석 필수.';
+  if (userLevel <= 6) levelNote = '\n\n※ 어두운 레벨(' + userLevel + ')에서는 보색 효과가 제한적. 탈색 이력 확인 필수.';
+  if (userLevel >= 16) levelNote = '\n\n※ 밝은 레벨(' + userLevel + ')에서는 소량으로도 발색 강함 — 희석 필수.';
 
   document.getElementById('rec-main').textContent = main;
   document.getElementById('rec-detail').textContent = detail + levelNote;
