@@ -4,6 +4,11 @@ function fmtMoney(n) {
   return Number(n).toLocaleString('ko-KR') + '원';
 }
 
+function closeReelsNotice() {
+  var n = document.getElementById('reels-notice');
+  if (n) n.style.display = 'none';
+}
+
 /* ══════════════════════════════════════
    SHIELD DESIGNER CONNECT — script.js
 ══════════════════════════════════════ */
@@ -64,7 +69,7 @@ function navigate(page) {
   if (page === 'ingredient') renderList();
   if (page === 'calculator') { setTimeout(initCalc, 50); }
   if (page === 'perm-calc') { setTimeout(initPermCalc, 50); }
-  if (page === 'reels') { renderReels(); }
+  if (page === 'reels') { renderReels(); var n = document.getElementById('reels-notice'); if(n) n.style.display='flex'; }
   if (page === 'memo') { memoRender(); }
 }
 
@@ -178,7 +183,6 @@ function openModal(y, m, d) {
   var k       = dateKey(y, m, d);
   var dayData = data[k] || null;
   var hasData = dayData && ((dayData.cut||0)+(dayData.color||0)+(dayData.perm||0)+(dayData.clinic||0)) > 0;
-
   var days = ['일','월','화','수','목','금','토'];
   var dow  = new Date(y, m, d).getDay();
   var d2   = dayData || { cut:0, color:0, perm:0, clinic:0 };
@@ -186,34 +190,27 @@ function openModal(y, m, d) {
   document.getElementById('modalTitle').textContent =
     (m+1) + '월 ' + d + '일 (' + days[dow] + ') ' + (hasData ? '매출 내역' : '매출 입력');
 
+  document.getElementById('modalOverlay').dataset.y = y;
+  document.getElementById('modalOverlay').dataset.m = m;
+  document.getElementById('modalOverlay').dataset.d = d;
+
   if (hasData) {
-    /* 보기 모드 */
     document.getElementById('modal-view-mode').style.display = 'block';
     document.getElementById('modal-edit-mode').style.display = 'none';
     document.getElementById('view-cut').textContent    = fmt(d2.cut||0) + '원';
     document.getElementById('view-color').textContent  = fmt(d2.color||0) + '원';
     document.getElementById('view-perm').textContent   = fmt(d2.perm||0) + '원';
     document.getElementById('view-clinic').textContent = fmt(d2.clinic||0) + '원';
-    var total = (d2.cut||0)+(d2.color||0)+(d2.perm||0)+(d2.clinic||0);
-    document.getElementById('viewTotalVal').textContent = fmt(total) + '원';
+    document.getElementById('viewTotalVal').textContent = fmt((d2.cut||0)+(d2.color||0)+(d2.perm||0)+(d2.clinic||0)) + '원';
     document.getElementById('modalDeleteBtn2').onclick = function() { deleteModal(y, m, d); };
   } else {
-    /* 입력 모드 */
     document.getElementById('modal-view-mode').style.display = 'none';
     document.getElementById('modal-edit-mode').style.display = 'block';
-    document.getElementById('inp-cut').value    = '';
-    document.getElementById('inp-color').value  = '';
-    document.getElementById('inp-perm').value   = '';
-    document.getElementById('inp-clinic').value = '';
+    ['cut','color','perm','clinic'].forEach(function(id) { document.getElementById('inp-'+id).value = ''; });
     updateModalTotal();
     document.getElementById('modalDeleteBtn').classList.add('hidden');
     document.getElementById('modalSaveBtn').onclick = function() { saveModal(y, m, d); };
   }
-
-  /* 수정 모드 전환용으로 y,m,d 저장 */
-  document.getElementById('modalOverlay').dataset.y = y;
-  document.getElementById('modalOverlay').dataset.m = m;
-  document.getElementById('modalOverlay').dataset.d = d;
 
   document.getElementById('modalOverlay').classList.remove('hidden');
 }
@@ -226,11 +223,10 @@ function switchToEditMode() {
   var data    = Storage.getData();
   var k       = dateKey(y, m, d);
   var dayData = data[k] || { cut:0, color:0, perm:0, clinic:0 };
-
   var days = ['일','월','화','수','목','금','토'];
   var dow  = new Date(y, m, d).getDay();
-  document.getElementById('modalTitle').textContent = (m+1) + '월 ' + d + '일 (' + days[dow] + ') 매출 수정';
 
+  document.getElementById('modalTitle').textContent = (m+1) + '월 ' + d + '일 (' + days[dow] + ') 매출 수정';
   document.getElementById('modal-view-mode').style.display = 'none';
   document.getElementById('modal-edit-mode').style.display = 'block';
 
