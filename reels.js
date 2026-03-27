@@ -79,7 +79,7 @@ const REELS_DATA = [
     tag:   '스타일'
   },
    {
-    thumb: './images/colorbase.png',
+    thumb: './images/colorbase.jpg',
     url:   'https://www.instagram.com/reel/DVxzDZcD2bz/',
     episode: 'EP.10',
     title: '염색약속 성분',
