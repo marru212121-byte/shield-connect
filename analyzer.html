@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>모발 색상 분석기</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0a;color:#fff;min-height:100dvh;overflow-x:hidden}
+
+/* 상단 헤더 */
+.header{display:flex;align-items:center;padding:16px;gap:12px;background:#111;border-bottom:1px solid #222;}
+.back-btn{width:36px;height:36px;border-radius:50%;background:#1a1a1a;border:1px solid #333;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.header-title{font-size:17px;font-weight:700;}
+.header-sub{font-size:11px;color:#666;margin-top:2px;}
+
+/* 카메라 화면 */
+.camera-wrap{position:relative;width:100%;background:#000;overflow:hidden;}
+#video{width:100%;display:block;max-height:65dvh;object-fit:cover;}
+#canvas{display:none;}
+
+/* 가이드 박스 */
+.guide-overlay{position:absolute;inset:0;pointer-events:none;}
+.guide-box{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:65%;aspect-ratio:3/2;
+  border:2px solid rgba(255,255,255,0.9);
+  border-radius:8px;
+  box-shadow:0 0 0 2000px rgba(0,0,0,0.45);
+}
+.guide-corner{position:absolute;width:16px;height:16px;border-color:#fff;border-style:solid;}
+.guide-corner.tl{top:-2px;left:-2px;border-width:3px 0 0 3px;border-radius:4px 0 0 0;}
+.guide-corner.tr{top:-2px;right:-2px;border-width:3px 3px 0 0;border-radius:0 4px 0 0;}
+.guide-corner.bl{bottom:-2px;left:-2px;border-width:0 0 3px 3px;border-radius:0 0 0 4px;}
+.guide-corner.br{bottom:-2px;right:-2px;border-width:0 3px 3px 0;border-radius:0 0 4px 0;}
+.guide-label{position:absolute;bottom:-28px;left:50%;transform:translateX(-50%);font-size:11px;color:rgba(255,255,255,0.7);white-space:nowrap;background:rgba(0,0,0,0.5);padding:3px 10px;border-radius:20px;}
+
+/* 촬영 전 안내 */
+.shoot-guide{padding:12px 16px;background:#111;border-top:1px solid #1a1a1a;}
+.shoot-guide-title{font-size:11px;color:#555;font-weight:700;letter-spacing:0.5px;margin-bottom:8px;}
+.shoot-guide-list{display:flex;flex-direction:column;gap:5px;}
+.shoot-guide-item{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#777;line-height:1.5;}
+.shoot-guide-item span:first-child{flex-shrink:0;font-size:13px;}
+
+/* 촬영 버튼 */
+.capture-area{padding:16px;display:flex;flex-direction:column;align-items:center;gap:12px;background:#0a0a0a;}
+.capture-btn{width:64px;height:64px;border-radius:50%;background:#fff;border:4px solid #555;cursor:pointer;transition:transform 0.1s;display:flex;align-items:center;justify-content:center;}
+.capture-btn:active{transform:scale(0.92);}
+.capture-hint{font-size:12px;color:#555;text-align:center;}
+
+/* 결과 화면 */
+.result-wrap{display:none;padding:16px;background:#0a0a0a;}
+
+.result-preview{width:100%;border-radius:12px;overflow:hidden;margin-bottom:16px;position:relative;}
+.result-preview img{width:100%;display:block;}
+.result-preview-crop{width:100%;border-radius:10px;overflow:hidden;margin-bottom:16px;border:2px solid #222;}
+.result-preview-crop canvas{width:100%;display:block;}
+
+/* 색상 결과 카드 */
+.result-card{background:#1a1a1a;border-radius:14px;border:1px solid #2a2a2a;padding:16px;margin-bottom:12px;}
+.result-card-title{font-size:12px;color:#666;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:12px;}
+
+.level-display{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.level-num{font-size:42px;font-weight:800;color:#fff;line-height:1;}
+.level-info{flex:1;}
+.level-name{font-size:15px;font-weight:700;color:#fff;}
+.level-sub{font-size:12px;color:#666;margin-top:2px;}
+
+.level-bar-wrap{margin-bottom:4px;}
+.level-bar{height:6px;background:#222;border-radius:3px;overflow:hidden;}
+.level-bar-fill{height:100%;border-radius:3px;transition:width 0.5s ease;}
+
+.color-swatch{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.swatch{width:36px;height:36px;border-radius:8px;border:1px solid #333;flex-shrink:0;}
+.swatch-info{flex:1;}
+.swatch-name{font-size:14px;font-weight:600;}
+.swatch-sub{font-size:11px;color:#666;margin-top:2px;}
+
+.tone-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.tone-tag{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;}
+
+/* 경고 박스 */
+.warning-box{background:rgba(255,180,0,0.08);border:1px solid rgba(255,180,0,0.2);border-radius:10px;padding:12px;margin-bottom:12px;display:flex;gap:8px;}
+.warning-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.warning-text{font-size:12px;color:#aaa;line-height:1.6;}
+
+/* 수정 UI */
+.edit-card{background:#1a1a1a;border-radius:14px;border:1px solid #2a2a2a;padding:16px;margin-bottom:12px;}
+.edit-title{font-size:13px;font-weight:700;margin-bottom:12px;}
+.edit-label{font-size:11px;color:#666;margin-bottom:8px;font-weight:600;}
+
+.level-btns{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:16px;}
+.level-btn{padding:8px 4px;border-radius:8px;border:1px solid #333;background:#111;color:#888;font-size:13px;font-weight:700;cursor:pointer;text-align:center;transition:all 0.15s;}
+.level-btn.active{background:#fff;color:#000;border-color:#fff;}
+
+.tone-btns{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
+.tone-btn{padding:7px 14px;border-radius:20px;border:1px solid #333;background:#111;color:#888;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;}
+.tone-btn.active{border-color:currentColor;}
+.tone-btn.yellow{color:#F5C518;}.tone-btn.yellow.active{background:rgba(245,197,24,0.15);}
+.tone-btn.orange{color:#FF8C00;}.tone-btn.orange.active{background:rgba(255,140,0,0.15);}
+.tone-btn.red{color:#FF4444;}.tone-btn.red.active{background:rgba(255,68,68,0.15);}
+.tone-btn.none{color:#888;}.tone-btn.none.active{background:rgba(255,255,255,0.08);color:#fff;}
+
+/* 레시피 추천 */
+.recipe-card{background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:14px;border:1px solid #2a2a4a;padding:16px;margin-bottom:12px;}
+.recipe-title{font-size:12px;color:#7a9fd4;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:12px;}
+.recipe-main{font-size:18px;font-weight:800;margin-bottom:8px;}
+.recipe-detail{font-size:13px;color:#aaa;line-height:1.7;margin-bottom:12px;}
+.recipe-ratio{background:rgba(255,255,255,0.05);border-radius:8px;padding:10px 12px;font-size:13px;color:#ccc;border:1px solid #333;}
+.recipe-ratio strong{color:#fff;}
+
+/* 하단 버튼 */
+.bottom-btns{display:flex;gap:10px;padding:0 0 32px;}
+.btn-retake{flex:1;padding:14px;border-radius:12px;background:#1a1a1a;border:1px solid #333;color:#fff;font-size:14px;font-weight:600;cursor:pointer;}
+.btn-apply{flex:2;padding:14px;border-radius:12px;background:#fff;border:none;color:#000;font-size:14px;font-weight:700;cursor:pointer;}
+
+.no-camera{padding:40px 20px;text-align:center;color:#555;}
+.no-camera p{margin-bottom:8px;font-size:14px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <button class="back-btn" onclick="history.back()">‹</button>
+  <div>
+    <div class="header-title">모발 색상 분석</div>
+    <div class="header-sub">가이드 박스에 모발을 맞춰 촬영하세요</div>
+  </div>
+</div>
+
+<!-- 카메라 화면 -->
+<div id="camera-section">
+  <div class="camera-wrap">
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas"></canvas>
+    <div class="guide-overlay">
+      <div class="guide-box" id="guide-box">
+        <div class="guide-corner tl"></div>
+        <div class="guide-corner tr"></div>
+        <div class="guide-corner bl"></div>
+        <div class="guide-corner br"></div>
+        <div class="guide-label">모발을 이 영역에 맞춰주세요</div>
+      </div>
+    </div>
+  </div>
+  <div class="shoot-guide">
+    <div class="shoot-guide-title">📋 촬영 전 확인</div>
+    <div class="shoot-guide-list">
+      <div class="shoot-guide-item"><span>💡</span><span>직사광선·강한 조명을 피하고, 자연광이나 일반 실내조명에서 촬영하세요</span></div>
+      <div class="shoot-guide-item"><span>✨</span><span>모발 반사광(윤기)이 없는 각도로 맞춰주세요 — 반사광은 명도를 실제보다 밝게 왜곡해요</span></div>
+      <div class="shoot-guide-item"><span>💧</span><span>젖은 모발은 더 어둡게 찍히므로 반드시 건조 상태에서 촬영하세요</span></div>
+      <div class="shoot-guide-item"><span>🎯</span><span>분석할 모발 부위(주로 중간~끝)를 가이드 박스 안에 꽉 채워주세요</span></div>
+    </div>
+  </div>
+  <div class="capture-area">
+    <button class="capture-btn" onclick="capture()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M20 7h-3.343L15 4H9L7.343 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+      </svg>
+    </button>
+    <p class="capture-hint">버튼을 눌러 촬영</p>
+  </div>
+</div>
+
+<!-- 결과 화면 -->
+<div class="result-wrap" id="result-section">
+
+  <!-- 분석된 영역 미리보기 -->
+  <div class="result-card">
+    <div class="result-card-title">📸 분석 영역</div>
+    <canvas id="crop-canvas" style="width:100%;border-radius:8px;display:block;"></canvas>
+  </div>
+
+  <!-- 색상 분석 결과 -->
+  <div class="result-card">
+    <div class="result-card-title">🔬 분석 결과 (참고용)</div>
+    <div class="level-display">
+      <div class="level-num" id="res-level">7</div>
+      <div class="level-info">
+        <div class="level-name" id="res-level-name">밝은 갈색</div>
+        <div class="level-sub">명도 레벨 추정값</div>
+      </div>
+    </div>
+    <div class="level-bar-wrap">
+      <div class="level-bar"><div class="level-bar-fill" id="res-level-bar" style="width:70%;background:linear-gradient(90deg,#8B5E3C,#D4A574);"></div></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:#555;margin-top:4px;margin-bottom:14px;"><span>Lv.1 (어두움)</span><span>Lv.10 (밝음)</span></div>
+
+    <div class="color-swatch">
+      <div class="swatch" id="res-swatch"></div>
+      <div class="swatch-info">
+        <div class="swatch-name" id="res-color-name">노랑기 감지</div>
+        <div class="swatch-sub" id="res-color-sub">주요 잔류 색감</div>
+      </div>
+    </div>
+    <div class="tone-tags" id="res-tone-tags"></div>
+  </div>
+
+  <div class="warning-box">
+    <div class="warning-icon">⚠️</div>
+    <div class="warning-text">
+      <strong style="color:#ddd;display:block;margin-bottom:6px;">이 분석은 색감 방향 참고용입니다</strong>
+      최종 시술 판단은 반드시 디자이너가 직접 확인 후 결정하세요.
+    </div>
+  </div>
+
+  <!-- 상세 주의사항 -->
+  <div class="result-card" style="border-color:#2a2020;">
+    <div class="result-card-title" style="color:#cc8888;">🔴 이런 경우 분석 오차가 커요</div>
+
+    <div style="display:flex;flex-direction:column;gap:14px;">
+
+      <div style="padding:12px;background:#1e1515;border-radius:10px;border-left:3px solid #FF6B6B;">
+        <div style="font-size:13px;font-weight:700;color:#FF6B6B;margin-bottom:4px;">탈색 후 어두운 색을 입힌 경우</div>
+        <div style="font-size:12px;color:#999;line-height:1.7;">이미지상 레벨 4~5처럼 보여도 <strong style="color:#ddd;">실제 모발 명도는 이미 9~10 이상</strong>일 수 있어요. 표면 색상만 어둡게 입혀진 상태라 분석기가 낮은 레벨로 오인해요. 이 경우 추가 탈색 없이 보색 보정 중심으로 접근하세요.</div>
+      </div>
+
+      <div style="padding:12px;background:#1e1515;border-radius:10px;border-left:3px solid #FF8C00;">
+        <div style="font-size:13px;font-weight:700;color:#FF8C00;margin-bottom:4px;">검은 버진모 (자연모)</div>
+        <div style="font-size:12px;color:#999;line-height:1.7;">조명이 밝거나 반사광이 있으면 <strong style="color:#ddd;">검은 자연모도 레벨 5~6처럼 밝게 찍혀요.</strong> 실제로는 레벨 1~2인 경우가 많아요. 버진모 여부는 이미지로 판단 불가 — 반드시 손으로 모발 상태를 직접 확인하세요. 원하는 색이 밝다면 단계적 탈색이 필요할 수 있어요.</div>
+      </div>
+
+      <div style="padding:12px;background:#1e1515;border-radius:10px;border-left:3px solid #F5C518;">
+        <div style="font-size:13px;font-weight:700;color:#F5C518;margin-bottom:4px;">강한 인공 색소가 남아있는 경우</div>
+        <div style="font-size:12px;color:#999;line-height:1.7;">빨강·파랑·보라 등 <strong style="color:#ddd;">선명한 색으로 염색한 이력이 있으면</strong> 잔류 인공 색소가 분석에 크게 영향을 줘요. 이 경우 색감 방향 분석보다 실제 모발을 스트랜드 테스트로 확인하는 게 더 정확해요.</div>
+      </div>
+
+      <div style="padding:12px;background:#1e1515;border-radius:10px;border-left:3px solid #888;">
+        <div style="font-size:13px;font-weight:700;color:#aaa;margin-bottom:4px;">노란 조명 / 형광등 환경</div>
+        <div style="font-size:12px;color:#999;line-height:1.7;">매장 조명에 따라 <strong style="color:#ddd;">같은 모발도 완전히 다른 색으로 분석돼요.</strong> 노란 조명에서는 모든 모발이 노랑기 있게, 형광등에서는 초록기 있게 찍힐 수 있어요. 가능하면 자연광이나 중성광 조건에서 촬영하세요.</div>
+      </div>
+
+    </div>
+
+    <div style="margin-top:14px;padding:10px 12px;background:#111;border-radius:8px;font-size:11px;color:#666;line-height:1.7;text-align:center;">
+      이 분석기는 <strong style="color:#888;">색감 방향 힌트</strong>를 제공하는 보조 도구예요<br>명도 판단·시술 가능 여부는 디자이너가 직접 결정하세요
+    </div>
+  </div>
+
+  <!-- 사용자 수정 -->
+  <div class="edit-card">
+    <div class="edit-title">현재 상태가 맞나요? 직접 수정하세요</div>
+    <div class="edit-label">명도 레벨</div>
+    <div class="level-btns" id="level-btns">
+      <button class="level-btn" data-lv="2" onclick="setLevel(2)">2</button>
+      <button class="level-btn" data-lv="3" onclick="setLevel(3)">3</button>
+      <button class="level-btn" data-lv="4" onclick="setLevel(4)">4</button>
+      <button class="level-btn" data-lv="5" onclick="setLevel(5)">5</button>
+      <button class="level-btn" data-lv="6" onclick="setLevel(6)">6</button>
+      <button class="level-btn" data-lv="7" onclick="setLevel(7)">7</button>
+      <button class="level-btn" data-lv="8" onclick="setLevel(8)">8</button>
+      <button class="level-btn" data-lv="9" onclick="setLevel(9)">9</button>
+      <button class="level-btn" data-lv="10" onclick="setLevel(10)">10</button>
+      <button class="level-btn" data-lv="11" onclick="setLevel(11)">11+</button>
+    </div>
+    <div class="edit-label">잔류 색감 (복수 선택 가능)</div>
+    <div class="tone-btns">
+      <button class="tone-btn yellow" data-tone="yellow" onclick="toggleTone('yellow')">노랑</button>
+      <button class="tone-btn orange" data-tone="orange" onclick="toggleTone('orange')">주황</button>
+      <button class="tone-btn red" data-tone="red" onclick="toggleTone('red')">붉은기</button>
+      <button class="tone-btn" data-tone="matte" onclick="toggleTone('matte')" style="color:#C8A878;">매트</button>
+      <button class="tone-btn none" data-tone="none" onclick="toggleTone('none')">없음</button>
+    </div>
+    <button onclick="updateRecipe()" style="width:100%;padding:12px;border-radius:10px;background:#9E7FBF;border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">레시피 업데이트</button>
+  </div>
+
+  <!-- 레시피 추천 -->
+  <div class="recipe-card" id="recipe-card">
+    <div class="recipe-title">✨ 추천 레시피</div>
+    <div class="recipe-main" id="rec-main">보라 계열 추천</div>
+    <div class="recipe-detail" id="rec-detail">노랑기를 중화하기 위해 보라(violet) 계열을 사용하세요.</div>
+    <div class="recipe-ratio" id="rec-ratio"><strong>추천 비율:</strong> 메인컬러 8 : 보색 2</div>
+  </div>
+
+  <div class="bottom-btns">
+    <button class="btn-retake" onclick="retake()">다시 촬영</button>
+    <button class="btn-apply" onclick="alert('레시피가 저장됐어요!')">레시피 저장</button>
+  </div>
+</div>
+
+<script>
+var stream = null;
+var analysisResult = { level: 7, tones: [] };
+var userLevel = 7;
+var userTones = [];
+
+/* ── 카메라 시작 ── */
+async function startCamera() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+    });
+    document.getElementById('video').srcObject = stream;
+  } catch(e) {
+    document.getElementById('camera-section').innerHTML =
+      '<div class="no-camera">' +
+      '<div style="font-size:48px;margin-bottom:16px;">📷</div>' +
+      '<p style="font-size:15px;font-weight:700;color:#ddd;margin-bottom:8px;">카메라 접근 권한이 필요해요</p>' +
+      '<div style="background:#1a1a1a;border-radius:12px;padding:16px;text-align:left;margin-top:12px;">' +
+      '<p style="font-size:12px;color:#888;font-weight:700;margin-bottom:10px;">📱 iPhone (Safari)</p>' +
+      '<p style="font-size:12px;color:#666;line-height:1.7;margin-bottom:12px;">설정 앱 → Safari → 카메라 → <strong style="color:#aaa;">허용</strong>으로 변경 후 새로고침</p>' +
+      '<p style="font-size:12px;color:#888;font-weight:700;margin-bottom:10px;">🤖 Android (Chrome)</p>' +
+      '<p style="font-size:12px;color:#666;line-height:1.7;">주소창 왼쪽 자물쇠 아이콘 → 카메라 → <strong style="color:#aaa;">허용</strong> 후 새로고침</p>' +
+      '</div>' +
+      '<button onclick="startCamera()" style="margin-top:16px;padding:12px 24px;border-radius:10px;background:#fff;border:none;color:#000;font-size:14px;font-weight:700;cursor:pointer;">다시 시도</button>' +
+      '</div>';
+  }
+}
+
+/* ── 촬영 ── */
+function capture() {
+  var video = document.getElementById('video');
+  var canvas = document.getElementById('canvas');
+  var guide = document.getElementById('guide-box');
+  var videoRect = video.getBoundingClientRect();
+  var guideRect = guide.getBoundingClientRect();
+
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  var ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0);
+
+  /* 가이드박스 영역 계산 (video 실제 픽셀 기준) */
+  var scaleX = video.videoWidth / videoRect.width;
+  var scaleY = video.videoHeight / videoRect.height;
+  var gx = (guideRect.left - videoRect.left) * scaleX;
+  var gy = (guideRect.top - videoRect.top) * scaleY;
+  var gw = guideRect.width * scaleX;
+  var gh = guideRect.height * scaleY;
+
+  /* 분석 */
+  var result = analyzeRegion(ctx, gx, gy, gw, gh);
+  analysisResult = result;
+  userLevel = result.level;
+  userTones = result.tones.slice();
+
+  /* 크롭 미리보기 */
+  var cropCanvas = document.getElementById('crop-canvas');
+  cropCanvas.width = gw;
+  cropCanvas.height = gh;
+  var cropCtx = cropCanvas.getContext('2d');
+  cropCtx.drawImage(canvas, gx, gy, gw, gh, 0, 0, gw, gh);
+
+  /* 결과 표시 */
+  showResult(result);
+
+  /* 화면 전환 */
+  document.getElementById('camera-section').style.display = 'none';
+  document.getElementById('result-section').style.display = 'block';
+
+  if (stream) { stream.getTracks().forEach(t => t.stop()); }
+}
+
+/* ── 색상 분석 ── */
+function analyzeRegion(ctx, x, y, w, h) {
+  var data = ctx.getImageData(x, y, w, h).data;
+  var totalR=0, totalG=0, totalB=0, count=0;
+  var samples = [];
+
+  /* 샘플링 */
+  for (var i = 0; i < data.length; i += 40) {
+    var sr = data[i], sg = data[i+1], sb = data[i+2];
+    totalR += sr; totalG += sg; totalB += sb; count++;
+    samples.push([sr, sg, sb]);
+  }
+
+  var r = totalR/count, g = totalG/count, b = totalB/count;
+
+  /* 화이트 밸런스 보정 */
+  var maxCh = Math.max(r, g, b);
+  if (maxCh > 0) { r = r/maxCh*255; g = g/maxCh*255; b = b/maxCh*255; }
+
+  /* HSL 변환 */
+  var hsl = rgbToHsl(r, g, b);
+  var h = hsl[0], s = hsl[1], l = hsl[2];
+
+  /* 명도 레벨 추정 */
+  var level = Math.round(l / 100 * 11) + 1;
+  level = Math.max(1, Math.min(12, level));
+
+  /* ── 얼룩 감지: Hue 분산 계산 ── */
+  var hueList = samples.map(function(px) {
+    var hslPx = rgbToHsl(px[0], px[1], px[2]);
+    return hslPx[0];
+  });
+  var hMean = hueList.reduce(function(a,b){return a+b;},0) / hueList.length;
+  var hVariance = hueList.reduce(function(acc, hv) {
+    return acc + Math.pow(hv - hMean, 2);
+  }, 0) / hueList.length;
+  var isUneven = hVariance > 600; // 분산 임계값
+
+  /* ── 매트 감지: 채도 낮고 탁한 노랑-주황 대역 ── */
+  var isMatte = s < 30 && s > 8 && h >= 20 && h < 65 && l < 75;
+
+  /* ── 잔류 색감 판단 ── */
+  var tones = [];
+  if (s > 15) {
+    if (h >= 30 && h < 60)  tones.push('yellow');
+    if (h >= 10 && h < 30)  tones.push('orange');
+    if ((h >= 0 && h < 10) || h >= 330) tones.push('red');
+    if (h >= 60 && h < 150 && s > 20) tones.push('green');
+  }
+
+  return { r:Math.round(r), g:Math.round(g), b:Math.round(b), h, s, l, level, tones, isUneven, isMatte, hVariance:Math.round(hVariance) };
+}
+
+function rgbToHsl(r, g, b) {
+  r/=255; g/=255; b/=255;
+  var max=Math.max(r,g,b), min=Math.min(r,g,b), h, s, l=(max+min)/2;
+  if (max===min) { h=s=0; }
+  else {
+    var d=max-min;
+    s = l>0.5 ? d/(2-max-min) : d/(max+min);
+    switch(max){
+      case r: h=(g-b)/d+(g<b?6:0); break;
+      case g: h=(b-r)/d+2; break;
+      case b: h=(r-g)/d+4; break;
+    }
+    h/=6;
+  }
+  return [Math.round(h*360), Math.round(s*100), Math.round(l*100)];
+}
+
+/* ── 결과 표시 ── */
+var levelNames = ['','1 (흑)','2 (매우 어두운 갈)','3 (어두운 갈)','4 (갈)','5 (중간 갈)','6 (밝은 갈)','7 (금갈)','8 (밝은 금)','9 (금)','10 (밝은 금)','11 (연금)','12 (백금)'];
+
+function showResult(r) {
+  document.getElementById('res-level').textContent = r.level;
+  document.getElementById('res-level-name').textContent = levelNames[Math.min(r.level, 12)] || r.level+'레벨';
+  document.getElementById('res-level-bar').style.width = (r.level/12*100)+'%';
+  document.getElementById('res-swatch').style.background = 'rgb('+r.r+','+r.g+','+r.b+')';
+
+  var toneMap = {yellow:'노랑기',orange:'주황기',red:'붉은기',green:'초록기'};
+  var toneColorMap = {yellow:'#F5C518',orange:'#FF8C00',red:'#FF4444',green:'#4CAF50'};
+
+  var tags = '';
+
+  /* 얼룩 뱃지 */
+  if (r.isUneven) {
+    tags += '<span class="tone-tag" style="background:rgba(255,100,100,0.15);color:#FF8080;border:1px solid rgba(255,100,100,0.3);">⚡ 색상 불균일 (얼룩 의심)</span>';
+  }
+  /* 매트 뱃지 */
+  if (r.isMatte) {
+    tags += '<span class="tone-tag" style="background:rgba(180,150,100,0.15);color:#C8A878;border:1px solid rgba(180,150,100,0.3);">🟤 매트 톤 감지</span>';
+  }
+
+  if (r.tones.length > 0) {
+    document.getElementById('res-color-name').textContent = r.tones.map(function(t){return toneMap[t];}).join(' + ') + ' 감지';
+    tags += r.tones.map(function(t) {
+      return '<span class="tone-tag" style="background:'+toneColorMap[t]+'22;color:'+toneColorMap[t]+';border:1px solid '+toneColorMap[t]+'44;">'+toneMap[t]+'</span>';
+    }).join('');
+  } else {
+    document.getElementById('res-color-name').textContent = r.isMatte ? '매트 톤 (채도 낮음)' : '잔류 색감 없음';
+    document.getElementById('res-color-sub').textContent = r.isMatte ? '탁한 노랑-주황 계열' : '채도가 낮거나 균형잡힌 색상';
+  }
+  document.getElementById('res-tone-tags').innerHTML = tags;
+
+  /* 얼룩 경고 */
+  var unevenWarn = document.getElementById('uneven-warning');
+  if (unevenWarn) {
+    unevenWarn.style.display = r.isUneven ? 'flex' : 'none';
+  }
+
+  setLevel(r.level);
+  userTones = r.tones.slice();
+  document.querySelectorAll('.tone-btn').forEach(function(btn) {
+    btn.classList.remove('active');
+    if (userTones.includes(btn.dataset.tone)) btn.classList.add('active');
+  });
+  if (userTones.length === 0) {
+    document.querySelector('.tone-btn[data-tone="none"]').classList.add('active');
+  }
+
+  /* 매트 체크박스 자동 선택 */
+  var matteBtn = document.querySelector('.tone-btn[data-tone="matte"]');
+  if (matteBtn && r.isMatte) matteBtn.classList.add('active');
+
+  updateRecipe();
+}
+
+/* ── 레벨 선택 ── */
+function setLevel(lv) {
+  userLevel = lv;
+  document.querySelectorAll('.level-btn').forEach(function(btn) {
+    btn.classList.toggle('active', parseInt(btn.dataset.lv) === lv);
+  });
+  updateRecipe();
+}
+
+/* ── 색감 선택 ── */
+function toggleTone(tone) {
+  if (tone === 'none') {
+    userTones = [];
+    document.querySelectorAll('.tone-btn').forEach(function(b){ b.classList.remove('active'); });
+    document.querySelector('.tone-btn[data-tone="none"]').classList.add('active');
+  } else {
+    var noneBtn = document.querySelector('.tone-btn[data-tone="none"]');
+    if (noneBtn) noneBtn.classList.remove('active');
+    var idx = userTones.indexOf(tone);
+    if (idx > -1) { userTones.splice(idx,1); }
+    else { userTones.push(tone); }
+    document.querySelectorAll('.tone-btn').forEach(function(btn) {
+      if (btn.dataset.tone !== 'none') {
+        btn.classList.toggle('active', userTones.includes(btn.dataset.tone));
+      }
+    });
+  }
+  updateRecipe();
+}
+
+/* ── 레시피 추천 (정교화) ── */
+function updateRecipe() {
+  var main='', detail='', ratio='';
+
+  var hasY = userTones.includes('yellow');
+  var hasO = userTones.includes('orange');
+  var hasR = userTones.includes('red');
+  var hasMatte = userTones.includes('matte');
+  var isUneven = analysisResult.isUneven;
+
+  /* 얼룩 감지 시 우선 안내 */
+  if (isUneven && (hasY || hasO || hasR)) {
+    main = '⚡ 얼룩 정리 우선 권장';
+    detail = '색상 분포가 불균일해요. 노랑·주황이 얼룩진 상태로 감지됩니다.\n\n' +
+      '방법 1 — 재탈색: 얼룩 영역을 추가 탈색해 균일하게 맞춘 후 시술\n' +
+      '방법 2 — 뉴트럴 브라운 혼합: 메인컬러에 뉴트럴/내추럴 브라운을 혼합해 얼룩을 시각적으로 완화 (단, 명도가 약간 탁해질 수 있어요)\n\n' +
+      '※ 얼룩이 심할수록 방법 1이 장기적으로 더 깔끔해요.';
+    ratio = '뉴트럴브라운 혼합 시: 메인컬러 7 : 뉴트럴브라운 3';
+  }
+  /* 매트 + 노랑 → 핑크 애쉬 브라운 */
+  else if (hasMatte && hasY) {
+    main = '핑크 애쉬 브라운 계열 추천';
+    detail = '매트 노랑은 순수 보라로 덮으면 탁해질 수 있어요.\n핑크 베이스 + 애쉬 + 브라운을 혼합한 계열이 자연스러운 중화 효과를 내요.\n트렌드 기법인 헬시 헤이즐, 플럼 메이플 계열 컬러가 이 원리예요.\n\n레벨 ' + userLevel + ' 기준으로 핑크 비율을 조절하세요.';
+    ratio = '메인브라운 6 : 핑크 2 : 애쉬 2';
+  }
+  /* 매트 + 주황 → 블루 애쉬 */
+  else if (hasMatte && hasO) {
+    main = '블루 애쉬 계열 추천';
+    detail = '매트 주황은 블루 베이스 애쉬 계열로 중화하는 게 효과적이에요.\n채도가 낮은 탁한 주황이므로 강한 블루보다 부드러운 블루 애쉬를 권장해요.\n레벨 ' + userLevel + ' 기준 적용.';
+    ratio = '메인컬러 7 : 블루애쉬 3';
+  }
+  /* 노랑 + 주황 복합 */
+  else if (hasY && hasO) {
+    main = '청보라 계열 추천';
+    detail = '노랑+주황 복합 잔류. 블루 베이스의 바이올렛 계열로 동시 중화.\n레벨 ' + userLevel + ' 기준, 밝을수록 소량으로도 발색이 강하므로 희석 조절.';
+    ratio = '메인컬러 7 : 블루바이올렛 3';
+  }
+  /* 노랑 + 붉은기 */
+  else if (hasY && hasR) {
+    main = '블루그린 계열 추천';
+    detail = '노랑+붉은기 복합. 블루와 그린을 혼합해 동시 중화.\n레벨 ' + userLevel + ' 기준으로 농도 조절 필요.';
+    ratio = '메인컬러 7 : 블루그린 3';
+  }
+  /* 주황 + 붉은기 */
+  else if (hasO && hasR) {
+    main = '블루 계열 추천';
+    detail = '주황+붉은기 복합. 강한 블루 계열로 중화.\n레벨 ' + userLevel + ' 이하에서는 그린 애쉬 혼합 권장.';
+    ratio = '메인컬러 6 : 블루애쉬 4';
+  }
+  /* 노랑 단독 */
+  else if (hasY) {
+    main = '보라(Violet) 계열 추천';
+    detail = '노랑기 중화에는 보라/바이올렛이 가장 효과적.\n레벨 ' + userLevel + ' 기준, 과하면 탁해질 수 있으니 희석 비율 조절.';
+    ratio = '메인컬러 8 : 바이올렛 2';
+  }
+  /* 주황 단독 */
+  else if (hasO) {
+    main = '블루/애쉬 계열 추천';
+    detail = '주황기 중화에는 블루 베이스 애쉬 계열이 효과적.\n레벨 ' + userLevel + ' 기준 적용.';
+    ratio = '메인컬러 8 : 블루애쉬 2';
+  }
+  /* 붉은기 단독 */
+  else if (hasR) {
+    main = '그린/카키 계열 추천';
+    detail = '붉은기 중화에는 그린 또는 카키 계열 사용.\n과하면 칙칙해질 수 있으니 소량 혼합 권장.';
+    ratio = '메인컬러 9 : 그린 1';
+  }
+  /* 색감 없음 */
+  else {
+    main = '보색 처리 불필요';
+    detail = '잔류 색감이 없어 바로 원하는 색상으로 시술 가능해요.';
+    ratio = '메인컬러 100% 적용 가능';
+  }
+
+  /* 레벨별 추가 안내 */
+  var levelNote = '';
+  if (userLevel <= 4) levelNote = '\n\n※ 어두운 레벨(' + userLevel + ')에서는 보색 효과가 제한적. 탈색 이력 확인 필수.';
+  if (userLevel >= 10) levelNote = '\n\n※ 밝은 레벨(' + userLevel + ')에서는 소량으로도 발색 강함 — 희석 필수.';
+
+  document.getElementById('rec-main').textContent = main;
+  document.getElementById('rec-detail').textContent = detail + levelNote;
+  document.getElementById('rec-ratio').innerHTML = '<strong>추천 비율:</strong> ' + ratio;
+}
+
+/* ── 다시 촬영 ── */
+function retake() {
+  document.getElementById('camera-section').style.display = 'block';
+  document.getElementById('result-section').style.display = 'none';
+  startCamera();
+}
+
+startCamera();
+</script>
+</body>
+</html>
