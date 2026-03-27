@@ -494,14 +494,6 @@ function rgbToHsl(r, g, b) {
 }
 
 /* ── 결과 표시 ── */
-var levelNames = {
-  1:'1 (흑)', 2:'2 (매우 어두운 갈)', 3:'3 (어두운 갈)', 4:'4 (갈)',
-  5:'5 (중간 갈)', 6:'6 (밝은 갈)', 7:'7 (금갈)', 8:'8 (밝은 금갈)',
-  9:'9 (금)', 10:'10 (밝은 금)', 11:'11 (연한 금)', 12:'12 (밝은 연금)',
-  13:'13 (페일 골드)', 14:'14 (연한 크림)', 15:'15 (크림)', 16:'16 (밝은 크림)',
-  17:'17 (페일 옐로우)', 18:'18 (연한 노랑)', 19:'19 (매우 밝은 노랑)', 20:'20 (백금)'
-};
-
 function showResult(r) {
   /* 명도 표시 제거 — 색감만 표시 */
   document.getElementById('res-swatch').style.background = 'rgb('+r.r+','+r.g+','+r.b+')';
@@ -546,8 +538,6 @@ function showResult(r) {
 
   document.getElementById('res-tone-tags').innerHTML = tags;
 
-  /* ── 색감 기반 명도 힌트 ── */
-  var hint = '';
   /* ── 현장 말투 색감 설명 ── */
   var mainTone = r.tones[0] || '';
   var subTone  = r.tones[1] || '';
@@ -793,6 +783,9 @@ function updateRecipe() {
     else if (hasMatte) designerAdded += '매트함이 확인됩니다.\n애쉬 계열 또는 핑크 브라운을 소량 믹스하면 질감이 부드럽게 정리됩니다.';
     else if (hasR) designerAdded += '붉은기가 확인됩니다.\n애쉬 계열로 어느 정도 중화가 가능합니다.';
   }
+
+  /* ── 목표 색감 미선택 — 현재 색감 기반 방향 안내 ── */
+  if (!userTarget) {
     if (hasR && lv <= 14) {
       main = '붉은기 + 낮은 명도 — 작업 난이도 높아요';
       detail = '명도도 낮고 붉은기까지 있어서 방향을 바꾸려면 시간이 걸려요.\n\n같은 계열(레드브라운)로 가면 → 바로 가능\n애쉬·한색 브라운으로 가려면 → 카키·블루 애쉬로 반복 중화 또는 탈색 필요\n블리치가 목표라면 → 붉은기 먼저 제거 후 탈색 권장';
@@ -814,9 +807,7 @@ function updateRecipe() {
       detail = '잔류 색감이 거의 없는 상태예요.\n원하는 색감 방향 선택하시면 바로 가이드해드릴게요.';
       ratio = '원하는 방향을 위에서 선택해주세요';
     }
-    document.getElementById('rec-main').textContent = main;
-    document.getElementById('rec-detail').textContent = detail;
-    document.getElementById('rec-ratio').innerHTML = '<strong style="color:#9E7FBF;">' + ratio + '</strong>';
+    showRecipe(main, detail, '원하는 방향을 위에서 선택해주세요');
     return;
   }
 
