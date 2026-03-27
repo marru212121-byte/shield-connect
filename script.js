@@ -76,11 +76,18 @@ function theoryPrev() {
 function openTheoryImg(src) {
   var modal = document.getElementById('theory-img-modal');
   var img = document.getElementById('theory-img-full');
-  if (modal && img) { img.src = src; modal.style.display = 'flex'; }
+  if (modal && img) {
+    img.src = src;
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
 }
 function closeTheoryImg() {
   var modal = document.getElementById('theory-img-modal');
-  if (modal) modal.style.display = 'none';
+  if (modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
 }
 
 function closeReelsNotice() {
