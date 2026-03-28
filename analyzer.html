@@ -430,124 +430,160 @@ function analyzeRegion(ctx, x, y, w, h) {
   var data = ctx.getImageData(x, y, w, h).data;
   var pixels = [];
 
+  /* 픽셀 수집 — 40픽셀마다 샘플링 */
   for (var i = 0; i < data.length; i += 40) {
     var pr = data[i], pg = data[i+1], pb = data[i+2];
     var pl = (Math.max(pr,pg,pb) + Math.min(pr,pg,pb)) / 2;
-    /* 반사광·그림자 픽셀 제거 */
-    if (pl > 15 && pl < 230) pixels.push([pr, pg, pb, pl]);
+    if (pl > 10 && pl < 245) pixels.push([pr, pg, pb, pl]);
   }
 
   if (pixels.length === 0) {
     return { r:128, g:128, b:128, h:0, s:0, l:50, level:1, tones:[], isUneven:false, isMatte:false, naturalTone:'', melaninZone:'', isArtificial:false, artificialType:'' };
   }
 
-  /* 상하 10% 극단값 제거 */
+  /* 상하 20% 제거 — 하이라이트·그림자 제거 강화 */
   pixels.sort(function(a,b){ return a[3]-b[3]; });
-  var trim = Math.floor(pixels.length * 0.1);
+  var trim = Math.floor(pixels.length * 0.20);
   var valid = pixels.slice(trim, pixels.length - trim);
 
+  /* ── Dominant Color: Hue 히스토그램 방식 ──
+     평균 RGB 대신 Hue 구간별 픽셀 수를 카운트해서
+     가장 많이 나온 색(Dominant)과 두 번째 색(Secondary)을 추출
+  ── */
+  var HUE_BINS = 12; /* 360도를 12구간으로 분할 (30도씩) */
+  var hueBins    = new Array(HUE_BINS).fill(0);
+  var hueSumL    = new Array(HUE_BINS).fill(0);
+  var hueSumS    = new Array(HUE_BINS).fill(0);
+  var lowSatCount = 0;
+  var lowSatSumL  = 0;
+  var totalPixels = valid.length;
+
+  valid.forEach(function(p) {
+    var hsl = rgbToHsl(p[0], p[1], p[2]);
+    var ph = hsl[0], ps = hsl[1], pl2 = hsl[2];
+    if (ps < 15) {
+      lowSatCount++;
+      lowSatSumL += pl2;
+    } else {
+      var bin = Math.floor(ph / 30) % HUE_BINS;
+      hueBins[bin]++;
+      hueSumL[bin] += pl2;
+      hueSumS[bin] += ps;
+    }
+  });
+
+  /* 상위 2개 Hue 구간 찾기 */
+  var binOrder = hueBins.map(function(cnt, idx){ return [idx, cnt]; })
+    .sort(function(a,b){ return b[1]-a[1]; });
+
+  var dominantBin   = binOrder[0][0];
+  var dominantCount = binOrder[0][1];
+  var secondaryBin   = binOrder[1][0];
+  var secondaryCount = binOrder[1][1];
+
+  var domH = dominantBin * 30 + 15;
+  var domL = dominantCount > 0 ? hueSumL[dominantBin] / dominantCount : 50;
+  var domS = dominantCount > 0 ? hueSumS[dominantBin] / dominantCount : 0;
+
+  /* Secondary가 Dominant의 50% 이상일 때만 사용 */
+  var hasSecondary = secondaryCount >= dominantCount * 0.5 && secondaryCount > 0;
+  var secH = secondaryBin * 30 + 15;
+
+  /* 무채색이 지배적인 경우 (채도 낮은 픽셀이 60% 이상) */
+  var isLowSatDominant = lowSatCount > totalPixels * 0.6;
+
+  /* 전체 평균 Lightness (베이스 판단·명도용) */
+  var allLSum = 0;
+  valid.forEach(function(p){
+    allLSum += rgbToHsl(p[0],p[1],p[2])[2];
+  });
+  var avgLAll = allLSum / valid.length;
+
+  /* 대표 RGB (스와치 색상용) */
   var totalR=0, totalG=0, totalB=0;
   valid.forEach(function(p){ totalR+=p[0]; totalG+=p[1]; totalB+=p[2]; });
-  var r = totalR/valid.length, g = totalG/valid.length, b = totalB/valid.length;
+  var rAvg = totalR/valid.length, gAvg = totalG/valid.length, bAvg = totalB/valid.length;
 
-  /* 화이트밸런스 제거 — 날것 그대로 읽기 (인공색 감지 정확도 우선) */
+  /* ── Hue → 색감 버킷 분류 ── */
+  function hueToBucket(hDeg) {
+    if ((hDeg >= 0 && hDeg < 15) || hDeg >= 345) return 'red';
+    if (hDeg >= 15 && hDeg < 30)  return 'redOrange';
+    if (hDeg >= 30 && hDeg < 50)  return 'orange';
+    if (hDeg >= 50 && hDeg < 80)  return 'yellow';
+    if (hDeg >= 80 && hDeg < 165) return 'green';
+    if (hDeg >= 165 && hDeg < 260) return 'blue';
+    if (hDeg >= 260 && hDeg < 290) return 'purple';
+    if (hDeg >= 290 && hDeg < 345) return 'pink';
+    return 'none';
+  }
 
-  var hsl = rgbToHsl(r, g, b);
-  var h = hsl[0], s = hsl[1], l = hsl[2];
+  var domBucket = isLowSatDominant ? 'none' : hueToBucket(domH);
+  var secBucket = hasSecondary ? hueToBucket(secH) : 'none';
+  if (secBucket === domBucket) { secBucket = 'none'; hasSecondary = false; }
 
-  /* 명도 레벨 (1~20) */
-  var level = Math.round(l / 100 * 19) + 1;
-  level = Math.max(1, Math.min(20, level));
+  /* ── toneScore 재구성 (기존 레시피 엔진 호환) ── */
+  var toneScore = { yellow:0, orange:0, red:0, pink:0, purple:0, green:0 };
 
-  /* 얼룩 감지 */
+  function applyBucketScore(bucket, weight) {
+    if (bucket === 'red' || bucket === 'redOrange') toneScore.red    = Math.max(toneScore.red,    weight);
+    if (bucket === 'orange')  toneScore.orange = Math.max(toneScore.orange,  weight);
+    if (bucket === 'yellow')  toneScore.yellow = Math.max(toneScore.yellow,  weight);
+    if (bucket === 'green')   toneScore.green  = Math.max(toneScore.green,   weight);
+    if (bucket === 'pink')    toneScore.pink   = Math.max(toneScore.pink,    weight);
+    if (bucket === 'purple')  toneScore.purple = Math.max(toneScore.purple,  weight);
+  }
+
+  var domWeight = dominantCount / Math.max(totalPixels, 1);
+  var secWeight = secondaryCount / Math.max(totalPixels, 1);
+  applyBucketScore(domBucket, Math.min(domWeight * 2, 1.0));
+  if (hasSecondary) applyBucketScore(secBucket, Math.min(secWeight * 2, 0.7));
+
+  /* tones 배열 — Secondary는 Dominant의 50% 이상일 때만 */
+  var sorted = Object.keys(toneScore).sort(function(a,b){ return toneScore[b]-toneScore[a]; });
+  var tones = [];
+  var primaryThresh = (sorted[0] === 'pink' || sorted[0] === 'purple') ? 0.15 : 0.20;
+  if (toneScore[sorted[0]] >= primaryThresh) {
+    tones.push(sorted[0]);
+    if (sorted[1] && toneScore[sorted[1]] >= toneScore[sorted[0]] * 0.5) {
+      tones.push(sorted[1]);
+    }
+  }
+
+  /* ── 인공색 감지 ── */
+  var isArtificial = false;
+  var artificialType = '';
+  if (domBucket === 'pink' && domS >= 15)                               { isArtificial = true; artificialType = 'pastel'; }
+  if (domBucket === 'blue' && domS >= 20)                               { isArtificial = true; artificialType = 'blue'; }
+  if (domBucket === 'purple' && domS >= 15)                             { isArtificial = true; artificialType = 'pastel'; }
+  if ((domBucket === 'blue' || domBucket === 'purple') && avgLAll > 60) { isArtificial = true; artificialType = 'pastel'; }
+
+  /* ── 매트 감지 ── */
+  var isMatte = isLowSatDominant && avgLAll >= 20 && avgLAll < 62;
+
+  /* ── 얼룩 감지 ── */
   var hueList = valid.map(function(px){ return rgbToHsl(px[0],px[1],px[2])[0]; });
   var hMean = hueList.reduce(function(a,b){return a+b;},0)/hueList.length;
   var hVariance = hueList.reduce(function(acc,hv){return acc+Math.pow(hv-hMean,2);},0)/hueList.length;
   var isUneven = hVariance > 2000;
 
-  /* 매트 감지 */
-  var isMatte = s < 28 && s > 8 && h >= 20 && h < 65 && l < 62; /* 밝은 베이스(l>=62) 는 매트 제외 */
+  /* ── 명도 레벨 ── */
+  var level = Math.round(avgLAll / 100 * 19) + 1;
+  level = Math.max(1, Math.min(20, level));
 
-  /* 퍼지 색감 점수 — 핑크/보라는 채도 15 이상도 감지 (인공색소라 채도 낮을 수 있음) */
-  var toneScore = { yellow:0, orange:0, red:0, pink:0, purple:0, green:0 };
-  var sThresh = 15; /* 핑크·보라는 낮은 채도도 감지 */
-  if (s >= 25) {
-    if (h >= 40 && h < 65)  toneScore.yellow = s/100;
-    else if (h >= 30 && h < 40) toneScore.yellow = (s/100)*((h-30)/10);
-
-    if (h >= 20 && h < 35)  toneScore.orange = s/100;
-    else if (h >= 35 && h < 45) toneScore.orange = (s/100)*((45-h)/10);
-    else if (h >= 10 && h < 20) toneScore.orange = (s/100)*((h-10)/10);
-
-    if ((h >= 0 && h < 12) || h >= 345) toneScore.red = s/100;
-    else if (h >= 12 && h < 20) toneScore.red = (s/100)*((20-h)/8);
-    else if (h >= 330 && h < 345) toneScore.red = (s/100)*((h-330)/15);
-
-    if (h >= 80 && h < 150 && s > 30) toneScore.green = s/100;
-  }
-  /* 핑크·보라는 채도 15 이상부터 별도 감지 (인공 색소 특성) */
-  if (s >= sThresh) {
-    /* 핑크: H 290~345 (마젠타~붉은 핑크) */
-    if (h >= 310 && h < 345) toneScore.pink = (s/100) * 1.2; /* 핵심 핑크 구간 가중치 */
-    else if (h >= 290 && h < 310) toneScore.pink = (s/100)*((h-290)/20);
-    else if (h >= 345 && h <= 360) toneScore.pink = (s/100)*((360-h)/15); /* 붉은핑크 */
-    /* 보라: H 255~295 */
-    if (h >= 255 && h < 295) toneScore.purple = s/100;
-    else if (h >= 295 && h < 310) toneScore.purple = (s/100)*((310-h)/15);
-  }
-
-  /* 멜라닌 구간 단순화 (5구간) */
-  var naturalTone = '';
-  var melaninZone = '';
+  /* ── 멜라닌 구간 ── */
+  var naturalTone = '', melaninZone = '';
   if (level >= 1  && level <= 5)  { naturalTone = 'red';    melaninZone = 'dark'; }
   if (level >= 6  && level <= 10) { naturalTone = 'red';    melaninZone = 'redOrange'; }
   if (level >= 11 && level <= 15) { naturalTone = 'orange'; melaninZone = 'yellowOrange'; }
   if (level >= 16 && level <= 20) { naturalTone = 'yellow'; melaninZone = 'yellow'; }
-  if (naturalTone && toneScore[naturalTone] > 0) {
-    toneScore[naturalTone] = Math.min(1, toneScore[naturalTone] * 1.2);
-  }
 
-  /* ── 인공색 감지 ──
-     파스텔: 명도 높고(l>65) 채도 중간(s 25~55) → 염색 잔류 가능
-     쨍한색: 채도 매우 높고(s>60) Hue가 자연 멜라닌 범위 벗어남 → 인공색소
-  ── */
-  var isArtificial = false;
-  var artificialType = '';
-
-  /* 핑크·마젠타 영역(H 290~345)은 인공색 우선 표시 — 자연 멜라닌에 없는 색 */
-  if (h >= 290 && h < 345 && s >= 15) {
-    isArtificial = true;
-    artificialType = 'pastel'; /* pastel 타입으로 표시 (핑크 잔류) */
-  }
-  /* 파스텔: 밝은데 청색/보라 기운 */
-  if (l > 60 && s >= 20 && (h >= 180 && h < 290)) {
-    isArtificial = true;
-    artificialType = 'pastel';
-  }
-  /* 쨍한 색: 채도 높고 자연 멜라닌 범위 완전 벗어남 */
-  if (s > 55 && (h >= 150 && h < 285)) {
-    isArtificial = true;
-    artificialType = 'vivid';
-  }
-  /* 블루/하늘: 레벨 17 미만인데 블루 기운 강하면 인공 */
-  if (level < 17 && h >= 180 && h < 260 && s > 20) {
-    isArtificial = true;
-    artificialType = 'blue';
-  }
-
-  /* tone 임계값: 핑크·보라는 0.15부터, 나머지는 0.25 */
-  var sorted = Object.keys(toneScore).sort(function(a,b){ return toneScore[b]-toneScore[a]; });
-  var tones = [];
-  var primaryThresh = (sorted[0] === 'pink' || sorted[0] === 'purple') ? 0.15 : 0.25;
-  if (toneScore[sorted[0]] >= primaryThresh) {
-    tones.push(sorted[0]);
-    var secThresh = (sorted[1] === 'pink' || sorted[1] === 'purple') ? 0.12 : 0.20;
-    if (sorted[1] && toneScore[sorted[1]] >= secThresh && (toneScore[sorted[0]] - toneScore[sorted[1]]) <= 0.40) {
-      tones.push(sorted[1]);
-    }
-  }
-
-  return { r:Math.round(r), g:Math.round(g), b:Math.round(b), h, s, l, level, tones, isUneven, isMatte, naturalTone, melaninZone, isArtificial, artificialType };
+  return {
+    r: Math.round(rAvg), g: Math.round(gAvg), b: Math.round(bAvg),
+    h: domH, s: Math.round(domS), l: Math.round(avgLAll),
+    level, tones, isUneven, isMatte,
+    naturalTone, melaninZone, isArtificial, artificialType,
+    domBucket: domBucket, secBucket: secBucket, hasSecondary: hasSecondary
+  };
 }
 
 function rgbToHsl(r, g, b) {
@@ -619,12 +655,22 @@ function showResult(r) {
   var minLevelHint = 1;
 
   /* ── 베이스 5구간 (출력 문장 보정용, 판단 로직과 무관) ── */
+  /* ── 베이스 5구간 — Lightness 기준 (출력 문장 보정용) ── */
   var base = '';
-  if      (r.l < 20)  base = 'dark';    /* 어두운 베이스 */
-  else if (r.l < 45)  base = 'brown';   /* 브라운 계열 베이스 */
-  else if (r.l < 62)  base = 'light';   /* 밝은 베이스 */
-  else if (r.l < 78)  base = 'bleached';/* 탈색된 밝은 베이스 */
-  else                base = 'ivory';   /* 아이보리·백금 베이스 */
+  var domBucket = r.domBucket || 'none';
+  var secBucket = r.secBucket || 'none';
+
+  if      (r.l < 20)  base = 'dark';
+  else if (r.l < 45)  base = 'brown';
+  else if (r.l < 62)  base = 'light';
+  else if (r.l < 78)  base = 'bleached';
+  else                base = 'ivory';
+
+  /* 선명한 색이 Dominant로 잡혔는데 브라운으로 오표현되는 것 보정 */
+  var vividBuckets = ['yellow','orange','red','pink','blue','purple','green'];
+  if (vividBuckets.indexOf(domBucket) > -1 && r.s > 30 && base === 'brown') {
+    base = 'light';
+  }
 
   var baseLabel = {
     'dark':     '어두운 베이스',
@@ -679,28 +725,28 @@ function showResult(r) {
 
   /* ── 핑크 잔류 ── */
   } else if (isPinkish) {
-    desc = '🌸 ' + baseLabel + '에 핑크·마젠타 잔류 색소가 ' + strength + ' 보여요.\n인공 색소 잔류로 판단돼요.\n\n핑크·파스텔 계열은 보통 레벨 14 이상에서 표현돼요.\n\n실제 명도가 어느 정도 되시나요?';
+    desc = '🌸 ' + baseLabel + '에 핑크·마젠타 잔류 색소가 ' + strength + ' 보여요.' + secDesc + '\n인공 색소 잔류로 판단돼요.\n\n핑크·파스텔 계열은 보통 레벨 14 이상에서 표현돼요.\n\n실제 명도가 어느 정도 되시나요?';
     minLevelHint = 14;
 
   /* ── 보라 잔류 ── */
   } else if (isPurplish) {
-    desc = '💜 ' + baseLabel + '에 보라·바이올렛 잔류 색소가 ' + strength + ' 보여요.\n인공 색소 잔류로 판단돼요.\n\n보라 계열은 보통 레벨 9 이상에서 표현되는 색이에요.\n\n실제 명도가 어느 정도 되시나요?';
+    desc = '💜 ' + baseLabel + '에 보라·바이올렛 잔류 색소가 ' + strength + ' 보여요.' + secDesc + '\n인공 색소 잔류로 판단돼요.\n\n보라 계열은 보통 레벨 9 이상에서 표현되는 색이에요.\n\n실제 명도가 어느 정도 되시나요?';
     minLevelHint = 9;
 
   /* ── 적색·와인 잔류 ── */
   } else if (isRedWine) {
-    desc = '🍷 ' + baseLabel + '에 적색·와인빛 잔류 색소가 ' + strength + ' 보여요.\n\n적색·와인 계열은 레벨 5 이상에서 다양하게 표현돼요.\n버진모에서도 짙은 붉은기가 남아있을 수 있어요.\n\n실제 명도가 어느 정도 되시나요?';
+    desc = '🍷 ' + baseLabel + '에 적색·와인빛 잔류 색소가 ' + strength + ' 보여요.' + secDesc + '\n\n적색·와인 계열은 레벨 5 이상에서 다양하게 표현돼요.\n버진모에서도 짙은 붉은기가 남아있을 수 있어요.\n\n실제 명도가 어느 정도 되시나요?';
     minLevelHint = 5;
 
   /* ── 붉은기·주황 잔류 ── */
   } else if (mainTone === 'red' || mainTone === 'orange') {
     var warmLabel = mainTone === 'red' ? '붉은기' : '주황기';
-    desc = '🔥 ' + baseLabel + '에 ' + warmLabel + '가 ' + strength + ' 깔려있어요.\n\n매장 조명이나 모발 광택에 따라 채도가 다르게 보일 수 있어요.\n붉은기·주황은 레벨 5~15까지 폭넓게 나타나요.\n\n실제 명도가 어느 정도 되시나요?';
+    desc = '🔥 ' + baseLabel + '에 ' + warmLabel + '가 ' + strength + ' 깔려있어요.' + secDesc + '\n\n매장 조명이나 모발 광택에 따라 채도가 다르게 보일 수 있어요.\n붉은기·주황은 레벨 5~15까지 폭넓게 나타나요.\n\n실제 명도가 어느 정도 되시나요?';
     minLevelHint = 5;
 
   /* ── 노랑 잔류 ── */
   } else if (mainTone === 'yellow') {
-    desc = '🌟 ' + baseLabel + '에 노랑기가 ' + strength + ' 올라와있어요.\n\n노랑은 보통 레벨 11 이상 탈색 베이스에서 나타나요.\n\n실제 명도가 어느 정도 되시나요?';
+    desc = '🌟 ' + baseLabel + '에 노랑기가 ' + strength + ' 올라와있어요.' + secDesc + '\n\n노랑은 보통 레벨 11 이상 탈색 베이스에서 나타나요.\n\n실제 명도가 어느 정도 되시나요?';
     minLevelHint = 11;
 
   /* ── 매트 잔류 ── */
@@ -737,6 +783,8 @@ function showResult(r) {
   analysisResult.isPinkish = isPinkish;
   analysisResult.isPurplish = isPurplish;
   analysisResult.isRedWine = isRedWine;
+  analysisResult.dominantHue = domHue;
+  analysisResult.secondaryHue = secHue;
   if (!analysisResult.isDarkDetected) analysisResult.isDarkDetected = false;
 
   var descEl = document.getElementById('res-natural-desc');
