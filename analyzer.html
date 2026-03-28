@@ -198,31 +198,55 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <!-- 1단계: 현재 모발색 확인 + Color Picker 보정 -->
   <div class="result-card" id="step1-card">
     <div class="result-card-title">1단계 · 현재 모발색 확인</div>
-    <div style="font-size:12px;color:#666;margin-bottom:12px;">촬영된 색상이에요. 실제 모발색과 다르면 슬라이더로 조정하세요.</div>
+    <div style="font-size:12px;color:#666;margin-bottom:12px;">촬영된 색상이에요. 실제 모발색과 다르면 조정하세요.</div>
 
     <!-- 현재색 스와치 크게 -->
     <div id="current-swatch-box" style="width:100%;height:80px;border-radius:12px;border:2px solid #333;margin-bottom:16px;"></div>
 
-    <!-- 현재색 Color Picker -->
-    <div style="margin-bottom:10px;">
-      <div style="font-size:10px;color:#555;margin-bottom:5px;">색상</div>
-      <div id="hue-bar-c" style="width:100%;height:20px;border-radius:10px;background:linear-gradient(to right,hsl(0,100%,50%),hsl(30,100%,50%),hsl(60,100%,50%),hsl(90,100%,50%),hsl(120,100%,50%),hsl(150,100%,50%),hsl(180,100%,50%),hsl(210,100%,50%),hsl(240,100%,50%),hsl(270,100%,50%),hsl(300,100%,50%),hsl(330,100%,50%),hsl(360,100%,50%));position:relative;cursor:pointer;touch-action:none;user-select:none;"
+    <!-- 현재색 색상 슬라이더 -->
+    <div style="margin-bottom:14px;">
+      <div style="font-size:10px;color:#555;margin-bottom:6px;">색상</div>
+      <div id="hue-bar-c" style="width:100%;height:22px;border-radius:11px;background:linear-gradient(to right,hsl(0,100%,50%),hsl(30,100%,50%),hsl(60,100%,50%),hsl(90,100%,50%),hsl(120,100%,50%),hsl(150,100%,50%),hsl(180,100%,50%),hsl(210,100%,50%),hsl(240,100%,50%),hsl(270,100%,50%),hsl(300,100%,50%),hsl(330,100%,50%),hsl(360,100%,50%));position:relative;cursor:pointer;touch-action:none;user-select:none;"
         onpointerdown="startDrag(event,'hue','c')" onpointermove="onDrag(event,'hue','c')" onpointerup="endDrag()">
-        <div id="hue-thumb-c" style="position:absolute;top:-4px;width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.7);transform:translateX(-50%);pointer-events:none;left:0%;"></div>
+        <div id="hue-thumb-c" style="position:absolute;top:-3px;width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.7);transform:translateX(-50%);pointer-events:none;left:0%;"></div>
       </div>
     </div>
-    <div style="margin-bottom:10px;">
-      <div style="font-size:10px;color:#555;margin-bottom:5px;">채도</div>
-      <div id="sat-bar-c" style="width:100%;height:20px;border-radius:10px;position:relative;cursor:pointer;touch-action:none;user-select:none;"
-        onpointerdown="startDrag(event,'sat','c')" onpointermove="onDrag(event,'sat','c')" onpointerup="endDrag()">
-        <div id="sat-thumb-c" style="position:absolute;top:-4px;width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.7);transform:translateX(-50%);pointer-events:none;left:60%;"></div>
+
+    <!-- 현재색 채도 3단계 버튼 -->
+    <div style="margin-bottom:14px;">
+      <div style="font-size:10px;color:#555;margin-bottom:8px;">선명도</div>
+      <div style="display:flex;gap:8px;">
+        <button id="sat-c-pastel" onclick="setSat('c','pastel')"
+          style="flex:1;padding:10px 0;border-radius:10px;border:2px solid #333;background:#111;color:#aaa;font-size:13px;font-weight:600;cursor:pointer;">
+          파스텔
+        </button>
+        <button id="sat-c-mid" onclick="setSat('c','mid')"
+          style="flex:1;padding:10px 0;border-radius:10px;border:2px solid #9E7FBF;background:rgba(158,127,191,0.15);color:#9E7FBF;font-size:13px;font-weight:600;cursor:pointer;">
+          보통
+        </button>
+        <button id="sat-c-vivid" onclick="setSat('c','vivid')"
+          style="flex:1;padding:10px 0;border-radius:10px;border:2px solid #333;background:#111;color:#aaa;font-size:13px;font-weight:600;cursor:pointer;">
+          선명
+        </button>
       </div>
     </div>
-    <div style="margin-bottom:16px;">
-      <div style="font-size:10px;color:#555;margin-bottom:5px;">명도</div>
-      <div id="lit-bar-c" style="width:100%;height:20px;border-radius:10px;background:linear-gradient(to right,#000,#fff);position:relative;cursor:pointer;touch-action:none;user-select:none;"
-        onpointerdown="startDrag(event,'lit','c')" onpointermove="onDrag(event,'lit','c')" onpointerup="endDrag()">
-        <div id="lit-thumb-c" style="position:absolute;top:-4px;width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.7);transform:translateX(-50%);pointer-events:none;left:35%;"></div>
+
+    <!-- 현재색 명도 3단계 버튼 -->
+    <div style="margin-bottom:18px;">
+      <div style="font-size:10px;color:#555;margin-bottom:8px;">명도</div>
+      <div style="display:flex;gap:8px;">
+        <button id="lit-c-dark" onclick="setLit('c','dark')"
+          style="flex:1;padding:10px 0;border-radius:10px;border:2px solid #333;background:#111;color:#aaa;font-size:13px;font-weight:600;cursor:pointer;">
+          어두운
+        </button>
+        <button id="lit-c-mid" onclick="setLit('c','mid')"
+          style="flex:1;padding:10px 0;border-radius:10px;border:2px solid #9E7FBF;background:rgba(158,127,191,0.15);color:#9E7FBF;font-size:13px;font-weight:600;cursor:pointer;">
+          중간
+        </button>
+        <button id="lit-c-light" onclick="setLit('c','light')"
+          style="flex:1;padding:10px 0;border-radius:10px;border:2px solid #333;background:#111;color:#aaa;font-size:13px;font-weight:600;cursor:pointer;">
+          밝은
+        </button>
       </div>
     </div>
 
@@ -655,16 +679,9 @@ function updatePickerUI(which) {
   var hsl = which === 'c' ? currentHSL : targetHSL;
   var color = hslStr(hsl.h, hsl.s, hsl.l);
 
-  /* 썸 위치 */
+  /* Hue 썸 위치만 업데이트 (채도·명도는 버튼으로 대체) */
   var hThumb = document.getElementById('hue-thumb-' + which);
-  var sThumb = document.getElementById('sat-thumb-' + which);
-  var lThumb = document.getElementById('lit-thumb-' + which);
   if (hThumb) { hThumb.style.left = (hueToPct(hsl.h) * 100) + '%'; hThumb.style.background = hslStr(hsl.h, 100, 50); }
-  if (sThumb) { sThumb.style.left = (satToPct(hsl.s) * 100) + '%'; sThumb.style.background = color; }
-  if (lThumb) { lThumb.style.left = (litToPct(hsl.l) * 100) + '%'; lThumb.style.background = color; }
-
-  /* 채도 바 배경 */
-  updateSatBar(which);
 
   /* 스와치 박스 */
   if (which === 'c') {
@@ -676,6 +693,54 @@ function updatePickerUI(which) {
     var tbox = document.getElementById('target-swatch-box');
     if (tbox) tbox.style.background = color;
   }
+}
+
+/* ── 채도 버튼 ── */
+function setSat(which, level) {
+  var vals = { pastel: 20, mid: 55, vivid: 85 };
+  var hsl = which === 'c' ? currentHSL : targetHSL;
+  hsl.s = vals[level];
+
+  /* 버튼 하이라이트 */
+  var prefix = which === 'c' ? 'sat-c-' : 'sat-btn-';
+  ['pastel','mid','vivid'].forEach(function(k) {
+    var btn = document.getElementById(prefix + k);
+    if (!btn) return;
+    if (k === level) {
+      btn.style.borderColor = '#9E7FBF';
+      btn.style.background = 'rgba(158,127,191,0.15)';
+      btn.style.color = '#9E7FBF';
+    } else {
+      btn.style.borderColor = '#333';
+      btn.style.background = '#111';
+      btn.style.color = '#aaa';
+    }
+  });
+  updatePickerUI(which);
+}
+
+/* ── 명도 버튼 ── */
+function setLit(which, level) {
+  var vals = { dark: 25, mid: 50, light: 75 };
+  var hsl = which === 'c' ? currentHSL : targetHSL;
+  hsl.l = vals[level];
+
+  /* 버튼 하이라이트 */
+  var prefix = which === 'c' ? 'lit-c-' : 'lit-btn-';
+  ['dark','mid','light'].forEach(function(k) {
+    var btn = document.getElementById(prefix + k);
+    if (!btn) return;
+    if (k === level) {
+      btn.style.borderColor = '#9E7FBF';
+      btn.style.background = 'rgba(158,127,191,0.15)';
+      btn.style.color = '#9E7FBF';
+    } else {
+      btn.style.borderColor = '#333';
+      btn.style.background = '#111';
+      btn.style.color = '#aaa';
+    }
+  });
+  updatePickerUI(which);
 }
 
 /* ── 결과 표시 (촬영 직후) ── */
@@ -747,153 +812,187 @@ function generateRecipe() {
   var cH = currentHSL.h, cS = currentHSL.s, cL = currentHSL.l;
   var tH = targetHSL.h,  tS = targetHSL.s,  tL = targetHSL.l;
 
-  /* 스와치 표시 */
   document.getElementById('recipe-current-swatch').style.background = hslStr(cH, cS, cL);
   document.getElementById('recipe-target-swatch').style.background  = hslStr(tH, tS, tL);
 
-  /* ── 현재색 분류 ── */
-  var curGroup = hueToGroup(cH, cS);   /* warm / cool / neutral / dark */
+  var curName  = hueToName(cH, cS, cL);
+  var tarName  = hueToName(tH, tS, tL);
+  var curGroup = hueToGroup(cH, cS);
   var tarGroup = hueToGroup(tH, tS);
 
-  /* ── 명도 차이 ── */
-  var lDiff = tL - cL;   /* 양수 = 밝아짐, 음수 = 어두워짐 */
-  var lDiffAbs = Math.abs(lDiff);
-
-  /* ── 채도 분류 ── */
-  var tarPastel = tS < 30;  /* 파스텔 계열 */
-  var tarVivid  = tS > 60;  /* 선명한 색 */
-
-  /* ── 색상 설명 ── */
-  var curName = hueToName(cH, cS, cL);
-  var tarName = hueToName(tH, tS, tL);
   document.getElementById('recipe-color-desc').textContent = curName + ' → ' + tarName;
   document.getElementById('rec-main').textContent = tarName + ' 방향';
 
-  /* ── 레시피 판단 ── */
-  var lines = [];
-  var risks = [];
-
-  /* 현재 상태 한 줄 */
-  lines.push('현재: ' + curName);
-  lines.push('목표: ' + tarName);
-  lines.push('');
-
-  /* 명도 차이 판단 */
-  if (lDiff > 30) {
-    /* 많이 밝혀야 함 */
-    var bleachCount = lDiff > 50 ? '2~3회' : '1~2회';
-    lines.push('명도 차이가 커요. 탈색이 필요해요.');
-    lines.push('탈색 ' + bleachCount + ' 진행 후 원하는 색을 올리는 방향이에요.');
-    if (tL > 75) {
-      lines.push('매우 밝은 목표라면 탈색 후 바이올렛·베이지 계열로 노랑기를 눌러주세요.');
-    }
-  } else if (lDiff < -20) {
-    /* 어두워짐 */
-    lines.push('현재보다 어두운 방향이에요.');
-    if (curGroup === 'cool' || cS > 30) {
-      lines.push('인공 색소 잔류가 있는 경우 탈색 한 번으로 정리 후 어두운 색을 올리는 게 깔끔해요.');
-    } else {
-      lines.push('대부분의 색상은 바로 올릴 수 있어요.');
-    }
-  }
-
-  /* 보색 충돌 판단 */
+  var lDiff   = tL - cL;
   var hueDiff = Math.abs(tH - cH);
   if (hueDiff > 180) hueDiff = 360 - hueDiff;
 
-  if (hueDiff > 120 && cS > 25 && tS > 25) {
-    /* 강한 보색 관계 */
-    lines.push('');
-    lines.push('현재 잔류 색상과 목표색이 보색에 가까워요.');
-    lines.push('잔류색이 목표색을 탁하게 만들 수 있어요.');
-    risks.push('보색 충돌 주의 — 잔류 색소 제거 후 시술이 깔끔해요.');
+  var tarPastel = tS <= 25;
+  var tarVivid  = tS >= 75;
+  var curDark   = cL <= 25;
+  var curMid    = cL > 25 && cL <= 50;
+  var curLight  = cL > 50;
 
-    /* 구체적 중화 방법 */
+  var lines = [];
+  var risks = [];
+
+  lines.push('현재 모발색: ' + curName);
+  lines.push('목표 색상: ' + tarName);
+  lines.push('');
+
+  if (curDark && tL >= 50 && tarPastel) {
+    lines.push('어두운 베이스에서 파스텔 계열로 가시는군요.');
+    lines.push('한 번에 가기 어려운 거리예요.');
+    lines.push('');
+    lines.push('탈색 진행 순서: 흑 → 붉은기 → 주황 → 노랑 → 아이보리');
+    lines.push('');
+    lines.push('파스텔 계열은 노랑~아이보리 구간까지 탈색이 진행돼야 표현 가능해요.');
+    lines.push('탈색 후 바이올렛 계열 염모제로 노랑기를 눌러주고 파스텔 토닝을 올리는 방향이에요.');
+    if (tL >= 70) {
+      lines.push('');
+      lines.push('화이트블론드·파스텔 방향이라면:');
+      lines.push('탈색 후 블루·바이올렛 계열 염모제로 진하게 입혀서 퇴색 과정을 이용하는 방법도 있어요.');
+      lines.push('다음 방문 때 파스텔·백금 계열로 마무리하는 게 좋아요.');
+    }
+    risks.push('모발과 모질에 따라 탈색 횟수와 잔여 멜라닌·언더톤은 차이가 날 수 있어요. 횟수는 참고용이며 직접 확인하면서 진행하세요.');
+
+  } else if (curDark && tL >= 50 && tarVivid) {
+    lines.push('어두운 베이스에서 선명한 ' + tarName + ' 방향이에요.');
+    lines.push('탈색 후 ' + tarName + ' 염모제를 올리는 방향이에요.');
+    lines.push('');
+    if (tarGroup === 'warm') {
+      lines.push('탈색 단계별 안내:');
+      lines.push('붉은기 단계 → 레드·주황 계열 염모제 바로 가능');
+      lines.push('주황 단계   → 레드·주황 계열 염모제 바로 가능');
+      lines.push('노랑 단계   → 레드·주황 계열 염모제 바로 가능');
+    } else if (tarGroup === 'cool') {
+      lines.push('탈색 단계별 안내:');
+      lines.push('붉은기 단계 → 그린 계열 염모제로 붉은기 중화 후 차가운 계열 가능');
+      lines.push('주황 단계   → 바이올렛 계열 염모제로 주황 중화 후 차가운 계열 가능');
+      lines.push('노랑 단계   → 바이올렛 계열 염모제로 노랑 눌러주면 애쉬·한색 가능');
+    }
+    risks.push('모발과 모질에 따라 탈색 횟수와 잔여 멜라닌·언더톤은 차이가 날 수 있어요. 직접 확인하면서 진행하세요.');
+
+  } else if (curDark && tL < 50) {
+    if (tarGroup === 'cool' && cS < 20) {
+      lines.push('어두운 자연 모발에서 ' + tarName + ' 방향이에요.');
+      lines.push('');
+      lines.push('연모이거나 손상이 있는 경우 애쉬·블루 계열 염모제를 사용하면');
+      lines.push('붉은기가 억제된 자연스러운 한색 계열이 표현되기도 해요.');
+      lines.push('탈색 없이 시술 시 어두운 방향으로만 가능해요.');
+    } else if (tarGroup === 'warm') {
+      lines.push('어두운 베이스에서 ' + tarName + ' 방향이에요.');
+      lines.push('레드·주황 계열 염모제는 어두운 명도에서도 색감이 살아나요.');
+      lines.push('바로 시술 가능한 방향이에요.');
+    } else {
+      lines.push('어두운 베이스에서 ' + tarName + ' 방향이에요.');
+      lines.push('같은 어두운 명도 유지라면 바로 시술 가능해요.');
+      if (hueDiff > 90) lines.push('색상 방향이 많이 달라서 잔류 색소가 영향을 줄 수 있어요.');
+    }
+
+  } else if (curMid && tL >= 60 && tarPastel) {
+    lines.push('현재 중간 명도에서 파스텔 계열로 가시는군요.');
+    lines.push('파스텔은 노랑~아이보리 구간까지 탈색이 필요해요.');
+    lines.push('탈색 후 바이올렛 계열 염모제로 노랑기를 정리하고 파스텔 계열 토닝을 올리세요.');
+    risks.push('현재 명도에서 파스텔을 바로 올리면 탁하게 나올 수 있어요.');
+
+  } else if (hueDiff > 120 && cS > 25) {
+    lines.push('현재 잔류 색상과 목표색이 보색에 가까운 관계예요.');
+    lines.push('');
     if (curGroup === 'warm' && tarGroup === 'cool') {
-      lines.push('따뜻한 잔류 → 차가운 방향: 그린 계열로 붉은기를 중화한 후 차가운 계열을 올리세요.');
+      lines.push('현재 ' + curName + ' 잔류가 차가운 ' + tarName + '을 방해해요.');
+      lines.push('');
+      if (cH < 50) {
+        lines.push('그린 계열 염모제로 붉은기를 중화한 후 차가운 계열 염모제를 올리세요.');
+      } else {
+        lines.push('바이올렛 계열 염모제로 노랑·주황기를 눌러준 후 차가운 계열 염모제를 올리세요.');
+      }
     } else if (curGroup === 'cool' && tarGroup === 'warm') {
-      lines.push('차가운 잔류 → 따뜻한 방향: 탈색으로 인공 색소를 제거한 후 난색을 올리세요.');
+      lines.push('현재 ' + curName + ' 잔류가 따뜻한 ' + tarName + '과 섞이면 탁해져요.');
+      lines.push('탈색으로 인공 색소를 제거한 후 ' + tarName + ' 염모제를 올리는 게 깔끔해요.');
+    } else {
+      lines.push('잔류 색소가 남은 채로 바로 올리면 탁하게 섞일 수 있어요.');
+      lines.push('탈색으로 정리 후 시술하는 게 가장 확실해요.');
     }
-  } else if (hueDiff > 60 && cS > 20) {
-    /* 중간 충돌 */
-    lines.push('');
-    lines.push('현재 색상과 목표색이 어느 정도 다른 방향이에요.');
-    lines.push('잔류 색소가 목표색에 약간 영향을 줄 수 있어요.');
-  }
+    risks.push('잔류 색소 제거 없이 바로 올리면 탁한 결과가 나올 수 있어요.');
 
-  /* 파스텔 특별 안내 */
-  if (tarPastel && tL > 70) {
-    lines.push('');
-    lines.push('파스텔 계열은 아이보리에 가까운 밝은 베이스에서 가장 선명해요.');
-    if (cL < 60) {
-      lines.push('탈색으로 충분히 밝힌 후 소량 토닝하는 방향이에요.');
-      risks.push('현재 명도에서 파스텔을 바로 올리면 탁하게 나올 수 있어요.');
-    }
-  }
-
-  /* 같은 계열 → 유리 */
-  if (hueDiff < 40 && lDiffAbs < 25) {
-    lines.push('');
+  } else if (hueDiff < 60 && Math.abs(lDiff) < 30) {
     lines.push('현재 색상과 목표색이 비슷한 방향이에요.');
-    lines.push('잔류 색소가 목표색과 방향이 맞아서 발색에 유리해요.');
-    lines.push('바로 시술 가능한 조합이에요.');
-  }
+    if (lDiff > 10) {
+      lines.push('목표가 조금 더 밝은 방향이에요. ' + tarName + ' 염모제를 올리면 돼요.');
+    } else if (lDiff < -10) {
+      lines.push('목표가 조금 더 어두운 방향이에요. ' + tarName + ' 염모제를 올리면 돼요.');
+    } else {
+      lines.push('잔류 언더톤과 목표 방향이 맞아서 발색에 유리해요.');
+      lines.push(tarName + ' 염모제를 바로 올리면 돼요.');
+    }
 
-  /* 완전한 화이트블론드 특별 안내 */
-  if (tL > 85 && tS < 15) {
-    lines.push('');
-    lines.push('화이트블론드·백금발 방향이에요.');
-    lines.push('탈색 2~3회 진행 후 보라나 블루 계열로 노랑기를 억제하면서 점진적으로 밝혀가는 방향이에요.');
-    lines.push('완전한 화이트블론드는 한 번에 가기 어려운 거리예요.');
-    lines.push('베이지·백금발: 탈색 후 바이올렛으로 노랑 억제 + 애쉬 소량 혼합이 필요해요.');
-  }
+  } else if (curLight) {
+    if (tarPastel) {
+      lines.push('밝은 베이스에서 파스텔 계열로 가시는군요.');
+      if (cL >= 65) {
+        lines.push('이미 밝은 명도라 파스텔 계열 표현이 수월해요.');
+        lines.push('바이올렛 계열 염모제로 노랑기를 살짝 눌러주고 파스텔 토닝을 올리세요.');
+      } else {
+        lines.push('탈색으로 조금 더 밝혀준 후 파스텔 토닝을 올리세요.');
+      }
+    } else if (tarGroup === 'warm') {
+      lines.push('밝은 베이스에서 ' + tarName + ' 방향이에요.');
+      lines.push(tarName + ' 염모제를 올리면 돼요.');
+    } else if (tarGroup === 'cool') {
+      lines.push('밝은 베이스에서 ' + tarName + ' 방향이에요.');
+      if (cL >= 60) {
+        lines.push('애쉬·바이올렛 계열 염모제를 올리면 깔끔하게 나와요.');
+      } else {
+        lines.push('노랑기가 남아있다면 바이올렛 계열 소량으로 눌러주고 차가운 계열 염모제를 올리세요.');
+      }
+    } else {
+      lines.push('밝은 베이스에서 ' + tarName + ' 방향이에요. ' + tarName + ' 염모제를 올리면 돼요.');
+    }
 
-  if (lines.length === 3 && risks.length === 0) {
-    lines.push('두 색상 관계에서 특별한 제약은 없어요.');
-    lines.push('원하는 방향으로 시술 가능해요.');
+  } else {
+    lines.push(curName + '에서 ' + tarName + ' 방향이에요.');
+    if (lDiff > 20) lines.push('목표 명도가 더 밝아서 탈색이 필요할 수 있어요.');
+    lines.push(tarName + ' 염모제를 올리는 방향이에요.');
   }
 
   var detail = lines.join('\n');
   if (risks.length > 0) detail += '\n\n⚠️ ' + risks.join('\n⚠️ ');
-
   document.getElementById('rec-detail').textContent = detail;
 }
 
-/* ── Hue → 그룹 분류 ── */
 function hueToGroup(h, s) {
   if (s < 15) return 'neutral';
   if ((h >= 0 && h < 60) || h >= 330) return 'warm';
-  if (h >= 60 && h < 150) return 'neutral';
   if (h >= 150 && h < 330) return 'cool';
   return 'neutral';
 }
 
-/* ── Hue → 한국어 색상명 ── */
 function hueToName(h, s, l) {
-  if (s < 12) {
-    if (l < 20) return '짙은 블랙·그레이';
-    if (l < 45) return '다크 그레이';
-    if (l < 70) return '실버·그레이';
-    return '화이트·아이보리';
+  if (s < 15) {
+    if (l <= 25) return '블랙 계열';
+    if (l <= 50) return '다크 그레이·애쉬 계열';
+    if (l <= 70) return '실버·그레이 계열';
+    return '화이트·아이보리 계열';
   }
-  if (l < 15) return '블랙 계열';
-  if (l > 85 && s < 20) return '화이트블론드·백금';
-
+  if (l >= 80 && s <= 20) return '화이트블론드·백금 계열';
   if ((h >= 0 && h < 15) || h >= 345) {
-    return l < 40 ? '짙은 레드' : s > 50 ? '선명한 레드' : '레드 계열';
+    return l <= 25 ? '짙은 레드 계열' : '레드 계열';
   }
-  if (h >= 15 && h < 40) return s > 50 ? '코퍼·오렌지' : '따뜻한 브라운';
-  if (h >= 40 && h < 65) return l > 60 ? '골든블론드·노랑' : '따뜻한 골든';
-  if (h >= 65 && h < 150) return s > 40 ? '그린 계열' : '카키·매트';
-  if (h >= 150 && h < 200) return '청록·틸';
-  if (h >= 200 && h < 260) {
-    return l < 35 ? '네이비·블루블랙' : s > 40 ? '블루 계열' : '애쉬·쿨그레이';
+  if (h >= 15 && h < 45) return s >= 55 ? '주황 계열' : '주황빛 계열';
+  if (h >= 45 && h < 70)  return l >= 60 ? '골든·노랑 계열' : '골든 계열';
+  if (h >= 70 && h < 150) return s >= 40 ? '그린 계열' : '카키·매트 계열';
+  if (h >= 150 && h < 210) return l <= 30 ? '네이비·블루블랙 계열' : '블루·청회색 계열';
+  if (h >= 210 && h < 260) {
+    if (l <= 30) return '네이비·블루블랙 계열';
+    return s >= 40 ? '블루 계열' : '애쉬·쿨그레이 계열';
   }
-  if (h >= 260 && h < 290) return s > 40 ? '보라·바이올렛' : '보라 애쉬';
-  if (h >= 290 && h < 330) return s > 40 ? '핑크·마젠타' : '핑크 파스텔';
-  if (h >= 330 && h < 345) return '와인레드·적보라';
-  return '브라운 계열';
+  if (h >= 260 && h < 295) return s >= 40 ? '바이올렛·보라 계열' : '보라 애쉬 계열';
+  if (h >= 295 && h < 340) return s >= 40 ? '핑크·마젠타 계열' : '핑크 계열';
+  if (h >= 340 && h < 345) return '와인레드 계열';
+  return '따뜻한 계열';
 }
+
 
 
 /* ── 명도 슬라이더 ── */
