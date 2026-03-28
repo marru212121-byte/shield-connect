@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <title>모발 색상 분석기</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -203,54 +204,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <!-- 현재색 스와치 크게 -->
     <div id="current-swatch-box" style="width:100%;height:80px;border-radius:12px;border:2px solid #333;margin-bottom:16px;"></div>
 
-    <!-- 현재색 색상 슬라이더 -->
-    <div style="margin-bottom:14px;">
-      <div style="font-size:10px;color:#555;margin-bottom:6px;">색상</div>
-      <div id="hue-bar-c" style="width:100%;height:22px;border-radius:11px;background:linear-gradient(to right,hsl(0,100%,50%),hsl(30,100%,50%),hsl(60,100%,50%),hsl(90,100%,50%),hsl(120,100%,50%),hsl(150,100%,50%),hsl(180,100%,50%),hsl(210,100%,50%),hsl(240,100%,50%),hsl(270,100%,50%),hsl(300,100%,50%),hsl(330,100%,50%),hsl(360,100%,50%));position:relative;cursor:pointer;touch-action:none;user-select:none;"
-        onpointerdown="startDrag(event,'hue','c')" onpointermove="onDrag(event,'hue','c')" onpointerup="endDrag()">
-        <div id="hue-thumb-c" style="position:absolute;top:-3px;width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.7);transform:translateX(-50%);pointer-events:none;left:0%;"></div>
-      </div>
-    </div>
+    <!-- 현재색 3D 구형 컬러피커 -->
+    <canvas id="sphere-c" width="260" height="260" style="display:block;margin:0 auto 8px;width:260px;height:260px;border-radius:50%;touch-action:none;cursor:grab;"></canvas>
+    <div style="font-size:10px;color:#555;text-align:center;margin-bottom:16px;">드래그로 회전 · 탭으로 색상 선택 | X=색상 Y=명도 안=저채도 밖=고채도</div>
 
-    <!-- 현재색 채도 3단계 버튼 -->
-    <div style="margin-bottom:14px;">
-      <div style="font-size:10px;color:#555;margin-bottom:8px;">선명도</div>
-      <div style="display:flex;gap:8px;">
-        <button id="sat-c-pastel" onclick="setSat('c','pastel')"
-          style="flex:1;padding:10px 0;border-radius:10px;border:2px solid #333;background:#111;color:#aaa;font-size:13px;font-weight:600;cursor:pointer;">
-          파스텔
-        </button>
-        <button id="sat-c-mid" onclick="setSat('c','mid')"
-          style="flex:1;padding:10px 0;border-radius:10px;border:2px solid #9E7FBF;background:rgba(158,127,191,0.15);color:#9E7FBF;font-size:13px;font-weight:600;cursor:pointer;">
-          보통
-        </button>
-        <button id="sat-c-vivid" onclick="setSat('c','vivid')"
-          style="flex:1;padding:10px 0;border-radius:10px;border:2px solid #333;background:#111;color:#aaa;font-size:13px;font-weight:600;cursor:pointer;">
-          선명
-        </button>
-      </div>
-    </div>
-
-    <!-- 현재색 명도 3단계 버튼 -->
-    <div style="margin-bottom:18px;">
-      <div style="font-size:10px;color:#555;margin-bottom:8px;">명도</div>
-      <div style="display:flex;gap:8px;">
-        <button id="lit-c-dark" onclick="setLit('c','dark')"
-          style="flex:1;padding:10px 0;border-radius:10px;border:2px solid #333;background:#111;color:#aaa;font-size:13px;font-weight:600;cursor:pointer;">
-          어두운
-        </button>
-        <button id="lit-c-mid" onclick="setLit('c','mid')"
-          style="flex:1;padding:10px 0;border-radius:10px;border:2px solid #9E7FBF;background:rgba(158,127,191,0.15);color:#9E7FBF;font-size:13px;font-weight:600;cursor:pointer;">
-          중간
-        </button>
-        <button id="lit-c-light" onclick="setLit('c','light')"
-          style="flex:1;padding:10px 0;border-radius:10px;border:2px solid #333;background:#111;color:#aaa;font-size:13px;font-weight:600;cursor:pointer;">
-          밝은
-        </button>
-      </div>
-    </div>
-
-    <button onclick="confirmCurrentColor()" style="width:100%;padding:13px;border-radius:11px;background:#9E7FBF;border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.3px;">
+    <button onclick="confirmCurrentColor()" style="width:100%;padding:13px;border-radius:11px;background:#fff;border:none;color:#000;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.3px;">
       이 색으로 확정 →
     </button>
   </div>
@@ -258,45 +216,26 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <!-- 2단계: 원하는 색 Color Picker -->
   <div class="result-card" id="step2-card" style="display:none;">
     <div class="result-card-title">2단계 · 원하는 색상 선택</div>
-    <div style="font-size:12px;color:#666;margin-bottom:14px;">원하는 결과 색상을 슬라이더로 선택해주세요.</div>
+    <div style="font-size:12px;color:#666;margin-bottom:14px;">원하는 결과 색상을 선택해주세요.</div>
 
     <!-- 두 스와치 나란히 -->
     <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:16px;">
       <div style="flex:1;">
         <div style="font-size:10px;color:#666;margin-bottom:5px;text-align:center;">현재 모발색</div>
-        <div id="current-swatch-mini" style="width:100%;height:60px;border-radius:10px;border:2px solid #333;"></div>
+        <div id="current-swatch-mini" style="width:100%;height:60px;border-radius:10px;border:2px solid #444;"></div>
       </div>
       <div style="font-size:22px;color:#444;padding-bottom:8px;">→</div>
       <div style="flex:1;">
-        <div style="font-size:10px;color:#9E7FBF;margin-bottom:5px;text-align:center;">목표 색상</div>
-        <div id="target-swatch-box" style="width:100%;height:60px;border-radius:10px;border:2px solid #9E7FBF;"></div>
+        <div style="font-size:10px;color:#fff;margin-bottom:5px;text-align:center;">목표 색상</div>
+        <div id="target-swatch-box" style="width:100%;height:60px;border-radius:10px;border:3px solid #fff;"></div>
       </div>
     </div>
 
-    <!-- 목표색 Color Picker -->
-    <div style="margin-bottom:10px;">
-      <div style="font-size:10px;color:#555;margin-bottom:5px;">색상</div>
-      <div id="hue-bar-t" style="width:100%;height:20px;border-radius:10px;background:linear-gradient(to right,hsl(0,100%,50%),hsl(30,100%,50%),hsl(60,100%,50%),hsl(90,100%,50%),hsl(120,100%,50%),hsl(150,100%,50%),hsl(180,100%,50%),hsl(210,100%,50%),hsl(240,100%,50%),hsl(270,100%,50%),hsl(300,100%,50%),hsl(330,100%,50%),hsl(360,100%,50%));position:relative;cursor:pointer;touch-action:none;user-select:none;"
-        onpointerdown="startDrag(event,'hue','t')" onpointermove="onDrag(event,'hue','t')" onpointerup="endDrag()">
-        <div id="hue-thumb-t" style="position:absolute;top:-4px;width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.7);transform:translateX(-50%);pointer-events:none;left:60%;"></div>
-      </div>
-    </div>
-    <div style="margin-bottom:10px;">
-      <div style="font-size:10px;color:#555;margin-bottom:5px;">채도</div>
-      <div id="sat-bar-t" style="width:100%;height:20px;border-radius:10px;position:relative;cursor:pointer;touch-action:none;user-select:none;"
-        onpointerdown="startDrag(event,'sat','t')" onpointermove="onDrag(event,'sat','t')" onpointerup="endDrag()">
-        <div id="sat-thumb-t" style="position:absolute;top:-4px;width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.7);transform:translateX(-50%);pointer-events:none;left:70%;"></div>
-      </div>
-    </div>
-    <div style="margin-bottom:16px;">
-      <div style="font-size:10px;color:#555;margin-bottom:5px;">명도</div>
-      <div id="lit-bar-t" style="width:100%;height:20px;border-radius:10px;background:linear-gradient(to right,#000,#fff);position:relative;cursor:pointer;touch-action:none;user-select:none;"
-        onpointerdown="startDrag(event,'lit','t')" onpointermove="onDrag(event,'lit','t')" onpointerup="endDrag()">
-        <div id="lit-thumb-t" style="position:absolute;top:-4px;width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.7);transform:translateX(-50%);pointer-events:none;left:70%;"></div>
-      </div>
-    </div>
+    <!-- 목표색 3D 구형 컬러피커 -->
+    <canvas id="sphere-t" width="260" height="260" style="display:block;margin:0 auto 8px;width:260px;height:260px;border-radius:50%;touch-action:none;cursor:grab;"></canvas>
+    <div style="font-size:10px;color:#555;text-align:center;margin-bottom:16px;">드래그로 회전 · 탭으로 색상 선택 | X=색상 Y=명도 안=저채도 밖=고채도</div>
 
-    <button onclick="confirmTargetColor()" style="width:100%;padding:13px;border-radius:11px;background:#9E7FBF;border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.3px;">
+    <button onclick="confirmTargetColor()" style="width:100%;padding:13px;border-radius:11px;background:#fff;border:none;color:#000;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.3px;">
       시술 방향 확인 →
     </button>
   </div>
@@ -625,65 +564,10 @@ function hslStr(h, s, l) {
   return 'hsl(' + h + ',' + s + '%,' + l + '%)';
 }
 
-/* ── 슬라이더 위치(%) → 값 변환 ── */
-function pctToHue(pct) { return Math.round(pct * 360); }
-function pctToSat(pct) { return Math.round(pct * 100); }
-function pctToLit(pct) { return Math.round(pct * 100); }
-
-/* ── 값 → 슬라이더 위치(%) ── */
-function hueToPct(h) { return h / 360; }
-function satToPct(s) { return s / 100; }
-function litToPct(l) { return l / 100; }
-
-/* ── 채도 슬라이더 배경 업데이트 ── */
-function updateSatBar(which) {
-  var hsl = which === 'c' ? currentHSL : targetHSL;
-  var bar = document.getElementById('sat-bar-' + which);
-  if (bar) bar.style.background = 'linear-gradient(to right, hsl(' + hsl.h + ',0%,' + hsl.l + '%), hsl(' + hsl.h + ',100%,' + hsl.l + '%))';
-}
-
-/* ── Color Picker 슬라이더 드래그 ── */
-function getRatio(event, el) {
-  var rect = el.getBoundingClientRect();
-  var x = (event.clientX !== undefined ? event.clientX : event.touches[0].clientX) - rect.left;
-  return Math.max(0, Math.min(1, x / rect.width));
-}
-
-function startDrag(event, axis, which) {
-  event.currentTarget.setPointerCapture(event.pointerId);
-  activeDrag = { axis: axis, which: which };
-  applyDrag(event, axis, which);
-}
-function onDrag(event, axis, which) {
-  if (!activeDrag || activeDrag.axis !== axis || activeDrag.which !== which) return;
-  applyDrag(event, axis, which);
-}
-function endDrag() { activeDrag = null; }
-
-function applyDrag(event, axis, which) {
-  var barId = axis + '-bar-' + which;
-  var bar = document.getElementById(barId);
-  if (!bar) return;
-  var ratio = getRatio(event, bar);
-  var hsl = which === 'c' ? currentHSL : targetHSL;
-
-  if (axis === 'hue') hsl.h = pctToHue(ratio);
-  if (axis === 'sat') hsl.s = pctToSat(ratio);
-  if (axis === 'lit') hsl.l = pctToLit(ratio);
-
-  updatePickerUI(which);
-}
-
-/* ── UI 전체 업데이트 ── */
-function updatePickerUI(which) {
+/* ── 스와치 업데이트 ── */
+function updateSwatchOnly(which) {
   var hsl = which === 'c' ? currentHSL : targetHSL;
   var color = hslStr(hsl.h, hsl.s, hsl.l);
-
-  /* Hue 썸 위치만 업데이트 (채도·명도는 버튼으로 대체) */
-  var hThumb = document.getElementById('hue-thumb-' + which);
-  if (hThumb) { hThumb.style.left = (hueToPct(hsl.h) * 100) + '%'; hThumb.style.background = hslStr(hsl.h, 100, 50); }
-
-  /* 스와치 박스 */
   if (which === 'c') {
     var box = document.getElementById('current-swatch-box');
     if (box) box.style.background = color;
@@ -695,70 +579,148 @@ function updatePickerUI(which) {
   }
 }
 
-/* ── 채도 버튼 ── */
-function setSat(which, level) {
-  var vals = { pastel: 20, mid: 55, vivid: 85 };
-  var hsl = which === 'c' ? currentHSL : targetHSL;
-  hsl.s = vals[level];
+/* ══════════════════════════════════════
+   3D 구형 컬러피커 — Three.js CDN
+   X(경도)=Hue, Y(위도)=Lightness
+   중심=저채도, 표면=고채도
+══════════════════════════════════════ */
+var _sphereC = null, _sphereT = null;
 
-  /* 버튼 하이라이트 */
-  var prefix = which === 'c' ? 'sat-c-' : 'sat-btn-';
-  ['pastel','mid','vivid'].forEach(function(k) {
-    var btn = document.getElementById(prefix + k);
-    if (!btn) return;
-    if (k === level) {
-      btn.style.borderColor = '#9E7FBF';
-      btn.style.background = 'rgba(158,127,191,0.15)';
-      btn.style.color = '#9E7FBF';
-    } else {
-      btn.style.borderColor = '#333';
-      btn.style.background = '#111';
-      btn.style.color = '#aaa';
-    }
-  });
-  updatePickerUI(which);
+function _buildSphere(canvasId, which) {
+  if (typeof THREE === 'undefined') return null;
+  var canvas = document.getElementById(canvasId);
+  if (!canvas) return null;
+
+  var R = 1.0, SEG = 56;
+  var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x000000, 0);
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+  camera.position.set(0, 0, 2.8);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.38));
+  var dl = new THREE.DirectionalLight(0xffffff, 0.85);
+  dl.position.set(3, 4, 5); scene.add(dl);
+
+  /* 버텍스 컬러 구 */
+  var geo = new THREE.SphereGeometry(R, SEG, SEG);
+  var pos = geo.attributes.position;
+  var cols = new Float32Array(pos.count * 3);
+  for (var i = 0; i < pos.count; i++) {
+    var x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+    var r3 = Math.sqrt(x*x+y*y+z*z);
+    var phi = Math.acos(Math.max(-1, Math.min(1, y/r3)));
+    var th = Math.atan2(z, x); if (th < 0) th += 2*Math.PI;
+    var H = th/(2*Math.PI)*360, L = (1-phi/Math.PI)*80+10, S = (r3/R)*90;
+    /* HSL→RGB */
+    var h6=H/60, ss=S/100, ll=L/100;
+    var c=(1-Math.abs(2*ll-1))*ss, xv=c*(1-Math.abs(h6%2-1)), m=ll-c/2;
+    var rr,gg,bb;
+    if(h6<1){rr=c;gg=xv;bb=0;}else if(h6<2){rr=xv;gg=c;bb=0;}
+    else if(h6<3){rr=0;gg=c;bb=xv;}else if(h6<4){rr=0;gg=xv;bb=c;}
+    else if(h6<5){rr=xv;gg=0;bb=c;}else{rr=c;gg=0;bb=xv;}
+    cols[i*3]=rr+m; cols[i*3+1]=gg+m; cols[i*3+2]=bb+m;
+  }
+  geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+  var sphere = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({ vertexColors:true, shininess:55 }));
+  scene.add(sphere);
+
+  /* 마커 */
+  var marker = new THREE.Mesh(new THREE.SphereGeometry(0.052,14,14), new THREE.MeshBasicMaterial({color:0xffffff,depthTest:false}));
+  var ring   = new THREE.Mesh(new THREE.TorusGeometry(0.072,0.016,8,28), new THREE.MeshBasicMaterial({color:0x000000,depthTest:false}));
+  scene.add(marker); scene.add(ring);
+
+  function localPt(h, s, l) {
+    var th = h/360*2*Math.PI, phi=(1-(l-10)/80)*Math.PI, rr=s/90*R;
+    return new THREE.Vector3(rr*Math.sin(phi)*Math.cos(th), rr*Math.cos(phi), rr*Math.sin(phi)*Math.sin(th));
+  }
+  function placeMarker(hsl) {
+    var pt=localPt(hsl.h,hsl.s,hsl.l), n=pt.clone().normalize();
+    marker.position.copy(pt).addScaledVector(n,0.012);
+    ring.position.copy(pt).addScaledVector(n,0.006);
+    ring.lookAt(camera.position);
+  }
+
+  var rotX=0, rotY=0, lx=0, ly=0, dragging=false, moved=false;
+  function align(hsl) {
+    rotY=-(hsl.h/360)*2*Math.PI; rotX=((hsl.l-10)/80-0.5)*Math.PI*0.85;
+    sphere.rotation.set(rotX,rotY,0); placeMarker(hsl);
+  }
+
+  var ray = new THREE.Raycaster();
+  function pickHSL(cx, cy) {
+    var rect=canvas.getBoundingClientRect();
+    ray.setFromCamera({x:((cx-rect.left)/rect.width)*2-1,y:-((cy-rect.top)/rect.height)*2+1},camera);
+    var invQ=sphere.quaternion.clone().invert();
+    var lo=ray.ray.origin.clone().applyQuaternion(invQ);
+    var ld=ray.ray.direction.clone().applyQuaternion(invQ).normalize();
+    var b=2*lo.dot(ld), c2=lo.dot(lo)-R*R, disc=b*b-4*c2;
+    if(disc<0) return null;
+    var t=(-b-Math.sqrt(disc))/2; if(t<0) t=(-b+Math.sqrt(disc))/2; if(t<0) return null;
+    var hit=lo.clone().addScaledVector(ld,t);
+    var rr=hit.length(), phi=Math.acos(Math.max(-1,Math.min(1,hit.y/rr))), th=Math.atan2(hit.z,hit.x);
+    if(th<0) th+=2*Math.PI;
+    return {h:Math.round(th/(2*Math.PI)*360)%360, l:Math.round((1-phi/Math.PI)*80+10), s:Math.round((rr/R)*90)};
+  }
+
+  function onDown(e){dragging=true;moved=false;var t=e.touches?e.touches[0]:e;lx=t.clientX;ly=t.clientY;canvas.style.cursor='grabbing';}
+  function onMove(e){
+    if(!dragging)return; e.preventDefault();
+    var t=e.touches?e.touches[0]:e, dx=t.clientX-lx, dy=t.clientY-ly; lx=t.clientX;ly=t.clientY;
+    if(Math.abs(dx)>1||Math.abs(dy)>1) moved=true;
+    rotY+=dx*0.013; rotX=Math.max(-Math.PI/2,Math.min(Math.PI/2,rotX+dy*0.013));
+    sphere.rotation.set(rotX,rotY,0); ring.rotation.copy(sphere.rotation);
+    var hsl=which==='c'?currentHSL:targetHSL;
+    var lp=marker.position.clone(), lr=lp.length(); if(lr<0.001)return;
+    var phi2=Math.acos(Math.max(-1,Math.min(1,lp.y/lr))), th2=Math.atan2(lp.z,lp.x); if(th2<0)th2+=2*Math.PI;
+    hsl.h=Math.round(th2/(2*Math.PI)*360)%360; hsl.l=Math.round((1-phi2/Math.PI)*80+10); hsl.s=Math.round((lr/R)*90);
+    updateSwatchOnly(which);
+  }
+  function onUp(e){
+    if(!dragging)return; dragging=false; canvas.style.cursor='grab';
+    if(!moved){var t=e.changedTouches?e.changedTouches[0]:e, res=pickHSL(t.clientX,t.clientY);
+      if(res){var hsl=which==='c'?currentHSL:targetHSL; hsl.h=res.h;hsl.s=res.s;hsl.l=res.l; placeMarker(hsl); updateSwatchOnly(which);}}
+  }
+  canvas.addEventListener('mousedown',onDown);
+  window.addEventListener('mousemove',onMove);
+  window.addEventListener('mouseup',onUp);
+  canvas.addEventListener('touchstart',onDown,{passive:false});
+  canvas.addEventListener('touchmove',onMove,{passive:false});
+  canvas.addEventListener('touchend',onUp);
+
+  (function loop(){requestAnimationFrame(loop);
+    var w=canvas.clientWidth,h=canvas.clientHeight;
+    if(renderer.domElement.width!==w||renderer.domElement.height!==h){renderer.setSize(w,h,false);camera.aspect=w/Math.max(h,1);camera.updateProjectionMatrix();}
+    renderer.render(scene,camera);
+  })();
+
+  return { align: align };
 }
 
-/* ── 명도 버튼 ── */
-function setLit(which, level) {
-  var vals = { dark: 25, mid: 50, light: 75 };
-  var hsl = which === 'c' ? currentHSL : targetHSL;
-  hsl.l = vals[level];
-
-  /* 버튼 하이라이트 */
-  var prefix = which === 'c' ? 'lit-c-' : 'lit-btn-';
-  ['dark','mid','light'].forEach(function(k) {
-    var btn = document.getElementById(prefix + k);
-    if (!btn) return;
-    if (k === level) {
-      btn.style.borderColor = '#9E7FBF';
-      btn.style.background = 'rgba(158,127,191,0.15)';
-      btn.style.color = '#9E7FBF';
-    } else {
-      btn.style.borderColor = '#333';
-      btn.style.background = '#111';
-      btn.style.color = '#aaa';
-    }
-  });
-  updatePickerUI(which);
+function _initSphere(which) {
+  if (which === 'c') {
+    if (!_sphereC) _sphereC = _buildSphere('sphere-c','c');
+    if (_sphereC) _sphereC.align(currentHSL);
+  } else {
+    if (!_sphereT) _sphereT = _buildSphere('sphere-t','t');
+    if (_sphereT) _sphereT.align(targetHSL);
+  }
+  updateSwatchOnly(which);
 }
 
 /* ── 결과 표시 (촬영 직후) ── */
 function showResult(r) {
-  /* 스와치 색상 → currentHSL 자동 세팅 */
   var hsl = rgbToHsl(r.r, r.g, r.b);
   currentHSL = { h: hsl[0], s: hsl[1], l: hsl[2] };
 
-  /* UI 초기화 */
-  updatePickerUI('c');
-  updateSatBar('c');
+  /* 구형 피커 초기화 */
+  updateSwatchOnly('c');
+  requestAnimationFrame(function(){ _initSphere('c'); });
 
-  /* 단계 표시 */
   document.getElementById('step1-card').style.display = 'block';
   document.getElementById('step2-card').style.display = 'none';
   document.getElementById('recipe-card').style.display = 'none';
 
-  /* 레벨 미선택 초기화 */
   userLevel = null;
   userTarget = null;
   applyLevelRestrictions();
@@ -767,10 +729,8 @@ function showResult(r) {
 
 /* ── 현재색 확정 ── */
 function confirmCurrentColor() {
-  /* 현재색 기반으로 undertone 계산해서 저장 */
   var h = currentHSL.h, s = currentHSL.s, l = currentHSL.l;
 
-  /* undertone 판단 (Hue 기반) */
   var ut = 'none';
   if (s < 15) { ut = l < 25 ? 'dark' : 'none'; }
   else if ((h >= 0 && h < 50) || h >= 330) { ut = 'warm'; }
@@ -778,25 +738,24 @@ function confirmCurrentColor() {
   else if (h >= 150 && h < 290) { ut = 'cool'; }
   else if (h >= 290 && h < 330) { ut = 'cool'; }
 
-  analysisResult.undertone = ut;
+  analysisResult.undertone  = ut;
   analysisResult.isBlueish  = (h >= 180 && h < 260) && s > 15;
   analysisResult.isPinkish  = (h >= 290 && h < 345) && s >= 15;
   analysisResult.isPurplish = (h >= 255 && h < 295) && s >= 15;
   analysisResult.isRedWine  = (h >= 330 || h < 15) && s > 20;
   analysisResult.base = l < 20 ? 'dark' : l < 45 ? 'brown' : l < 62 ? 'light' : l < 78 ? 'bleached' : 'ivory';
 
-  /* 목표색 초기 세팅 — 현재색 반대편으로 */
-  targetHSL = { h: (currentHSL.h + 180) % 360, s: 50, l: Math.min(80, currentHSL.l + 20) };
-  updatePickerUI('t');
-  updateSatBar('t');
+  /* 목표색 초기값 — 현재보다 밝고 약간 다른 방향 */
+  targetHSL = { h: (currentHSL.h + 30) % 360, s: 55, l: Math.min(78, currentHSL.l + 25) };
 
-  /* 단계 전환 */
+  updateSwatchOnly('c');
+  updateSwatchOnly('t');
+
   document.getElementById('step1-card').style.display = 'none';
   document.getElementById('step2-card').style.display = 'block';
-  document.getElementById('step2-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-  /* 미니 스와치 */
   document.getElementById('current-swatch-mini').style.background = hslStr(currentHSL.h, currentHSL.s, currentHSL.l);
+  document.getElementById('step2-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  requestAnimationFrame(function(){ _initSphere('t'); });
 }
 
 /* ── 목표색 확정 → 레시피 도출 ── */
