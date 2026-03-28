@@ -582,7 +582,7 @@ function analyzeRegion(ctx, x, y, w, h) {
     h: domH, s: Math.round(domS), l: Math.round(avgLAll),
     level, tones, isUneven, isMatte,
     naturalTone, melaninZone, isArtificial, artificialType,
-    domBucket: domBucket, secBucket: secBucket, hasSecondary: hasSecondary
+    dominantHue: domBucket, secondaryHue: (hasSecondary ? secBucket : 'none')
   };
 }
 
@@ -657,8 +657,8 @@ function showResult(r) {
   /* ── 베이스 5구간 (출력 문장 보정용, 판단 로직과 무관) ── */
   /* ── 베이스 5구간 — Lightness 기준 (출력 문장 보정용) ── */
   var base = '';
-  var domBucket = r.domBucket || 'none';
-  var secBucket = r.secBucket || 'none';
+  var domBucket = r.dominantHue || 'none';
+  var secBucket = r.secondaryHue || 'none';
 
   if      (r.l < 20)  base = 'dark';
   else if (r.l < 45)  base = 'brown';
@@ -692,18 +692,29 @@ function showResult(r) {
     undertone = 'dark';
   }
 
-  var isBlueish  = (r.h >= 180 && r.h < 260) && r.s > 15;
-  var isPinkish  = (r.h >= 290 && r.h < 345) && r.s >= 15;
-  var isPurplish = (r.h >= 255 && r.h < 295) && r.s >= 15;
-  var isRedWine  = (r.h >= 330 || r.h < 15)  && r.s > 20;
-  var isDark     = (r.l < 22 && r.s < 30); /* 카키·딥그레이·블랙 포함 */
+  /* domBucket 기반 감지 플래그 (Dominant 방식 연동) */
+  var isBlueish  = domBucket === 'blue'   || (domBucket === 'none' && (r.h >= 180 && r.h < 260) && r.s > 15);
+  var isPinkish  = domBucket === 'pink'   || (domBucket === 'none' && (r.h >= 290 && r.h < 345) && r.s >= 15);
+  var isPurplish = domBucket === 'purple' || (domBucket === 'none' && (r.h >= 255 && r.h < 295) && r.s >= 15);
+  var isRedWine  = domBucket === 'red'    || domBucket === 'redOrange';
+  var isGreenish = domBucket === 'green';
+  var isDark     = (r.l < 22 && r.s < 30);
 
-  /* ── 언더톤 강도 판단 ── */
+  /* 강도 */
   var strength = '';
   if (r.s >= 50)       strength = '강하게';
   else if (r.s >= 28)  strength = '확실하게';
   else if (r.s >= 15)  strength = '살짝';
-  else                 strength = '';
+
+  /* Secondary 보조 문구 */
+  var secLabelMap = {
+    'red':'붉은기','redOrange':'붉은 주황기','orange':'주황기',
+    'yellow':'노랑기','green':'그린기','blue':'파란기',
+    'purple':'보라기','pink':'핑크기'
+  };
+  var secDesc = (secBucket !== 'none' && secLabelMap[secBucket])
+    ? (' 여기에 ' + secLabelMap[secBucket] + '도 살짝 섞인 상태예요.')
+    : '';
 
   /* ── 아이보리·백금 베이스 전용 문구 ── */
   if (base === 'ivory') {
@@ -718,9 +729,14 @@ function showResult(r) {
       minLevelHint = 15;
     }
 
+  /* ── 초록 감지 ── */
+  } else if (isGreenish) {
+    desc = '🌿 그린 계열 색감이 감지돼요.' + secDesc + '\n\n자연 모발에서 이 색감이 나오기 어려운 구간이에요.\n인공 색소이거나 조명 영향일 수 있어요.\n\n실제 모발 상태를 직접 확인 후 명도를 선택해주세요.\n\n실제 명도가 어느 정도 되시나요?';
+    minLevelHint = 1;
+
   /* ── 파랑 잔류 ── */
   } else if (isBlueish) {
-    desc = '🔵 ' + baseLabel + '에 청회색·파랑 계열 잔류 색소가 ' + strength + ' 보여요.\n\n조명·각도에 따라 실제보다 밝거나 어둡게 보일 수 있어요.\n파랑·네이비는 보통 레벨 14 이상에서 표현되는 색이에요.\n\n실제 명도가 어느 정도 되시나요?';
+    desc = '🔵 ' + baseLabel + '에 청회색·파랑 계열 잔류 색소가 ' + strength + ' 보여요.' + secDesc + '\n\n조명·각도에 따라 실제보다 밝거나 어둡게 보일 수 있어요.\n파랑·네이비는 보통 레벨 14 이상에서 표현되는 색이에요.\n\n실제 명도가 어느 정도 되시나요?';
     minLevelHint = 14;
 
   /* ── 핑크 잔류 ── */
@@ -783,8 +799,8 @@ function showResult(r) {
   analysisResult.isPinkish = isPinkish;
   analysisResult.isPurplish = isPurplish;
   analysisResult.isRedWine = isRedWine;
-  analysisResult.dominantHue = domHue;
-  analysisResult.secondaryHue = secHue;
+  analysisResult.dominantHue = domBucket;
+  analysisResult.secondaryHue = secBucket;
   if (!analysisResult.isDarkDetected) analysisResult.isDarkDetected = false;
 
   var descEl = document.getElementById('res-natural-desc');
