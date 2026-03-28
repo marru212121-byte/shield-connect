@@ -203,53 +203,59 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <!-- 현재색 스와치 크게 -->
     <div id="current-swatch-box" style="width:100%;height:80px;border-radius:12px;border:2px solid #333;margin-bottom:16px;"></div>
 
-    <!-- 현재색 3D 구형 색상 피커 (Hue 선택) -->
-    <div style="display:flex;justify-content:center;margin-bottom:6px;">
-      <canvas id="sphere-c" width="260" height="260" style="width:260px;height:260px;border-radius:50%;cursor:grab;touch-action:none;display:block;"></canvas>
+    <!-- 현재색 색상 슬라이더 -->
+    <div style="margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="font-size:11px;color:#666;font-weight:600;letter-spacing:0.5px;">색상</div>
+        <div id="hue-label-c" style="font-size:11px;color:#aaa;"></div>
+      </div>
+      <div id="hue-bar-c" style="width:100%;height:36px;border-radius:18px;background:linear-gradient(to right,hsl(0,100%,50%),hsl(30,100%,50%),hsl(60,100%,50%),hsl(90,100%,50%),hsl(120,100%,50%),hsl(150,100%,50%),hsl(180,100%,50%),hsl(210,100%,50%),hsl(240,100%,50%),hsl(270,100%,50%),hsl(300,100%,50%),hsl(330,100%,50%),hsl(360,100%,50%));position:relative;cursor:pointer;touch-action:none;user-select:none;box-shadow:0 2px 12px rgba(0,0,0,0.4);"
+        onpointerdown="startDrag(event,'hue','c')" onpointermove="onDrag(event,'hue','c')" onpointerup="endDrag()">
+        <div id="hue-thumb-c" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:32px;height:32px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,0.7);pointer-events:none;left:0%;transition:left 0.05s;"></div>
+      </div>
     </div>
-    <div style="font-size:10px;color:#555;text-align:center;margin-bottom:14px;">드래그로 회전해 색상 선택 · 선명도·명도는 아래 슬라이더로 조절</div>
 
-    <!-- 현재색 채도 4단계 스냅 슬라이더 -->
-    <div style="margin-bottom:16px;">
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-        <div style="font-size:10px;color:#777;">선명도</div>
-        <div style="font-size:10px;color:#aaa;" id="sat-label-c">보통</div>
+    <!-- 현재색 선명도 4단계 스냅 슬라이더 -->
+    <div style="margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="font-size:11px;color:#666;font-weight:600;letter-spacing:0.5px;">선명도</div>
+        <div style="font-size:12px;color:#fff;font-weight:700;" id="sat-label-c">보통</div>
       </div>
-      <div id="sat-bar-c" style="width:100%;height:22px;border-radius:11px;position:relative;cursor:pointer;touch-action:none;user-select:none;"
+      <div id="sat-bar-c" style="width:100%;height:36px;border-radius:18px;position:relative;cursor:pointer;touch-action:none;user-select:none;box-shadow:0 2px 12px rgba(0,0,0,0.4);"
         onpointerdown="startSnapDrag(event,'sat','c')" onpointermove="onSnapDrag(event,'sat','c')" onpointerup="endDrag()">
-        <div style="position:absolute;top:50%;left:10%;width:4px;height:10px;background:rgba(255,255,255,0.3);border-radius:2px;transform:translate(-50%,-50%);pointer-events:none;"></div>
-        <div style="position:absolute;top:50%;left:36%;width:4px;height:10px;background:rgba(255,255,255,0.3);border-radius:2px;transform:translate(-50%,-50%);pointer-events:none;"></div>
-        <div style="position:absolute;top:50%;left:63%;width:4px;height:10px;background:rgba(255,255,255,0.3);border-radius:2px;transform:translate(-50%,-50%);pointer-events:none;"></div>
-        <div style="position:absolute;top:50%;left:90%;width:4px;height:10px;background:rgba(255,255,255,0.3);border-radius:2px;transform:translate(-50%,-50%);pointer-events:none;"></div>
-        <div id="sat-thumb-c" style="position:absolute;top:-3px;width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.8);transform:translateX(-50%);pointer-events:none;left:36%;"></div>
+        <div style="position:absolute;top:50%;left:10%;width:2px;height:14px;background:rgba(255,255,255,0.25);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none;"></div>
+        <div style="position:absolute;top:50%;left:36%;width:2px;height:14px;background:rgba(255,255,255,0.25);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none;"></div>
+        <div style="position:absolute;top:50%;left:63%;width:2px;height:14px;background:rgba(255,255,255,0.25);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none;"></div>
+        <div style="position:absolute;top:50%;left:90%;width:2px;height:14px;background:rgba(255,255,255,0.25);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none;"></div>
+        <div id="sat-thumb-c" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:32px;height:32px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,0.8);pointer-events:none;left:36%;"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;margin-top:5px;padding:0 5px;">
-        <span style="font-size:9px;color:#555;">파스텔</span>
-        <span style="font-size:9px;color:#555;">연한</span>
-        <span style="font-size:9px;color:#555;">보통</span>
-        <span style="font-size:9px;color:#555;">선명</span>
+      <div style="display:flex;justify-content:space-between;margin-top:6px;padding:0 4px;">
+        <span style="font-size:10px;color:#444;">파스텔</span>
+        <span style="font-size:10px;color:#444;">연한</span>
+        <span style="font-size:10px;color:#444;">보통</span>
+        <span style="font-size:10px;color:#444;">선명</span>
       </div>
     </div>
 
     <!-- 현재색 명도 4단계 스냅 슬라이더 -->
-    <div style="margin-bottom:18px;">
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-        <div style="font-size:10px;color:#777;">명도</div>
-        <div style="font-size:10px;color:#aaa;" id="lit-label-c">중저</div>
+    <div style="margin-bottom:22px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="font-size:11px;color:#666;font-weight:600;letter-spacing:0.5px;">명도</div>
+        <div style="font-size:12px;color:#fff;font-weight:700;" id="lit-label-c">중저</div>
       </div>
-      <div id="lit-bar-c" style="width:100%;height:22px;border-radius:11px;background:linear-gradient(to right,#111,#fff);position:relative;cursor:pointer;touch-action:none;user-select:none;"
+      <div id="lit-bar-c" style="width:100%;height:36px;border-radius:18px;background:linear-gradient(to right,#111,#fff);position:relative;cursor:pointer;touch-action:none;user-select:none;box-shadow:0 2px 12px rgba(0,0,0,0.4);"
         onpointerdown="startSnapDrag(event,'lit','c')" onpointermove="onSnapDrag(event,'lit','c')" onpointerup="endDrag()">
-        <div style="position:absolute;top:50%;left:10%;width:4px;height:10px;background:rgba(255,255,255,0.3);border-radius:2px;transform:translate(-50%,-50%);pointer-events:none;"></div>
-        <div style="position:absolute;top:50%;left:36%;width:4px;height:10px;background:rgba(255,255,255,0.3);border-radius:2px;transform:translate(-50%,-50%);pointer-events:none;"></div>
-        <div style="position:absolute;top:50%;left:63%;width:4px;height:10px;background:rgba(255,255,255,0.3);border-radius:2px;transform:translate(-50%,-50%);pointer-events:none;"></div>
-        <div style="position:absolute;top:50%;left:90%;width:4px;height:10px;background:rgba(255,255,255,0.3);border-radius:2px;transform:translate(-50%,-50%);pointer-events:none;"></div>
-        <div id="lit-thumb-c" style="position:absolute;top:-3px;width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.8);transform:translateX(-50%);pointer-events:none;left:36%;"></div>
+        <div style="position:absolute;top:50%;left:10%;width:2px;height:14px;background:rgba(255,255,255,0.25);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none;"></div>
+        <div style="position:absolute;top:50%;left:36%;width:2px;height:14px;background:rgba(255,255,255,0.25);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none;"></div>
+        <div style="position:absolute;top:50%;left:63%;width:2px;height:14px;background:rgba(255,255,255,0.25);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none;"></div>
+        <div style="position:absolute;top:50%;left:90%;width:2px;height:14px;background:rgba(255,255,255,0.25);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none;"></div>
+        <div id="lit-thumb-c" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:32px;height:32px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,0.8);pointer-events:none;left:36%;"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;margin-top:5px;padding:0 5px;">
-        <span style="font-size:9px;color:#555;">어두운</span>
-        <span style="font-size:9px;color:#555;">중저</span>
-        <span style="font-size:9px;color:#555;">중고</span>
-        <span style="font-size:9px;color:#555;">밝은</span>
+      <div style="display:flex;justify-content:space-between;margin-top:6px;padding:0 4px;">
+        <span style="font-size:10px;color:#444;">어두운</span>
+        <span style="font-size:10px;color:#444;">중저</span>
+        <span style="font-size:10px;color:#444;">중고</span>
+        <span style="font-size:10px;color:#444;">밝은</span>
       </div>
     </div>
 
@@ -276,54 +282,59 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       </div>
     </div>
 
-    <!-- 목표색 3D 구형 색상 피커 (Hue 선택) -->
-    <div style="display:flex;justify-content:center;margin-bottom:6px;">
-      <canvas id="sphere-t" width="260" height="260" style="width:260px;height:260px;border-radius:50%;cursor:grab;touch-action:none;display:block;"></canvas>
+    <!-- 목표색 색상 슬라이더 -->
+    <div style="margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="font-size:11px;color:#666;font-weight:600;letter-spacing:0.5px;">색상</div>
+        <div id="hue-label-t" style="font-size:11px;color:#aaa;"></div>
+      </div>
+      <div id="hue-bar-t" style="width:100%;height:36px;border-radius:18px;background:linear-gradient(to right,hsl(0,100%,50%),hsl(30,100%,50%),hsl(60,100%,50%),hsl(90,100%,50%),hsl(120,100%,50%),hsl(150,100%,50%),hsl(180,100%,50%),hsl(210,100%,50%),hsl(240,100%,50%),hsl(270,100%,50%),hsl(300,100%,50%),hsl(330,100%,50%),hsl(360,100%,50%));position:relative;cursor:pointer;touch-action:none;user-select:none;box-shadow:0 2px 12px rgba(0,0,0,0.4);"
+        onpointerdown="startDrag(event,'hue','t')" onpointermove="onDrag(event,'hue','t')" onpointerup="endDrag()">
+        <div id="hue-thumb-t" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:32px;height:32px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,0.8);pointer-events:none;left:60%;transition:left 0.05s;"></div>
+      </div>
     </div>
-    <div style="font-size:10px;color:#555;text-align:center;margin-bottom:14px;">드래그로 회전해 색상 선택 · 선명도·명도는 아래 슬라이더로 조절</div>
 
-    <!-- 목표색 채도 4단계 스냅 슬라이더 -->
-    <div style="margin-bottom:16px;">
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-        <div style="font-size:10px;color:#777;">선명도</div>
-        <div style="font-size:10px;color:#aaa;" id="sat-label-t">보통</div>
+    <!-- 목표색 선명도 4단계 스냅 슬라이더 -->
+    <div style="margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="font-size:11px;color:#666;font-weight:600;letter-spacing:0.5px;">선명도</div>
+        <div style="font-size:12px;color:#fff;font-weight:700;" id="sat-label-t">보통</div>
       </div>
-      <div id="sat-bar-t" style="width:100%;height:22px;border-radius:11px;position:relative;cursor:pointer;touch-action:none;user-select:none;"
+      <div id="sat-bar-t" style="width:100%;height:36px;border-radius:18px;position:relative;cursor:pointer;touch-action:none;user-select:none;box-shadow:0 2px 12px rgba(0,0,0,0.4);"
         onpointerdown="startSnapDrag(event,'sat','t')" onpointermove="onSnapDrag(event,'sat','t')" onpointerup="endDrag()">
-        <!-- 4개 눈금 표시 -->
-        <div style="position:absolute;top:50%;left:10%;width:4px;height:10px;background:rgba(255,255,255,0.3);border-radius:2px;transform:translate(-50%,-50%);pointer-events:none;"></div>
-        <div style="position:absolute;top:50%;left:36%;width:4px;height:10px;background:rgba(255,255,255,0.3);border-radius:2px;transform:translate(-50%,-50%);pointer-events:none;"></div>
-        <div style="position:absolute;top:50%;left:63%;width:4px;height:10px;background:rgba(255,255,255,0.3);border-radius:2px;transform:translate(-50%,-50%);pointer-events:none;"></div>
-        <div style="position:absolute;top:50%;left:90%;width:4px;height:10px;background:rgba(255,255,255,0.3);border-radius:2px;transform:translate(-50%,-50%);pointer-events:none;"></div>
-        <div id="sat-thumb-t" style="position:absolute;top:-3px;width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.8);transform:translateX(-50%);pointer-events:none;left:36%;"></div>
+        <div style="position:absolute;top:50%;left:10%;width:2px;height:14px;background:rgba(255,255,255,0.25);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none;"></div>
+        <div style="position:absolute;top:50%;left:36%;width:2px;height:14px;background:rgba(255,255,255,0.25);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none;"></div>
+        <div style="position:absolute;top:50%;left:63%;width:2px;height:14px;background:rgba(255,255,255,0.25);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none;"></div>
+        <div style="position:absolute;top:50%;left:90%;width:2px;height:14px;background:rgba(255,255,255,0.25);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none;"></div>
+        <div id="sat-thumb-t" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:32px;height:32px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,0.8);pointer-events:none;left:36%;"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;margin-top:5px;padding:0 5px;">
-        <span style="font-size:9px;color:#555;">파스텔</span>
-        <span style="font-size:9px;color:#555;">연한</span>
-        <span style="font-size:9px;color:#555;">보통</span>
-        <span style="font-size:9px;color:#555;">선명</span>
+      <div style="display:flex;justify-content:space-between;margin-top:6px;padding:0 4px;">
+        <span style="font-size:10px;color:#444;">파스텔</span>
+        <span style="font-size:10px;color:#444;">연한</span>
+        <span style="font-size:10px;color:#444;">보통</span>
+        <span style="font-size:10px;color:#444;">선명</span>
       </div>
     </div>
 
     <!-- 목표색 명도 4단계 스냅 슬라이더 -->
-    <div style="margin-bottom:18px;">
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-        <div style="font-size:10px;color:#777;">명도</div>
-        <div style="font-size:10px;color:#aaa;" id="lit-label-t">중간</div>
+    <div style="margin-bottom:22px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="font-size:11px;color:#666;font-weight:600;letter-spacing:0.5px;">명도</div>
+        <div style="font-size:12px;color:#fff;font-weight:700;" id="lit-label-t">중간</div>
       </div>
-      <div id="lit-bar-t" style="width:100%;height:22px;border-radius:11px;background:linear-gradient(to right,#111,#fff);position:relative;cursor:pointer;touch-action:none;user-select:none;"
+      <div id="lit-bar-t" style="width:100%;height:36px;border-radius:18px;background:linear-gradient(to right,#111,#fff);position:relative;cursor:pointer;touch-action:none;user-select:none;box-shadow:0 2px 12px rgba(0,0,0,0.4);"
         onpointerdown="startSnapDrag(event,'lit','t')" onpointermove="onSnapDrag(event,'lit','t')" onpointerup="endDrag()">
-        <div style="position:absolute;top:50%;left:10%;width:4px;height:10px;background:rgba(255,255,255,0.3);border-radius:2px;transform:translate(-50%,-50%);pointer-events:none;"></div>
-        <div style="position:absolute;top:50%;left:36%;width:4px;height:10px;background:rgba(255,255,255,0.3);border-radius:2px;transform:translate(-50%,-50%);pointer-events:none;"></div>
-        <div style="position:absolute;top:50%;left:63%;width:4px;height:10px;background:rgba(255,255,255,0.3);border-radius:2px;transform:translate(-50%,-50%);pointer-events:none;"></div>
-        <div style="position:absolute;top:50%;left:90%;width:4px;height:10px;background:rgba(255,255,255,0.3);border-radius:2px;transform:translate(-50%,-50%);pointer-events:none;"></div>
-        <div id="lit-thumb-t" style="position:absolute;top:-3px;width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.8);transform:translateX(-50%);pointer-events:none;left:36%;"></div>
+        <div style="position:absolute;top:50%;left:10%;width:2px;height:14px;background:rgba(255,255,255,0.25);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none;"></div>
+        <div style="position:absolute;top:50%;left:36%;width:2px;height:14px;background:rgba(255,255,255,0.25);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none;"></div>
+        <div style="position:absolute;top:50%;left:63%;width:2px;height:14px;background:rgba(255,255,255,0.25);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none;"></div>
+        <div style="position:absolute;top:50%;left:90%;width:2px;height:14px;background:rgba(255,255,255,0.25);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none;"></div>
+        <div id="lit-thumb-t" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:32px;height:32px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,0.8);pointer-events:none;left:36%;"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;margin-top:5px;padding:0 5px;">
-        <span style="font-size:9px;color:#555;">어두운</span>
-        <span style="font-size:9px;color:#555;">중저</span>
-        <span style="font-size:9px;color:#555;">중고</span>
-        <span style="font-size:9px;color:#555;">밝은</span>
+      <div style="display:flex;justify-content:space-between;margin-top:6px;padding:0 4px;">
+        <span style="font-size:10px;color:#444;">어두운</span>
+        <span style="font-size:10px;color:#444;">중저</span>
+        <span style="font-size:10px;color:#444;">중고</span>
+        <span style="font-size:10px;color:#444;">밝은</span>
       </div>
     </div>
 
@@ -656,8 +667,15 @@ function hslStr(h, s, l) {
   return 'hsl(' + h + ',' + s + '%,' + l + '%)';
 }
 
-/* ── 값 → 슬라이더 위치(%) (S/L 슬라이더용) ── */
+/* ── 슬라이더 위치(%) → 값 변환 ── */
+function pctToHue(pct) { return Math.round(pct * 360); }
+function pctToSat(pct) { return Math.round(pct * 100); }
+function pctToLit(pct) { return Math.round(pct * 100); }
+
+/* ── 값 → 슬라이더 위치(%) ── */
 function hueToPct(h) { return h / 360; }
+function satToPct(s) { return s / 100; }
+function litToPct(l) { return l / 100; }
 
 /* ── 채도 슬라이더 배경 업데이트 ── */
 function updateSatBar(which) {
@@ -666,215 +684,58 @@ function updateSatBar(which) {
   if (bar) bar.style.background = 'linear-gradient(to right, hsl(' + hsl.h + ',0%,' + hsl.l + '%), hsl(' + hsl.h + ',100%,' + hsl.l + '%))';
 }
 
-/* ── 포인터 이벤트용 비율 계산 (S/L 스냅 슬라이더용) ── */
+/* ── Color Picker 슬라이더 드래그 ── */
 function getRatio(event, el) {
   var rect = el.getBoundingClientRect();
   var x = (event.clientX !== undefined ? event.clientX : event.touches[0].clientX) - rect.left;
   return Math.max(0, Math.min(1, x / rect.width));
 }
 
-/* ══════════════════════════════════════
-   3D 구형 Hue 피커 — Three.js CDN
-   구를 좌우로 돌리면 Hue 변경
-   구를 상하로 돌리면 Lightness 미리보기(참고용)
-   실제 S/L은 아래 스냅 슬라이더로 조절
-══════════════════════════════════════ */
-var _sphereC = null, _sphereT = null;
-
-function _buildSphere(canvasId, which) {
-  if (typeof THREE === 'undefined') return null;
-  var canvas = document.getElementById(canvasId);
-  if (!canvas) return null;
-
-  var R = 1.0, SEG = 56;
-  var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setClearColor(0x000000, 0);
-  var scene = new THREE.Scene();
-  var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-  camera.position.set(0, 0, 2.8);
-  scene.add(new THREE.AmbientLight(0xffffff, 0.38));
-  var dl = new THREE.DirectionalLight(0xffffff, 0.85);
-  dl.position.set(3, 4, 5); scene.add(dl);
-
-  /* ── 버텍스 컬러 구 생성 ── */
-  var geo = new THREE.SphereGeometry(R, SEG, SEG);
-  var pos = geo.attributes.position;
-  var cols = new Float32Array(pos.count * 3);
-  for (var i = 0; i < pos.count; i++) {
-    var x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
-    var r3 = Math.sqrt(x*x+y*y+z*z);
-    var phi = Math.acos(Math.max(-1, Math.min(1, y/r3)));
-    var th  = Math.atan2(z, x); if (th < 0) th += 2*Math.PI;
-    /* X축=Hue, Y축=Lightness, 반경=Saturation */
-    var H = th/(2*Math.PI)*360;
-    var L = (1 - phi/Math.PI)*80 + 10;
-    var S = (r3/R)*90;
-    /* HSL→RGB (inline) */
-    var h6=H/60, ss=S/100, ll=L/100;
-    var c=(1-Math.abs(2*ll-1))*ss, xv=c*(1-Math.abs(h6%2-1)), m=ll-c/2;
-    var rr,gg,bb;
-    if(h6<1){rr=c;gg=xv;bb=0;}else if(h6<2){rr=xv;gg=c;bb=0;}
-    else if(h6<3){rr=0;gg=c;bb=xv;}else if(h6<4){rr=0;gg=xv;bb=c;}
-    else if(h6<5){rr=xv;gg=0;bb=c;}else{rr=c;gg=0;bb=xv;}
-    cols[i*3]=rr+m; cols[i*3+1]=gg+m; cols[i*3+2]=bb+m;
-  }
-  geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
-  var sphere = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({
-    vertexColors: true, shininess: 55
-  }));
-  scene.add(sphere);
-
-  /* ── 마커 (현재 Hue 위치 표시, 항상 적도에) ── */
-  var markerMesh = new THREE.Mesh(
-    new THREE.SphereGeometry(0.06, 14, 14),
-    new THREE.MeshBasicMaterial({ color: 0xffffff, depthTest: false })
-  );
-  var markerRing = new THREE.Mesh(
-    new THREE.TorusGeometry(0.082, 0.018, 8, 28),
-    new THREE.MeshBasicMaterial({ color: 0x000000, depthTest: false })
-  );
-  scene.add(markerMesh); scene.add(markerRing);
-
-  /* ── Hue → 구 적도 위 3D 위치 (local) ── */
-  function hueToPoint(h) {
-    var th = h / 360 * 2 * Math.PI;
-    /* 적도(phi=PI/2)의 표면(r=R) */
-    return new THREE.Vector3(R * Math.cos(th), 0, R * Math.sin(th));
-  }
-
-  /* ── 마커를 현재 Hue 위치로 이동 ── */
-  function placeMarker(h) {
-    var pt = hueToPoint(h);
-    var n  = pt.clone().normalize();
-    markerMesh.position.copy(pt).addScaledVector(n, 0.012);
-    markerRing.position.copy(pt).addScaledVector(n, 0.006);
-    markerRing.lookAt(camera.position);
-  }
-
-  /* ── 구 정렬: 현재 Hue가 정면에 오도록 ── */
-  var rotY = 0;
-  function alignToHue(h) {
-    /* Hue=0이 +X축 → 정면(camera)에 오려면 rotY=0
-       Hue를 정면에 두려면 rotY = -(h/360)*2PI */
-    rotY = -(h / 360) * 2 * Math.PI;
-    sphere.rotation.set(0, rotY, 0);
-    placeMarker(h);
-  }
-
-  /* ── 드래그로 구 회전 → Hue 실시간 변경 ── */
-  var lx = 0, dragging = false, moved = false;
-
-  function onDown(e) {
-    dragging = true; moved = false;
-    var t = e.touches ? e.touches[0] : e;
-    lx = t.clientX;
-    canvas.style.cursor = 'grabbing';
-  }
-
-  function onMove(e) {
-    if (!dragging) return;
-    e.preventDefault();
-    var t  = e.touches ? e.touches[0] : e;
-    var dx = t.clientX - lx;
-    lx = t.clientX;
-    if (Math.abs(dx) > 0.5) moved = true;
-
-    /* 좌우 드래그 → Hue 변경 */
-    var hsl = which === 'c' ? currentHSL : targetHSL;
-    hsl.h = (hsl.h - dx * 0.8 + 360) % 360;
-    rotY = -(hsl.h / 360) * 2 * Math.PI;
-    sphere.rotation.set(0, rotY, 0);
-    placeMarker(hsl.h);
-    _syncHue(which);
-  }
-
-  function onUp(e) {
-    if (!dragging) return;
-    dragging = false;
-    canvas.style.cursor = 'grab';
-    /* 탭: 클릭 위치의 Hue를 레이캐스트로 계산 */
-    if (!moved) {
-      var t   = e.changedTouches ? e.changedTouches[0] : e;
-      var h   = _pickHue(canvas, t.clientX, t.clientY, sphere, camera);
-      if (h !== null) {
-        var hsl = which === 'c' ? currentHSL : targetHSL;
-        hsl.h = h;
-        rotY = -(h / 360) * 2 * Math.PI;
-        sphere.rotation.set(0, rotY, 0);
-        placeMarker(h);
-        _syncHue(which);
-      }
-    }
-  }
-
-  canvas.addEventListener('mousedown',  onDown);
-  window.addEventListener('mousemove',  onMove);
-  window.addEventListener('mouseup',    onUp);
-  canvas.addEventListener('touchstart', onDown, { passive: false });
-  canvas.addEventListener('touchmove',  onMove, { passive: false });
-  canvas.addEventListener('touchend',   onUp);
-
-  /* ── 렌더 루프 ── */
-  (function loop() {
-    requestAnimationFrame(loop);
-    var w = canvas.clientWidth, h = canvas.clientHeight;
-    if (renderer.domElement.width !== w || renderer.domElement.height !== h) {
-      renderer.setSize(w, h, false);
-      camera.aspect = w / Math.max(h, 1);
-      camera.updateProjectionMatrix();
-    }
-    renderer.render(scene, camera);
-  })();
-
-  return { alignToHue: alignToHue };
+function startDrag(event, axis, which) {
+  event.currentTarget.setPointerCapture(event.pointerId);
+  activeDrag = { axis: axis, which: which };
+  applyDrag(event, axis, which);
 }
-
-/* ── 탭 시 Hue 레이캐스트 계산 ── */
-function _pickHue(canvas, cx, cy, sphere, camera) {
-  var ray = new THREE.Raycaster();
-  var rect = canvas.getBoundingClientRect();
-  ray.setFromCamera({
-    x: ((cx - rect.left) / rect.width)  * 2 - 1,
-    y: -((cy - rect.top) / rect.height) * 2 + 1
-  }, camera);
-  var invQ = sphere.quaternion.clone().invert();
-  var lo = ray.ray.origin.clone().applyQuaternion(invQ);
-  var ld = ray.ray.direction.clone().applyQuaternion(invQ).normalize();
-  var b = 2 * lo.dot(ld), c2 = lo.dot(lo) - 1.0;
-  var disc = b*b - 4*c2;
-  if (disc < 0) return null;
-  var t = (-b - Math.sqrt(disc)) / 2;
-  if (t < 0) t = (-b + Math.sqrt(disc)) / 2;
-  if (t < 0) return null;
-  var hit = lo.clone().addScaledVector(ld, t);
-  var th  = Math.atan2(hit.z, hit.x);
-  if (th < 0) th += 2 * Math.PI;
-  return Math.round(th / (2 * Math.PI) * 360) % 360;
+function onDrag(event, axis, which) {
+  if (!activeDrag || activeDrag.axis !== axis || activeDrag.which !== which) return;
+  applyDrag(event, axis, which);
 }
+function endDrag() { activeDrag = null; }
 
-/* ── Hue 변경 후 스와치 + 채도바 업데이트 ── */
-function _syncHue(which) {
-  updateSwatchOnly(which);
-  updateSatBarBg(which);
-}
-
-/* ── 구 초기화 (showResult / confirmCurrentColor 에서 호출) ── */
-function _initSphere(which) {
+function applyDrag(event, axis, which) {
+  var barId = axis + '-bar-' + which;
+  var bar = document.getElementById(barId);
+  if (!bar) return;
+  var ratio = getRatio(event, bar);
   var hsl = which === 'c' ? currentHSL : targetHSL;
-  if (which === 'c') {
-    if (!_sphereC) _sphereC = _buildSphere('sphere-c', 'c');
-    if (_sphereC)  _sphereC.alignToHue(hsl.h);
-  } else {
-    if (!_sphereT) _sphereT = _buildSphere('sphere-t', 't');
-    if (_sphereT)  _sphereT.alignToHue(hsl.h);
-  }
+
+  if (axis === 'hue') hsl.h = pctToHue(ratio);
+  if (axis === 'sat') hsl.s = pctToSat(ratio);
+  if (axis === 'lit') hsl.l = pctToLit(ratio);
+
+  updatePickerUI(which);
 }
 
-/* ── (구형 피커로 대체했으므로 Hue 슬라이더 드래그는 no-op) ── */
-function startDrag(e, axis, which) {}
-function onDrag(e, axis, which) {}
-function endDrag() {}
+/* ── UI 전체 업데이트 ── */
+function updatePickerUI(which) {
+  var hsl = which === 'c' ? currentHSL : targetHSL;
+  var color = hslStr(hsl.h, hsl.s, hsl.l);
+
+  /* Hue 썸 위치만 업데이트 (채도·명도는 버튼으로 대체) */
+  var hThumb = document.getElementById('hue-thumb-' + which);
+  if (hThumb) { hThumb.style.left = (hueToPct(hsl.h) * 100) + '%'; hThumb.style.background = hslStr(hsl.h, 100, 50); }
+
+  /* 스와치 박스 */
+  if (which === 'c') {
+    var box = document.getElementById('current-swatch-box');
+    if (box) box.style.background = color;
+    var mini = document.getElementById('current-swatch-mini');
+    if (mini) mini.style.background = color;
+  } else {
+    var tbox = document.getElementById('target-swatch-box');
+    if (tbox) tbox.style.background = color;
+  }
+}
 
 /* ── 4단계 스냅 설정 ── */
 var SAT_SNAPS = [
@@ -949,6 +810,9 @@ function updateSwatchOnly(which) {
   } else {
     var tbox = document.getElementById('target-swatch-box');
     if (tbox) tbox.style.background = color;
+    /* 썸 색상 */
+    var hThumb = document.getElementById('hue-thumb-t');
+    if (hThumb) hThumb.style.background = hslStr(hsl.h, 100, 50);
   }
 }
 
@@ -957,8 +821,8 @@ function showResult(r) {
   var hsl = rgbToHsl(r.r, r.g, r.b);
   currentHSL = { h: hsl[0], s: hsl[1], l: hsl[2] };
 
-  /* 구형 Hue 피커 초기화 */
-  requestAnimationFrame(function() { _initSphere('c'); });
+  /* Hue 썸 초기화 */
+  updatePickerUI('c');
 
   /* 채도·명도 스냅 초기화 — 가장 가까운 스냅으로 */
   var satSnap = getNearestSnap(currentHSL.s / 100, SAT_SNAPS);
@@ -1026,9 +890,9 @@ function confirmCurrentColor() {
   if (satLabel) satLabel.textContent = satSnap.label;
   if (litLabel) litLabel.textContent = litSnap.label;
 
+  updatePickerUI('t');
   updateSatBarBg('t');
   updateSwatchOnly('t');
-  requestAnimationFrame(function() { _initSphere('t'); });
 
   document.getElementById('step1-card').style.display = 'none';
   document.getElementById('step2-card').style.display = 'block';
@@ -1918,6 +1782,5 @@ function retake() {
 
 startCamera();
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </body>
 </html>
