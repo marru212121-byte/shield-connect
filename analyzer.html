@@ -466,7 +466,7 @@ function analyzeRegion(ctx, x, y, w, h) {
   var isUneven = hVariance > 2000;
 
   /* 매트 감지 */
-  var isMatte = s < 28 && s > 8 && h >= 20 && h < 65 && l < 75;
+  var isMatte = s < 28 && s > 8 && h >= 20 && h < 65 && l < 62; /* 밝은 베이스(l>=62) 는 매트 제외 */
 
   /* 퍼지 색감 점수 — 핑크/보라는 채도 15 이상도 감지 (인공색소라 채도 낮을 수 있음) */
   var toneScore = { yellow:0, orange:0, red:0, pink:0, purple:0, green:0 };
@@ -650,7 +650,7 @@ function showResult(r) {
   var isPinkish  = (r.h >= 290 && r.h < 345) && r.s >= 15;
   var isPurplish = (r.h >= 255 && r.h < 295) && r.s >= 15;
   var isRedWine  = (r.h >= 330 || r.h < 15)  && r.s > 20;
-  var isDark     = (r.l < 18 && r.s < 20);
+  var isDark     = (r.l < 22 && r.s < 30); /* 카키·딥그레이·블랙 포함 */
 
   /* ── 언더톤 강도 판단 ── */
   var strength = '';
@@ -975,7 +975,13 @@ function updateRecipe() {
   var residualType  = 'none';
   if (isBlue)                       { residualPower = 3; residualType = 'blue'; }
   else if (isPink)                  { residualPower = 3; residualType = 'pink'; }
-  else if (isRedW || ut === 'warm') { residualPower = 3; residualType = 'red';  }
+  else if (isRedW || ut === 'warm' && analysisResult.tones && analysisResult.tones[0] === 'red')
+                                    { residualPower = 3; residualType = 'red';  }
+  else if (ut === 'warm' && analysisResult.tones && analysisResult.tones[0] === 'orange')
+                                    { residualPower = 2; residualType = 'orange'; }
+  else if (ut === 'warm' && analysisResult.tones && analysisResult.tones[0] === 'yellow')
+                                    { residualPower = 1; residualType = 'yellow'; }
+  else if (ut === 'warm')           { residualPower = 2; residualType = 'red'; } /* fallback */
   else if (isPurp)                  { residualPower = 2; residualType = 'purple'; }
   else if (ut === 'matte')          { residualPower = 1; residualType = 'matte'; }
   else                              { residualPower = 0; residualType = 'none'; }
@@ -1001,6 +1007,8 @@ function updateRecipe() {
      파랑  ↔ 한색           = 무충돌(0)
      붉은기↔ 한색·카키      = 보통충돌(2)
      붉은기↔ 난색           = 무충돌(0)
+     주황  ↔ 한색           = 보통충돌(2) — 카키 변질 위험
+     노랑  ↔ 한색           = 약충돌(1) — 바이올렛으로 중화 필요
      핑크  ↔ 한색           = 보통충돌(2)
      핑크  ↔ 핑크베이지     = 무충돌(0)
      보라  ↔ 청보라·바이올렛= 무충돌(0)
@@ -1020,6 +1028,16 @@ function updateRecipe() {
     else if (T === 'khaki')                                    conflict = 1;
     else if (isWarm)                                           conflict = 0;
     else                                                       conflict = 1;
+  } else if (residualType === 'orange') {
+    if (isCold)                                                conflict = 2; /* 주황+한색 = 카키 변질 */
+    else if (T === 'khaki')                                    conflict = 0; /* 주황+카키 = 자연스러움 */
+    else if (isWarm)                                           conflict = 0;
+    else                                                       conflict = 1;
+  } else if (residualType === 'yellow') {
+    if (isCold && T !== 'cool-beige')                          conflict = 1; /* 노랑+한색 = 바이올렛 중화 필요 */
+    else if (T === 'khaki')                                    conflict = 0; /* 노랑+카키 = 유리 */
+    else if (isWarm)                                           conflict = 0;
+    else                                                       conflict = 0;
   } else if (residualType === 'pink') {
     if (isCold)                                                conflict = 2;
     else if (T === 'pink-beige')                               conflict = 0;
@@ -1035,9 +1053,14 @@ function updateRecipe() {
 
   /* ── 잔류색 설명 ── */
   var rDesc = {
-    'blue':'청회색·파랑 계열 잔류','pink':'핑크·마젠타 잔류 (인공 색소)',
-    'red':'붉은기·적색 잔류','purple':'보라 잔류 (인공 색소)',
-    'matte':'매트한 노랑기 잔류','none':'뚜렷한 잔류색 없음'
+    'blue':   '청회색·파랑 계열 잔류',
+    'pink':   '핑크·마젠타 잔류 (인공 색소)',
+    'red':    '붉은기·적색 잔류',
+    'orange': '주황 잔류',
+    'yellow': '노랑 잔류',
+    'purple': '보라 잔류 (인공 색소)',
+    'matte':  '매트한 노랑기 잔류',
+    'none':   '뚜렷한 잔류색 없음'
   }[residualType] || '';
 
   /* ══════════════════════════════════
@@ -1153,6 +1176,31 @@ function updateRecipe() {
       lines.push('1. 보라+레드 혼합으로 표현');
       lines.push('2. 선명한 와인레드 원하면 탈색 후 시술');
 
+    } else if (residualType === 'yellow' && isCold) {
+      lines.push('노랑 잔류 위에 차가운 계열을 바로 올리면 카키빛으로 변질될 수 있어요.');
+      lines.push('바이올렛 계열을 소량 먼저 섞어 노랑을 중화한 뒤 차가운 계열을 올리는 순서가 중요해요.');
+      if (lvBright) {
+        lines.push('밝은 명도(' + lv + '레벨)에서는 바이올렛 소량으로도 효과적으로 중화돼요.');
+      }
+      lines.push('');
+      lines.push('추천:');
+      lines.push('1. 바이올렛 계열 소량 선혼합 → 노랑 중화 → 차가운 계열 시술');
+      lines.push('2. 탈색 1회로 노랑기를 정리한 후 시술 — 더 깔끔');
+      risks.push('노랑 + 차가운 계열 직접 = 카키빛 변질');
+
+    } else if (residualType === 'orange' && isCold) {
+      lines.push('주황 잔류 위에 차가운 계열이에요.');
+      lines.push('주황과 차가운 색은 보색에 가까워서 탁하게 섞일 수 있어요.');
+      if (lvMid) {
+        lines.push('이 명도(' + lv + '레벨)에서 주황기 영향이 꽤 강하게 나와요.');
+        lines.push('청회색 계열로 명도를 올리면서 동시에 색을 입히는 방식이 효과적이에요.');
+      }
+      lines.push('');
+      lines.push('추천:');
+      lines.push('1. 청회색 계열로 주황을 억제하면서 차가운 계열 적용');
+      lines.push('2. 탈색으로 주황기 제거 후 시술 — 가장 확실');
+      risks.push('주황 + 차가운 계열 직접 = 탁한 카키·그린빛 가능성');
+
     } else if (residualType === 'red' && T === 'khaki') {
       lines.push('붉은기 잔류 위에 카키 계열이에요.');
       lines.push('그린이 붉은기를 자연스럽게 억제하면서 카키로 정착해요.');
@@ -1239,6 +1287,27 @@ function updateRecipe() {
       lines.push('추천:');
       lines.push('1. 바로 시술 가능해요');
       lines.push('2. 선명도를 높이려면 같은 계열 컨트롤 컬러 소량 추가');
+
+    } else if (residualType === 'orange' && isWarm) {
+      lines.push('주황 잔류와 따뜻한 방향은 잘 어울려요.');
+      if (T === 'copper') lines.push('코퍼 방향은 주황 언더톤과 찰떡이에요 — 가장 선명하게 나와요.');
+      lines.push('');
+      lines.push('추천:');
+      lines.push('1. 바로 시술 가능해요');
+
+    } else if (residualType === 'yellow' && isWarm) {
+      lines.push('노랑 잔류와 따뜻한 방향이에요.');
+      if (T === 'warm-brown') lines.push('자연스러운 골든 계열이 나와요.');
+      lines.push('');
+      lines.push('추천:');
+      lines.push('1. 바로 시술 가능해요');
+
+    } else if (residualType === 'yellow' && T === 'khaki') {
+      lines.push('노랑 잔류가 있으면 그린 계열이 노랑을 카키로 자연스럽게 바꿔줘요.');
+      lines.push('이 조합은 카키 방향에 오히려 유리해요.');
+      lines.push('');
+      lines.push('추천:');
+      lines.push('1. 바로 시술 가능해요 — 노랑 언더톤이 카키 발색에 도움이 돼요');
 
     } else if (residualType === 'blue' && T === 'blue-violet') {
       lines.push('파랑 잔류와 청보라는 자연스럽게 연결돼요.');
