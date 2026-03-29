@@ -147,13 +147,41 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div class="header">
   <button class="back-btn" onclick="history.back()">‹</button>
   <div>
-    <div class="header-title">모발 색상 분석</div>
-    <div class="header-sub">가이드 박스에 모발을 맞춰 촬영하세요</div>
+    <div class="header-title" id="header-title">모발 색상 분석</div>
+    <div class="header-sub" id="header-sub">분석 방식을 선택해주세요</div>
+  </div>
+</div>
+
+<!-- 모드 선택 화면 -->
+<div id="mode-section" style="padding:24px 16px;">
+  <div style="font-size:15px;color:#ccc;font-weight:600;margin-bottom:20px;text-align:center;">
+    현재 모발 색상을 어떻게 확인할까요?
+  </div>
+
+  <!-- 카메라 촬영 -->
+  <div onclick="selectMode('camera')" style="background:#111;border:1.5px solid #2a2a2a;border-radius:16px;padding:20px;margin-bottom:12px;cursor:pointer;display:flex;align-items:center;gap:16px;transition:all 0.2s;">
+    <div style="width:52px;height:52px;border-radius:12px;background:#1a1a1a;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;">📷</div>
+    <div>
+      <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:4px;">카메라 촬영</div>
+      <div style="font-size:12px;color:#555;line-height:1.6;">모발을 직접 촬영해서 색상을 자동으로 감지해요.<br>촬영 후 슬라이더로 보정 가능해요.</div>
+    </div>
+  </div>
+
+  <!-- 수동 분석 -->
+  <div onclick="selectMode('manual')" style="background:#111;border:1.5px solid #2a2a2a;border-radius:16px;padding:20px;cursor:pointer;display:flex;align-items:center;gap:16px;transition:all 0.2s;">
+    <div style="width:52px;height:52px;border-radius:12px;background:#1a1a1a;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;">✏️</div>
+    <div>
+      <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:4px;">수동 분석</div>
+      <div style="font-size:12px;color:#555;line-height:1.6;">카메라 없이 색상을 직접 선택해요.<br>색상 프리셋 + 슬라이더로 정밀하게 설정 가능해요.</div>
+    </div>
   </div>
 </div>
 
 <!-- 카메라 화면 -->
-<div id="camera-section">
+<div id="camera-section" style="display:none;">
+  <div style="padding:8px 16px;">
+    <button onclick="goToModeSelect()" style="background:none;border:none;color:#666;font-size:13px;cursor:pointer;padding:4px 0;">← 선택으로 돌아가기</button>
+  </div>
   <div class="camera-wrap">
     <video id="video" autoplay playsinline></video>
     <canvas id="canvas"></canvas>
@@ -172,7 +200,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="shoot-guide-list">
       <div class="shoot-guide-item"><span>💡</span><span>직사광선·강한 조명 피하기 — 자연광이나 일반 실내조명에서 촬영</span></div>
       <div class="shoot-guide-item"><span>🎯</span><span>모발로 가이드 박스를 꽉 채워주세요 — 배경(피부·옷)이 조금이라도 찍히면 오류 가능</span></div>
-      <div class="shoot-guide-item"><span>⚠️</span><span>형광등·할로겐·전구색 조명에서는 실제 색감과 다르게 인식될 수 있어요 — 가능하면 자연광에 가까운 환경에서 촬영</span></div>
+      <div class="shoot-guide-item"><span>⚠️</span><span>형광등·할로겐·전구색 조명에서는 실제 색감과 다르게 인식될 수 있어요</span></div>
     </div>
   </div>
   <div class="capture-area">
@@ -183,6 +211,102 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       </svg>
     </button>
     <p class="capture-hint">버튼을 눌러 촬영</p>
+  </div>
+</div>
+
+<!-- 수동 분석 화면 -->
+<div id="manual-section" style="display:none;padding:16px;">
+  <div style="padding:0 0 8px;">
+    <button onclick="goToModeSelect()" style="background:none;border:none;color:#666;font-size:13px;cursor:pointer;padding:4px 0;">← 선택으로 돌아가기</button>
+  </div>
+
+  <div class="result-card">
+    <div class="result-card-title">현재 모발색 선택</div>
+    <div style="font-size:12px;color:#666;margin-bottom:14px;">현재 모발과 가장 가까운 색을 선택해주세요.</div>
+
+    <!-- 색상 프리셋 -->
+    <div style="margin-bottom:16px;">
+      <div style="font-size:10px;color:#777;margin-bottom:8px;font-weight:600;letter-spacing:0.5px;">색상 프리셋</div>
+      <div style="display:flex;flex-wrap:wrap;gap:7px;">
+        <button onclick="setPreset(0,8,6)"   style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#fff;">⚫ 블랙</button>
+        <button onclick="setPreset(10,40,22)"  style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#c0785a;">🟤 다크브라운</button>
+        <button onclick="setPreset(20,55,38)"  style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#c8824a;">🟫 브라운</button>
+        <button onclick="setPreset(28,60,50)"  style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#d4944a;">🧡 주황브라운</button>
+        <button onclick="setPreset(38,70,58)"  style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#e0b050;">🌟 골든브라운</button>
+        <button onclick="setPreset(52,80,70)"  style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#f0d060;">💛 노랑·블론드</button>
+        <button onclick="setPreset(350,45,35)" style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#c06050;">🔴 레드브라운</button>
+        <button onclick="setPreset(330,40,45)" style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#b05070;">🍷 와인·버건디</button>
+        <button onclick="setPreset(100,25,38)" style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#7a8a60;">🌿 카키·매트</button>
+        <button onclick="setPreset(210,20,45)" style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#7090a0;">🩶 애쉬그레이</button>
+        <button onclick="setPreset(220,35,30)" style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#506080;">🔵 블루블랙</button>
+        <button onclick="setPreset(270,30,40)" style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#8060a0;">💜 바이올렛</button>
+        <button onclick="setPreset(310,25,70)" style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#d090b0;">🩷 핑크파스텔</button>
+        <button onclick="setPreset(30,15,78)"  style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#f0e0d0;">🤍 아이보리·백금</button>
+      </div>
+    </div>
+
+    <!-- 현재색 스와치 -->
+    <div id="manual-swatch-box" style="width:100%;height:70px;border-radius:12px;border:2px solid #333;margin-bottom:16px;transition:background 0.2s;"></div>
+
+    <!-- 색상 슬라이더 -->
+    <div style="margin-bottom:16px;">
+      <div style="font-size:10px;color:#777;margin-bottom:6px;">색상 미세 조정</div>
+      <div id="hue-bar-m" style="width:100%;height:22px;border-radius:11px;background:linear-gradient(to right,hsl(0,100%,50%),hsl(30,100%,50%),hsl(60,100%,50%),hsl(90,100%,50%),hsl(120,100%,50%),hsl(150,100%,50%),hsl(180,100%,50%),hsl(210,100%,50%),hsl(240,100%,50%),hsl(270,100%,50%),hsl(300,100%,50%),hsl(330,100%,50%),hsl(360,100%,50%));position:relative;cursor:pointer;touch-action:none;user-select:none;"
+        onpointerdown="startDrag(event,'hue','m')" onpointermove="onDrag(event,'hue','m')" onpointerup="endDrag()">
+        <div id="hue-thumb-m" style="position:absolute;top:-3px;width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.8);transform:translateX(-50%);pointer-events:none;left:0%;"></div>
+      </div>
+    </div>
+
+    <!-- 채도 4단계 -->
+    <div style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+        <div style="font-size:10px;color:#777;">선명도</div>
+        <div style="font-size:10px;color:#aaa;" id="sat-label-m">보통</div>
+      </div>
+      <div id="sat-bar-m" style="width:100%;height:22px;border-radius:11px;position:relative;cursor:pointer;touch-action:none;user-select:none;"
+        onpointerdown="startSnapDrag(event,'sat','m')" onpointermove="onSnapDrag(event,'sat','m')" onpointerup="endDrag()">
+        <div style="position:absolute;top:50%;left:8%;width:2px;height:12px;background:rgba(255,255,255,0.25);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none;"></div>
+        <div style="position:absolute;top:50%;left:27%;width:2px;height:12px;background:rgba(255,255,255,0.25);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none;"></div>
+        <div style="position:absolute;top:50%;left:47%;width:2px;height:12px;background:rgba(255,255,255,0.25);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none;"></div>
+        <div style="position:absolute;top:50%;left:67%;width:2px;height:12px;background:rgba(255,255,255,0.25);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none;"></div>
+        <div style="position:absolute;top:50%;left:88%;width:2px;height:12px;background:rgba(255,255,255,0.25);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none;"></div>
+        <div id="sat-thumb-m" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.8);pointer-events:none;left:47%;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:5px;padding:0 4px;">
+        <span style="font-size:9px;color:#555;">파스텔</span>
+        <span style="font-size:9px;color:#555;">연한</span>
+        <span style="font-size:9px;color:#555;">보통</span>
+        <span style="font-size:9px;color:#555;">선명</span>
+      </div>
+    </div>
+
+    <!-- 명도 5단계 -->
+    <div style="margin-bottom:18px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+        <div style="font-size:10px;color:#777;">명도</div>
+        <div style="font-size:10px;color:#aaa;" id="lit-label-m">중저</div>
+      </div>
+      <div id="lit-bar-m" style="width:100%;height:22px;border-radius:11px;background:linear-gradient(to right,#111,#fff);position:relative;cursor:pointer;touch-action:none;user-select:none;"
+        onpointerdown="startSnapDrag(event,'lit','m')" onpointermove="onSnapDrag(event,'lit','m')" onpointerup="endDrag()">
+        <div style="position:absolute;top:50%;left:8%;width:2px;height:12px;background:rgba(255,255,255,0.25);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none;"></div>
+        <div style="position:absolute;top:50%;left:27%;width:2px;height:12px;background:rgba(255,255,255,0.25);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none;"></div>
+        <div style="position:absolute;top:50%;left:47%;width:2px;height:12px;background:rgba(255,255,255,0.25);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none;"></div>
+        <div style="position:absolute;top:50%;left:67%;width:2px;height:12px;background:rgba(255,255,255,0.25);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none;"></div>
+        <div style="position:absolute;top:50%;left:88%;width:2px;height:12px;background:rgba(255,255,255,0.25);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none;"></div>
+        <div id="lit-thumb-m" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.8);pointer-events:none;left:27%;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:5px;padding:0 4px;">
+        <span style="font-size:9px;color:#555;">블랙</span>
+        <span style="font-size:9px;color:#555;">어두운</span>
+        <span style="font-size:9px;color:#555;">중저</span>
+        <span style="font-size:9px;color:#555;">중고</span>
+        <span style="font-size:9px;color:#555;">밝은</span>
+      </div>
+    </div>
+
+    <button onclick="confirmManualColor()" style="width:100%;padding:13px;border-radius:11px;background:#fff;border:none;color:#000;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.3px;">
+      이 색으로 확정 →
+    </button>
   </div>
 </div>
 
@@ -412,9 +536,125 @@ var userTones = [];
 var userTarget = null;
 
 /* ── Color Picker 상태 ── */
-var currentHSL = { h: 30, s: 60, l: 35 };  /* 현재 모발색 */
-var targetHSL  = { h: 210, s: 30, l: 50 }; /* 목표 색상 */
-var activeDrag = null; /* { axis, which } */
+var currentHSL = { h: 30, s: 60, l: 35 };
+var targetHSL  = { h: 210, s: 30, l: 50 };
+var activeDrag = null;
+
+/* ── 수동 분석 HSL 상태 ── */
+var manualHSL = { h: 28, s: 60, l: 38 };
+
+/* ── 모드 선택 ── */
+function selectMode(mode) {
+  document.getElementById('mode-section').style.display = 'none';
+  if (mode === 'camera') {
+    document.getElementById('header-sub').textContent = '가이드 박스에 모발을 맞춰 촬영하세요';
+    document.getElementById('camera-section').style.display = 'block';
+    startCamera();
+  } else {
+    document.getElementById('header-sub').textContent = '현재 모발색을 직접 선택해주세요';
+    document.getElementById('manual-section').style.display = 'block';
+    initManualPicker();
+  }
+}
+
+function goToModeSelect() {
+  stopStream();
+  document.getElementById('camera-section').style.display = 'none';
+  document.getElementById('manual-section').style.display = 'none';
+  document.getElementById('result-section').style.display = 'none';
+  document.getElementById('mode-section').style.display = 'block';
+  document.getElementById('header-sub').textContent = '분석 방식을 선택해주세요';
+}
+
+/* ── 수동 분석 초기화 ── */
+function initManualPicker() {
+  updateManualSwatch();
+  var satSnap = getNearestSnap(manualHSL.s / 100, SAT_SNAPS);
+  var litSnap = getNearestSnap(manualHSL.l / 100, LIT_SNAPS);
+  manualHSL.s = satSnap.val;
+  manualHSL.l = litSnap.val;
+  var hThumb = document.getElementById('hue-thumb-m');
+  if (hThumb) { hThumb.style.left = (manualHSL.h / 360 * 100) + '%'; hThumb.style.background = hslStr(manualHSL.h, 100, 50); }
+  var satThumb = document.getElementById('sat-thumb-m');
+  var litThumb = document.getElementById('lit-thumb-m');
+  if (satThumb) satThumb.style.left = satSnap.pct + '%';
+  if (litThumb) litThumb.style.left = litSnap.pct + '%';
+  var satLabel = document.getElementById('sat-label-m');
+  var litLabel = document.getElementById('lit-label-m');
+  if (satLabel) satLabel.textContent = satSnap.label;
+  if (litLabel) litLabel.textContent = litSnap.label;
+  updateManualSatBar();
+}
+
+function updateManualSwatch() {
+  var box = document.getElementById('manual-swatch-box');
+  if (box) box.style.background = hslStr(manualHSL.h, manualHSL.s, manualHSL.l);
+}
+
+function updateManualSatBar() {
+  var bar = document.getElementById('sat-bar-m');
+  if (bar) bar.style.background = 'linear-gradient(to right, hsl(' + manualHSL.h + ',0%,' + manualHSL.l + '%), hsl(' + manualHSL.h + ',100%,' + manualHSL.l + '%))';
+}
+
+/* ── 프리셋 버튼 ── */
+function setPreset(h, s, l) {
+  manualHSL.h = h;
+  /* 스냅 적용 */
+  var satSnap = getNearestSnap(s / 100, SAT_SNAPS);
+  var litSnap = getNearestSnap(l / 100, LIT_SNAPS);
+  manualHSL.s = satSnap.val;
+  manualHSL.l = litSnap.val;
+
+  var hThumb = document.getElementById('hue-thumb-m');
+  if (hThumb) { hThumb.style.left = (h / 360 * 100) + '%'; hThumb.style.background = hslStr(h, 100, 50); }
+  var satThumb = document.getElementById('sat-thumb-m');
+  var litThumb = document.getElementById('lit-thumb-m');
+  if (satThumb) satThumb.style.left = satSnap.pct + '%';
+  if (litThumb) litThumb.style.left = litSnap.pct + '%';
+  var satLabel = document.getElementById('sat-label-m');
+  var litLabel = document.getElementById('lit-label-m');
+  if (satLabel) satLabel.textContent = satSnap.label;
+  if (litLabel) litLabel.textContent = litSnap.label;
+  updateManualSatBar();
+  updateManualSwatch();
+}
+
+/* ── 수동 분석 확정 ── */
+function confirmManualColor() {
+  /* manualHSL → currentHSL로 복사 후 결과 화면으로 */
+  currentHSL = { h: manualHSL.h, s: manualHSL.s, l: manualHSL.l };
+  document.getElementById('manual-section').style.display = 'none';
+  document.getElementById('result-section').style.display = 'block';
+
+  /* step1 스와치 세팅 */
+  var box = document.getElementById('current-swatch-box');
+  if (box) box.style.background = hslStr(currentHSL.h, currentHSL.s, currentHSL.l);
+
+  /* step1 슬라이더 초기화 */
+  var hThumb = document.getElementById('hue-thumb-c');
+  if (hThumb) { hThumb.style.left = (currentHSL.h / 360 * 100) + '%'; hThumb.style.background = hslStr(currentHSL.h, 100, 50); }
+  var satSnap = getNearestSnap(currentHSL.s / 100, SAT_SNAPS);
+  var litSnap = getNearestSnap(currentHSL.l / 100, LIT_SNAPS);
+  var satThumb = document.getElementById('sat-thumb-c');
+  var litThumb = document.getElementById('lit-thumb-c');
+  if (satThumb) satThumb.style.left = satSnap.pct + '%';
+  if (litThumb) litThumb.style.left = litSnap.pct + '%';
+  var satLabel = document.getElementById('sat-label-c');
+  var litLabel = document.getElementById('lit-label-c');
+  if (satLabel) satLabel.textContent = satSnap.label;
+  if (litLabel) litLabel.textContent = litSnap.label;
+  updateSatBarBg('c');
+
+  /* crop-canvas 숨김 */
+  var cropCard = document.querySelector('#result-section .result-card');
+  if (cropCard) cropCard.style.display = 'none';
+
+  document.getElementById('step1-card').style.display = 'block';
+  document.getElementById('step2-card').style.display = 'none';
+  document.getElementById('recipe-card').style.display = 'none';
+  document.getElementById('black-choice-card').style.display = 'none';
+  document.getElementById('result-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
 /* ── 스트림 완전 종료 (어디서든 호출 가능) ── */
 function stopStream() {
@@ -742,13 +982,20 @@ function applyDrag(event, axis, which) {
   var bar = document.getElementById(barId);
   if (!bar) return;
   var ratio = getRatio(event, bar);
-  var hsl = which === 'c' ? currentHSL : targetHSL;
+  var hsl = which === 'c' ? currentHSL : which === 't' ? targetHSL : manualHSL;
 
   if (axis === 'hue') hsl.h = pctToHue(ratio);
   if (axis === 'sat') hsl.s = pctToSat(ratio);
   if (axis === 'lit') hsl.l = pctToLit(ratio);
 
-  updatePickerUI(which);
+  if (which === 'm') {
+    var hThumb = document.getElementById('hue-thumb-m');
+    if (hThumb) { hThumb.style.left = (hsl.h / 360 * 100) + '%'; hThumb.style.background = hslStr(hsl.h, 100, 50); }
+    updateManualSatBar();
+    updateManualSwatch();
+  } else {
+    updatePickerUI(which);
+  }
 }
 
 /* ── UI 전체 업데이트 ── */
@@ -812,21 +1059,23 @@ function applySnapDrag(event, axis, which) {
   var ratio = getRatio(event, bar);
   var snaps = axis === 'sat' ? SAT_SNAPS : LIT_SNAPS;
   var snap = getNearestSnap(ratio, snaps);
-  var hsl = which === 'c' ? currentHSL : targetHSL;
+  var hsl = which === 'c' ? currentHSL : which === 't' ? targetHSL : manualHSL;
   if (axis === 'sat') hsl.s = snap.val;
   else hsl.l = snap.val;
 
-  /* 썸 위치 업데이트 */
   var thumb = document.getElementById(axis + '-thumb-' + which);
   if (thumb) thumb.style.left = snap.pct + '%';
 
-  /* 라벨 업데이트 */
   var label = document.getElementById(axis + '-label-' + which);
   if (label) label.textContent = snap.label;
 
-  /* 채도 바 배경 및 스와치 업데이트 */
-  updateSatBarBg(which);
-  updateSwatchOnly(which);
+  if (which === 'm') {
+    updateManualSatBar();
+    updateManualSwatch();
+  } else {
+    updateSatBarBg(which);
+    updateSwatchOnly(which);
+  }
 }
 
 function updateSatBarBg(which) {
@@ -1970,20 +2219,16 @@ function showRecipe(main, detail, ratio) {
   if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-/* ── 다시 촬영 ── */
+/* ── 다시 촬영 / 처음으로 ── */
 function retake() {
   stopStream();
-  analysisResult.isDarkDetected = false;
-  var darkCard = document.getElementById('dark-choice-card');
-  var editCard = document.querySelector('.edit-card');
-  if (darkCard) darkCard.style.display = 'none';
-  if (editCard) editCard.style.display = 'block';
   document.getElementById('result-section').style.display = 'none';
-  document.getElementById('camera-section').style.display = 'block';
-  startCamera();
+  document.getElementById('black-choice-card') && (document.getElementById('black-choice-card').style.display = 'none');
+  goToModeSelect();
 }
 
-startCamera();
+/* 페이지 로드 시 모드 선택 화면 표시 (카메라 자동 시작 안 함) */
+document.getElementById('mode-section').style.display = 'block';
 </script>
 </body>
 </html>
