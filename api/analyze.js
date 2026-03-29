@@ -43,7 +43,24 @@ const SYSTEM_PROMPT = `
 3. 보색 중화 필요 여부
 4. 색이 탁해질 위험
 5. 시술 공정 (톤업 / 톤다운 / 보색중화 / 탈색)
+[언더톤별 보색 규칙 — 반드시 준수]
+curUndertone = YELLOW
+→ 바이올렛·보라 계열만 언급
+→ 주황·붉은기 절대 언급 금지
 
+curUndertone = ORANGE
+→ 블루·애쉬 계열 언급
+
+curUndertone = RED
+→ 그린 계열 언급
+
+curUndertone = GREEN / YELLOW_GREEN
+→ 핑크·레드 또는 시나몬브라운 언급
+→ 초록·카키 언급 금지
+
+curUndertone = BLUE / VIOLET
+→ 이미 한색 계열
+→ 난색 방향 시 탈색 언급
 [출력 규칙]
 - 짧고 바로 쓰는 말
 - 각 항목 2줄 이내
