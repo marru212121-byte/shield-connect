@@ -557,6 +557,112 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 
 <script>
+/* ════════════════════════════════════════
+   API 설정 — 키는 여기만 교체하면 됩니다
+════════════════════════════════════════ */
+var ANTHROPIC_API_KEY = 'USE_VERCEL_ENV'; /* 키는 버셀 환경변수에 있음 */
+var API_MODEL = 'claude-haiku-4-5-20251001';
+var DAILY_LIMIT = 10; /* 하루 무료 이용 횟수 */
+
+/* ── 일일 사용량 체크 ── */
+function getTodayKey() {
+  return 'hair_api_' + new Date().toISOString().slice(0, 10);
+}
+function getUsageCount() {
+  try { return parseInt(localStorage.getItem(getTodayKey()) || '0'); } catch(e) { return 0; }
+}
+function incrementUsage() {
+  try { localStorage.setItem(getTodayKey(), getUsageCount() + 1); } catch(e) {}
+}
+function isLimitReached() {
+  return getUsageCount() >= DAILY_LIMIT;
+}
+
+/* ── 시스템 프롬프트 ── */
+var SYSTEM_PROMPT = `너는 미용실 염색 시술을 도와주는 전문가 AI야.
+디자이너가 입력한 색상 분석 데이터를 바탕으로 실무 가이드를 제공한다.
+
+[절대 규칙]
+- 구체적 비율 수치(1:1, 1:3 등) 절대 명시 금지
+- 정답 단정 금지, 항상 "추천" 형태로 말할 것
+- 모질·손상도는 파악 불가임을 인지하고 항상 "직접 확인하며 진행" 문구 포함
+- 리스크(탁해짐, 과발색, 색 먹어들어감 등) 반드시 포함
+- 탈색 권장 조건 포함
+- 비율 관련 질문에는 "소량씩 조절하며 테스트" 표현 사용
+
+[색의 파워 순서 - 약→강]
+노랑 < 주황 < 레드 < 블루 < 보라 < 블랙
+
+[보색 관계]
+노랑 → 바이올렛·보라 계열로 중화
+주황 → 블루·애쉬 계열로 중화
+붉은색 → 그린 계열로 중화
+초록·카키 → 핑크·레드 계열 또는 시나몬브라운(애쉬+핑크가 가미된 브라운)으로 중화
+매트(노랑+초록) → 바이올렛 소량+따뜻함 또는 시나몬브라운
+노랑주황 → 청보라(애쉬+바이올렛 혼합) 계열
+
+[보색 중화 주의]
+- 같은 명도·파워로 맞춰야 효과적
+- 비율 틀리면 중화가 아닌 색이 먹어들어갈 수 있음
+- 전체 채도가 낮아지고 탁해질 수 있음
+
+[자연 탈색 단계]
+블랙 → 짙은레드 → 레드 → 레드주황 → 주황 → 주황노랑 → 노랑 → 바나나껍질색 → 바나나안쪽색 → 아이보리크림
+
+[명도별 한계]
+어두운: 색 변화 제한적, 파스텔·밝은 색은 탈색 필수
+중저: 잔류색 영향 큼, 보색 필요하지만 탁해짐 발생 가능
+중고: 대부분 가능, 보색 시 채도 감소, 손상도 고려
+밝은: 전부 가능, 파스텔 가능, 잔류색 제거 후 최적
+
+[버진모 특성]
+탈색 없이 한색 계열 → 오묘하고 청초한 브라운
+탈색 없이 난색 계열 → 와인빛·레드빛 브라운
+연모일수록 발색 잘 됨
+
+[출력 구조 - 반드시 이 순서로]
+1. 현재 상태 분석
+2. 문제 원인
+3. 해결 방향
+4. 실무 추천
+5. 결과 한계
+6. 최적 솔루션
+
+[스타일]
+- 디자이너에게 설명하듯 자연스럽게
+- 학술적 표현 금지
+- 핵심 키워드는 줄바꿈으로 강조
+- 같은 문장 반복 금지
+- 짧고 명확하게`;
+
+/* ── API 호출 (버셀 프록시 경유) ── */
+async function callHairAPI(analysisResult) {
+  var userMsg = [
+    '현재 언더톤: ' + analysisResult.curUndertone,
+    '목표 언더톤: ' + analysisResult.tarUndertone,
+    '탈색 단계 추정: ' + analysisResult.bleachStage,
+    '명도 변화: ' + analysisResult.levelChange + ' (차이: ' + analysisResult.levelGap + ')',
+    '색감 방향: ' + analysisResult.toneDirection,
+    '보색 중화 필요도: ' + analysisResult.neutralization,
+    '시술 공정: ' + analysisResult.processType,
+    '파스텔 목표: ' + (analysisResult.pastelTarget ? 'YES' : 'NO'),
+    '모발 이력: ' + (analysisResult.hairState || 'unknown'),
+    '리스크: ' + (analysisResult.risk.length > 0 ? analysisResult.risk.join(', ') : '없음'),
+    '',
+    '위 데이터를 바탕으로 1~6 구조로 실무 가이드를 작성해줘.'
+  ].join('\n');
+
+  var response = await fetch('/api/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: userMsg })
+  });
+
+  var data = await response.json();
+  if (data.result) return data.result;
+  throw new Error(data.error || 'API 오류');
+}
+
 var stream = null;
 var analysisResult = { level: 7, tones: [], isUneven: false, isMatte: false, isArtificial: false, artificialType: '' };
 var userLevel = null;
@@ -1445,39 +1551,50 @@ function selectBlackType(type) {
   document.getElementById('recipe-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-/* ── 분석 결과 렌더링 (API 연동 전 판단값 표시) ── */
+/* ── 분석 결과 렌더링 (API 호출) ── */
 function renderAnalysisResult(result) {
+  var curName = hueToName(currentHSL.h, currentHSL.s, currentHSL.l);
+  var tarName = hueToName(targetHSL.h, targetHSL.s, targetHSL.l);
+
   document.getElementById('recipe-current-swatch').style.background =
     hslStr(currentHSL.h, currentHSL.s, currentHSL.l);
   document.getElementById('recipe-target-swatch').style.background =
     hslStr(targetHSL.h, targetHSL.s, targetHSL.l);
-
-  var curName = hueToName(currentHSL.h, currentHSL.s, currentHSL.l);
-  var tarName = hueToName(targetHSL.h, targetHSL.s, targetHSL.l);
   document.getElementById('recipe-color-desc').textContent = curName + ' → ' + tarName;
   document.getElementById('rec-main').textContent = tarName + ' 방향';
-
-  /* 판단값 요약 표시 (API 연동 전 임시) */
-  var lines = [];
-  lines.push('[ 분석 결과 ]');
-  lines.push('현재 언더톤: ' + result.curUndertone);
-  lines.push('목표 언더톤: ' + result.tarUndertone);
-  lines.push('탈색 단계:   ' + result.bleachStage);
-  lines.push('명도 방향:   ' + result.levelChange + ' (' + (result.levelGap > 0 ? '+' : '') + result.levelGap + ')');
-  lines.push('색감 방향:   ' + result.toneDirection);
-  lines.push('중화 필요:   ' + result.neutralization);
-  lines.push('시술 공정:   ' + result.processType);
-  lines.push('파스텔 목표: ' + (result.pastelTarget ? 'YES' : 'NO'));
-  if (result.risk.length > 0) {
-    lines.push('리스크:      ' + result.risk.join(' / '));
-  }
-  lines.push('');
-  lines.push('※ API 연동 후 이 값을 기반으로');
-  lines.push('  상세 가이드가 자동 생성돼요.');
-
-  document.getElementById('rec-detail').textContent = lines.join('\n');
   document.getElementById('recipe-card').style.display = 'block';
   document.getElementById('recipe-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  /* 일일 한도 체크 */
+  if (isLimitReached()) {
+    document.getElementById('rec-detail').innerHTML =
+      '<span style="color:#ff6b6b;">오늘 무료 분석 횟수(' + DAILY_LIMIT + '회)를 모두 사용했어요.<br>내일 다시 이용해주세요.</span>';
+    return;
+  }
+
+  /* 로딩 표시 */
+  document.getElementById('rec-detail').innerHTML =
+    '<span style="color:#888;">✦ 분석 중이에요...</span>';
+
+  /* API 호출 */
+  incrementUsage();
+  callHairAPI(result).then(function(text) {
+    document.getElementById('rec-detail').textContent = text;
+    /* 남은 횟수 표시 */
+    var remaining = DAILY_LIMIT - getUsageCount();
+    var hint = document.createElement('div');
+    hint.style.cssText = 'margin-top:12px;font-size:11px;color:#444;text-align:right;';
+    hint.textContent = '오늘 남은 무료 횟수: ' + remaining + '회';
+    document.getElementById('rec-detail').appendChild(hint);
+  }).catch(function(err) {
+    document.getElementById('rec-detail').textContent =
+      '분석 중 오류가 발생했어요.\n다시 시도해주세요.\n\n' + err.message;
+    /* 실패 시 카운트 복원 */
+    try {
+      var k = getTodayKey();
+      localStorage.setItem(k, Math.max(0, getUsageCount() - 1));
+    } catch(e) {}
+  });
 }
 
 function hueToGroup(h, s) {
