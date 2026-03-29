@@ -662,38 +662,47 @@ function showHint(msg) {
 
 /* ── 수동 분석 확정 ── */
 function confirmManualColor() {
-  /* manualHSL → currentHSL로 복사 후 결과 화면으로 */
+  /* manualHSL → currentHSL 복사 */
   currentHSL = { h: manualHSL.h, s: manualHSL.s, l: manualHSL.l };
+
+  /* 목표색 초기 세팅 */
+  targetHSL = { h: (currentHSL.h + 30) % 360, s: 55, l: Math.min(78, currentHSL.l + 20) };
+  var satSnap = getNearestSnap(targetHSL.s / 100, SAT_SNAPS);
+  var litSnap = getNearestSnap(targetHSL.l / 100, LIT_SNAPS);
+  targetHSL.s = satSnap.val;
+  targetHSL.l = litSnap.val;
+
+  var satThumbT = document.getElementById('sat-thumb-t');
+  var litThumbT = document.getElementById('lit-thumb-t');
+  if (satThumbT) satThumbT.style.left = satSnap.pct + '%';
+  if (litThumbT) litThumbT.style.left = litSnap.pct + '%';
+  var satLabelT = document.getElementById('sat-label-t');
+  var litLabelT = document.getElementById('lit-label-t');
+  if (satLabelT) satLabelT.textContent = satSnap.label;
+  if (litLabelT) litLabelT.textContent = litSnap.label;
+
+  updatePickerUI('t');
+  updateSatBarBg('t');
+  updateSwatchOnly('t');
+
+  /* 수동 화면 → 결과 화면으로 전환, step1 건너뛰고 바로 step2 */
   document.getElementById('manual-section').style.display = 'none';
   document.getElementById('result-section').style.display = 'block';
 
-  /* step1 스와치 세팅 */
-  var box = document.getElementById('current-swatch-box');
-  if (box) box.style.background = hslStr(currentHSL.h, currentHSL.s, currentHSL.l);
-
-  /* step1 슬라이더 초기화 */
-  var hThumb = document.getElementById('hue-thumb-c');
-  if (hThumb) { hThumb.style.left = (currentHSL.h / 360 * 100) + '%'; hThumb.style.background = hslStr(currentHSL.h, 100, 50); }
-  var satSnap = getNearestSnap(currentHSL.s / 100, SAT_SNAPS);
-  var litSnap = getNearestSnap(currentHSL.l / 100, LIT_SNAPS);
-  var satThumb = document.getElementById('sat-thumb-c');
-  var litThumb = document.getElementById('lit-thumb-c');
-  if (satThumb) satThumb.style.left = satSnap.pct + '%';
-  if (litThumb) litThumb.style.left = litSnap.pct + '%';
-  var satLabel = document.getElementById('sat-label-c');
-  var litLabel = document.getElementById('lit-label-c');
-  if (satLabel) satLabel.textContent = satSnap.label;
-  if (litLabel) litLabel.textContent = litSnap.label;
-  updateSatBarBg('c');
-
-  /* crop-canvas 숨김 */
-  var cropCard = document.querySelector('#result-section .result-card');
+  /* crop-canvas 카드 숨김 (카메라 없으므로) */
+  var cropCard = document.querySelector('#result-section > .result-card:first-child');
   if (cropCard) cropCard.style.display = 'none';
 
-  document.getElementById('step1-card').style.display = 'block';
-  document.getElementById('step2-card').style.display = 'none';
+  /* step1 숨기고 step2 바로 표시 */
+  document.getElementById('step1-card').style.display = 'none';
+  document.getElementById('step2-card').style.display = 'block';
   document.getElementById('recipe-card').style.display = 'none';
   document.getElementById('black-choice-card').style.display = 'none';
+
+  /* 미니 스와치 */
+  var mini = document.getElementById('current-swatch-mini');
+  if (mini) mini.style.background = hslStr(currentHSL.h, currentHSL.s, currentHSL.l);
+
   document.getElementById('result-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
