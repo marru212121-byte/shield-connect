@@ -1257,202 +1257,227 @@ function confirmTargetColor() {
 }
 
 /* ── HSL 기반 레시피 생성 ── */
-function generateRecipe() {
-  var cH = currentHSL.h, cS = currentHSL.s, cL = currentHSL.l;
-  var tH = targetHSL.h,  tS = targetHSL.s,  tL = targetHSL.l;
+/* ════════════════════════════════════════
+   analyzeColorFlow — 판단 전용 함수
+   문장 출력 없음, 도출값만 반환
+   API 연동 시 이 값을 그대로 넘긴다
+════════════════════════════════════════ */
+function getUndertone(h, s, l) {
+  if (l <= 12 || (l <= 22 && s < 25)) return 'BLACK';
+  if (s < 15) {
+    if (l <= 40) return 'DARK_NEUTRAL';
+    if (l <= 65) return 'GRAY';
+    return 'WHITE';
+  }
+  if ((h >= 0 && h < 15) || h >= 345) return 'RED';
+  if (h >= 15 && h < 45)  return 'ORANGE';
+  if (h >= 45 && h < 75)  return 'YELLOW';
+  if (h >= 75 && h < 100) return 'YELLOW_GREEN';
+  if (h >= 100 && h < 155) return 'GREEN';
+  if (h >= 155 && h < 200) return 'TEAL';
+  if (h >= 200 && h < 255) return 'BLUE';
+  if (h >= 255 && h < 295) return 'VIOLET';
+  if (h >= 295 && h < 340) return 'PINK';
+  if (h >= 340 && h < 345) return 'RED_VIOLET';
+  return 'NEUTRAL';
+}
 
-  document.getElementById('recipe-current-swatch').style.background = hslStr(cH, cS, cL);
-  document.getElementById('recipe-target-swatch').style.background  = hslStr(tH, tS, tL);
+/* 자연 탈색 단계 추정 (현재 명도 기반) */
+function getBleachStage(l) {
+  if (l <= 10) return 'BLACK';
+  if (l <= 20) return 'DARK_RED';
+  if (l <= 28) return 'RED';
+  if (l <= 35) return 'RED_ORANGE';
+  if (l <= 42) return 'ORANGE';
+  if (l <= 50) return 'ORANGE_YELLOW';
+  if (l <= 58) return 'YELLOW';
+  if (l <= 66) return 'BANANA_PEEL';       /* 바나나 껍질 */
+  if (l <= 74) return 'BANANA_INNER';      /* 바나나 안쪽 */
+  return 'IVORY_CREAM';
+}
 
-  var curName  = hueToName(cH, cS, cL);
-  var tarName  = hueToName(tH, tS, tL);
-  var curGroup = hueToGroup(cH, cS);
-  var tarGroup = hueToGroup(tH, tS);
+/* 보색 중화 필요 여부 판단 */
+function getNeutralization(curUndertone, tarUndertone) {
+  var comp = {
+    'YELLOW':       ['VIOLET', 'BLUE'],
+    'YELLOW_GREEN': ['VIOLET', 'PINK'],
+    'ORANGE':       ['BLUE', 'TEAL'],
+    'RED':          ['GREEN', 'TEAL'],
+    'GREEN':        ['RED', 'PINK', 'RED_VIOLET'],
+    'TEAL':         ['RED', 'ORANGE'],
+    'BLUE':         ['ORANGE', 'RED_ORANGE'],
+    'VIOLET':       ['YELLOW', 'YELLOW_GREEN'],
+    'PINK':         ['GREEN'],
+    'RED_VIOLET':   ['GREEN', 'TEAL']
+  };
+  var strongComp = {
+    'RED':   ['BLUE', 'TEAL', 'GREEN'],
+    'GREEN': ['RED', 'PINK'],
+    'ORANGE':['BLUE', 'VIOLET']
+  };
+  if (strongComp[curUndertone] && strongComp[curUndertone].indexOf(tarUndertone) > -1) {
+    return 'STRONG_REQUIRED';
+  }
+  if (comp[curUndertone] && comp[curUndertone].indexOf(tarUndertone) > -1) {
+    return 'REQUIRED';
+  }
+  return 'NOT_REQUIRED';
+}
 
-  document.getElementById('recipe-color-desc').textContent = curName + ' → ' + tarName;
-  document.getElementById('rec-main').textContent = tarName + ' 방향';
+function analyzeColorFlow(current, target, hairState) {
+  var cH = current.h, cS = current.s, cL = current.l;
+  var tH = target.h,  tS = target.s,  tL = target.l;
 
-  var lDiff   = tL - cL;
-  var hueDiff = Math.abs(tH - cH);
-  if (hueDiff > 180) hueDiff = 360 - hueDiff;
+  var curUndertone = getUndertone(cH, cS, cL);
+  var tarUndertone = getUndertone(tH, tS, tL);
+  var bleachStage  = getBleachStage(cL);
 
-  var tarPastel = tS <= 25;
-  var tarVivid  = tS >= 75;
-  var curDark   = cL <= 25;
-  var curMid    = cL > 25 && cL <= 50;
-  var curLight  = cL > 50;
+  /* 명도 방향 */
+  var levelGap = tL - cL;
+  var levelChange = Math.abs(levelGap) < 8 ? 'SAME_LEVEL'
+                  : levelGap > 0 ? 'TONE_UP' : 'TONE_DOWN';
 
-  /* ── 블랙·매우 어두운 감지 시 → 3선택지 카드로 분기 ── */
-  var curIsBlack = cL <= 22 && cS < 25;
-  if (curIsBlack) {
-    showBlackChoiceCard(tarName, tarGroup, tarPastel, tL);
+  /* 색감 방향 */
+  var warmTones = ['RED','RED_VIOLET','ORANGE','YELLOW','YELLOW_GREEN','PINK'];
+  var coolTones = ['BLUE','TEAL','VIOLET','GRAY','WHITE'];
+  var curWarm = warmTones.indexOf(curUndertone) > -1;
+  var tarWarm = warmTones.indexOf(tarUndertone) > -1;
+  var curCool = coolTones.indexOf(curUndertone) > -1;
+  var tarCool = coolTones.indexOf(tarUndertone) > -1;
+  var toneDirection = (curWarm && tarCool) ? 'WARM_TO_COOL'
+                    : (curCool && tarWarm) ? 'COOL_TO_WARM'
+                    : 'SAME_TONE';
+
+  /* 보색 중화 */
+  var neutralization = getNeutralization(curUndertone, tarUndertone);
+
+  /* 공정 판단 */
+  var processType;
+  var pastelTarget = tS <= 25 && tL >= 55;
+
+  if (curUndertone === 'BLACK') {
+    processType = 'BLEACH_FIRST';
+  } else if (levelChange === 'TONE_UP' && levelGap > 20) {
+    processType = 'BLEACH_FIRST';
+  } else if (pastelTarget && cL < 60) {
+    processType = 'BLEACH_FIRST';
+  } else if (levelChange === 'TONE_DOWN') {
+    processType = 'TONE_DOWN';
+  } else if (neutralization !== 'NOT_REQUIRED') {
+    processType = 'NEUTRALIZATION_THEN_COLOR';
+  } else {
+    processType = 'DIRECT_COLOR';
+  }
+
+  /* 리스크 */
+  var risk = [];
+  if (neutralization !== 'NOT_REQUIRED') risk.push('MUDDY_RISK');
+  if (neutralization === 'STRONG_REQUIRED') risk.push('COLOR_SHIFT_RISK');
+  if (levelChange === 'TONE_DOWN') risk.push('UNEVEN_RISK');
+  if (cL < 15) risk.push('HIGH_LIFT_REQUIRED');
+  if (cS > 50 && tS < 25) risk.push('SATURATION_MISMATCH');
+  if (pastelTarget && cL < 60) risk.push('PASTEL_BASE_INSUFFICIENT');
+  if (tL > 75 && tS < 15) risk.push('WHITE_BLONDE_DIFFICULT');
+  if (hairState === 'bleached' && levelChange === 'TONE_UP') risk.push('FAST_LIFT_RISK');
+  if (hairState === 'dyed' && levelChange === 'TONE_DOWN') risk.push('COLOR_ACCUMULATION_RISK');
+  /* 매트 언더톤 특수 처리 */
+  if (curUndertone === 'YELLOW_GREEN' || curUndertone === 'GREEN') {
+    if (tarCool) risk.push('MATTE_COOL_CONFLICT');
+  }
+
+  return {
+    curUndertone:   curUndertone,
+    tarUndertone:   tarUndertone,
+    bleachStage:    bleachStage,
+    toneDirection:  toneDirection,
+    levelChange:    levelChange,
+    levelGap:       Math.round(levelGap),
+    neutralization: neutralization,
+    processType:    processType,
+    pastelTarget:   pastelTarget,
+    hairState:      hairState || 'unknown',
+    risk:           risk
+  };
+}
+
+/* ── confirmTargetColor → analyzeColorFlow 호출 ── */
+function confirmTargetColor() {
+  document.getElementById('step2-card').style.display = 'none';
+
+  /* 블랙 감지 → 3선택지 */
+  if (currentHSL.l <= 22 && currentHSL.s < 25) {
+    showBlackChoiceCard();
     return;
   }
 
+  var result = analyzeColorFlow(currentHSL, targetHSL, null);
+  renderAnalysisResult(result);
+}
+
+/* ── 블랙 감지 시 3선택지 ── */
+function showBlackChoiceCard() {
+  var cH = currentHSL.h, cS = currentHSL.s, cL = currentHSL.l;
+  var tH = targetHSL.h,  tS = targetHSL.s,  tL = targetHSL.l;
+  document.getElementById('black-current-swatch').style.background = hslStr(cH, cS, cL);
+  document.getElementById('black-target-swatch').style.background  = hslStr(tH, tS, tL);
+  document.getElementById('black-color-desc').textContent = '블랙 계열 → ' + hueToName(tH, tS, tL);
+  var btns = document.querySelectorAll('#black-choice-card button');
+  btns.forEach(function(b) { b.style.borderColor = '#333'; b.style.background = '#111'; });
+  document.getElementById('black-recipe-result').style.display = 'none';
+  document.getElementById('black-choice-card').style.display = 'block';
+  document.getElementById('recipe-card').style.display = 'none';
+  document.getElementById('black-choice-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function selectBlackType(type) {
+  var btns = document.querySelectorAll('#black-choice-card button');
+  btns.forEach(function(b) { b.style.borderColor = '#333'; b.style.background = '#111'; });
+  event.currentTarget.style.borderColor = '#fff';
+  event.currentTarget.style.background = 'rgba(255,255,255,0.07)';
+
+  var result = analyzeColorFlow(currentHSL, targetHSL, type);
+  document.getElementById('black-recipe-result').style.display = 'block';
+  document.getElementById('black-recipe-text').textContent = '분석 완료 — API 연동 후 상세 가이드가 여기 표시돼요.';
+
+  /* 레시피 카드에도 표시 */
+  renderAnalysisResult(result);
+  document.getElementById('recipe-card').style.display = 'block';
+  document.getElementById('recipe-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ── 분석 결과 렌더링 (API 연동 전 판단값 표시) ── */
+function renderAnalysisResult(result) {
+  document.getElementById('recipe-current-swatch').style.background =
+    hslStr(currentHSL.h, currentHSL.s, currentHSL.l);
+  document.getElementById('recipe-target-swatch').style.background =
+    hslStr(targetHSL.h, targetHSL.s, targetHSL.l);
+
+  var curName = hueToName(currentHSL.h, currentHSL.s, currentHSL.l);
+  var tarName = hueToName(targetHSL.h, targetHSL.s, targetHSL.l);
+  document.getElementById('recipe-color-desc').textContent = curName + ' → ' + tarName;
+  document.getElementById('rec-main').textContent = tarName + ' 방향';
+
+  /* 판단값 요약 표시 (API 연동 전 임시) */
   var lines = [];
-  var risks = [];
-
-  /* ── 현재색 노랑 계열 여부 판단 ── */
-  var curIsYellow = (cH >= 45 && cH < 75) && cS >= 15;
-
-  lines.push('현재 모발색: ' + curName);
-  lines.push('목표 색상: ' + tarName);
+  lines.push('[ 분석 결과 ]');
+  lines.push('현재 언더톤: ' + result.curUndertone);
+  lines.push('목표 언더톤: ' + result.tarUndertone);
+  lines.push('탈색 단계:   ' + result.bleachStage);
+  lines.push('명도 방향:   ' + result.levelChange + ' (' + (result.levelGap > 0 ? '+' : '') + result.levelGap + ')');
+  lines.push('색감 방향:   ' + result.toneDirection);
+  lines.push('중화 필요:   ' + result.neutralization);
+  lines.push('시술 공정:   ' + result.processType);
+  lines.push('파스텔 목표: ' + (result.pastelTarget ? 'YES' : 'NO'));
+  if (result.risk.length > 0) {
+    lines.push('리스크:      ' + result.risk.join(' / '));
+  }
   lines.push('');
+  lines.push('※ API 연동 후 이 값을 기반으로');
+  lines.push('  상세 가이드가 자동 생성돼요.');
 
-  /* ── 노랑 감지 시 목표색별 가이드 (최상단에 추가) ── */
-  if (curIsYellow) {
-    lines.push('━━━━━━━━━━━━━━━━━━━━');
-    lines.push('💛 노랑 계열이 감지됐어요.');
-    lines.push('');
-    lines.push('노랑 계열은 탈색이 진행된 베이스에서 나타나는 색이에요.');
-    lines.push('다만 매장 조명 특성상 카메라만으로는 선명한 노랑인지,');
-    lines.push('매트하게 퇴색된 노랑인지 정확히 구분하기 어려워요.');
-    lines.push('실제 모발을 직접 확인해주세요.');
-    lines.push('');
-
-    if (tarGroup === 'cool' || tarGroup === 'neutral') {
-      lines.push('💛 선명한 노랑기라면');
-      lines.push('바이올렛 계열 염모제를 소량 혼합해서 보색 중화 개념으로 접근하면');
-      lines.push('노랑기를 효과적으로 잡을 수 있어요.');
-      lines.push('이때 중요한 점은 같은 명도와 파워로 맞춰서 사용하는 거예요.');
-      lines.push('비율이 맞지 않으면 중화가 아니라 색이 먹어들어갈 수 있으니 주의하세요.');
-      lines.push('');
-      lines.push('🟤 노랑기인데 매트하게 퇴색된 모발이라면');
-      lines.push('시나몬 계열처럼 애쉬와 핑크가 살짝 가미된,');
-      lines.push('난색과 한색이 동시에 있는 브라운 계열이 가장 안정적이에요.');
-      lines.push('복잡하시다면 바이올렛 계열 소량으로 매트기를 눌러주셔도 돼요.');
-      lines.push('단, 소량씩 조절하면서 사용하세요.');
-    } else if (tarGroup === 'warm') {
-      lines.push('노랑 언더톤이 따뜻한 계열 발색에 유리하게 작용해요.');
-      lines.push(tarName + ' 계열 염모제를 바로 올리면 자연스럽게 나와요.');
-    } else if (tarPastel && tL >= 65) {
-      lines.push('파스텔 계열로 가시려면 노랑기를 먼저 정리하는 게 좋아요.');
-      lines.push('바이올렛 계열 소량으로 노랑기를 눌러준 후 파스텔 토닝을 올리세요.');
-      risks.push('노랑기가 남은 채로 파스텔을 올리면 탁하게 나올 수 있어요.');
-    }
-    lines.push('━━━━━━━━━━━━━━━━━━━━');
-    lines.push('');
-  }
-
-  if (curDark && tL >= 50 && tarPastel) {
-    lines.push('어두운 베이스에서 파스텔 계열로 가시는군요.');
-    lines.push('한 번에 가기 어려운 거리예요.');
-    lines.push('');
-    lines.push('탈색 진행 순서: 흑 → 붉은기 → 주황 → 노랑 → 아이보리');
-    lines.push('');
-    lines.push('파스텔 계열은 노랑~아이보리 구간까지 탈색이 진행돼야 표현 가능해요.');
-    lines.push('탈색 후 바이올렛 계열 염모제로 노랑기를 눌러주고 파스텔 토닝을 올리는 방향이에요.');
-    if (tL >= 70) {
-      lines.push('');
-      lines.push('화이트블론드·파스텔 방향이라면:');
-      lines.push('탈색 후 블루·바이올렛 계열 염모제로 진하게 입혀서 퇴색 과정을 이용하는 방법도 있어요.');
-      lines.push('다음 방문 때 파스텔·백금 계열로 마무리하는 게 좋아요.');
-    }
-    risks.push('모발과 모질에 따라 탈색 횟수와 잔여 멜라닌·언더톤은 차이가 날 수 있어요. 횟수는 참고용이며 직접 확인하면서 진행하세요.');
-
-  } else if (curDark && tL >= 50 && tarVivid) {
-    lines.push('어두운 베이스에서 선명한 ' + tarName + ' 방향이에요.');
-    lines.push('탈색 후 ' + tarName + ' 염모제를 올리는 방향이에요.');
-    lines.push('');
-    if (tarGroup === 'warm') {
-      lines.push('탈색 단계별 안내:');
-      lines.push('붉은기 단계 → 레드·주황 계열 염모제 바로 가능');
-      lines.push('주황 단계   → 레드·주황 계열 염모제 바로 가능');
-      lines.push('노랑 단계   → 레드·주황 계열 염모제 바로 가능');
-    } else if (tarGroup === 'cool') {
-      lines.push('탈색 단계별 안내:');
-      lines.push('붉은기 단계 → 그린 계열 염모제로 붉은기 중화 후 차가운 계열 가능');
-      lines.push('주황 단계   → 바이올렛 계열 염모제로 주황 중화 후 차가운 계열 가능');
-      lines.push('노랑 단계   → 바이올렛 계열 염모제로 노랑 눌러주면 애쉬·한색 가능');
-    }
-    risks.push('모발과 모질에 따라 탈색 횟수와 잔여 멜라닌·언더톤은 차이가 날 수 있어요. 직접 확인하면서 진행하세요.');
-
-  } else if (curDark && tL < 50) {
-    if (tarGroup === 'cool' && cS < 20) {
-      lines.push('어두운 자연 모발에서 ' + tarName + ' 방향이에요.');
-      lines.push('');
-      lines.push('연모이거나 손상이 있는 경우 애쉬·블루 계열 염모제를 사용하면');
-      lines.push('붉은기가 억제된 자연스러운 한색 계열이 표현되기도 해요.');
-      lines.push('탈색 없이 시술 시 어두운 방향으로만 가능해요.');
-    } else if (tarGroup === 'warm') {
-      lines.push('어두운 베이스에서 ' + tarName + ' 방향이에요.');
-      lines.push('레드·주황 계열 염모제는 어두운 명도에서도 색감이 살아나요.');
-      lines.push('바로 시술 가능한 방향이에요.');
-    } else {
-      lines.push('어두운 베이스에서 ' + tarName + ' 방향이에요.');
-      lines.push('같은 어두운 명도 유지라면 바로 시술 가능해요.');
-      if (hueDiff > 90) lines.push('색상 방향이 많이 달라서 잔류 색소가 영향을 줄 수 있어요.');
-    }
-
-  } else if (curMid && tL >= 60 && tarPastel) {
-    lines.push('현재 중간 명도에서 파스텔 계열로 가시는군요.');
-    lines.push('파스텔은 노랑~아이보리 구간까지 탈색이 필요해요.');
-    lines.push('탈색 후 바이올렛 계열 염모제로 노랑기를 정리하고 파스텔 계열 토닝을 올리세요.');
-    risks.push('현재 명도에서 파스텔을 바로 올리면 탁하게 나올 수 있어요.');
-
-  } else if (hueDiff > 120 && cS > 25) {
-    lines.push('현재 잔류 색상과 목표색이 보색에 가까운 관계예요.');
-    lines.push('');
-    if (curGroup === 'warm' && tarGroup === 'cool') {
-      lines.push('현재 ' + curName + ' 잔류가 차가운 ' + tarName + '을 방해해요.');
-      lines.push('');
-      if (cH < 50) {
-        lines.push('그린 계열 염모제로 붉은기를 중화한 후 차가운 계열 염모제를 올리세요.');
-      } else {
-        lines.push('바이올렛 계열 염모제로 노랑·주황기를 눌러준 후 차가운 계열 염모제를 올리세요.');
-      }
-    } else if (curGroup === 'cool' && tarGroup === 'warm') {
-      lines.push('현재 ' + curName + ' 잔류가 따뜻한 ' + tarName + '과 섞이면 탁해져요.');
-      lines.push('탈색으로 인공 색소를 제거한 후 ' + tarName + ' 염모제를 올리는 게 깔끔해요.');
-    } else {
-      lines.push('잔류 색소가 남은 채로 바로 올리면 탁하게 섞일 수 있어요.');
-      lines.push('탈색으로 정리 후 시술하는 게 가장 확실해요.');
-    }
-    risks.push('잔류 색소 제거 없이 바로 올리면 탁한 결과가 나올 수 있어요.');
-
-  } else if (hueDiff < 60 && Math.abs(lDiff) < 30) {
-    lines.push('현재 색상과 목표색이 비슷한 방향이에요.');
-    if (lDiff > 10) {
-      lines.push('목표가 조금 더 밝은 방향이에요. ' + tarName + ' 염모제를 올리면 돼요.');
-    } else if (lDiff < -10) {
-      lines.push('목표가 조금 더 어두운 방향이에요. ' + tarName + ' 염모제를 올리면 돼요.');
-    } else {
-      lines.push('잔류 언더톤과 목표 방향이 맞아서 발색에 유리해요.');
-      lines.push(tarName + ' 염모제를 바로 올리면 돼요.');
-    }
-
-  } else if (curLight) {
-    if (tarPastel) {
-      lines.push('밝은 베이스에서 파스텔 계열로 가시는군요.');
-      if (cL >= 65) {
-        lines.push('이미 밝은 명도라 파스텔 계열 표현이 수월해요.');
-        lines.push('바이올렛 계열 염모제로 노랑기를 살짝 눌러주고 파스텔 토닝을 올리세요.');
-      } else {
-        lines.push('탈색으로 조금 더 밝혀준 후 파스텔 토닝을 올리세요.');
-      }
-    } else if (tarGroup === 'warm') {
-      lines.push('밝은 베이스에서 ' + tarName + ' 방향이에요.');
-      lines.push(tarName + ' 염모제를 올리면 돼요.');
-    } else if (tarGroup === 'cool') {
-      lines.push('밝은 베이스에서 ' + tarName + ' 방향이에요.');
-      if (cL >= 60) {
-        lines.push('애쉬·바이올렛 계열 염모제를 올리면 깔끔하게 나와요.');
-      } else {
-        lines.push('노랑기가 남아있다면 바이올렛 계열 소량으로 눌러주고 차가운 계열 염모제를 올리세요.');
-      }
-    } else {
-      lines.push('밝은 베이스에서 ' + tarName + ' 방향이에요. ' + tarName + ' 염모제를 올리면 돼요.');
-    }
-
-  } else {
-    lines.push(curName + '에서 ' + tarName + ' 방향이에요.');
-    if (lDiff > 20) lines.push('목표 명도가 더 밝아서 탈색이 필요할 수 있어요.');
-    lines.push(tarName + ' 염모제를 올리는 방향이에요.');
-  }
-
-  var detail = lines.join('\n');
-  if (risks.length > 0) detail += '\n\n⚠️ ' + risks.join('\n⚠️ ');
-  document.getElementById('rec-detail').textContent = detail;
+  document.getElementById('rec-detail').textContent = lines.join('\n');
+  document.getElementById('recipe-card').style.display = 'block';
+  document.getElementById('recipe-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function hueToGroup(h, s) {
@@ -1603,144 +1628,6 @@ function clearRecipe() {
    매트+노랑 → 애쉬+핑크 소량 가미 브라운 (시나몬·낙엽빛 복합 브라운)
    노랑+애쉬 단독 = 카키 변질 주의
 ════════════════════════════════════════ */
-/* ── 블랙 감지 시 3선택지 카드 표시 ── */
-var _blackTarName = '', _blackTarGroup = '', _blackTarPastel = false, _blackTarL = 50;
-
-function showBlackChoiceCard(tarName, tarGroup, tarPastel, tL) {
-  _blackTarName   = tarName;
-  _blackTarGroup  = tarGroup;
-  _blackTarPastel = tarPastel;
-  _blackTarL      = tL;
-
-  var cH = currentHSL.h, cS = currentHSL.s, cL = currentHSL.l;
-  var tH = targetHSL.h,  tS = targetHSL.s;
-
-  document.getElementById('black-current-swatch').style.background = hslStr(cH, cS, cL);
-  document.getElementById('black-target-swatch').style.background  = hslStr(tH, tS, tL);
-  document.getElementById('black-color-desc').textContent = '블랙 계열 → ' + tarName;
-
-  var btns = document.querySelectorAll('#black-choice-card button');
-  btns.forEach(function(b) { b.style.borderColor = '#333'; b.style.background = '#111'; });
-  document.getElementById('black-recipe-result').style.display = 'none';
-  document.getElementById('black-choice-card').style.display = 'block';
-  document.getElementById('recipe-card').style.display = 'none';
-  document.getElementById('black-choice-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function selectBlackType(type) {
-  var btns = document.querySelectorAll('#black-choice-card button');
-  btns.forEach(function(b) { b.style.borderColor = '#333'; b.style.background = '#111'; });
-  event.currentTarget.style.borderColor = '#fff';
-  event.currentTarget.style.background = 'rgba(255,255,255,0.07)';
-
-  var tarName   = _blackTarName;
-  var tarGroup  = _blackTarGroup;
-  var tarPastel = _blackTarPastel;
-  var tL        = _blackTarL;
-  var lines     = [];
-
-  if (type === 'virgin') {
-    lines.push('버진모(자연 흑모) 상태에서 ' + tarName + ' 방향이시군요.');
-    lines.push('');
-    lines.push('버진모에서의 색상 표현은 크게 두 방향으로 나뉘어요.');
-    lines.push('');
-    lines.push('① 탈색 없이 바로 염색하는 경우');
-    if (tarGroup === 'warm') {
-      lines.push('레드·핑크·바이올렛 계열 염모제를 올리면');
-      lines.push('약간의 와인빛이나 레드빛이 감도는 브라운으로 표현돼요.');
-    } else if (tarGroup === 'cool') {
-      lines.push('애쉬·블루·그린 계열 염모제를 사용하면');
-      lines.push('붉은기가 완화되면서 오묘하고 청초한 브라운으로 표현돼요.');
-      lines.push('연모나 손상모일수록 발색이 더 잘 나와요.');
-    } else {
-      lines.push('어두운 명도 유지라면 원하는 계열 염모제를 바로 올릴 수 있어요.');
-    }
-    lines.push('');
-    lines.push('② 탈색 후 시술하는 경우');
-    if (tarPastel || tL >= 65) {
-      lines.push('파스텔·밝은 색감은 탈색이 필수예요.');
-      lines.push('탈색 진행 순서: 흑 → 붉은기 → 주황 → 노랑 → 아이보리');
-      lines.push('한 번에 가기 어려운 거리라면 2회 이상 분할 시술이 필요할 수 있어요.');
-    } else {
-      lines.push('탈색 1~2회 후 원하는 색을 올리면 더 선명하게 표현 가능해요.');
-    }
-    lines.push('');
-    lines.push('⚠️ 모발과 모질에 따라 발색 결과는 달라질 수 있어요. 직접 확인하면서 진행하세요.');
-
-  } else if (type === 'dyed') {
-    lines.push('염색 이력이 있는 모발에서 ' + tarName + ' 방향이시군요.');
-    lines.push('');
-    lines.push('현재 잔류 색소가 남아있는 상태예요.');
-    lines.push('');
-    if (tarGroup === 'cool' || tarGroup === 'neutral') {
-      lines.push('한색 계열로 체인지하려면 잔류 색소가 발색을 방해할 수 있어요.');
-      lines.push('보색 계열로 반복 중화하거나, 탈색으로 잔류 색소를 제거하는 방법이 있어요.');
-      lines.push('');
-      lines.push('보색 중화 시 주의할 점:');
-      lines.push('· 같은 명도·파워로 소량씩 사용해야 해요');
-      lines.push('· 비율이 틀리면 중화가 아닌 색이 먹어들어갈 수 있어요');
-      lines.push('· 전체적인 채도가 낮아지고 탁해질 수 있어요');
-    } else if (tarGroup === 'warm') {
-      lines.push('따뜻한 계열로의 체인지는 비교적 수월해요.');
-      lines.push('레드·주황 계열은 색 파워가 강해 발색이 잘 나와요.');
-    }
-    lines.push('');
-    lines.push('가장 깔끔한 방법은 탈색 후 원하는 색을 올리는 거예요.');
-    lines.push('⚠️ 블랙 계열로 톤다운한 경우 반복 탈색이 필요할 수 있어요.');
-
-  } else if (type === 'bleached') {
-    lines.push('탈색 베이스에서 어두운 색을 올리신 상태군요.');
-    lines.push('');
-    if (tarPastel || tL >= 55) {
-      lines.push('밝고 파스텔한 방향으로 가시려면:');
-      lines.push('잔류 틴트를 토닝 또는 탈색으로 살짝 빼낸 후 시술하는 걸 추천해요.');
-      lines.push('');
-      lines.push('블랙 계열로 톤다운한 경우:');
-      lines.push('반복 탈색이 필요해요. 단계적으로 밝히는 방향이에요.');
-    } else {
-      lines.push('같은 어두운 방향 유지라면 보색 계열로 조금씩 체인지하는 방법도 있어요.');
-      lines.push('');
-      lines.push('최근 나오는 체인지 가능한 블랙 계열 염모제는');
-      lines.push('탈색 1회로도 전환이 가능한 경우가 있으니 참고하세요.');
-    }
-    lines.push('');
-    lines.push('⚠️ 탈색 베이스라 반응이 빠를 수 있어요. 직접 확인하면서 진행하세요.');
-  }
-
-  document.getElementById('black-recipe-text').textContent = lines.join('\n');
-  document.getElementById('black-recipe-result').style.display = 'block';
-}
-
-/* ── 어두운 상태 3선택지 처리 ── */
-function selectDarkType(type) {
-  var darkCard = document.getElementById('dark-choice-card');
-  var recipeCard = document.getElementById('recipe-card');
-
-  /* 선택된 버튼 하이라이트 */
-  var btns = darkCard.querySelectorAll('button');
-  btns.forEach(function(b) { b.style.border = '1px solid #333'; b.style.background = '#111'; });
-  event.currentTarget.style.border = '1px solid #9E7FBF';
-  event.currentTarget.style.background = 'rgba(158,127,191,0.1)';
-
-  var main = '';
-  var detail = '';
-
-  if (type === 'virgin') {
-    main = '버진모 (자연 흑모)';
-    detail = '버진모 상태로 판단돼요.\n\n탈색 없이는 블루블랙이나 어두운 계열 색상만 올릴 수 있어요.\n\n다만 모발이 연모이거나 손상이 있는 경우엔 애쉬, 블루, 카키 계열을 사용하면 붉은기가 억제된 자연스러운 한색 계열 컬러가 표현되기도 해요.\n\n탈색을 진행하면 붉은기 → 주황 → 노랑 순서로 올라오면서 원하는 방향으로 선택지가 넓어져요.\n\n⚠️ 버진모의 자연 멜라닌은 따뜻한 방향이에요. 선명한 한색이나 밝은 색감을 원하신다면 탈색이 필수예요.';
-
-  } else if (type === 'toneup') {
-    main = '톤업 후 어둡게 입힌 상태';
-    detail = '톤업된 베이스에 그레이·애쉬 계열로 어둡게 입힌 상태로 판단돼요.\n\n이 상태에서 선명하거나 밝은 색감 표현은 어려워요.\n잔류된 어두운 색소가 발색을 방해하기 때문이에요.\n\n추천:\n1. 같은 계열로 유지하거나, 토닝으로 정리하는 게 가장 자연스러운 방향이에요\n2. 색감을 바꾸고 싶다면 붉은기·카키 계열처럼 보색 개념으로 조금씩 체인지하는 방법이 있어요\n\n⚠️ 밝게 가려면 탈색이 필요해요. 어두운 염색 잔류가 탈색 결과에도 영향을 줄 수 있어요.';
-
-  } else if (type === 'bleached') {
-    main = '밝은 탈색 베이스에 어두운 색을 입힌 상태';
-    detail = '밝은 탈색 베이스에 블루블랙이나 짙은 애쉬를 올리신 상태로 판단돼요.\n\n원하는 색감으로 전환하려면 탈색이 필요해요.\n탈색 베이스였기 때문에 탈색 반응이 비교적 빠르게 나타나요.\n\n추천:\n1. 탈색 1회로 어두운 색을 걷어낸 후 원하는 방향으로 시술\n2. 최근 나오는 체인지 가능한 블랙 계열은 탈색 한 번으로도 전환이 가능한 경우가 있어요\n\n⚠️ 탈색 시 베이스가 올라오는 속도가 빠를 수 있으니 확인하며 진행하세요.';
-  }
-
-  showRecipe(main, detail, '');
-}
-
 function updateRecipe() {
   if (!userLevel) {
     showRecipe('명도를 선택해주세요', '슬라이더로 현재 명도를 선택한 뒤\n원하는 색감 방향을 골라주세요.', '');
