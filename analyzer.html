@@ -663,8 +663,8 @@ async function callHairAPI(analysisResult) {
   if (data.result) {
     return data.result;
   }
-
-  throw new Error(data.error || 'API 응답 오류');
+  console.log('API ERROR:', data);
+  return '분석 실패: ' + (data.error || '응답 없음');
 }
 
 var stream = null;
@@ -1584,16 +1584,16 @@ function renderAnalysisResult(result) {
   incrementUsage();
   callHairAPI(result).then(function(text) {
     document.getElementById('rec-detail').textContent = text;
-    /* 남은 횟수 표시 */
     var remaining = DAILY_LIMIT - getUsageCount();
     var hint = document.createElement('div');
     hint.style.cssText = 'margin-top:12px;font-size:11px;color:#444;text-align:right;';
     hint.textContent = '오늘 남은 무료 횟수: ' + remaining + '회';
     document.getElementById('rec-detail').appendChild(hint);
   }).catch(function(err) {
+    /* 네트워크 오류 등 예외 상황만 여기 도달 */
+    console.log('catch error:', err.message);
     document.getElementById('rec-detail').textContent =
-      '분석 중 오류가 발생했어요.\n다시 시도해주세요.\n\n' + err.message;
-    /* 실패 시 카운트 복원 */
+      '네트워크 오류가 발생했어요. 다시 시도해주세요.\n\n' + err.message;
     try {
       var k = getTodayKey();
       localStorage.setItem(k, Math.max(0, getUsageCount() - 1));
