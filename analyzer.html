@@ -1565,7 +1565,7 @@ function renderAnalysisResult(result) {
   document.getElementById('recipe-target-swatch').style.background =
     hslStr(targetHSL.h, targetHSL.s, targetHSL.l);
   document.getElementById('recipe-color-desc').textContent = curName + ' → ' + tarName;
-  document.getElementById('rec-main').textContent = tarName + ' 방향';
+  document.getElementById('rec-main').textContent = '';
   document.getElementById('recipe-card').style.display = 'block';
   document.getElementById('recipe-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
