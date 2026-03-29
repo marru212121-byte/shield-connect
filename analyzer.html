@@ -560,7 +560,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 /* ════════════════════════════════════════
    API 설정 — 키는 여기만 교체하면 됩니다
 ════════════════════════════════════════ */
-var ANTHROPIC_API_KEY = 'YOUR_API_KEY_HERE';
+var ANTHROPIC_API_KEY = 'VERCEL_PROXY'; /* 키는 버셀 환경변수에 있음 - 여기 수정 불필요 */
 var API_MODEL = 'claude-haiku-4-5-20251001';
 var DAILY_LIMIT = 10; /* 하루 무료 이용 횟수 */
 
@@ -1579,13 +1579,6 @@ function renderAnalysisResult(result) {
   /* 로딩 표시 */
   document.getElementById('rec-detail').innerHTML =
     '<span style="color:#888;">✦ 분석 중이에요...</span>';
-
-  /* API 키 미설정 체크 */
-  if (ANTHROPIC_API_KEY === 'YOUR_API_KEY_HERE') {
-    document.getElementById('rec-detail').textContent =
-      '[ API 키를 설정해주세요 ]\n\nanalyzer.html 파일에서\nYOUR_API_KEY_HERE 부분을\n발급받은 키로 교체하세요.';
-    return;
-  }
 
   /* API 호출 */
   incrementUsage();
