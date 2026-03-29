@@ -45,7 +45,6 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  /* body 안전 파싱 */
   let body = req.body;
   if (typeof body === 'string') {
     try { body = JSON.parse(body); } catch(e) {
@@ -74,7 +73,7 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-3-haiku-20240307',
+        model: 'claude-3-5-haiku-20241022',
         max_tokens: 1000,
         system: SYSTEM_PROMPT,
         messages: [{
@@ -92,7 +91,6 @@ export default async function handler(req, res) {
       return res.status(200).json({ result: data.content[0].text });
     }
 
-    /* 에러 메시지 그대로 반환 */
     const errMsg = data.error?.message || JSON.stringify(data);
     console.error('[analyze] API 오류:', errMsg);
     return res.status(500).json({ error: errMsg });
