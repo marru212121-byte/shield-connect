@@ -360,6 +360,37 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="recipe-detail" id="rec-detail" style="white-space:pre-line;margin-top:10px;font-size:13px;color:#ccc;line-height:1.8;"></div>
   </div>
 
+  <!-- 블랙 감지 시 3선택지 카드 -->
+  <div class="recipe-card" id="black-choice-card" style="display:none;">
+    <div class="recipe-title">⚫ 현재 모발 상태 확인</div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px;">
+      <div id="black-current-swatch" style="width:52px;height:52px;border-radius:9px;border:2px solid #333;flex-shrink:0;"></div>
+      <div style="font-size:20px;color:#555;">→</div>
+      <div id="black-target-swatch" style="width:52px;height:52px;border-radius:9px;border:2px solid #fff;flex-shrink:0;"></div>
+      <div style="flex:1;font-size:12px;color:#888;line-height:1.5;" id="black-color-desc"></div>
+    </div>
+    <div style="font-size:13px;color:#aaa;margin-bottom:14px;line-height:1.7;">
+      어두운 모발이 감지됐어요.<br>정확한 가이드를 위해 현재 모발 상태를 선택해주세요.
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button onclick="selectBlackType('virgin')"
+        style="padding:14px;border-radius:12px;border:1px solid #333;background:#111;color:#ddd;font-size:13px;font-weight:600;cursor:pointer;text-align:left;line-height:1.6;">
+        🌱 버진모 (자연 흑모 그대로예요)
+      </button>
+      <button onclick="selectBlackType('dyed')"
+        style="padding:14px;border-radius:12px;border:1px solid #333;background:#111;color:#ddd;font-size:13px;font-weight:600;cursor:pointer;text-align:left;line-height:1.6;">
+        🎨 5~15레벨 염색 후 블랙·그레이로 어둡게 한 상태예요
+      </button>
+      <button onclick="selectBlackType('bleached')"
+        style="padding:14px;border-radius:12px;border:1px solid #333;background:#111;color:#ddd;font-size:13px;font-weight:600;cursor:pointer;text-align:left;line-height:1.6;">
+        ⬛ 탈색 후 블랙·그레이로 톤다운한 상태예요
+      </button>
+    </div>
+    <div id="black-recipe-result" style="display:none;margin-top:16px;padding:14px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid #222;">
+      <div style="font-size:13px;color:#ccc;line-height:1.9;white-space:pre-line;" id="black-recipe-text"></div>
+    </div>
+  </div>
+
   <div style="padding:12px 16px;background:#111;border-radius:12px;margin-bottom:12px;border:1px solid #1a1a1a;">
     <div style="font-size:11px;color:#444;line-height:1.7;text-align:center;">
       이 분석은 색감 방향 힌트예요 · 최종 판단은 디자이너가 직접 하세요
@@ -946,6 +977,13 @@ function generateRecipe() {
   var curMid    = cL > 25 && cL <= 50;
   var curLight  = cL > 50;
 
+  /* ── 블랙·매우 어두운 감지 시 → 3선택지 카드로 분기 ── */
+  var curIsBlack = cL <= 22;
+  if (curIsBlack) {
+    showBlackChoiceCard(tarName, tarGroup, tarPastel, tL);
+    return;
+  }
+
   var lines = [];
   var risks = [];
 
@@ -1120,20 +1158,27 @@ function hueToGroup(h, s) {
 }
 
 function hueToName(h, s, l) {
+  /* ── 명도 최우선 체크 — 어두우면 Hue 무관하게 블랙 계열 ── */
+  if (l <= 12) return '블랙 계열';
+  if (l <= 22 && s < 25) return '블랙·짙은 다크 계열';
+
   if (s < 15) {
-    if (l <= 25) return '블랙 계열';
-    if (l <= 50) return '다크 그레이·애쉬 계열';
-    if (l <= 70) return '실버·그레이 계열';
+    if (l <= 40) return '다크 그레이·애쉬 계열';
+    if (l <= 65) return '실버·그레이 계열';
     return '화이트·아이보리 계열';
   }
   if (l >= 80 && s <= 20) return '화이트블론드·백금 계열';
+
+  /* ── 어두운 명도에서 채도 있어도 블랙 계열로 처리 ── */
+  if (l <= 18) return '블랙 계열';
+
   if ((h >= 0 && h < 15) || h >= 345) {
-    return l <= 25 ? '짙은 레드 계열' : '레드 계열';
+    return l <= 30 ? '짙은 레드·와인 계열' : '레드 계열';
   }
   if (h >= 15 && h < 45) return s >= 55 ? '주황 계열' : '주황빛 계열';
   if (h >= 45 && h < 70)  return l >= 60 ? '골든·노랑 계열' : '골든 계열';
   if (h >= 70 && h < 150) return s >= 40 ? '그린 계열' : '카키·매트 계열';
-  if (h >= 150 && h < 210) return l <= 30 ? '네이비·블루블랙 계열' : '블루·청회색 계열';
+  if (h >= 150 && h < 210) return l <= 35 ? '네이비·블루블랙 계열' : '블루·청회색 계열';
   if (h >= 210 && h < 260) {
     if (l <= 30) return '네이비·블루블랙 계열';
     return s >= 40 ? '블루 계열' : '애쉬·쿨그레이 계열';
@@ -1253,6 +1298,114 @@ function clearRecipe() {
    매트+노랑 → 애쉬+핑크 소량 가미 브라운 (시나몬·낙엽빛 복합 브라운)
    노랑+애쉬 단독 = 카키 변질 주의
 ════════════════════════════════════════ */
+/* ── 블랙 감지 시 3선택지 카드 표시 ── */
+var _blackTarName = '', _blackTarGroup = '', _blackTarPastel = false, _blackTarL = 50;
+
+function showBlackChoiceCard(tarName, tarGroup, tarPastel, tL) {
+  _blackTarName   = tarName;
+  _blackTarGroup  = tarGroup;
+  _blackTarPastel = tarPastel;
+  _blackTarL      = tL;
+
+  var cH = currentHSL.h, cS = currentHSL.s, cL = currentHSL.l;
+  var tH = targetHSL.h,  tS = targetHSL.s;
+
+  document.getElementById('black-current-swatch').style.background = hslStr(cH, cS, cL);
+  document.getElementById('black-target-swatch').style.background  = hslStr(tH, tS, tL);
+  document.getElementById('black-color-desc').textContent = '블랙 계열 → ' + tarName;
+
+  var btns = document.querySelectorAll('#black-choice-card button');
+  btns.forEach(function(b) { b.style.borderColor = '#333'; b.style.background = '#111'; });
+  document.getElementById('black-recipe-result').style.display = 'none';
+  document.getElementById('black-choice-card').style.display = 'block';
+  document.getElementById('recipe-card').style.display = 'none';
+  document.getElementById('black-choice-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function selectBlackType(type) {
+  var btns = document.querySelectorAll('#black-choice-card button');
+  btns.forEach(function(b) { b.style.borderColor = '#333'; b.style.background = '#111'; });
+  event.currentTarget.style.borderColor = '#fff';
+  event.currentTarget.style.background = 'rgba(255,255,255,0.07)';
+
+  var tarName   = _blackTarName;
+  var tarGroup  = _blackTarGroup;
+  var tarPastel = _blackTarPastel;
+  var tL        = _blackTarL;
+  var lines     = [];
+
+  if (type === 'virgin') {
+    lines.push('버진모(자연 흑모) 상태에서 ' + tarName + ' 방향이시군요.');
+    lines.push('');
+    lines.push('버진모에서의 색상 표현은 크게 두 방향으로 나뉘어요.');
+    lines.push('');
+    lines.push('① 탈색 없이 바로 염색하는 경우');
+    if (tarGroup === 'warm') {
+      lines.push('레드·핑크·바이올렛 계열 염모제를 올리면');
+      lines.push('약간의 와인빛이나 레드빛이 감도는 브라운으로 표현돼요.');
+    } else if (tarGroup === 'cool') {
+      lines.push('애쉬·블루·그린 계열 염모제를 사용하면');
+      lines.push('붉은기가 완화되면서 오묘하고 청초한 브라운으로 표현돼요.');
+      lines.push('연모나 손상모일수록 발색이 더 잘 나와요.');
+    } else {
+      lines.push('어두운 명도 유지라면 원하는 계열 염모제를 바로 올릴 수 있어요.');
+    }
+    lines.push('');
+    lines.push('② 탈색 후 시술하는 경우');
+    if (tarPastel || tL >= 65) {
+      lines.push('파스텔·밝은 색감은 탈색이 필수예요.');
+      lines.push('탈색 진행 순서: 흑 → 붉은기 → 주황 → 노랑 → 아이보리');
+      lines.push('한 번에 가기 어려운 거리라면 2회 이상 분할 시술이 필요할 수 있어요.');
+    } else {
+      lines.push('탈색 1~2회 후 원하는 색을 올리면 더 선명하게 표현 가능해요.');
+    }
+    lines.push('');
+    lines.push('⚠️ 모발과 모질에 따라 발색 결과는 달라질 수 있어요. 직접 확인하면서 진행하세요.');
+
+  } else if (type === 'dyed') {
+    lines.push('염색 이력이 있는 모발에서 ' + tarName + ' 방향이시군요.');
+    lines.push('');
+    lines.push('현재 잔류 색소가 남아있는 상태예요.');
+    lines.push('');
+    if (tarGroup === 'cool' || tarGroup === 'neutral') {
+      lines.push('한색 계열로 체인지하려면 잔류 색소가 발색을 방해할 수 있어요.');
+      lines.push('보색 계열로 반복 중화하거나, 탈색으로 잔류 색소를 제거하는 방법이 있어요.');
+      lines.push('');
+      lines.push('보색 중화 시 주의할 점:');
+      lines.push('· 같은 명도·파워로 소량씩 사용해야 해요');
+      lines.push('· 비율이 틀리면 중화가 아닌 색이 먹어들어갈 수 있어요');
+      lines.push('· 전체적인 채도가 낮아지고 탁해질 수 있어요');
+    } else if (tarGroup === 'warm') {
+      lines.push('따뜻한 계열로의 체인지는 비교적 수월해요.');
+      lines.push('레드·주황 계열은 색 파워가 강해 발색이 잘 나와요.');
+    }
+    lines.push('');
+    lines.push('가장 깔끔한 방법은 탈색 후 원하는 색을 올리는 거예요.');
+    lines.push('⚠️ 블랙 계열로 톤다운한 경우 반복 탈색이 필요할 수 있어요.');
+
+  } else if (type === 'bleached') {
+    lines.push('탈색 베이스에서 어두운 색을 올리신 상태군요.');
+    lines.push('');
+    if (tarPastel || tL >= 55) {
+      lines.push('밝고 파스텔한 방향으로 가시려면:');
+      lines.push('잔류 틴트를 토닝 또는 탈색으로 살짝 빼낸 후 시술하는 걸 추천해요.');
+      lines.push('');
+      lines.push('블랙 계열로 톤다운한 경우:');
+      lines.push('반복 탈색이 필요해요. 단계적으로 밝히는 방향이에요.');
+    } else {
+      lines.push('같은 어두운 방향 유지라면 보색 계열로 조금씩 체인지하는 방법도 있어요.');
+      lines.push('');
+      lines.push('최근 나오는 체인지 가능한 블랙 계열 염모제는');
+      lines.push('탈색 1회로도 전환이 가능한 경우가 있으니 참고하세요.');
+    }
+    lines.push('');
+    lines.push('⚠️ 탈색 베이스라 반응이 빠를 수 있어요. 직접 확인하면서 진행하세요.');
+  }
+
+  document.getElementById('black-recipe-text').textContent = lines.join('\n');
+  document.getElementById('black-recipe-result').style.display = 'block';
+}
+
 /* ── 어두운 상태 3선택지 처리 ── */
 function selectDarkType(type) {
   var darkCard = document.getElementById('dark-choice-card');
