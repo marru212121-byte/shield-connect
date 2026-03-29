@@ -226,22 +226,44 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
     <!-- 색상 프리셋 -->
     <div style="margin-bottom:16px;">
-      <div style="font-size:10px;color:#777;margin-bottom:8px;font-weight:600;letter-spacing:0.5px;">색상 프리셋</div>
-      <div style="display:flex;flex-wrap:wrap;gap:7px;">
-        <button onclick="setPreset(0,8,6)"   style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#fff;">⚫ 블랙</button>
-        <button onclick="setPreset(10,40,22)"  style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#c0785a;">🟤 다크브라운</button>
-        <button onclick="setPreset(20,55,38)"  style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#c8824a;">🟫 브라운</button>
-        <button onclick="setPreset(28,60,50)"  style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#d4944a;">🧡 주황브라운</button>
-        <button onclick="setPreset(38,70,58)"  style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#e0b050;">🌟 골든브라운</button>
-        <button onclick="setPreset(52,80,70)"  style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#f0d060;">💛 노랑·블론드</button>
-        <button onclick="setPreset(350,45,35)" style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#c06050;">🔴 레드브라운</button>
-        <button onclick="setPreset(330,40,45)" style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#b05070;">🍷 와인·버건디</button>
-        <button onclick="setPreset(100,25,38)" style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#7a8a60;">🌿 카키·매트</button>
-        <button onclick="setPreset(210,20,45)" style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#7090a0;">🩶 애쉬그레이</button>
-        <button onclick="setPreset(220,35,30)" style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#506080;">🔵 블루블랙</button>
-        <button onclick="setPreset(270,30,40)" style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#8060a0;">💜 바이올렛</button>
-        <button onclick="setPreset(310,25,70)" style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#d090b0;">🩷 핑크파스텔</button>
-        <button onclick="setPreset(30,15,78)"  style="padding:7px 12px;border-radius:20px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:600;cursor:pointer;color:#f0e0d0;">🤍 아이보리·백금</button>
+      <div style="font-size:10px;color:#777;margin-bottom:10px;font-weight:600;letter-spacing:0.5px;">색상 대분류</div>
+
+      <!-- 유채색 7개 -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:10px;">
+        <button onclick="setPreset(0,60,38);showHint('')"
+          style="padding:11px 4px;border-radius:11px;border:1.5px solid #333;background:#111;font-size:13px;font-weight:700;cursor:pointer;color:#d06050;">빨강</button>
+        <button onclick="setPreset(25,65,45);showHint('')"
+          style="padding:11px 4px;border-radius:11px;border:1.5px solid #333;background:#111;font-size:13px;font-weight:700;cursor:pointer;color:#d08040;">주황</button>
+        <button onclick="setPreset(52,75,58);showHint('')"
+          style="padding:11px 4px;border-radius:11px;border:1.5px solid #333;background:#111;font-size:13px;font-weight:700;cursor:pointer;color:#d0b040;">노랑</button>
+        <button onclick="setPreset(110,45,38);showHint('')"
+          style="padding:11px 4px;border-radius:11px;border:1.5px solid #333;background:#111;font-size:13px;font-weight:700;cursor:pointer;color:#608050;">초록</button>
+        <button onclick="setPreset(215,55,42);showHint('블루 계열에서 채도를 낮추면 애쉬·쿨그레이가 표현돼요.')"
+          style="padding:11px 4px;border-radius:11px;border:1.5px solid #333;background:#111;font-size:13px;font-weight:700;cursor:pointer;color:#5080b0;">파랑</button>
+        <button onclick="setPreset(240,50,35);showHint('블루 계열에서 채도를 낮추면 애쉬·쿨그레이가 표현돼요.')"
+          style="padding:11px 4px;border-radius:11px;border:1.5px solid #333;background:#111;font-size:13px;font-weight:700;cursor:pointer;color:#5060a0;">남색</button>
+        <button onclick="setPreset(275,45,42);showHint('')"
+          style="padding:11px 4px;border-radius:11px;border:1.5px solid #333;background:#111;font-size:13px;font-weight:700;cursor:pointer;color:#8060b0;">보라</button>
+        <button onclick="setPreset(315,38,55);showHint('')"
+          style="padding:11px 4px;border-radius:11px;border:1.5px solid #333;background:#111;font-size:13px;font-weight:700;cursor:pointer;color:#c060a0;">핑크</button>
+      </div>
+
+      <!-- 무채색·특수 계열 -->
+      <div style="font-size:10px;color:#777;margin-bottom:8px;font-weight:600;letter-spacing:0.5px;">무채색 · 특수</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px;">
+        <button onclick="setPreset(0,5,6);showHint('')"
+          style="padding:11px 4px;border-radius:11px;border:1.5px solid #333;background:#111;font-size:13px;font-weight:700;cursor:pointer;color:#888;">블랙</button>
+        <button onclick="setPreset(0,5,45);showHint('')"
+          style="padding:11px 4px;border-radius:11px;border:1.5px solid #333;background:#111;font-size:13px;font-weight:700;cursor:pointer;color:#999;">그레이</button>
+        <button onclick="setPreset(210,18,48);showHint('애쉬는 블루 계열에서 채도를 낮춰 표현해요. 명도와 채도를 조절해 쿨그레이·슬레이트 느낌을 잡아보세요.')"
+          style="padding:11px 4px;border-radius:11px;border:1.5px solid #333;background:#111;font-size:13px;font-weight:700;cursor:pointer;color:#90a0b0;">애쉬</button>
+        <button onclick="setPreset(35,15,78);showHint('')"
+          style="padding:11px 4px;border-radius:11px;border:1.5px solid #333;background:#111;font-size:13px;font-weight:700;cursor:pointer;color:#e8dcc8;">아이보리</button>
+      </div>
+
+      <!-- 힌트 문구 -->
+      <div id="preset-hint" style="display:none;margin-top:10px;padding:9px 12px;background:rgba(100,160,220,0.08);border-radius:9px;border:1px solid rgba(100,160,220,0.2);">
+        <div style="font-size:11px;color:#88aacc;line-height:1.7;" id="preset-hint-text"></div>
       </div>
     </div>
 
@@ -409,7 +431,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     </div>
 
     <!-- 목표색 색상 슬라이더 -->
-    <div style="margin-bottom:20px;">
+    <div style="margin-bottom:16px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <div style="font-size:11px;color:#666;font-weight:600;letter-spacing:0.5px;">색상</div>
         <div id="hue-label-t" style="font-size:11px;color:#aaa;"></div>
@@ -417,6 +439,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div id="hue-bar-t" style="width:100%;height:36px;border-radius:18px;background:linear-gradient(to right,hsl(0,100%,50%),hsl(30,100%,50%),hsl(60,100%,50%),hsl(90,100%,50%),hsl(120,100%,50%),hsl(150,100%,50%),hsl(180,100%,50%),hsl(210,100%,50%),hsl(240,100%,50%),hsl(270,100%,50%),hsl(300,100%,50%),hsl(330,100%,50%),hsl(360,100%,50%));position:relative;cursor:pointer;touch-action:none;user-select:none;box-shadow:0 2px 12px rgba(0,0,0,0.4);"
         onpointerdown="startDrag(event,'hue','t')" onpointermove="onDrag(event,'hue','t')" onpointerup="endDrag()">
         <div id="hue-thumb-t" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:32px;height:32px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,0.8);pointer-events:none;left:60%;transition:left 0.05s;"></div>
+      </div>
+      <!-- 애쉬·그레이 힌트 -->
+      <div id="ash-hint-t" style="display:none;margin-top:8px;padding:9px 12px;background:rgba(100,160,220,0.08);border-radius:9px;border:1px solid rgba(100,160,220,0.2);">
+        <div style="font-size:11px;color:#88aacc;line-height:1.7;">
+          💡 애쉬·쿨그레이는 블루(파랑) 계열에서 <b>채도를 낮게</b> 설정하면 표현돼요.<br>선명도를 파스텔·연한으로 내리면 자연스러운 애쉬 느낌이 나요.
+        </div>
       </div>
     </div>
 
@@ -617,6 +645,19 @@ function setPreset(h, s, l) {
   if (litLabel) litLabel.textContent = litSnap.label;
   updateManualSatBar();
   updateManualSwatch();
+}
+
+/* ── 프리셋 힌트 문구 ── */
+function showHint(msg) {
+  var hint = document.getElementById('preset-hint');
+  var text = document.getElementById('preset-hint-text');
+  if (!hint || !text) return;
+  if (msg) {
+    text.textContent = msg;
+    hint.style.display = 'block';
+  } else {
+    hint.style.display = 'none';
+  }
 }
 
 /* ── 수동 분석 확정 ── */
@@ -1003,7 +1044,7 @@ function updatePickerUI(which) {
   var hsl = which === 'c' ? currentHSL : targetHSL;
   var color = hslStr(hsl.h, hsl.s, hsl.l);
 
-  /* Hue 썸 위치만 업데이트 (채도·명도는 버튼으로 대체) */
+  /* Hue 썸 위치만 업데이트 */
   var hThumb = document.getElementById('hue-thumb-' + which);
   if (hThumb) { hThumb.style.left = (hueToPct(hsl.h) * 100) + '%'; hThumb.style.background = hslStr(hsl.h, 100, 50); }
 
@@ -1016,6 +1057,12 @@ function updatePickerUI(which) {
   } else {
     var tbox = document.getElementById('target-swatch-box');
     if (tbox) tbox.style.background = color;
+    /* 블루 영역 진입 시 애쉬 힌트 표시 */
+    var ashHint = document.getElementById('ash-hint-t');
+    if (ashHint) {
+      var inBlueZone = hsl.h >= 170 && hsl.h <= 265;
+      ashHint.style.display = inBlueZone ? 'block' : 'none';
+    }
   }
 }
 
@@ -1227,7 +1274,7 @@ function generateRecipe() {
   var curLight  = cL > 50;
 
   /* ── 블랙·매우 어두운 감지 시 → 3선택지 카드로 분기 ── */
-  var curIsBlack = cL <= 22;
+  var curIsBlack = cL <= 22 && cS < 25;
   if (curIsBlack) {
     showBlackChoiceCard(tarName, tarGroup, tarPastel, tL);
     return;
