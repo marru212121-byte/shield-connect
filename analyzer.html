@@ -268,12 +268,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div id="xy-grid-m" style="flex:1;height:190px;border-radius:12px;position:relative;cursor:crosshair;border:1.5px solid #2a2a2a;touch-action:none;user-select:none;"
         onpointerdown="startXYDrag(event,'m')" onpointermove="moveXYDrag(event,'m')" onpointerup="endXYDrag(event,'m')" onpointercancel="endXYDrag(event,'m')">
         <!-- 모서리 라벨 -->
-        <div style="position:absolute;top:4px;left:6px;font-size:9px;color:rgba(255,255,255,0.5);pointer-events:none;line-height:1.2;">미색</div>
-        <div style="position:absolute;top:4px;right:6px;font-size:9px;color:rgba(255,255,255,0.7);pointer-events:none;line-height:1.2;text-align:right;">파스텔</div>
-        <div style="position:absolute;bottom:4px;left:6px;font-size:9px;color:rgba(255,255,255,0.4);pointer-events:none;line-height:1.2;">블랙</div>
-        <div style="position:absolute;bottom:4px;right:6px;font-size:9px;color:rgba(255,255,255,0.6);pointer-events:none;line-height:1.2;text-align:right;">진함</div>
+        <div style="position:absolute;top:6px;left:8px;font-size:11px;color:rgba(255,255,255,0.6);pointer-events:none;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,0.8);">아이보리</div>
+        <div style="position:absolute;top:6px;right:8px;font-size:11px;color:rgba(255,255,255,0.9);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.6);">파스텔</div>
+        <div style="position:absolute;top:38%;right:8px;font-size:10px;color:rgba(255,255,255,0.7);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.8);">비비드</div>
+        <div style="position:absolute;bottom:6px;left:8px;font-size:11px;color:rgba(255,255,255,0.5);pointer-events:none;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,0.9);">블랙</div>
+        <div style="position:absolute;bottom:6px;right:8px;font-size:11px;color:rgba(255,255,255,0.7);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.8);">다크톤</div>
         <!-- 최초 관측 마커 (카메라용) -->
-        <div id="xy-origin-m" style="position:absolute;width:10px;height:10px;border-radius:50%;background:rgba(255,255,100,0.6);border:1.5px solid rgba(255,255,100,0.9);transform:translate(-50%,-50%);pointer-events:none;display:none;"></div>
+        <div id="xy-origin-m" style="position:absolute;width:14px;height:14px;border-radius:50%;border:2.5px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.5),0 2px 6px rgba(0,0,0,0.7);transform:translate(-50%,-50%);pointer-events:none;display:none;"></div>
         <!-- 현재 위치 닷 -->
         <div id="xy-dot-m" style="position:absolute;width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,0.9);transform:translate(-50%,-50%);pointer-events:none;left:62%;top:70%;"></div>
       </div>
@@ -339,12 +340,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div id="xy-grid-c" style="flex:1;height:190px;border-radius:12px;position:relative;cursor:crosshair;border:1.5px solid #2a2a2a;touch-action:none;user-select:none;"
         onpointerdown="startXYDrag(event,'c')" onpointermove="moveXYDrag(event,'c')" onpointerup="endXYDrag(event,'c')" onpointercancel="endXYDrag(event,'c')">
         <!-- 모서리 라벨 -->
-        <div style="position:absolute;top:4px;left:6px;font-size:9px;color:rgba(255,255,255,0.5);pointer-events:none;line-height:1.2;">미색</div>
-        <div style="position:absolute;top:4px;right:6px;font-size:9px;color:rgba(255,255,255,0.7);pointer-events:none;line-height:1.2;text-align:right;">파스텔</div>
-        <div style="position:absolute;bottom:4px;left:6px;font-size:9px;color:rgba(255,255,255,0.4);pointer-events:none;line-height:1.2;">블랙</div>
-        <div style="position:absolute;bottom:4px;right:6px;font-size:9px;color:rgba(255,255,255,0.6);pointer-events:none;line-height:1.2;text-align:right;">진함</div>
+        <div style="position:absolute;top:6px;left:8px;font-size:11px;color:rgba(255,255,255,0.6);pointer-events:none;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,0.8);">아이보리</div>
+        <div style="position:absolute;top:6px;right:8px;font-size:11px;color:rgba(255,255,255,0.9);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.6);">파스텔</div>
+        <div style="position:absolute;top:38%;right:8px;font-size:10px;color:rgba(255,255,255,0.7);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.8);">비비드</div>
+        <div style="position:absolute;bottom:6px;left:8px;font-size:11px;color:rgba(255,255,255,0.5);pointer-events:none;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,0.9);">블랙</div>
+        <div style="position:absolute;bottom:6px;right:8px;font-size:11px;color:rgba(255,255,255,0.7);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.8);">다크톤</div>
         <!-- 최초 관측 마커 (카메라용) -->
-        <div id="xy-origin-c" style="position:absolute;width:10px;height:10px;border-radius:50%;background:rgba(255,255,100,0.6);border:1.5px solid rgba(255,255,100,0.9);transform:translate(-50%,-50%);pointer-events:none;display:none;"></div>
+        <div id="xy-origin-c" style="position:absolute;width:14px;height:14px;border-radius:50%;border:2.5px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.5),0 2px 6px rgba(0,0,0,0.7);transform:translate(-50%,-50%);pointer-events:none;display:none;"></div>
         <!-- 현재 위치 닷 -->
         <div id="xy-dot-c" style="position:absolute;width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,0.9);transform:translate(-50%,-50%);pointer-events:none;left:62%;top:70%;"></div>
       </div>
@@ -416,12 +418,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div id="xy-grid-t" style="flex:1;height:190px;border-radius:12px;position:relative;cursor:crosshair;border:1.5px solid #2a2a2a;touch-action:none;user-select:none;"
         onpointerdown="startXYDrag(event,'t')" onpointermove="moveXYDrag(event,'t')" onpointerup="endXYDrag(event,'t')" onpointercancel="endXYDrag(event,'t')">
         <!-- 모서리 라벨 -->
-        <div style="position:absolute;top:4px;left:6px;font-size:9px;color:rgba(255,255,255,0.5);pointer-events:none;line-height:1.2;">미색</div>
-        <div style="position:absolute;top:4px;right:6px;font-size:9px;color:rgba(255,255,255,0.7);pointer-events:none;line-height:1.2;text-align:right;">파스텔</div>
-        <div style="position:absolute;bottom:4px;left:6px;font-size:9px;color:rgba(255,255,255,0.4);pointer-events:none;line-height:1.2;">블랙</div>
-        <div style="position:absolute;bottom:4px;right:6px;font-size:9px;color:rgba(255,255,255,0.6);pointer-events:none;line-height:1.2;text-align:right;">진함</div>
+        <div style="position:absolute;top:6px;left:8px;font-size:11px;color:rgba(255,255,255,0.6);pointer-events:none;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,0.8);">아이보리</div>
+        <div style="position:absolute;top:6px;right:8px;font-size:11px;color:rgba(255,255,255,0.9);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.6);">파스텔</div>
+        <div style="position:absolute;top:38%;right:8px;font-size:10px;color:rgba(255,255,255,0.7);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.8);">비비드</div>
+        <div style="position:absolute;bottom:6px;left:8px;font-size:11px;color:rgba(255,255,255,0.5);pointer-events:none;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,0.9);">블랙</div>
+        <div style="position:absolute;bottom:6px;right:8px;font-size:11px;color:rgba(255,255,255,0.7);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.8);">다크톤</div>
         <!-- 최초 관측 마커 (카메라용) -->
-        <div id="xy-origin-t" style="position:absolute;width:10px;height:10px;border-radius:50%;background:rgba(255,255,100,0.6);border:1.5px solid rgba(255,255,100,0.9);transform:translate(-50%,-50%);pointer-events:none;display:none;"></div>
+        <div id="xy-origin-t" style="position:absolute;width:14px;height:14px;border-radius:50%;border:2.5px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.5),0 2px 6px rgba(0,0,0,0.7);transform:translate(-50%,-50%);pointer-events:none;display:none;"></div>
         <!-- 현재 위치 닷 -->
         <div id="xy-dot-t" style="position:absolute;width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,0.9);transform:translate(-50%,-50%);pointer-events:none;left:62%;top:47%;"></div>
       </div>
@@ -804,6 +807,11 @@ function initManualPicker() {
 function updateManualSwatch() {
   var box = document.getElementById('manual-swatch-box');
   if (box) box.style.background = hslStr(manualHSL.h, manualHSL.s, manualHSL.l);
+  /* XY 닷 색상도 동기화 */
+  var dot = document.getElementById('xy-dot-m');
+  if (dot) dot.style.background = hslStr(manualHSL.h, Math.min(manualHSL.s + 10, 100), Math.max(manualHSL.l - 5, 10));
+  /* 그리드 배경 업데이트 */
+  updateXYGrid('m');
 }
 
 /* ── 프리셋 버튼 (새 버전) ── */
@@ -1230,7 +1238,7 @@ function updatePickerUI(which) {
   var hsl = which === 'c' ? currentHSL : targetHSL;
   var color = hslStr(hsl.h, hsl.s, hsl.l);
 
-  /* Hue 썸 위치만 업데이트 */
+  /* Hue 썸 위치 업데이트 */
   var hThumb = document.getElementById('hue-thumb-' + which);
   if (hThumb) { hThumb.style.left = (hueToPct(hsl.h) * 100) + '%'; hThumb.style.background = hslStr(hsl.h, 100, 50); }
 
@@ -1243,13 +1251,18 @@ function updatePickerUI(which) {
   } else {
     var tbox = document.getElementById('target-swatch-box');
     if (tbox) tbox.style.background = color;
-    /* 블루 영역 진입 시 애쉬 힌트 표시 */
     var ashHint = document.getElementById('ash-hint-t');
     if (ashHint) {
-      var inBlueZone = hsl.h >= 170 && hsl.h <= 265;
-      ashHint.style.display = inBlueZone ? 'block' : 'none';
+      ashHint.style.display = (hsl.h >= 170 && hsl.h <= 265) ? 'block' : 'none';
     }
   }
+
+  /* XY 그리드 배경도 색상에 맞게 업데이트 */
+  updateXYGrid(which);
+
+  /* 닷 색상도 현재 색으로 */
+  var dot = document.getElementById('xy-dot-' + which);
+  if (dot) dot.style.background = hslStr(hsl.h, Math.min(hsl.s + 10, 100), Math.max(hsl.l - 5, 10));
 }
 
 /* ── 4단계 스냅 설정 ── */
@@ -1358,13 +1371,13 @@ function showResult(r) {
   var labelC = document.getElementById('xy-label-c');
   if (labelC) labelC.textContent = bestLit.label + ' · ' + bestSat.label;
 
-  /* 최초 관측 마커 (노란 점) */
+  /* 최초 관측 마커 (관측 색상으로) */
   var origin = document.getElementById('xy-origin-c');
   if (origin) {
-    origin.style.left = bestSat.pct + '%';
-    origin.style.top  = bestLit.pct + '%';
-    origin.style.display = 'block';
-    origin.title = '최초 관측 색상';
+    origin.style.left       = bestSat.pct + '%';
+    origin.style.top        = bestLit.pct + '%';
+    origin.style.background = rawColor;
+    origin.style.display    = 'block';
   }
 
   document.getElementById('step1-card').style.display = 'block';
