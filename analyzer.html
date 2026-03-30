@@ -229,18 +229,27 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <button id="mpre-red" onclick="setPresetM('red')" style="padding:10px 4px;border-radius:10px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:700;cursor:pointer;color:#d06050;">빨강</button>
         <button id="mpre-org" onclick="setPresetM('org')" style="padding:10px 4px;border-radius:10px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:700;cursor:pointer;color:#d08040;">주황</button>
         <button id="mpre-yel" onclick="setPresetM('yel')" style="padding:10px 4px;border-radius:10px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:700;cursor:pointer;color:#d0b040;">노랑</button>
+        <button id="mpre-brn" onclick="setPresetM('brn')" style="padding:10px 4px;border-radius:10px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:700;cursor:pointer;color:#a06840;">브라운</button>
         <button id="mpre-grn" onclick="setPresetM('grn')" style="padding:10px 4px;border-radius:10px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:700;cursor:pointer;color:#608050;">초록</button>
         <button id="mpre-blu" onclick="setPresetM('blu')" style="padding:10px 4px;border-radius:10px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:700;cursor:pointer;color:#5080b0;">파랑</button>
         <button id="mpre-vio" onclick="setPresetM('vio')" style="padding:10px 4px;border-radius:10px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:700;cursor:pointer;color:#8060b0;">보라</button>
         <button id="mpre-pnk" onclick="setPresetM('pnk')" style="padding:10px 4px;border-radius:10px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:700;cursor:pointer;color:#c060a0;">핑크</button>
         <button id="mpre-blk" onclick="setPresetM('blk')" style="padding:10px 4px;border-radius:10px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:700;cursor:pointer;color:#888;">블랙</button>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;">
         <button id="mpre-ash" onclick="setPresetM('ash')" style="padding:10px 4px;border-radius:10px;border:1.5px solid #444;background:rgba(144,160,176,0.15);font-size:12px;font-weight:700;cursor:pointer;color:#90a0b0;">애쉬</button>
-        <button id="mpre-gry" onclick="setPresetM('gry')" style="padding:10px 4px;border-radius:10px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:700;cursor:pointer;color:#999;">그레이</button>
+        <button id="mpre-gry" onclick="setPresetM('gry')" style="padding:10px 4px;border-radius:10px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:700;cursor:pointer;color:#777;">다크애쉬</button>
         <button id="mpre-ivo" onclick="setPresetM('ivo')" style="padding:10px 4px;border-radius:10px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:700;cursor:pointer;color:#e8dcc8;">아이보리</button>
       </div>
-    </div>
+
+      <!-- 색상(Hue) 미세 조정 슬라이더 -->
+      <div style="margin-bottom:12px;">
+        <div style="font-size:10px;color:#666;margin-bottom:6px;font-weight:600;">색상 미세 조정</div>
+        <div id="hue-bar-m" style="width:100%;height:22px;border-radius:11px;background:linear-gradient(to right,hsl(0,100%,50%),hsl(30,100%,50%),hsl(60,100%,50%),hsl(90,100%,50%),hsl(120,100%,50%),hsl(150,100%,50%),hsl(180,100%,50%),hsl(210,100%,50%),hsl(240,100%,50%),hsl(270,100%,50%),hsl(300,100%,50%),hsl(330,100%,50%),hsl(360,100%,50%));position:relative;cursor:pointer;touch-action:none;user-select:none;"
+          onpointerdown="startDrag(event,'hue','m')" onpointermove="onDrag(event,'hue','m')" onpointerup="endDrag()">
+          <div id="hue-thumb-m" style="position:absolute;top:-3px;width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.8);transform:translateX(-50%);pointer-events:none;left:8%;"></div>
+        </div>
+      </div>
     <!-- 스와치 -->
     <div id="manual-swatch-box" style="width:100%;height:56px;border-radius:12px;border:2px solid #333;margin-bottom:14px;transition:background 0.3s;"></div>
     <!-- XY 그리드 -->
@@ -281,6 +290,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <div id="xy-dot-m" style="position:absolute;width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,0.9);transform:translate(-50%,-50%);pointer-events:none;left:62%;top:70%;"></div>
       </div>
     </div>
+    <!-- 확대 버튼 -->
+    <button onclick="openExpandSheet('m')" style="width:100%;margin-bottom:12px;padding:10px;border-radius:10px;border:1.5px solid #333;background:#111;color:#aaa;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+      <span style="font-size:15px;">⤢</span> 확대해서 미세 조정
+    </button>
+    <button onclick="openExpandSheet('m')" style="width:100%;padding:10px;border-radius:10px;background:#1a1a1a;border:1.5px solid #333;color:#ccc;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:10px;letter-spacing:0.3px;">
+      ⤢ 확대 조정
+    </button>
     <button onclick="confirmManualColor()" style="width:100%;padding:13px;border-radius:11px;background:#fff;border:none;color:#000;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.3px;">
       이 색으로 확정 →
     </button>
@@ -355,7 +371,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <div id="xy-dot-c" style="position:absolute;width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,0.9);transform:translate(-50%,-50%);pointer-events:none;left:62%;top:70%;"></div>
       </div>
     </div>
+    <button onclick="openExpandSheet('c')" style="width:100%;margin-bottom:12px;padding:10px;border-radius:10px;border:1.5px solid #333;background:#111;color:#aaa;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+      <span style="font-size:15px;">⤢</span> 확대해서 미세 조정
+    </button>
 
+    <button onclick="openExpandSheet('c')" style="width:100%;padding:10px;border-radius:10px;background:#1a1a1a;border:1.5px solid #333;color:#ccc;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:10px;letter-spacing:0.3px;">
+      ⤢ 확대 조정
+    </button>
     <button onclick="confirmCurrentColor()" style="width:100%;padding:13px;border-radius:11px;background:#fff;border:none;color:#000;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.3px;">
       이 색으로 확정 →
     </button>
@@ -435,7 +457,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <div id="xy-dot-t" style="position:absolute;width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,0.9);transform:translate(-50%,-50%);pointer-events:none;left:62%;top:47%;"></div>
       </div>
     </div>
+    <button onclick="openExpandSheet('t')" style="width:100%;margin-bottom:12px;padding:10px;border-radius:10px;border:1.5px solid #333;background:#111;color:#aaa;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+      <span style="font-size:15px;">⤢</span> 확대해서 미세 조정
+    </button>
 
+    <button onclick="openExpandSheet('t')" style="width:100%;padding:10px;border-radius:10px;background:#1a1a1a;border:1.5px solid #333;color:#ccc;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:10px;letter-spacing:0.3px;">
+      ⤢ 확대 조정
+    </button>
     <button onclick="confirmTargetColor()" style="width:100%;padding:13px;border-radius:11px;background:#fff;border:none;color:#000;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.3px;">
       시술 방향 확인 →
     </button>
@@ -652,22 +680,23 @@ function lToLevel(l) {
 
 /* 반사빛 코드 → 번호 */
 var REFLECT_MAP = {
-  'red': 5, 'org': 4, 'yel': 3, 'grn': 7,
+  'red': 5, 'org': 4, 'yel': 3, 'brn': 4, 'grn': 7,
   'blu': 8, 'vio': 2, 'pnk': 9, 'blk': 0,
-  'ash': 1, 'gry': 0, 'ivo': 3
+  'ash': 1, 'gry': 1, 'ivo': 3
 };
 /* 프리셋별 HSL */
 var PRESET_HSL = {
   'red': { h: 0,   s: 70, l: 38 },
   'org': { h: 25,  s: 70, l: 45 },
   'yel': { h: 50,  s: 75, l: 58 },
+  'brn': { h: 25,  s: 55, l: 32 },  /* 브라운 — 주황+중저명도+보통채도 */
   'grn': { h: 110, s: 45, l: 38 },
   'blu': { h: 215, s: 60, l: 42 },
   'vio': { h: 275, s: 50, l: 42 },
   'pnk': { h: 315, s: 45, l: 55 },
   'blk': { h: 0,   s: 5,  l: 6  },
-  'ash': { h: 210, s: 18, l: 48 },
-  'gry': { h: 0,   s: 5,  l: 50 },
+  'ash': { h: 210, s: 18, l: 48 },  /* 애쉬 — 중명도 */
+  'gry': { h: 210, s: 12, l: 30 },  /* 다크애쉬 — 애쉬보다 한 단계 어두운 */
   'ivo': { h: 35,  s: 18, l: 78 }
 };
 
@@ -838,9 +867,10 @@ function setPresetM(key) {
   manualHSL.h = p.h;
   manualHSL.s = p.s;
   manualHSL.l = p.l;
+  _baseHue = p.h; /* 보정 범위 기준점 설정 */
 
   /* 버튼 강조 */
-  var ids = ['red','org','yel','grn','blu','vio','pnk','blk','ash','gry','ivo'];
+  var ids = ['red','org','yel','brn','grn','blu','vio','pnk','blk','ash','gry','ivo'];
   ids.forEach(function(id) {
     var btn = document.getElementById('mpre-' + id);
     if (!btn) return;
@@ -1225,6 +1255,21 @@ function getRatio(event, el) {
   return Math.max(0, Math.min(1, x / rect.width));
 }
 
+/* ── 관측 기준 Hue (보정 범위 제한용) ── */
+var _baseHue = null; /* 카메라 관측 또는 프리셋 선택 시 설정 */
+var HUE_RANGE = 50;  /* ±50도 이내로 제한 */
+
+function clampHue(h, base, which) {
+  /* 목표색(t)은 제한 없음. 수동·현재색만 제한 */
+  if (which === 't' || base === null) return h;
+  var diff = h - base;
+  /* -180 ~ 180 정규화 */
+  while (diff > 180) diff -= 360;
+  while (diff < -180) diff += 360;
+  if (Math.abs(diff) <= HUE_RANGE) return h;
+  return (base + (diff > 0 ? HUE_RANGE : -HUE_RANGE) + 360) % 360;
+}
+
 function startDrag(event, axis, which) {
   event.currentTarget.setPointerCapture(event.pointerId);
   activeDrag = { axis: axis, which: which };
@@ -1243,14 +1288,16 @@ function applyDrag(event, axis, which) {
   var ratio = getRatio(event, bar);
   var hsl = which === 'c' ? currentHSL : which === 't' ? targetHSL : manualHSL;
 
-  if (axis === 'hue') hsl.h = pctToHue(ratio);
+  if (axis === 'hue') {
+    var rawH = pctToHue(ratio);
+    hsl.h = clampHue(rawH, _baseHue, which);
+  }
   if (axis === 'sat') hsl.s = pctToSat(ratio);
   if (axis === 'lit') hsl.l = pctToLit(ratio);
 
   if (which === 'm') {
     var hThumb = document.getElementById('hue-thumb-m');
     if (hThumb) { hThumb.style.left = (hsl.h / 360 * 100) + '%'; hThumb.style.background = hslStr(hsl.h, 100, 50); }
-    updateManualSatBar();
     updateManualSwatch();
   } else {
     updatePickerUI(which);
@@ -1379,6 +1426,7 @@ function showResult(r) {
 
   var hsl = rgbToHsl(r.r, r.g, r.b);
   currentHSL = { h: hsl[0], s: hsl[1], l: hsl[2] };
+  _baseHue = currentHSL.h; /* 보정 범위 기준점 설정 */
 
   /* XY 스냅으로 초기화 */
   var bestSat = XY_SAT[1], bestLit = XY_LIT[2], minS = 999, minL = 999;
@@ -2387,6 +2435,171 @@ function retake() {
 
 /* 페이지 로드 시 모드 선택 화면 표시 (카메라 자동 시작 안 함) */
 document.getElementById('mode-section').style.display = 'block';
+
+/* ════════════════════════════════════════
+   확대 조정 하단 시트
+════════════════════════════════════════ */
+var _expandWhich = null;
+var _expandDragging = false;
+
+function openExpandSheet(which) {
+  _expandWhich = which;
+  var hsl = which === 'm' ? manualHSL : which === 'c' ? currentHSL : targetHSL;
+
+  var sw = document.getElementById('expand-swatch');
+  if (sw) sw.style.background = hslStr(hsl.h, hsl.s, hsl.l);
+
+  updateExpandGrid(hsl.h);
+
+  var bestSat = XY_SAT[2], bestLit = XY_LIT[2], minS = 999, minL = 999;
+  XY_SAT.forEach(function(s) { var d = Math.abs(hsl.s - s.val); if (d < minS) { minS = d; bestSat = s; } });
+  XY_LIT.forEach(function(l) { var d = Math.abs(hsl.l - l.val); if (d < minL) { minL = d; bestLit = l; } });
+  var dot = document.getElementById('expand-dot');
+  if (dot) {
+    dot.style.transition = 'none';
+    dot.style.left = bestSat.pct + '%';
+    dot.style.top  = bestLit.pct + '%';
+    dot.style.background = hslStr(hsl.h, Math.min(hsl.s + 10, 100), Math.max(hsl.l - 5, 10));
+  }
+  var label = document.getElementById('expand-label');
+  if (label) label.textContent = bestLit.label + ' · ' + bestSat.label;
+
+  var title = document.getElementById('expand-title');
+  if (title) title.textContent = which === 't' ? '목표 색상 미세 조정' : '현재 모발색 미세 조정';
+
+  document.getElementById('expand-overlay').style.display = 'block';
+  document.getElementById('expand-sheet').style.display = 'block';
+}
+
+function closeExpandSheet() {
+  document.getElementById('expand-overlay').style.display = 'none';
+  document.getElementById('expand-sheet').style.display = 'none';
+  _expandWhich = null;
+}
+
+function updateExpandGrid(h) {
+  var grid = document.getElementById('expand-grid');
+  if (!grid) return;
+  grid.style.background = [
+    'radial-gradient(ellipse 90% 90% at 0%   0%,   hsl('+h+',12%,88%)  0%, transparent 100%)',
+    'radial-gradient(ellipse 90% 90% at 100% 0%,   hsl('+h+',78%,72%)  0%, transparent 100%)',
+    'radial-gradient(ellipse 90% 90% at 100% 100%,  hsl('+h+',82%,28%)  0%, transparent 100%)',
+    'radial-gradient(ellipse 90% 90% at 0%   100%,  hsl('+h+',6%,8%)    0%, transparent 100%)'
+  ].join(',');
+}
+
+function applyExpandPosition(event, snap) {
+  var grid = document.getElementById('expand-grid');
+  if (!grid || !_expandWhich) return;
+  var rect = grid.getBoundingClientRect();
+  var rx = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+  var ry = Math.max(0, Math.min(1, (event.clientY - rect.top)  / rect.height));
+  var dot = document.getElementById('expand-dot');
+
+  if (snap) {
+    var bestSat = XY_SAT[0], minDx = 999;
+    XY_SAT.forEach(function(s) { var d = Math.abs(rx - s.pct/100); if (d < minDx) { minDx = d; bestSat = s; } });
+    var bestLit = XY_LIT[2], minDy = 999;
+    XY_LIT.forEach(function(l) { var d = Math.abs(ry - l.pct/100); if (d < minDy) { minDy = d; bestLit = l; } });
+
+    var hsl = _expandWhich === 'm' ? manualHSL : _expandWhich === 'c' ? currentHSL : targetHSL;
+    hsl.s = bestSat.val;
+    hsl.l = bestLit.val;
+
+    if (dot) {
+      dot.style.transition = 'left 0.12s, top 0.12s';
+      dot.style.left = bestSat.pct + '%';
+      dot.style.top  = bestLit.pct + '%';
+      dot.style.background = hslStr(hsl.h, Math.min(hsl.s + 10, 100), Math.max(hsl.l - 5, 10));
+    }
+
+    var label = document.getElementById('expand-label');
+    if (label) label.textContent = bestLit.label + ' · ' + bestSat.label;
+    var sw = document.getElementById('expand-swatch');
+    if (sw) sw.style.background = hslStr(hsl.h, hsl.s, hsl.l);
+
+    /* 원래 그리드 닷도 동기화 */
+    var origDot = document.getElementById('xy-dot-' + _expandWhich);
+    if (origDot) { origDot.style.transition = 'none'; origDot.style.left = bestSat.pct + '%'; origDot.style.top = bestLit.pct + '%'; }
+    var origLabel = document.getElementById('xy-label-' + _expandWhich);
+    if (origLabel) origLabel.textContent = bestLit.label + ' · ' + bestSat.label;
+
+    if (_expandWhich === 'm') { updateManualSwatch(); }
+    else { updatePickerUI(_expandWhich); }
+  } else {
+    if (dot) {
+      dot.style.transition = 'none';
+      dot.style.left = (rx * 100) + '%';
+      dot.style.top  = (ry * 100) + '%';
+    }
+  }
+}
+
+function startExpandDrag(event) {
+  _expandDragging = true;
+  event.currentTarget.setPointerCapture(event.pointerId);
+  applyExpandPosition(event, false);
+}
+function moveExpandDrag(event) {
+  if (!_expandDragging) return;
+  applyExpandPosition(event, false);
+}
+function endExpandDrag(event) {
+  if (!_expandDragging) return;
+  _expandDragging = false;
+  applyExpandPosition(event, true);
+}
 </script>
-</body>
-</html>
+<!-- 확대 조정 하단 시트 -->
+<div id="expand-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:900;" onclick="closeExpandSheet()"></div>
+<div id="expand-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#0e0e0e;border-radius:20px 20px 0 0;padding:20px 16px 32px;z-index:901;max-height:85vh;overflow-y:auto;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+    <div style="font-size:15px;font-weight:700;color:#fff;" id="expand-title">색상 미세 조정</div>
+    <button onclick="closeExpandSheet()" style="background:#222;border:1px solid #333;color:#aaa;font-size:14px;border-radius:8px;padding:6px 14px;cursor:pointer;">✕ 닫기</button>
+  </div>
+  <!-- 확대 스와치 -->
+  <div id="expand-swatch" style="width:100%;height:64px;border-radius:12px;border:2px solid #333;margin-bottom:16px;transition:background 0.2s;"></div>
+  <!-- 라벨 -->
+  <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+    <div style="font-size:11px;color:#777;font-weight:600;">밝기(위↑) × 색의 파워(우→)</div>
+    <div style="font-size:12px;color:#fff;font-weight:700;" id="expand-label">—</div>
+  </div>
+  <!-- X축 라벨 -->
+  <div style="display:flex;gap:6px;margin-bottom:4px;">
+    <div style="width:38px;"></div>
+    <div style="flex:1;display:flex;justify-content:space-between;">
+      <span style="font-size:11px;color:#aaa;font-weight:600;">파스텔</span>
+      <span style="font-size:11px;color:#aaa;font-weight:600;">연함</span>
+      <span style="font-size:11px;color:#aaa;font-weight:600;">보통</span>
+      <span style="font-size:11px;color:#aaa;font-weight:600;">선명</span>
+    </div>
+  </div>
+  <!-- Y축 + 그리드 -->
+  <div style="display:flex;gap:6px;margin-bottom:16px;">
+    <div style="width:38px;display:flex;flex-direction:column;justify-content:space-between;padding:8px 0;">
+      <span style="font-size:11px;color:#aaa;text-align:right;display:block;font-weight:600;">밝음</span>
+      <span style="font-size:11px;color:#aaa;text-align:right;display:block;font-weight:600;">중고</span>
+      <span style="font-size:11px;color:#aaa;text-align:right;display:block;font-weight:600;">중저</span>
+      <span style="font-size:11px;color:#aaa;text-align:right;display:block;font-weight:600;">어두운</span>
+      <span style="font-size:11px;color:#aaa;text-align:right;display:block;font-weight:600;">블랙</span>
+    </div>
+    <div id="expand-grid" style="flex:1;height:300px;border-radius:14px;position:relative;cursor:crosshair;border:1.5px solid #2a2a2a;touch-action:none;user-select:none;"
+      onpointerdown="startExpandDrag(event)" onpointermove="moveExpandDrag(event)" onpointerup="endExpandDrag(event)" onpointercancel="endExpandDrag(event)">
+      <!-- 모서리 라벨 -->
+      <div style="position:absolute;top:8px;left:10px;font-size:12px;color:rgba(255,255,255,0.6);pointer-events:none;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,0.8);">아이보리</div>
+      <div style="position:absolute;top:8px;right:10px;font-size:12px;color:rgba(255,255,255,0.9);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.6);">파스텔</div>
+      <div style="position:absolute;top:27%;right:10px;font-size:12px;color:rgba(255,255,255,0.5);pointer-events:none;font-weight:700;text-align:right;">· · ·</div>
+      <div style="position:absolute;top:44%;right:10px;font-size:12px;color:rgba(255,255,255,0.85);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.8);">비비드</div>
+      <div style="position:absolute;top:63%;right:10px;font-size:12px;color:rgba(255,255,255,0.7);pointer-events:none;font-weight:700;text-align:right;">어두움</div>
+      <div style="position:absolute;bottom:8px;left:10px;font-size:12px;color:rgba(255,255,255,0.5);pointer-events:none;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,0.9);">블랙</div>
+      <div style="position:absolute;bottom:8px;right:10px;font-size:12px;color:rgba(255,255,255,0.7);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.8);">다크톤</div>
+      <!-- 닷 -->
+      <div id="expand-dot" style="position:absolute;width:32px;height:32px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 14px rgba(0,0,0,0.9);transform:translate(-50%,-50%);pointer-events:none;left:62%;top:50%;"></div>
+    </div>
+  </div>
+  <button onclick="closeExpandSheet()" style="width:100%;padding:13px;border-radius:11px;background:#fff;border:none;color:#000;font-size:14px;font-weight:700;cursor:pointer;">
+    확인
+  </button>
+</div>
+
+
