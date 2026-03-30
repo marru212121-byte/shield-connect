@@ -470,8 +470,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div id="recipe-target-swatch" style="width:52px;height:52px;border-radius:9px;border:2px solid #9E7FBF;flex-shrink:0;"></div>
       <div style="flex:1;font-size:12px;color:#888;line-height:1.5;" id="recipe-color-desc"></div>
     </div>
+    <!-- 색상 혼합 애니메이션 -->
+    <div id="color-anim-wrap" style="width:100%;margin-bottom:14px;background:#111;border-radius:10px;overflow:hidden;min-height:110px;"></div>
     <div class="recipe-main" id="rec-main"></div>
-    <div class="recipe-detail" id="rec-detail" style="white-space:pre-line;margin-top:10px;font-size:13px;color:#ccc;line-height:1.8;"></div>
+    <div class="recipe-detail" id="rec-detail" style="white-space:pre-line;margin-top:10px;font-size:13px;color:#ccc;line-height:1.9;"></div>
   </div>
 
   <!-- 블랙 감지 시 3선택지 카드 -->
@@ -599,22 +601,28 @@ var SYSTEM_PROMPT = `너는 미용실 염색 시술을 도와주는 전문가 AI
 
 /* ── API 호출 ── */
 async function callHairAPI(analysisResult) {
-  var userMsg = [
-    '현재 넘버링: ' + analysisResult.curNumbering,
-    '목표 넘버링: ' + analysisResult.tarNumbering,
-    '현재 언더톤: ' + analysisResult.curUndertone,
-    '목표 언더톤: ' + analysisResult.tarUndertone,
-    '탈색 단계:   ' + analysisResult.bleachStage,
-    '명도 변화:   ' + analysisResult.levelChange + ' (차이: ' + analysisResult.levelGap + ')',
-    '색감 방향:   ' + analysisResult.toneDirection,
-    '보색 중화:   ' + analysisResult.neutralization,
-    '시술 공정:   ' + analysisResult.processType,
-    '파스텔 목표: ' + (analysisResult.pastelTarget ? 'YES' : 'NO'),
-    '모발 이력:   ' + (analysisResult.hairState || 'unknown'),
-    '리스크:      ' + (analysisResult.risk.length > 0 ? analysisResult.risk.join(', ') : '없음'),
-    '',
-    '위 데이터를 바탕으로 1~3 구조로 실무 가이드를 작성해줘.'
-  ].join('\n');
+  /* 2안: _rawMsg가 있으면 그대로 전송 (말투 다듬기 모드) */
+  var userMsg;
+  if (analysisResult._rawMsg) {
+    userMsg = analysisResult._rawMsg;
+  } else {
+    userMsg = [
+      '현재 넘버링: ' + analysisResult.curNumbering,
+      '목표 넘버링: ' + analysisResult.tarNumbering,
+      '현재 언더톤: ' + analysisResult.curUndertone,
+      '목표 언더톤: ' + analysisResult.tarUndertone,
+      '탈색 단계:   ' + analysisResult.bleachStage,
+      '명도 변화:   ' + analysisResult.levelChange + ' (차이: ' + analysisResult.levelGap + ')',
+      '색감 방향:   ' + analysisResult.toneDirection,
+      '보색 중화:   ' + analysisResult.neutralization,
+      '시술 공정:   ' + analysisResult.processType,
+      '파스텔 목표: ' + (analysisResult.pastelTarget ? 'YES' : 'NO'),
+      '모발 이력:   ' + (analysisResult.hairState || 'unknown'),
+      '리스크:      ' + (analysisResult.risk && analysisResult.risk.length > 0 ? analysisResult.risk.join(', ') : '없음'),
+      '',
+      '위 데이터를 바탕으로 1~3 구조로 실무 가이드를 작성해줘.'
+    ].join('\n');
+  }
 
   var response = await fetch('/api/analyze', {
     method: 'POST',
@@ -1820,50 +1828,458 @@ function selectBlackType(type) {
   document.getElementById('recipe-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-/* ── 분석 결과 렌더링 (API 호출) ── */
+/* ════════════════════════════════════════
+   2안: buildHairMessage — 규칙 기반 문장 생성 (프론트 80%)
+   API는 말투 다듬기만 (20%)
+════════════════════════════════════════ */
+
+/* 언더톤 → 한국어 색감명 */
+var UNDERTONE_KO = {
+  'BLACK':       '블랙',
+  'DARK_NEUTRAL':'다크 계열',
+  'GRAY':        '그레이',
+  'WHITE':       '화이트',
+  'RED':         '레드',
+  'RED_VIOLET':  '와인레드',
+  'ORANGE':      '주황',
+  'YELLOW':      '노랑',
+  'YELLOW_GREEN':'매트·카키',
+  'GREEN':       '그린',
+  'TEAL':        '블루그린',
+  'BLUE':        '블루',
+  'VIOLET':      '바이올렛',
+  'PINK':        '핑크',
+  'NEUTRAL':     '뉴트럴'
+};
+
+/* 언더톤 → 보색명 */
+var COMP_COLOR_KO = {
+  'YELLOW':       '바이올렛',
+  'YELLOW_GREEN': '바이올렛·핑크',
+  'ORANGE':       '블루·애쉬',
+  'RED':          '그린',
+  'GREEN':        '시나몬브라운',
+  'TEAL':         '레드·오렌지',
+  'BLUE':         '오렌지',
+  'VIOLET':       '옐로우',
+  'PINK':         '그린'
+};
+
+/* 명도 단계 → 한국어 표현 */
+function bleachStageToKo(stage, l) {
+  if (stage === 'BLACK' || stage === 'DARK_RED') return '블랙';
+  if (stage === 'RED' || stage === 'RED_ORANGE') return '어두운';
+  if (stage === 'ORANGE') return '어두운';
+  if (stage === 'ORANGE_YELLOW') return '중간';
+  if (stage === 'YELLOW' || stage === 'BANANA_PEEL') return '밝은';
+  return '밝은';
+}
+
+/* 채도 → 표현 */
+function satToKo(s) {
+  if (s <= 15) return '파스텔';
+  if (s <= 35) return '연한';
+  if (s <= 60) return '보통';
+  return '선명한';
+}
+
+/* ── 핵심: 규칙 기반 문장 생성 ── */
+function buildHairMessage(result, curHSL, tarHSL) {
+  var curName = hueToName(curHSL.h, curHSL.s, curHSL.l);
+  var tarName = hueToName(tarHSL.h, tarHSL.s, tarHSL.l);
+  var curLvKo = bleachStageToKo(result.bleachStage, curHSL.l);
+  var tarSatKo = satToKo(tarHSL.s);
+  var curUt = result.curUndertone;
+  var tarUt = result.tarUndertone;
+  var neut   = result.neutralization;
+  var proc   = result.processType;
+  var pastel = result.pastelTarget;
+
+  /* 1️⃣ 첫 문장 */
+  var line1 = curLvKo + ' ' + curName + '에서 ' +
+              (pastel ? '파스텔 ' : tarSatKo + ' ') +
+              tarName + '으로 가시는군요.';
+
+  /* 2️⃣ 언더톤 문제 문장 */
+  var line2 = '';
+  if (neut !== 'NOT_REQUIRED') {
+    var utKo = UNDERTONE_KO[curUt] || curUt;
+    if (curUt === 'YELLOW' || curUt === 'YELLOW_GREEN') {
+      line2 = '언더톤에 ' + utKo + '기가 있어 그대로 들어가면 매트하게 빠질 수 있습니다.';
+    } else if (curUt === 'ORANGE') {
+      line2 = '언더톤에 주황기가 남아있어 탁해질 수 있습니다.';
+    } else if (curUt === 'RED' || curUt === 'RED_VIOLET') {
+      line2 = '붉은 색소가 남아있어 색이 왜곡될 수 있습니다.';
+    } else if (curUt === 'GREEN' || curUt === 'YELLOW_GREEN') {
+      line2 = '매트 언더톤이 있어 한색 계열이 탁하게 나올 수 있습니다.';
+    }
+  }
+
+  /* 3️⃣ 보색 중화 솔루션 */
+  var line3 = '';
+  if (neut !== 'NOT_REQUIRED') {
+    var compKo = COMP_COLOR_KO[curUt] || '';
+    if (curUt === 'GREEN' || curUt === 'YELLOW_GREEN') {
+      line3 = '시나몬브라운을 소량 믹스해 중화하면서 진행하세요.';
+    } else if (compKo) {
+      line3 = compKo + ' 색상을 소량 믹스해 중화하면서 진행하세요.';
+    }
+  }
+
+  /* 4️⃣ 시술 방향 */
+  var line4 = '';
+  if (proc === 'BLEACH_FIRST') {
+    if (pastel) {
+      line4 = '파스텔 발색을 위해 충분한 탈색 후 시술하세요.';
+    } else {
+      line4 = '명도 차이가 커서 탈색 후 시술을 추천합니다.';
+    }
+  } else if (proc === 'TONE_DOWN') {
+    line4 = tarName + ' 계열 낮은 명도 염모제로 톤다운하세요.';
+  } else if (proc === 'NEUTRALIZATION_THEN_COLOR') {
+    line4 = '중화 후 ' + tarName + ' 계열로 바로 시술 가능합니다.';
+  } else {
+    line4 = tarName + ' 계열로 바로 시술 가능합니다.';
+  }
+
+  return [line1, line2, line3, line4].filter(Boolean).join('\n');
+}
+
+/* ── 분석 결과 렌더링 (2안: 프론트 문장 → API 다듬기) ── */
 function renderAnalysisResult(result) {
   var curName = hueToName(currentHSL.h, currentHSL.s, currentHSL.l);
   var tarName = hueToName(targetHSL.h, targetHSL.s, targetHSL.l);
 
-  document.getElementById('recipe-current-swatch').style.background =
-    hslStr(currentHSL.h, currentHSL.s, currentHSL.l);
-  document.getElementById('recipe-target-swatch').style.background =
-    hslStr(targetHSL.h, targetHSL.s, targetHSL.l);
-  document.getElementById('recipe-color-desc').textContent = curName + ' → ' + tarName;
-  document.getElementById('rec-main').textContent = '';
-  document.getElementById('recipe-card').style.display = 'block';
-  document.getElementById('recipe-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  /* 스와치 */
+  var cSwatch = document.getElementById('recipe-current-swatch');
+  var tSwatch = document.getElementById('recipe-target-swatch');
+  var desc    = document.getElementById('recipe-color-desc');
+  if (cSwatch) cSwatch.style.background = hslStr(currentHSL.h, currentHSL.s, currentHSL.l);
+  if (tSwatch) tSwatch.style.background = hslStr(targetHSL.h, targetHSL.s, targetHSL.l);
+  if (desc)    desc.textContent = curName + ' → ' + tarName;
 
-  /* 일일 한도 체크 */
-  if (isLimitReached()) {
-    document.getElementById('rec-detail').innerHTML =
-      '<span style="color:#ff6b6b;">오늘 무료 분석 횟수(' + DAILY_LIMIT + '회)를 모두 사용했어요.<br>내일 다시 이용해주세요.</span>';
-    return;
+  var mainEl   = document.getElementById('rec-main');
+  var detailEl = document.getElementById('rec-detail');
+  if (mainEl) mainEl.textContent = '';
+
+  /* 카드 표시 */
+  var card = document.getElementById('recipe-card');
+  if (card) { card.style.display = 'block'; card.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+
+  /* Canvas 애니메이션 렌더 */
+  renderColorAnimation(result, currentHSL, targetHSL);
+
+  /* 프론트에서 문장 먼저 생성 */
+  var frontText = buildHairMessage(result, currentHSL, targetHSL);
+
+  /* 즉시 표시 (로딩 없이) */
+  if (detailEl) {
+    detailEl.style.whiteSpace = 'pre-line';
+    detailEl.textContent = frontText;
   }
 
-  /* 로딩 표시 */
-  document.getElementById('rec-detail').innerHTML =
-    '<span style="color:#888;">✦ 분석 중이에요...</span>';
+  /* 한도 체크 */
+  if (isLimitReached()) return;
 
-  /* API 호출 */
+  /* API로 말투만 다듬기 */
+  if (detailEl) detailEl.innerHTML = '<span style="color:#888;font-size:12px;">✦ 다듬는 중...</span>';
   incrementUsage();
-  callHairAPI(result).then(function(text) {
-    document.getElementById('rec-detail').textContent = text;
-    var remaining = DAILY_LIMIT - getUsageCount();
-    var hint = document.createElement('div');
-    hint.style.cssText = 'margin-top:12px;font-size:11px;color:#444;text-align:right;';
-    hint.textContent = '오늘 남은 무료 횟수: ' + remaining + '회';
-    document.getElementById('rec-detail').appendChild(hint);
-  }).catch(function(err) {
-    /* 네트워크 오류 등 예외 상황만 여기 도달 */
-    console.log('catch error:', err.message);
-    document.getElementById('rec-detail').textContent =
-      '네트워크 오류가 발생했어요. 다시 시도해주세요.\n\n' + err.message;
-    try {
-      var k = getTodayKey();
-      localStorage.setItem(k, Math.max(0, getUsageCount() - 1));
-    } catch(e) {}
+
+  var apiMsg = '아래 문장을 미용사가 디자이너에게 말하듯 자연스럽게만 다듬어줘. 의미·구조·문장 수 절대 변경 금지. 비율·수치 추가 금지. ** 기호 금지.\n\n' + frontText;
+
+  callHairAPI({ _rawMsg: apiMsg }).then(function(text) {
+    if (detailEl) {
+      detailEl.style.whiteSpace = 'pre-line';
+      detailEl.textContent = text || frontText;
+      var remaining = DAILY_LIMIT - getUsageCount();
+      var hint = document.createElement('div');
+      hint.style.cssText = 'margin-top:10px;font-size:11px;color:#444;text-align:right;';
+      hint.textContent = '남은 횟수: ' + remaining + '회';
+      detailEl.appendChild(hint);
+    }
+  }).catch(function() {
+    /* API 실패 시 프론트 문장 그대로 표시 */
+    if (detailEl) {
+      detailEl.style.whiteSpace = 'pre-line';
+      detailEl.textContent = frontText;
+    }
   });
+}
+
+/* ════════════════════════════════════════
+   Canvas 색상 혼합 애니메이션
+════════════════════════════════════════ */
+function hslToRgb(h, s, l) {
+  s /= 100; l /= 100;
+  var k = function(n) { return (n + h / 30) % 12; };
+  var a = s * Math.min(l, 1 - l);
+  var f = function(n) { return l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1))); };
+  return [Math.round(f(0)*255), Math.round(f(8)*255), Math.round(f(4)*255)];
+}
+
+function renderColorAnimation(result, curHSL, tarHSL) {
+  var container = document.getElementById('color-anim-wrap');
+  if (!container) return;
+  if (window._hairAnimRAF) { cancelAnimationFrame(window._hairAnimRAF); window._hairAnimRAF = null; }
+  container.innerHTML = '';
+
+  var W = Math.max(container.clientWidth || 0, 300);
+  var H = 130;
+  var canvas = document.createElement('canvas');
+  canvas.width  = W * 2; /* 레티나 대응 */
+  canvas.height = H * 2;
+  canvas.style.cssText = 'width:100%;height:' + H + 'px;border-radius:10px;display:block;';
+  container.appendChild(canvas);
+  var ctx = canvas.getContext('2d');
+  ctx.scale(2, 2); /* 레티나 */
+
+  /* ── 색상 유틸 ── */
+  var curRgb = hslToRgb(curHSL.h, curHSL.s, curHSL.l);
+  var tarRgb = hslToRgb(tarHSL.h, tarHSL.s, tarHSL.l);
+  /* 실제 보색 (언더톤 기반) */
+  var compH = (function() {
+    var ut = result.curUndertone;
+    var map = { 'YELLOW':270,'YELLOW_GREEN':290,'ORANGE':210,'RED':130,'GREEN':330,'TEAL':20,'BLUE':30,'VIOLET':60,'PINK':140 };
+    return map[ut] !== undefined ? map[ut] : (curHSL.h + 180) % 360;
+  })();
+  var compS   = Math.min(curHSL.s + 15, 90);
+  var compL   = Math.max(curHSL.l - 5,  20);
+  var compRgb = hslToRgb(compH, compS, compL);
+  /* 아이보리 (탈색 최대) */
+  var ivoryRgb = [255, 245, 210];
+
+  var neut = result.neutralization;
+  var proc = result.processType;
+
+  /* ── 공용 유틸 ── */
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function eio(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+  function lc(c1, c2, t) {
+    return [Math.round(lerp(c1[0],c2[0],t)), Math.round(lerp(c1[1],c2[1],t)), Math.round(lerp(c1[2],c2[2],t))];
+  }
+  function rs(c, a) {
+    if (a === undefined) return 'rgb('+c[0]+','+c[1]+','+c[2]+')';
+    return 'rgba('+c[0]+','+c[1]+','+c[2]+','+a+')';
+  }
+
+  function circle(x, y, r, color, alpha) {
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, Math.min(1, alpha !== undefined ? alpha : 1));
+    ctx.beginPath();
+    ctx.arc(x, y, Math.max(1, r), 0, Math.PI * 2);
+    ctx.fillStyle = typeof color === 'string' ? color : rs(color);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function glow(x, y, r, color) {
+    ctx.save();
+    ctx.globalAlpha = 0.18;
+    var g = ctx.createRadialGradient(x, y, 0, x, y, r * 1.8);
+    g.addColorStop(0, typeof color === 'string' ? color : rs(color));
+    g.addColorStop(1, 'transparent');
+    ctx.beginPath();
+    ctx.arc(x, y, r * 1.8, 0, Math.PI * 2);
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function label(x, y, text, alpha) {
+    ctx.save();
+    ctx.globalAlpha = alpha !== undefined ? alpha : 0.75;
+    ctx.fillStyle = '#fff';
+    ctx.font = '600 10px -apple-system,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(text, x, y);
+    ctx.restore();
+  }
+
+  function arrow(x1, x2, y, alpha) {
+    ctx.save();
+    ctx.globalAlpha = alpha || 0.4;
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x1, y);
+    ctx.lineTo(x2 - 5, y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x2 - 5, y - 4);
+    ctx.lineTo(x2, y);
+    ctx.lineTo(x2 - 5, y + 4);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /* ── 시나리오 판별 ── */
+  var SCENARIO;
+  if (neut !== 'NOT_REQUIRED' && proc === 'BLEACH_FIRST') {
+    SCENARIO = 'BLEACH_THEN_NEUTRALIZE'; /* 탈색 + 보색 중화 */
+  } else if (neut !== 'NOT_REQUIRED') {
+    SCENARIO = 'NEUTRALIZE';             /* 보색 중화 후 목표색 */
+  } else if (proc === 'BLEACH_FIRST') {
+    SCENARIO = 'BLEACH';                 /* 탈색 후 직접 */
+  } else if (proc === 'TONE_DOWN') {
+    SCENARIO = 'TONE_DOWN';              /* 톤다운 */
+  } else {
+    SCENARIO = 'DIRECT';                 /* 직접 시술 */
+  }
+
+  var R   = Math.min(32, W * 0.10);
+  var cy  = H * 0.46;
+  var t   = 0;
+  var dir = 1;
+
+  function bg() {
+    ctx.fillStyle = '#0e0e0e';
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  /* ════ 시나리오별 drawFrame ════ */
+
+  function drawNeutralize(e) {
+    /* 단계1(0~0.45): 현재색 + 보색이 서서히 접근·교집합
+       단계2(0.45~0.75): 교집합이 연브라운·베이지로 중화
+       단계3(0.75~1): 목표색 원이 등장 */
+    var x1 = W * 0.20, x2 = W * 0.50, x3 = W * 0.80;
+    var phase1 = Math.min(1, e / 0.45);
+    var phase2 = Math.max(0, Math.min(1, (e - 0.45) / 0.30));
+    var phase3 = Math.max(0, Math.min(1, (e - 0.75) / 0.25));
+
+    /* 현재색 */
+    glow(x1, cy, R, curRgb);
+    circle(x1, cy, R, curRgb, 0.9);
+    label(x1, cy + R + 13, '현재');
+
+    /* 보색 — 좌측에서 접근 */
+    var compX = x2 - (x2 - x1) * (1 - phase1) * 0.6;
+    glow(compX, cy, R * 0.85, compRgb);
+    circle(compX, cy, R * 0.85, compRgb, 0.75 + phase1 * 0.2);
+    label(compX, cy + R + 13, '보색', phase1);
+
+    /* 교집합 — 두 원 중간 */
+    if (phase1 > 0.5) {
+      var mixP  = (phase1 - 0.5) / 0.5;
+      var midX  = (x1 + compX) / 2;
+      var mixRgb = lc(lc(curRgb, compRgb, 0.5), [210, 185, 155], phase2 * 0.7);
+      circle(midX, cy, R * 0.55 * mixP, rs(mixRgb), 0.9 * mixP);
+    }
+
+    /* 목표색 등장 */
+    if (phase3 > 0) {
+      glow(x3, cy, R, tarRgb);
+      circle(x3, cy, R * phase3, tarRgb, phase3 * 0.95);
+      label(x3, cy + R + 13, '목표', phase3);
+      if (phase3 > 0.3) arrow(x2 + R, x3 - R - 4, cy, phase3 * 0.5);
+    }
+  }
+
+  function drawBleach(e) {
+    /* 단계1(0~0.5): 현재색 원이 서서히 밝아짐 (탈색)
+       단계2(0.5~1): 밝아진 원 옆에 목표색 등장·착색 */
+    var x1 = W * 0.28, x2 = W * 0.72;
+    var p1 = Math.min(1, e / 0.50);
+    var p2 = Math.max(0, Math.min(1, (e - 0.50) / 0.50));
+
+    var bleachedRgb = lc(curRgb, ivoryRgb, p1);
+    glow(x1, cy, R, bleachedRgb);
+    circle(x1, cy, R, bleachedRgb, 0.95);
+    label(x1, cy + R + 13, p1 > 0.7 ? '탈색완료' : '탈색중');
+
+    /* 탈색 진행 파티클 효과 */
+    if (p1 < 0.9) {
+      for (var i = 0; i < 4; i++) {
+        var ang = (p1 * 6 + i * 1.57) % (Math.PI * 2);
+        var px  = x1 + Math.cos(ang) * (R + 6 + i * 3);
+        var py  = cy + Math.sin(ang) * (R + 6 + i * 3);
+        circle(px, py, 2.5, ivoryRgb, (1 - p1) * 0.6);
+      }
+    }
+
+    if (p2 > 0) {
+      glow(x2, cy, R, tarRgb);
+      circle(x2, cy, R * p2, tarRgb, p2 * 0.95);
+      label(x2, cy + R + 13, '착색', p2);
+      arrow(x1 + R + 2, x2 - R - 2, cy, p2 * 0.55);
+    }
+  }
+
+  function drawBleachNeutralize(e) {
+    /* 4단계: 탈색→중화→착색 */
+    var x1 = W*0.15, x2 = W*0.38, x3 = W*0.62, x4 = W*0.85;
+    var p1 = Math.min(1, e / 0.30);
+    var p2 = Math.max(0, Math.min(1, (e-0.30)/0.25));
+    var p3 = Math.max(0, Math.min(1, (e-0.55)/0.20));
+    var p4 = Math.max(0, Math.min(1, (e-0.75)/0.25));
+
+    /* 현재 */
+    circle(x1, cy, R, curRgb, 0.9);
+    label(x1, cy+R+13, '현재');
+    /* 탈색 */
+    if (p1 > 0) {
+      var blRgb = lc(curRgb, ivoryRgb, p1);
+      circle(x2, cy, R*p1, blRgb, p1*0.9);
+      label(x2, cy+R+13, '탈색', p1);
+      if (p1 > 0.2) arrow(x1+R+2, x2-R-2, cy, p1*0.4);
+    }
+    /* 보색 중화 */
+    if (p2 > 0) {
+      circle(x3, cy, R*p2, compRgb, p2*0.85);
+      label(x3, cy+R+13, '중화', p2);
+      if (p2 > 0.2) arrow(x2+R+2, x3-R-2, cy, p2*0.4);
+    }
+    /* 목표 */
+    if (p4 > 0) {
+      glow(x4, cy, R, tarRgb);
+      circle(x4, cy, R*p4, tarRgb, p4*0.95);
+      label(x4, cy+R+13, '목표', p4);
+      if (p4 > 0.2) arrow(x3+R+2, x4-R-2, cy, p4*0.4);
+    }
+  }
+
+  function drawToneDown(e) {
+    /* 현재색이 서서히 어두워지며 목표색으로 */
+    var x1 = W*0.30, x2 = W*0.70;
+    var transitRgb = lc(curRgb, tarRgb, e);
+    glow(x1, cy, R, curRgb);
+    circle(x1, cy, R, curRgb, 1 - e*0.3);
+    label(x1, cy+R+13, '현재');
+    glow(x2, cy, R, tarRgb);
+    circle(x2, cy, R*(0.3 + e*0.7), transitRgb, 0.4 + e*0.55);
+    label(x2, cy+R+13, '톤다운 목표', 0.4 + e*0.6);
+    arrow(x1+R+2, x2-R-2, cy, 0.3 + e*0.3);
+  }
+
+  function drawDirect(e) {
+    /* 현재→목표 서서히 전환 */
+    var x1 = W*0.28, x2 = W*0.72;
+    glow(x1, cy, R, curRgb);
+    circle(x1, cy, R, curRgb, 1 - e*0.25);
+    label(x1, cy+R+13, '현재');
+    glow(x2, cy, R, tarRgb);
+    circle(x2, cy, R*(0.25 + e*0.75), lc(curRgb, tarRgb, e), 0.3 + e*0.65);
+    label(x2, cy+R+13, '바로 시술', 0.3 + e*0.7);
+    arrow(x1+R+2, x2-R-2, cy, 0.25 + e*0.35);
+  }
+
+  function drawFrame() {
+    bg();
+    var e = eio(t);
+
+    if      (SCENARIO === 'NEUTRALIZE')           drawNeutralize(e);
+    else if (SCENARIO === 'BLEACH')               drawBleach(e);
+    else if (SCENARIO === 'BLEACH_THEN_NEUTRALIZE') drawBleachNeutralize(e);
+    else if (SCENARIO === 'TONE_DOWN')            drawToneDown(e);
+    else                                          drawDirect(e);
+
+    t += dir * 0.010;
+    if (t >= 1) { t = 1; dir = -1; }
+    if (t <= 0) { t = 0; dir =  1; }
+    window._hairAnimRAF = requestAnimationFrame(drawFrame);
+  }
+
+  window._hairAnimRAF = requestAnimationFrame(drawFrame);
 }
 
 function hueToGroup(h, s) {
