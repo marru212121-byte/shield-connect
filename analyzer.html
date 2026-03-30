@@ -2622,5 +2622,18 @@ function endExpandDrag(event) {
     확인
   </button>
 </div>
+<script>
+window.onerror = function(msg, url, line, col, error) {
+  alert("에러: " + msg + " / line: " + line);
+};
+
+window.onunhandledrejection = function(e) {
+  alert("Promise 에러: " + e.reason);
+};
+</script>
+
+</body>
+</html>
+
 
 
