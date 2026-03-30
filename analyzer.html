@@ -753,10 +753,19 @@ function applyXYPosition(event, which, snap) {
 
     if (which === 'm') { updateManualSwatch(); }
     else {
+      /* c/t 조정 시 스와치도 HSL 기반으로 업데이트 (미세조정 반영) */
+      var adjHsl = which === 'c' ? currentHSL : targetHSL;
+      var adjColor = hslStr(adjHsl.h, adjHsl.s, adjHsl.l);
+      if (which === 'c') {
+        var cbox = document.getElementById('current-swatch-box');
+        if (cbox) cbox.style.background = adjColor;
+        var cmini = document.getElementById('current-swatch-mini');
+        if (cmini) cmini.style.background = adjColor;
+      }
       updatePickerUI(which);
       if (which === 't') {
         var ashHint = document.getElementById('ash-hint-t');
-        if (ashHint) ashHint.style.display = (hsl.h >= 170 && hsl.h <= 265) ? 'block' : 'none';
+        if (ashHint) ashHint.style.display = (adjHsl.h >= 170 && adjHsl.h <= 265) ? 'block' : 'none';
       }
     }
   } else {
@@ -1444,18 +1453,6 @@ function confirmCurrentColor() {
 }
 
 /* ── 목표색 확정 → 분석 ── */
-function confirmTargetColor() {
-  document.getElementById('step2-card').style.display = 'none';
-
-  if (currentHSL.l <= 22 && currentHSL.s < 25) {
-    showBlackChoiceCard();
-    return;
-  }
-
-  var result = analyzeColorFlow(currentHSL, targetHSL, null);
-  renderAnalysisResult(result);
-}
-
 /* ── HSL 기반 레시피 생성 ── */
 /* ════════════════════════════════════════
    analyzeColorFlow — 판단 전용 함수
