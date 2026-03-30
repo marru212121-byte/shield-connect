@@ -900,40 +900,43 @@ function setPresetM(key) {
 
 /* ── 수동 분석 확정 ── */
 function confirmManualColor() {
-  currentHSL = { h: manualHSL.h, s: manualHSL.s, l: manualHSL.l };
+  try {
+    currentHSL = { h: manualHSL.h, s: manualHSL.s, l: manualHSL.l };
 
-  /* 목표색 초기값 */
-  targetHSL = { h: (currentHSL.h + 30) % 360, s: 55, l: Math.min(80, currentHSL.l + 18) };
+    /* 목표색 초기값 */
+    targetHSL = { h: (currentHSL.h + 30) % 360, s: 55, l: Math.min(80, currentHSL.l + 18) };
 
-  updatePickerUI('t');
-  updateXYGrid('t');
-  var dot = document.getElementById('xy-dot-t');
-  var bestSat = XY_SAT[2], bestLit = XY_LIT[2];
-  if (dot) { dot.style.left = bestSat.pct + '%'; dot.style.top = bestLit.pct + '%'; }
-  var label = document.getElementById('xy-label-t');
-  if (label) label.textContent = bestLit.label + ' · ' + bestSat.label;
-  updateSatBarBg('t');
-  updateSwatchOnly('t');
+    updatePickerUI('t');
+    updateXYGrid('t');
 
-  /* 수동 화면 → 결과 화면으로 전환, step1 건너뛰고 바로 step2 */
-  document.getElementById('manual-section').style.display = 'none';
-  document.getElementById('result-section').style.display = 'block';
+    var dot = document.getElementById('xy-dot-t');
+    var bestSat = XY_SAT[2], bestLit = XY_LIT[2];
+    if (dot) { dot.style.transition = 'none'; dot.style.left = bestSat.pct + '%'; dot.style.top = bestLit.pct + '%'; }
+    var label = document.getElementById('xy-label-t');
+    if (label) label.textContent = bestLit.label + ' · ' + bestSat.label;
 
-  /* crop-canvas 카드 숨김 (카메라 없으므로) */
-  var cropCard = document.querySelector('#result-section > .result-card:first-child');
-  if (cropCard) cropCard.style.display = 'none';
+    /* 수동 화면 → 결과 화면으로 전환, step2 바로 */
+    document.getElementById('manual-section').style.display = 'none';
+    document.getElementById('result-section').style.display = 'block';
 
-  /* step1 숨기고 step2 바로 표시 */
-  document.getElementById('step1-card').style.display = 'none';
-  document.getElementById('step2-card').style.display = 'block';
-  document.getElementById('recipe-card').style.display = 'none';
-  document.getElementById('black-choice-card').style.display = 'none';
+    /* crop-canvas 카드 숨김 */
+    var cropCard = document.querySelector('#result-section > .result-card:first-child');
+    if (cropCard) cropCard.style.display = 'none';
 
-  /* 미니 스와치 */
-  var mini = document.getElementById('current-swatch-mini');
-  if (mini) mini.style.background = hslStr(currentHSL.h, currentHSL.s, currentHSL.l);
+    document.getElementById('step1-card').style.display = 'none';
+    document.getElementById('step2-card').style.display = 'block';
+    document.getElementById('recipe-card').style.display = 'none';
+    var bc = document.getElementById('black-choice-card');
+    if (bc) bc.style.display = 'none';
 
-  document.getElementById('result-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    var mini = document.getElementById('current-swatch-mini');
+    if (mini) mini.style.background = hslStr(currentHSL.h, currentHSL.s, currentHSL.l);
+
+    document.getElementById('step2-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch(e) {
+    console.error('confirmManualColor 오류:', e);
+    alert('오류: ' + e.message);
+  }
 }
 
 /* ── 스트림 완전 종료 (어디서든 호출 가능) ── */
