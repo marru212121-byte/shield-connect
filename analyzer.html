@@ -183,7 +183,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <button onclick="goToModeSelect()" style="background:none;border:none;color:#666;font-size:13px;cursor:pointer;padding:4px 0;">← 선택으로 돌아가기</button>
   </div>
   <div class="camera-wrap">
-    <video id="video" autoplay playsinline></video>
+    <video id="video" autoplay playsinline muted></video>
     <canvas id="canvas"></canvas>
     <div class="guide-overlay">
       <div class="guide-box" id="guide-box">
@@ -916,11 +916,11 @@ function confirmManualColor() {
   var tbox = document.getElementById('target-swatch-box');
   if (tbox) tbox.style.background = hslStr(targetHSL.h, targetHSL.s, targetHSL.l);
 
-  /* hue thumb 위치 초기화 */
+  /* hue thumb */
   var hThumbT = document.getElementById('hue-thumb-t');
   if (hThumbT) { hThumbT.style.left = (targetHSL.h / 360 * 100) + '%'; hThumbT.style.background = hslStr(targetHSL.h, 100, 50); }
 
-  /* XY 그리드 배경 초기화 (없으면 검은 화면) */
+  /* XY 그리드 배경 — 없으면 투명(검은 화면) */
   var gridT = document.getElementById('xy-grid-t');
   if (gridT) {
     var ht = targetHSL.h;
@@ -932,7 +932,7 @@ function confirmManualColor() {
     ].join(',');
   }
 
-  /* XY 닷 위치 초기화 */
+  /* XY 닷 위치 */
   var bestSatT = XY_SAT[2], bestLitT = XY_LIT[2], minST = 999, minLT = 999;
   XY_SAT.forEach(function(s) { var d = Math.abs(targetHSL.s - s.val); if (d < minST) { minST = d; bestSatT = s; } });
   XY_LIT.forEach(function(l) { var d = Math.abs(targetHSL.l - l.val); if (d < minLT) { minLT = d; bestLitT = l; } });
@@ -978,7 +978,10 @@ async function startCamera() {
       video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
     });
     var video = document.getElementById('video');
-    if (video) video.srcObject = stream;
+    if (video) {
+      video.srcObject = stream;
+      video.play().catch(function() {}); /* iOS Safari: autoplay 정책상 명시 호출 필요 */
+    }
   } catch(e) {
     var sec = document.getElementById('camera-section');
     if (sec) sec.innerHTML =
