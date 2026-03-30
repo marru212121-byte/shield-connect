@@ -265,8 +265,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <span style="font-size:11px;color:#aaa;text-align:right;display:block;font-weight:600;">어두운</span>
         <span style="font-size:11px;color:#aaa;text-align:right;display:block;font-weight:600;">블랙</span>
       </div>
-      <div id="xy-grid-m" style="flex:1;height:190px;border-radius:12px;position:relative;cursor:pointer;border:1.5px solid #2a2a2a;touch-action:none;" onclick="onXYGridClick(event,'m')" ontouchstart="onXYGridClick(event,'m')">
-        <div id="xy-dot-m" style="position:absolute;width:24px;height:24px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,0.9);transform:translate(-50%,-50%);pointer-events:none;left:47%;top:70%;transition:left 0.15s,top 0.15s;"></div>
+      <div id="xy-grid-m" style="flex:1;height:190px;border-radius:12px;position:relative;cursor:crosshair;border:1.5px solid #2a2a2a;touch-action:none;user-select:none;"
+        onpointerdown="startXYDrag(event,'m')" onpointermove="moveXYDrag(event,'m')" onpointerup="endXYDrag(event,'m')" onpointercancel="endXYDrag(event,'m')">
+        <!-- 모서리 라벨 -->
+        <div style="position:absolute;top:4px;left:6px;font-size:9px;color:rgba(255,255,255,0.5);pointer-events:none;line-height:1.2;">미색</div>
+        <div style="position:absolute;top:4px;right:6px;font-size:9px;color:rgba(255,255,255,0.7);pointer-events:none;line-height:1.2;text-align:right;">파스텔</div>
+        <div style="position:absolute;bottom:4px;left:6px;font-size:9px;color:rgba(255,255,255,0.4);pointer-events:none;line-height:1.2;">블랙</div>
+        <div style="position:absolute;bottom:4px;right:6px;font-size:9px;color:rgba(255,255,255,0.6);pointer-events:none;line-height:1.2;text-align:right;">진함</div>
+        <!-- 최초 관측 마커 (카메라용) -->
+        <div id="xy-origin-m" style="position:absolute;width:10px;height:10px;border-radius:50%;background:rgba(255,255,100,0.6);border:1.5px solid rgba(255,255,100,0.9);transform:translate(-50%,-50%);pointer-events:none;display:none;"></div>
+        <!-- 현재 위치 닷 -->
+        <div id="xy-dot-m" style="position:absolute;width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,0.9);transform:translate(-50%,-50%);pointer-events:none;left:62%;top:70%;"></div>
       </div>
     </div>
     <button onclick="confirmManualColor()" style="width:100%;padding:13px;border-radius:11px;background:#fff;border:none;color:#000;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.3px;">
@@ -327,8 +336,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <span style="font-size:11px;color:#aaa;text-align:right;display:block;font-weight:600;">어두운</span>
         <span style="font-size:11px;color:#aaa;text-align:right;display:block;font-weight:600;">블랙</span>
       </div>
-      <div id="xy-grid-c" style="flex:1;height:190px;border-radius:12px;position:relative;cursor:pointer;border:1.5px solid #2a2a2a;touch-action:none;" onclick="onXYGridClick(event,'c')" ontouchstart="onXYGridClick(event,'c')">
-        <div id="xy-dot-c" style="position:absolute;width:24px;height:24px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,0.9);transform:translate(-50%,-50%);pointer-events:none;left:47%;top:70%;transition:left 0.15s,top 0.15s;"></div>
+      <div id="xy-grid-c" style="flex:1;height:190px;border-radius:12px;position:relative;cursor:crosshair;border:1.5px solid #2a2a2a;touch-action:none;user-select:none;"
+        onpointerdown="startXYDrag(event,'c')" onpointermove="moveXYDrag(event,'c')" onpointerup="endXYDrag(event,'c')" onpointercancel="endXYDrag(event,'c')">
+        <!-- 모서리 라벨 -->
+        <div style="position:absolute;top:4px;left:6px;font-size:9px;color:rgba(255,255,255,0.5);pointer-events:none;line-height:1.2;">미색</div>
+        <div style="position:absolute;top:4px;right:6px;font-size:9px;color:rgba(255,255,255,0.7);pointer-events:none;line-height:1.2;text-align:right;">파스텔</div>
+        <div style="position:absolute;bottom:4px;left:6px;font-size:9px;color:rgba(255,255,255,0.4);pointer-events:none;line-height:1.2;">블랙</div>
+        <div style="position:absolute;bottom:4px;right:6px;font-size:9px;color:rgba(255,255,255,0.6);pointer-events:none;line-height:1.2;text-align:right;">진함</div>
+        <!-- 최초 관측 마커 (카메라용) -->
+        <div id="xy-origin-c" style="position:absolute;width:10px;height:10px;border-radius:50%;background:rgba(255,255,100,0.6);border:1.5px solid rgba(255,255,100,0.9);transform:translate(-50%,-50%);pointer-events:none;display:none;"></div>
+        <!-- 현재 위치 닷 -->
+        <div id="xy-dot-c" style="position:absolute;width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,0.9);transform:translate(-50%,-50%);pointer-events:none;left:62%;top:70%;"></div>
       </div>
     </div>
 
@@ -395,8 +413,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <span style="font-size:11px;color:#aaa;text-align:right;display:block;font-weight:600;">어두운</span>
         <span style="font-size:11px;color:#aaa;text-align:right;display:block;font-weight:600;">블랙</span>
       </div>
-      <div id="xy-grid-t" style="flex:1;height:190px;border-radius:12px;position:relative;cursor:pointer;border:1.5px solid #2a2a2a;touch-action:none;" onclick="onXYGridClick(event,'t')" ontouchstart="onXYGridClick(event,'t')">
-        <div id="xy-dot-t" style="position:absolute;width:24px;height:24px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,0.9);transform:translate(-50%,-50%);pointer-events:none;left:47%;top:47%;transition:left 0.15s,top 0.15s;"></div>
+      <div id="xy-grid-t" style="flex:1;height:190px;border-radius:12px;position:relative;cursor:crosshair;border:1.5px solid #2a2a2a;touch-action:none;user-select:none;"
+        onpointerdown="startXYDrag(event,'t')" onpointermove="moveXYDrag(event,'t')" onpointerup="endXYDrag(event,'t')" onpointercancel="endXYDrag(event,'t')">
+        <!-- 모서리 라벨 -->
+        <div style="position:absolute;top:4px;left:6px;font-size:9px;color:rgba(255,255,255,0.5);pointer-events:none;line-height:1.2;">미색</div>
+        <div style="position:absolute;top:4px;right:6px;font-size:9px;color:rgba(255,255,255,0.7);pointer-events:none;line-height:1.2;text-align:right;">파스텔</div>
+        <div style="position:absolute;bottom:4px;left:6px;font-size:9px;color:rgba(255,255,255,0.4);pointer-events:none;line-height:1.2;">블랙</div>
+        <div style="position:absolute;bottom:4px;right:6px;font-size:9px;color:rgba(255,255,255,0.6);pointer-events:none;line-height:1.2;text-align:right;">진함</div>
+        <!-- 최초 관측 마커 (카메라용) -->
+        <div id="xy-origin-t" style="position:absolute;width:10px;height:10px;border-radius:50%;background:rgba(255,255,100,0.6);border:1.5px solid rgba(255,255,100,0.9);transform:translate(-50%,-50%);pointer-events:none;display:none;"></div>
+        <!-- 현재 위치 닷 -->
+        <div id="xy-dot-t" style="position:absolute;width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,0.9);transform:translate(-50%,-50%);pointer-events:none;left:62%;top:47%;"></div>
       </div>
     </div>
 
@@ -648,62 +675,96 @@ function updateXYGrid(which) {
   var grid = document.getElementById('xy-grid-' + which);
   if (!grid) return;
   var h = hsl.h;
-  /* 4방향 radial gradient: 좌상=밝고파스텔, 우상=밝고선명, 좌하=어둡고파스텔, 우하=어둡고선명 */
+  /*
+    미용 파스텔 기준:
+    좌상(밝음+저채도) = 미색·아이보리
+    우상(밝음+고채도) = 파스텔헤어 (실제 파스텔)
+    우하(중저+고채도) = 진한 색감
+    좌하(어둠+저채도) = 블랙·무채색
+  */
   grid.style.background = [
-    'radial-gradient(ellipse 80% 80% at 0% 0%,   hsl('+h+',20%,88%) 0%, transparent 100%)',
-    'radial-gradient(ellipse 80% 80% at 100% 0%,  hsl('+h+',85%,65%) 0%, transparent 100%)',
-    'radial-gradient(ellipse 80% 80% at 0% 100%,  hsl('+h+',8%,12%)  0%, transparent 100%)',
-    'radial-gradient(ellipse 80% 80% at 100% 100%,hsl('+h+',80%,15%) 0%, transparent 100%)'
+    'radial-gradient(ellipse 90% 90% at 0%   0%,   hsl('+h+',12%,88%)  0%, transparent 100%)',
+    'radial-gradient(ellipse 90% 90% at 100% 0%,   hsl('+h+',78%,72%)  0%, transparent 100%)',
+    'radial-gradient(ellipse 90% 90% at 100% 100%,  hsl('+h+',82%,28%)  0%, transparent 100%)',
+    'radial-gradient(ellipse 90% 90% at 0%   100%,  hsl('+h+',6%,8%)    0%, transparent 100%)'
   ].join(',');
 }
 
-/* XY 그리드 클릭 → 스냅 */
-function onXYGridClick(event, which) {
+/* ── XY 드래그 상태 ── */
+var _xyDragging = false;
+var _xyWhich = null;
+
+function startXYDrag(event, which) {
+  _xyDragging = true;
+  _xyWhich = which;
+  event.currentTarget.setPointerCapture(event.pointerId);
+  applyXYPosition(event, which, false); /* 실시간 - 스냅 없음 */
+}
+
+function moveXYDrag(event, which) {
+  if (!_xyDragging || _xyWhich !== which) return;
+  applyXYPosition(event, which, false); /* 실시간 */
+}
+
+function endXYDrag(event, which) {
+  if (!_xyDragging) return;
+  _xyDragging = false;
+  _xyWhich = null;
+  applyXYPosition(event, which, true); /* 손 떼면 스냅 확정 */
+}
+
+function applyXYPosition(event, which, snap) {
   var grid = document.getElementById('xy-grid-' + which);
   if (!grid) return;
   var rect = grid.getBoundingClientRect();
-  /* 터치 지원 */
-  var clientX = event.touches ? event.touches[0].clientX : event.clientX;
-  var clientY = event.touches ? event.touches[0].clientY : event.clientY;
+  var clientX = event.clientX, clientY = event.clientY;
   var rx = Math.max(0, Math.min(1, (clientX - rect.left)  / rect.width));
   var ry = Math.max(0, Math.min(1, (clientY - rect.top)   / rect.height));
 
-  /* X → 채도 스냅 */
-  var bestSat = XY_SAT[0], minDx = 999;
-  XY_SAT.forEach(function(s) {
-    var dx = Math.abs(rx - s.pct / 100);
-    if (dx < minDx) { minDx = dx; bestSat = s; }
-  });
-  /* Y → 명도 스냅 */
-  var bestLit = XY_LIT[2], minDy = 999;
-  XY_LIT.forEach(function(l) {
-    var dy = Math.abs(ry - l.pct / 100);
-    if (dy < minDy) { minDy = dy; bestLit = l; }
-  });
-
-  /* HSL 업데이트 */
-  var hsl = which === 'm' ? manualHSL : which === 'c' ? currentHSL : targetHSL;
-  hsl.s = bestSat.val;
-  hsl.l = bestLit.val;
-
-  /* 닷 위치 */
   var dot = document.getElementById('xy-dot-' + which);
-  if (dot) { dot.style.left = bestSat.pct + '%'; dot.style.top = bestLit.pct + '%'; }
 
-  /* 라벨 */
-  var label = document.getElementById('xy-label-' + which);
-  if (label) label.textContent = bestLit.label + ' · ' + bestSat.label;
+  if (snap) {
+    /* 스냅 확정 */
+    var bestSat = XY_SAT[0], minDx = 999;
+    XY_SAT.forEach(function(s) { var d = Math.abs(rx - s.pct/100); if (d < minDx) { minDx = d; bestSat = s; } });
+    var bestLit = XY_LIT[2], minDy = 999;
+    XY_LIT.forEach(function(l) { var d = Math.abs(ry - l.pct/100); if (d < minDy) { minDy = d; bestLit = l; } });
 
-  /* 스와치·색상 업데이트 */
-  if (which === 'm') {
-    updateManualSwatch();
+    var hsl = which === 'm' ? manualHSL : which === 'c' ? currentHSL : targetHSL;
+    hsl.s = bestSat.val;
+    hsl.l = bestLit.val;
+
+    if (dot) {
+      dot.style.transition = 'left 0.12s, top 0.12s';
+      dot.style.left = bestSat.pct + '%';
+      dot.style.top  = bestLit.pct + '%';
+    }
+    var label = document.getElementById('xy-label-' + which);
+    if (label) label.textContent = bestLit.label + ' · ' + bestSat.label;
+
+    if (which === 'm') { updateManualSwatch(); }
+    else {
+      updatePickerUI(which);
+      if (which === 't') {
+        var ashHint = document.getElementById('ash-hint-t');
+        if (ashHint) ashHint.style.display = (hsl.h >= 170 && hsl.h <= 265) ? 'block' : 'none';
+      }
+    }
   } else {
-    updatePickerUI(which);
-    if (which === 't') {
-      var ashHint = document.getElementById('ash-hint-t');
-      if (ashHint) ashHint.style.display = (hsl.h >= 170 && hsl.h <= 265) ? 'block' : 'none';
+    /* 실시간 - 닷만 부드럽게 이동 */
+    if (dot) {
+      dot.style.transition = 'none';
+      dot.style.left = (rx * 100) + '%';
+      dot.style.top  = (ry * 100) + '%';
     }
   }
+}
+
+/* ── XY 그리드 클릭 (탭) → 스냅 ── */
+function onXYGridClick(event, which) {
+  /* 드래그 끝에서 발생하는 click은 무시 */
+  if (event.type === 'click' && _xyDragging) return;
+  applyXYPosition(event, which, true);
 }
 
 /* ── 모드 선택 ── */
@@ -1296,6 +1357,15 @@ function showResult(r) {
   if (dotC) { dotC.style.left = bestSat.pct + '%'; dotC.style.top = bestLit.pct + '%'; }
   var labelC = document.getElementById('xy-label-c');
   if (labelC) labelC.textContent = bestLit.label + ' · ' + bestSat.label;
+
+  /* 최초 관측 마커 (노란 점) */
+  var origin = document.getElementById('xy-origin-c');
+  if (origin) {
+    origin.style.left = bestSat.pct + '%';
+    origin.style.top  = bestLit.pct + '%';
+    origin.style.display = 'block';
+    origin.title = '최초 관측 색상';
+  }
 
   document.getElementById('step1-card').style.display = 'block';
   document.getElementById('step2-card').style.display = 'none';
