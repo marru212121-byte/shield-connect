@@ -842,11 +842,9 @@ function initManualPicker() {
 function updateManualSwatch() {
   var box = document.getElementById('manual-swatch-box');
   if (box) box.style.background = hslStr(manualHSL.h, manualHSL.s, manualHSL.l);
-  /* XY 닷 색상도 동기화 */
+  /* XY 닷 색상 동기화 */
   var dot = document.getElementById('xy-dot-m');
   if (dot) dot.style.background = hslStr(manualHSL.h, Math.min(manualHSL.s + 10, 100), Math.max(manualHSL.l - 5, 10));
-  /* 그리드 배경 업데이트 */
-  updateXYGrid('m');
 }
 
 /* ── 프리셋 버튼 (새 버전) ── */
@@ -1299,8 +1297,10 @@ function applyDrag(event, axis, which) {
     var hThumb = document.getElementById('hue-thumb-m');
     if (hThumb) { hThumb.style.left = (hsl.h / 360 * 100) + '%'; hThumb.style.background = hslStr(hsl.h, 100, 50); }
     updateManualSwatch();
+    if (axis === 'hue') updateXYGrid('m');
   } else {
     updatePickerUI(which);
+    if (axis === 'hue') updateXYGrid(which);
   }
 }
 
@@ -1328,12 +1328,10 @@ function updatePickerUI(which) {
     }
   }
 
-  /* XY 그리드 배경도 색상에 맞게 업데이트 */
-  updateXYGrid(which);
-
-  /* 닷 색상도 현재 색으로 */
+  /* 닷 색상 */
   var dot = document.getElementById('xy-dot-' + which);
   if (dot) dot.style.background = hslStr(hsl.h, Math.min(hsl.s + 10, 100), Math.max(hsl.l - 5, 10));
+  /* 그리드 배경은 updateXYGrid를 별도 호출할 때만 업데이트 */
 }
 
 /* ── 4단계 스냅 설정 ── */
