@@ -898,7 +898,46 @@ function setPresetM(key) {
 
 /* ── 수동 분석 확정 ── */
 function confirmManualColor() {
-  /* 화면 전환 */
+  /* 데이터 설정 */
+  currentHSL = { h: manualHSL.h, s: manualHSL.s, l: manualHSL.l };
+  targetHSL  = { h: (currentHSL.h + 30) % 360, s: 55, l: Math.min(80, currentHSL.l + 18) };
+
+  /* 현재색 미니 스와치 */
+  var mini = document.getElementById('current-swatch-mini');
+  if (mini) mini.style.background = hslStr(currentHSL.h, currentHSL.s, currentHSL.l);
+
+  /* 목표색 스와치 + hue thumb 초기화 */
+  var tbox = document.getElementById('target-swatch-box');
+  if (tbox) tbox.style.background = hslStr(targetHSL.h, targetHSL.s, targetHSL.l);
+  var hThumbT = document.getElementById('hue-thumb-t');
+  if (hThumbT) { hThumbT.style.left = (targetHSL.h / 360 * 100) + '%'; hThumbT.style.background = hslStr(targetHSL.h, 100, 50); }
+
+  /* 목표색 XY 그리드 배경 초기화 */
+  var gridT = document.getElementById('xy-grid-t');
+  if (gridT) {
+    var ht = targetHSL.h;
+    gridT.style.background = [
+      'radial-gradient(ellipse 90% 90% at 0%   0%,   hsl('+ht+',12%,88%)  0%, transparent 100%)',
+      'radial-gradient(ellipse 90% 90% at 100% 0%,   hsl('+ht+',78%,72%)  0%, transparent 100%)',
+      'radial-gradient(ellipse 90% 90% at 100% 100%,  hsl('+ht+',82%,28%)  0%, transparent 100%)',
+      'radial-gradient(ellipse 90% 90% at 0%   100%,  hsl('+ht+',6%,8%)    0%, transparent 100%)'
+    ].join(',');
+  }
+
+  /* 목표색 XY 닷 초기 위치 */
+  var bestSatT = XY_SAT[2], bestLitT = XY_LIT[3], minST = 999, minLT = 999;
+  XY_SAT.forEach(function(s) { var d = Math.abs(targetHSL.s - s.val); if (d < minST) { minST = d; bestSatT = s; } });
+  XY_LIT.forEach(function(l) { var d = Math.abs(targetHSL.l - l.val); if (d < minLT) { minLT = d; bestLitT = l; } });
+  var dotT = document.getElementById('xy-dot-t');
+  if (dotT) { dotT.style.left = bestSatT.pct + '%'; dotT.style.top = bestLitT.pct + '%'; dotT.style.background = hslStr(targetHSL.h, Math.min(targetHSL.s + 10, 100), Math.max(targetHSL.l - 5, 10)); }
+  var labelT = document.getElementById('xy-label-t');
+  if (labelT) labelT.textContent = bestLitT.label + ' · ' + bestSatT.label;
+
+  /* 애쉬 힌트 초기 상태 */
+  var ashHint = document.getElementById('ash-hint-t');
+  if (ashHint) ashHint.style.display = (targetHSL.h >= 170 && targetHSL.h <= 265) ? 'block' : 'none';
+
+  /* 화면 전환 — 데이터 세팅 완료 후 마지막에 */
   document.getElementById('manual-section').style.display = 'none';
   document.getElementById('result-section').style.display = 'block';
   document.getElementById('step1-card').style.display = 'none';
@@ -907,14 +946,6 @@ function confirmManualColor() {
   if (bc) bc.style.display = 'none';
   var rc = document.getElementById('recipe-card');
   if (rc) rc.style.display = 'none';
-
-  currentHSL = { h: manualHSL.h, s: manualHSL.s, l: manualHSL.l };
-  targetHSL  = { h: (currentHSL.h + 30) % 360, s: 55, l: Math.min(80, currentHSL.l + 18) };
-
-  var mini = document.getElementById('current-swatch-mini');
-  if (mini) mini.style.background = hslStr(currentHSL.h, currentHSL.s, currentHSL.l);
-  var tbox = document.getElementById('target-swatch-box');
-  if (tbox) tbox.style.background = hslStr(targetHSL.h, targetHSL.s, targetHSL.l);
 
   document.getElementById('step2-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -1415,6 +1446,18 @@ function showResult(r) {
   currentHSL.s = bestSat.val;
   currentHSL.l = bestLit.val;
 
+  /* 현재색 XY 그리드 배경 초기화 */
+  var gridC = document.getElementById('xy-grid-c');
+  if (gridC) {
+    var hc = currentHSL.h;
+    gridC.style.background = [
+      'radial-gradient(ellipse 90% 90% at 0%   0%,   hsl('+hc+',12%,88%)  0%, transparent 100%)',
+      'radial-gradient(ellipse 90% 90% at 100% 0%,   hsl('+hc+',78%,72%)  0%, transparent 100%)',
+      'radial-gradient(ellipse 90% 90% at 100% 100%,  hsl('+hc+',82%,28%)  0%, transparent 100%)',
+      'radial-gradient(ellipse 90% 90% at 0%   100%,  hsl('+hc+',6%,8%)    0%, transparent 100%)'
+    ].join(',');
+  }
+
   /* Hue 썸 위치 */
   var hThumb = document.getElementById('hue-thumb-c');
   if (hThumb) { hThumb.style.left = (currentHSL.h / 360 * 100) + '%'; hThumb.style.background = hslStr(currentHSL.h, 100, 50); }
@@ -1434,10 +1477,7 @@ function showResult(r) {
     origin.style.display = 'block';
   }
 
-  document.getElementById('step1-card').style.display = 'block';
-  document.getElementById('step2-card').style.display = 'none';
-  document.getElementById('recipe-card').style.display = 'none';
-
+  /* step 표시는 capture() / confirmManualColor() 에서 처리 — 여기선 데이터만 세팅 */
   userLevel = null;
   userTarget = null;
   clearRecipe();
