@@ -51,7 +51,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .capture-hint{font-size:12px;color:#555;text-align:center;}
 
 /* 결과 화면 */
-.result-wrap{display:none;padding:16px;background:#0a0a0a;}
+.result-wrap{padding:16px;background:#0a0a0a;}
 
 .result-preview{width:100%;border-radius:12px;overflow:hidden;margin-bottom:16px;position:relative;}
 .result-preview img{width:100%;display:block;}
@@ -302,7 +302,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 
 <!-- 결과 화면 -->
-<div class="result-wrap" id="result-section">
+<div class="result-wrap" id="result-section" style="display:none;">
 
   <!-- 분석 영역 미리보기 -->
   <div class="result-card" style="padding:10px 12px;">
@@ -1530,6 +1530,18 @@ function showResult(r) {
   var hThumb = document.getElementById('hue-thumb-c');
   if (hThumb) { hThumb.style.left = (currentHSL.h / 360 * 100) + '%'; hThumb.style.background = hslStr(currentHSL.h, 100, 50); }
 
+  /* XY 그리드 배경 */
+  var gridC = document.getElementById('xy-grid-c');
+  if (gridC) {
+    var hc = currentHSL.h;
+    gridC.style.background = [
+      'radial-gradient(ellipse 90% 90% at 0%   0%,   hsl('+hc+',12%,88%)  0%, transparent 100%)',
+      'radial-gradient(ellipse 90% 90% at 100% 0%,   hsl('+hc+',78%,72%)  0%, transparent 100%)',
+      'radial-gradient(ellipse 90% 90% at 100% 100%, hsl('+hc+',82%,28%)  0%, transparent 100%)',
+      'radial-gradient(ellipse 90% 90% at 0%   100%, hsl('+hc+',6%,8%)    0%, transparent 100%)'
+    ].join(',');
+  }
+
   /* XY 닷 위치 */
   var dotC = document.getElementById('xy-dot-c');
   if (dotC) { dotC.style.left = bestSat.pct + '%'; dotC.style.top = bestLit.pct + '%'; }
@@ -1545,9 +1557,9 @@ function showResult(r) {
     origin.style.display = 'block';
   }
 
-  document.getElementById('step1-card').style.display = 'block';
-  document.getElementById('step2-card').style.display = 'none';
-  document.getElementById('recipe-card').style.display = 'none';
+  var s1 = document.getElementById('step1-card'); if (s1) s1.style.display = 'block';
+  var s2 = document.getElementById('step2-card'); if (s2) s2.style.display = 'none';
+  var rcard = document.getElementById('recipe-card'); if (rcard) rcard.style.display = 'none';
 
   userLevel = null;
   userTarget = null;
@@ -1556,40 +1568,58 @@ function showResult(r) {
 
 /* ── 현재색 확정 ── */
 function confirmCurrentColor() {
-  var h = currentHSL.h, s = currentHSL.s, l = currentHSL.l;
-
+  var l = currentHSL.l;
   analysisResult.base = l < 20 ? 'dark' : l < 45 ? 'brown' : l < 62 ? 'light' : l < 78 ? 'bleached' : 'ivory';
 
   /* 목표색 초기값 */
   targetHSL = { h: (currentHSL.h + 30) % 360, s: 55, l: Math.min(80, currentHSL.l + 18) };
 
-  updatePickerUI('t');
-  updateXYGrid('t');
+  /* 화면 전환 먼저 */
+  var step1 = document.getElementById('step1-card');
+  if (step1) step1.style.display = 'none';
+  var step2 = document.getElementById('step2-card');
+  if (step2) step2.style.display = 'block';
 
-  /* XY 닷 초기 위치 */
-  var dot = document.getElementById('xy-dot-t');
-  var bestSat = XY_SAT[2], bestLit = XY_LIT[2];
-  if (dot) { dot.style.left = bestSat.pct + '%'; dot.style.top = bestLit.pct + '%'; }
-  var label = document.getElementById('xy-label-t');
-  if (label) label.textContent = bestLit.label + ' · ' + bestSat.label;
+  /* 현재색 미니 스와치 */
+  var mini = document.getElementById('current-swatch-mini');
+  if (mini) mini.style.background = hslStr(currentHSL.h, currentHSL.s, currentHSL.l);
 
-  document.getElementById('step1-card').style.display = 'none';
-  document.getElementById('step2-card').style.display = 'block';
-  document.getElementById('current-swatch-mini').style.background = hslStr(currentHSL.h, currentHSL.s, currentHSL.l);
+  /* 목표색 스와치 */
+  var tbox = document.getElementById('target-swatch-box');
+  if (tbox) tbox.style.background = hslStr(targetHSL.h, targetHSL.s, targetHSL.l);
 
-  /* step1 XY 그리드 초기화 */
-  updateXYGrid('c');
-  var dotC = document.getElementById('xy-dot-c');
-  if (dotC) {
-    var bS = XY_SAT[2], bL = XY_LIT[2], minS = 999, minL = 999;
-    XY_SAT.forEach(function(sv) { var d = Math.abs(currentHSL.s - sv.val); if (d < minS) { minS = d; bS = sv; } });
-    XY_LIT.forEach(function(lv) { var d = Math.abs(currentHSL.l - lv.val); if (d < minL) { minL = d; bL = lv; } });
-    dotC.style.left = bS.pct + '%'; dotC.style.top = bL.pct + '%';
-    var labelC = document.getElementById('xy-label-c');
-    if (labelC) labelC.textContent = bL.label + ' · ' + bS.label;
+  /* 목표색 hue thumb */
+  var hThumbT = document.getElementById('hue-thumb-t');
+  if (hThumbT) { hThumbT.style.left = (targetHSL.h / 360 * 100) + '%'; hThumbT.style.background = hslStr(targetHSL.h, 100, 50); }
+
+  /* 목표색 XY 그리드 배경 */
+  var gridT = document.getElementById('xy-grid-t');
+  if (gridT) {
+    var ht = targetHSL.h;
+    gridT.style.background = [
+      'radial-gradient(ellipse 90% 90% at 0%   0%,   hsl('+ht+',12%,88%)  0%, transparent 100%)',
+      'radial-gradient(ellipse 90% 90% at 100% 0%,   hsl('+ht+',78%,72%)  0%, transparent 100%)',
+      'radial-gradient(ellipse 90% 90% at 100% 100%, hsl('+ht+',82%,28%)  0%, transparent 100%)',
+      'radial-gradient(ellipse 90% 90% at 0%   100%, hsl('+ht+',6%,8%)    0%, transparent 100%)'
+    ].join(',');
   }
 
-  document.getElementById('step2-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  /* 목표색 XY 닷 */
+  var bestSatT = XY_SAT[2], bestLitT = XY_LIT[2], minST = 999, minLT = 999;
+  XY_SAT.forEach(function(sv) { var d = Math.abs(targetHSL.s - sv.val); if (d < minST) { minST = d; bestSatT = sv; } });
+  XY_LIT.forEach(function(lv) { var d = Math.abs(targetHSL.l - lv.val); if (d < minLT) { minLT = d; bestLitT = lv; } });
+  var dotT = document.getElementById('xy-dot-t');
+  if (dotT) { dotT.style.left = bestSatT.pct + '%'; dotT.style.top = bestLitT.pct + '%'; }
+  var labelT = document.getElementById('xy-label-t');
+  if (labelT) labelT.textContent = bestLitT.label + ' · ' + bestSatT.label;
+
+  /* 애쉬 힌트 */
+  var ashHint = document.getElementById('ash-hint-t');
+  if (ashHint) ashHint.style.display = (targetHSL.h >= 170 && targetHSL.h <= 265) ? 'block' : 'none';
+
+  try {
+    if (step2 && step2.scrollIntoView) step2.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch(e) {}
 }
 
 /* ── 목표색 확정 → 분석 ── */
@@ -1746,7 +1776,7 @@ function analyzeColorFlow(current, target, hairState) {
 
 /* ── confirmTargetColor → analyzeColorFlow 호출 ── */
 function confirmTargetColor() {
-  document.getElementById('step2-card').style.display = 'none';
+  var s2 = document.getElementById('step2-card'); if (s2) s2.style.display = 'none';
 
   /* 블랙 감지 → 3선택지 */
   if (currentHSL.l <= 22 && currentHSL.s < 25) {
@@ -2693,15 +2723,5 @@ function endExpandDrag(event) {
     확인
   </button>
 </div>
-  <script>
-alert('JS 실행됨');
-</script>
-<script>
-function goToModeSelect() {
-  alert('버튼 연결됨');
-}
-</script>
-</body>
-</html>
 
 
