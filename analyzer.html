@@ -898,7 +898,7 @@ function setPresetM(key) {
 
 /* ── 수동 분석 확정 ── */
 function confirmManualColor() {
-  /* 화면 전환만 - 최소한으로 */
+  /* 화면 전환 */
   document.getElementById('manual-section').style.display = 'none';
   document.getElementById('result-section').style.display = 'block';
   document.getElementById('step1-card').style.display = 'none';
@@ -915,10 +915,6 @@ function confirmManualColor() {
   if (mini) mini.style.background = hslStr(currentHSL.h, currentHSL.s, currentHSL.l);
   var tbox = document.getElementById('target-swatch-box');
   if (tbox) tbox.style.background = hslStr(targetHSL.h, targetHSL.s, targetHSL.l);
-
-  updateXYGrid('t');
-  var dot = document.getElementById('xy-dot-t');
-  if (dot) { dot.style.left = '62%'; dot.style.top = '50%'; }
 
   document.getElementById('step2-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -1410,7 +1406,7 @@ function showResult(r) {
 
   var hsl = rgbToHsl(r.r, r.g, r.b);
   currentHSL = { h: hsl[0], s: hsl[1], l: hsl[2] };
-  _baseHue = currentHSL.h; /* 보정 범위 기준점 설정 */
+  _baseHue = currentHSL.h;
 
   /* XY 스냅으로 초기화 */
   var bestSat = XY_SAT[1], bestLit = XY_LIT[2], minS = 999, minL = 999;
@@ -1419,21 +1415,23 @@ function showResult(r) {
   currentHSL.s = bestSat.val;
   currentHSL.l = bestLit.val;
 
-  /* XY 그리드 초기화 */
-  updatePickerUI('c');
-  updateXYGrid('c');
+  /* Hue 썸 위치 */
+  var hThumb = document.getElementById('hue-thumb-c');
+  if (hThumb) { hThumb.style.left = (currentHSL.h / 360 * 100) + '%'; hThumb.style.background = hslStr(currentHSL.h, 100, 50); }
+
+  /* XY 닷 위치 */
   var dotC = document.getElementById('xy-dot-c');
   if (dotC) { dotC.style.left = bestSat.pct + '%'; dotC.style.top = bestLit.pct + '%'; }
   var labelC = document.getElementById('xy-label-c');
   if (labelC) labelC.textContent = bestLit.label + ' · ' + bestSat.label;
 
-  /* 최초 관측 마커 (관측 색상으로) */
+  /* 최초 관측 마커 */
   var origin = document.getElementById('xy-origin-c');
   if (origin) {
-    origin.style.left       = bestSat.pct + '%';
-    origin.style.top        = bestLit.pct + '%';
+    origin.style.left = bestSat.pct + '%';
+    origin.style.top  = bestLit.pct + '%';
     origin.style.background = rawColor;
-    origin.style.display    = 'block';
+    origin.style.display = 'block';
   }
 
   document.getElementById('step1-card').style.display = 'block';
@@ -1442,7 +1440,6 @@ function showResult(r) {
 
   userLevel = null;
   userTarget = null;
-  applyLevelRestrictions();
   clearRecipe();
 }
 
