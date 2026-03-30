@@ -143,7 +143,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </style>
 </head>
 <body>
-<h1 style="color:red">TEST</h1>
 
 <div class="header">
   <button class="back-btn" onclick="history.back()">‹</button>
@@ -900,58 +899,106 @@ function setPresetM(key) {
 /* ── 수동 분석 확정 ── */
 function confirmManualColor() {
   try {
-    /* 화면 전환 */
-    document.getElementById('manual-section').style.display = 'none';
-    document.getElementById('result-section').style.display = 'block';
-    document.getElementById('step1-card').style.display = 'none';
-    document.getElementById('step2-card').style.display = 'block';
+
+    /* ── 1. manualHSL 안전 체크 ── */
+    if (typeof manualHSL === 'undefined' || manualHSL === null) {
+      alert('[오류] manualHSL이 없습니다. 색상을 먼저 선택해주세요.');
+      return;
+    }
+
+    /* ── 2. HSL 값 복사 ── */
+    try {
+      currentHSL = { h: Number(manualHSL.h) || 0, s: Number(manualHSL.s) || 0, l: Number(manualHSL.l) || 0 };
+      targetHSL  = { h: (currentHSL.h + 30) % 360, s: 55, l: Math.min(80, currentHSL.l + 18) };
+    } catch(e2) {
+      alert('[오류] HSL 계산 실패: ' + e2.message);
+      return;
+    }
+
+    /* ── 3. 화면 전환 ── */
+    var manualSec = document.getElementById('manual-section');
+    if (manualSec) manualSec.style.display = 'none';
+
+    var resultSec = document.getElementById('result-section');
+    if (resultSec) {
+      resultSec.style.display = 'block';
+    } else {
+      alert('[오류] result-section 요소를 찾을 수 없습니다.');
+      return;
+    }
+
+    var step1 = document.getElementById('step1-card');
+    if (step1) step1.style.display = 'none';
+
+    var step2 = document.getElementById('step2-card');
+    if (step2) {
+      step2.style.display = 'block';
+    } else {
+      alert('[오류] step2-card 요소를 찾을 수 없습니다.');
+      return;
+    }
+
     var bc = document.getElementById('black-choice-card');
     if (bc) bc.style.display = 'none';
     var rc = document.getElementById('recipe-card');
     if (rc) rc.style.display = 'none';
 
-    currentHSL = { h: manualHSL.h, s: manualHSL.s, l: manualHSL.l };
-    targetHSL  = { h: (currentHSL.h + 30) % 360, s: 55, l: Math.min(80, currentHSL.l + 18) };
+    /* ── 4. 스와치 색상 ── */
+    try {
+      var cColor = 'hsl(' + currentHSL.h + ',' + currentHSL.s + '%,' + currentHSL.l + '%)';
+      var tColor = 'hsl(' + targetHSL.h  + ',' + targetHSL.s  + '%,' + targetHSL.l  + '%)';
 
-    var mini = document.getElementById('current-swatch-mini');
-    if (mini) mini.style.background = hslStr(currentHSL.h, currentHSL.s, currentHSL.l);
-    var tbox = document.getElementById('target-swatch-box');
-    if (tbox) tbox.style.background = hslStr(targetHSL.h, targetHSL.s, targetHSL.l);
+      var mini = document.getElementById('current-swatch-mini');
+      if (mini) mini.style.background = cColor;
 
-    /* hue thumb */
-    var hThumbT = document.getElementById('hue-thumb-t');
-    if (hThumbT) { hThumbT.style.left = (targetHSL.h / 360 * 100) + '%'; hThumbT.style.background = hslStr(targetHSL.h, 100, 50); }
+      var tbox = document.getElementById('target-swatch-box');
+      if (tbox) tbox.style.background = tColor;
 
-    /* XY 그리드 배경 */
-    var gridT = document.getElementById('xy-grid-t');
-    if (gridT) {
-      var ht = targetHSL.h;
-      gridT.style.background = [
-        'radial-gradient(ellipse 90% 90% at 0%   0%,   hsl('+ht+',12%,88%)  0%, transparent 100%)',
-        'radial-gradient(ellipse 90% 90% at 100% 0%,   hsl('+ht+',78%,72%)  0%, transparent 100%)',
-        'radial-gradient(ellipse 90% 90% at 100% 100%,  hsl('+ht+',82%,28%)  0%, transparent 100%)',
-        'radial-gradient(ellipse 90% 90% at 0%   100%,  hsl('+ht+',6%,8%)    0%, transparent 100%)'
-      ].join(',');
+      /* ── 5. hue thumb ── */
+      var hThumbT = document.getElementById('hue-thumb-t');
+      if (hThumbT) {
+        hThumbT.style.left = (targetHSL.h / 360 * 100) + '%';
+        hThumbT.style.background = 'hsl(' + targetHSL.h + ',100%,50%)';
+      }
+
+      /* ── 6. XY 그리드 배경 ── */
+      var gridT = document.getElementById('xy-grid-t');
+      if (gridT) {
+        var ht = targetHSL.h;
+        gridT.style.background = [
+          'radial-gradient(ellipse 90% 90% at 0%   0%,   hsl('+ht+',12%,88%)  0%, transparent 100%)',
+          'radial-gradient(ellipse 90% 90% at 100% 0%,   hsl('+ht+',78%,72%)  0%, transparent 100%)',
+          'radial-gradient(ellipse 90% 90% at 100% 100%, hsl('+ht+',82%,28%)  0%, transparent 100%)',
+          'radial-gradient(ellipse 90% 90% at 0%   100%, hsl('+ht+',6%,8%)    0%, transparent 100%)'
+        ].join(',');
+      }
+
+      /* ── 7. XY 닷 위치 ── */
+      if (typeof XY_SAT !== 'undefined' && typeof XY_LIT !== 'undefined') {
+        var bestSatT = XY_SAT[2], bestLitT = XY_LIT[2], minST = 999, minLT = 999;
+        XY_SAT.forEach(function(s) { var d = Math.abs(targetHSL.s - s.val); if (d < minST) { minST = d; bestSatT = s; } });
+        XY_LIT.forEach(function(l) { var d = Math.abs(targetHSL.l - l.val); if (d < minLT) { minLT = d; bestLitT = l; } });
+        var dotT = document.getElementById('xy-dot-t');
+        if (dotT) { dotT.style.left = bestSatT.pct + '%'; dotT.style.top = bestLitT.pct + '%'; }
+        var labelT = document.getElementById('xy-label-t');
+        if (labelT) labelT.textContent = bestLitT.label + ' · ' + bestSatT.label;
+      }
+
+    } catch(e3) {
+      alert('[오류] UI 업데이트 실패: ' + e3.message);
+      return;
     }
 
-    /* XY 닷 위치 */
-    var bestSatT = XY_SAT[2], bestLitT = XY_LIT[2], minST = 999, minLT = 999;
-    XY_SAT.forEach(function(s) { var d = Math.abs(targetHSL.s - s.val); if (d < minST) { minST = d; bestSatT = s; } });
-    XY_LIT.forEach(function(l) { var d = Math.abs(targetHSL.l - l.val); if (d < minLT) { minLT = d; bestLitT = l; } });
-    var dotT = document.getElementById('xy-dot-t');
-    if (dotT) { dotT.style.left = bestSatT.pct + '%'; dotT.style.top = bestLitT.pct + '%'; }
-    var labelT = document.getElementById('xy-label-t');
-    if (labelT) labelT.textContent = bestLitT.label + ' · ' + bestSatT.label;
+    /* ── 8. 스크롤 ── */
+    try {
+      var s2 = document.getElementById('step2-card');
+      if (s2 && s2.scrollIntoView) {
+        s2.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    } catch(e4) { /* 스크롤 실패는 무시 */ }
 
-    document.getElementById('step2-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-  } catch(e) {
-    /* 에러를 화면에 표시 — 어느 줄에서 무슨 에러인지 확인용 */
-    document.body.innerHTML = '<div style="padding:24px;background:#1a0000;color:#ff6b6b;font-family:monospace;font-size:13px;line-height:1.8;position:fixed;inset:0;overflow:auto;z-index:9999;">'
-      + '<div style="font-size:16px;font-weight:700;margin-bottom:16px;">❌ confirmManualColor 에러</div>'
-      + '<div>' + e.name + ': ' + e.message + '</div>'
-      + '<div style="margin-top:12px;color:#ff9999;">' + (e.stack || '스택 없음') + '</div>'
-      + '</div>';
+  } catch(eFinal) {
+    alert('[치명 오류] confirmManualColor: ' + eFinal.message);
   }
 }
 
@@ -1030,8 +1077,8 @@ function capture() {
     var scaleX = video.videoWidth / videoRect.width;
     var scaleY = video.videoHeight / videoRect.height;
     var gx = (guideRect.left - videoRect.left) * scaleX;
-    var gy = (guideRect.top - videoRect.top) * scaleY;
-    var gw = guideRect.width * scaleX;
+    var gy = (guideRect.top  - videoRect.top)  * scaleY;
+    var gw = guideRect.width  * scaleX;
     var gh = guideRect.height * scaleY;
 
     var result = analyzeRegion(ctx, gx, gy, gw, gh);
@@ -1041,29 +1088,53 @@ function capture() {
     userTones = result.tones.slice();
 
     var cropCanvas = document.getElementById('crop-canvas');
-    cropCanvas.width = gw;
-    cropCanvas.height = gh;
-    var cropCtx = cropCanvas.getContext('2d');
-    cropCtx.drawImage(canvas, gx, gy, gw, gh, 0, 0, gw, gh);
+    if (cropCanvas) {
+      cropCanvas.width = gw;
+      cropCanvas.height = gh;
+      var cropCtx = cropCanvas.getContext('2d');
+      cropCtx.drawImage(canvas, gx, gy, gw, gh, 0, 0, gw, gh);
+    }
 
-    showResult(result);
-
+    /* 카메라 종료 */
     stopStream();
-    document.getElementById('camera-section').style.display = 'none';
-    document.getElementById('result-section').style.display = 'block';
-    document.getElementById('step1-card').style.display = 'block';
-    document.getElementById('step2-card').style.display = 'none';
-    document.getElementById('recipe-card').style.display = 'none';
+
+    /* 화면 전환 */
+    var camSec = document.getElementById('camera-section');
+    if (camSec) camSec.style.display = 'none';
+
+    var resultSec = document.getElementById('result-section');
+    if (resultSec) {
+      resultSec.style.display = 'block';
+    } else {
+      alert('[오류] result-section을 찾을 수 없습니다.');
+      return;
+    }
+
+    var step1 = document.getElementById('step1-card');
+    if (step1) step1.style.display = 'block';
+    var step2 = document.getElementById('step2-card');
+    if (step2) step2.style.display = 'none';
+    var rc = document.getElementById('recipe-card');
+    if (rc) rc.style.display = 'none';
     var bc = document.getElementById('black-choice-card');
     if (bc) bc.style.display = 'none';
-    document.getElementById('step1-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  } catch(e) {
-    document.body.innerHTML = '<div style="padding:24px;background:#1a0000;color:#ff6b6b;font-family:monospace;font-size:13px;line-height:1.8;position:fixed;inset:0;overflow:auto;z-index:9999;">'
-      + '<div style="font-size:16px;font-weight:700;margin-bottom:16px;">❌ capture 에러</div>'
-      + '<div>' + e.name + ': ' + e.message + '</div>'
-      + '<div style="margin-top:12px;color:#ff9999;">' + (e.stack || '스택 없음') + '</div>'
-      + '</div>';
+    /* showResult 호출 */
+    try {
+      showResult(result);
+    } catch(eShow) {
+      alert('[오류] showResult 실패: ' + eShow.message);
+      return;
+    }
+
+    try {
+      if (step1 && step1.scrollIntoView) {
+        step1.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    } catch(eScroll) { /* 스크롤 실패 무시 */ }
+
+  } catch(eFinal) {
+    alert('[치명 오류] capture: ' + eFinal.message);
   }
 }
 
@@ -2622,18 +2693,5 @@ function endExpandDrag(event) {
     확인
   </button>
 </div>
-<script>
-window.onerror = function(msg, url, line, col, error) {
-  alert("에러: " + msg + " / line: " + line);
-};
-
-window.onunhandledrejection = function(e) {
-  alert("Promise 에러: " + e.reason);
-};
-</script>
-
-</body>
-</html>
-
 
 
