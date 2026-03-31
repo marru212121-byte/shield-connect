@@ -469,6 +469,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <!-- 시술 방향 선택 카드 -->
   <div class="result-card" id="tone-dir-card" style="display:none;">
     <div class="result-card-title">시술 방향 선택</div>
+    <!-- 스와치 미리보기 -->
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;">
+      <div id="tone-cur-swatch" style="width:48px;height:48px;border-radius:9px;border:2px solid #333;flex-shrink:0;"></div>
+      <div style="font-size:18px;color:#444;">→</div>
+      <div id="tone-tar-swatch" style="width:48px;height:48px;border-radius:9px;border:2px solid #9E7FBF;flex-shrink:0;"></div>
+      <div id="tone-color-desc" style="flex:1;font-size:11px;color:#777;line-height:1.5;"></div>
+    </div>
+    <div id="tone-analyzing" style="font-size:12px;color:#9E7FBF;margin-bottom:10px;display:none;">✦ 분석 중...</div>
     <div style="font-size:11px;color:#555;margin-bottom:14px;line-height:1.7;">
       매장 조명과 카메라 특성상 오차가 생길 수 있어요.<br>
       한 가지만 더 선택해주시면 지금 바로 정확한 시술 방향을 확정할게요.
@@ -482,7 +490,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <button onclick="selectToneDir('same')"
         style="padding:14px;border-radius:12px;border:1px solid #333;background:#111;color:#ddd;font-size:13px;font-weight:600;cursor:pointer;text-align:left;line-height:1.6;">
         🎨 밝기는 유지하고 색감만 바꾸고 싶어요
-        <div style="font-size:11px;color:#666;margin-top:3px;font-weight:400;">같은 명도 안에서 색상 전환</div>
+        <div style="font-size:11px;color:#666;margin-top:3px;font-weight:400;">탈색 없이 현재 명도에서 색상 전환 · 잔류색소로 완벽한 발색이 어려울 수 있어요</div>
       </button>
       <button onclick="selectToneDir('down')"
         style="padding:14px;border-radius:12px;border:1px solid #333;background:#111;color:#ddd;font-size:13px;font-weight:600;cursor:pointer;text-align:left;line-height:1.6;">
@@ -501,28 +509,26 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div id="recipe-target-swatch" style="width:52px;height:52px;border-radius:9px;border:2px solid #9E7FBF;flex-shrink:0;"></div>
       <div style="flex:1;font-size:12px;color:#888;line-height:1.5;" id="recipe-color-desc"></div>
     </div>
-    <!-- 손상도 인라인 선택 (탈색 필요 시에만 표시) -->
-    <div id="dmg-btn-wrap" style="display:none;margin-bottom:12px;">
-      <div style="font-size:10px;color:#555;margin-bottom:6px;font-weight:600;">탈색 횟수 기준 손상도</div>
-      <div style="display:flex;gap:6px;">
-        <button id="dmg-btn-natural" onclick="changeDamageLevel('natural')"
-          style="flex:1;padding:7px 4px;border-radius:9px;border:1px solid #333;background:#111;color:#888;font-size:11px;font-weight:700;cursor:pointer;">
-          🌿 일반
-        </button>
-        <button id="dmg-btn-damaged" onclick="changeDamageLevel('damaged')"
-          style="flex:1;padding:7px 4px;border-radius:9px;border:1px solid #333;background:#111;color:#888;font-size:11px;font-weight:700;cursor:pointer;">
-          🟠 손상
-        </button>
-        <button id="dmg-btn-ultra_damaged" onclick="changeDamageLevel('ultra_damaged')"
-          style="flex:1;padding:7px 4px;border-radius:9px;border:1px solid #333;background:#111;color:#888;font-size:11px;font-weight:700;cursor:pointer;">
-          🔴 고손상
-        </button>
+    <!-- 손상도 팁 (탈색 필요 시에만 표시) -->
+    <div id="dmg-btn-wrap" style="display:none;margin-bottom:12px;padding:10px 12px;background:rgba(255,160,50,0.07);border-radius:10px;border:1px solid rgba(255,160,50,0.15);">
+      <div style="font-size:11px;color:#bb8040;line-height:1.7;">
+        💡 탈색 이력이 많을수록 추가 탈색 시 모발 손상 위험이 높아요.<br>고손상모(탈색 3회+)라면 단시간 탈색 후 토닝으로 마무리하는 것을 추천해요.
       </div>
     </div>
     <!-- 색상 혼합 애니메이션 -->
     <div id="color-anim-wrap" style="width:100%;margin-bottom:14px;background:#111;border-radius:10px;overflow:hidden;min-height:110px;"></div>
     <div class="recipe-main" id="rec-main"></div>
     <div class="recipe-detail" id="rec-detail" style="white-space:pre-line;margin-top:10px;font-size:13px;color:#ccc;line-height:1.9;"></div>
+
+    <!-- 시술 체크리스트 + 카드 저장 -->
+    <div id="card-checklist-wrap" style="margin-top:18px;display:none;">
+      <div style="font-size:11px;color:#666;font-weight:600;margin-bottom:10px;letter-spacing:0.4px;">시술 순서 — 카드에 포함할 항목을 선택하세요</div>
+      <div id="checklist-items" style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px;"></div>
+      <button onclick="generateRecipeCard()"
+        style="width:100%;padding:13px;border-radius:11px;background:linear-gradient(135deg,#9E7FBF,#6a5a8a);border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.3px;">
+        📋 시술 레시피 카드 저장
+      </button>
+    </div>
   </div>
 
   <!-- 블랙 감지 시 3선택지 카드 -->
@@ -1931,7 +1937,7 @@ function analyzeColorFlow(current, target, damageLevel, toneDir) {
 }
 
 
-/* ── confirmTargetColor → 3방향 선택 카드 표시 ── */
+/* ── confirmTargetColor → 스와치 표시 + 딜레이 + 3방향 선택 ── */
 function confirmTargetColor() {
   var s2 = document.getElementById('step2-card');
   if (s2) s2.style.display = 'none';
@@ -1942,11 +1948,26 @@ function confirmTargetColor() {
     return;
   }
 
-  /* 3방향 선택 카드 표시 */
+  /* 스와치 미리 세팅 */
+  var curN = hueToName(currentHSL.h, currentHSL.s, currentHSL.l);
+  var tarN = hueToName(targetHSL.h, targetHSL.s, targetHSL.l);
+  var cs = document.getElementById('tone-cur-swatch');
+  var ts = document.getElementById('tone-tar-swatch');
+  var cd = document.getElementById('tone-color-desc');
+  if (cs) cs.style.background = hslStr(currentHSL.h, currentHSL.s, currentHSL.l);
+  if (ts) ts.style.background = hslStr(targetHSL.h, targetHSL.s, targetHSL.l);
+  if (cd) cd.textContent = curN + ' → ' + tarN;
+
+  /* 카드 표시 + 분석중 딜레이 */
   var tc = document.getElementById('tone-dir-card');
+  var ta = document.getElementById('tone-analyzing');
   if (tc) {
     tc.style.display = 'block';
     tc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  if (ta) {
+    ta.style.display = 'block';
+    setTimeout(function() { if (ta) ta.style.display = 'none'; }, 900);
   }
 }
 
@@ -2255,7 +2276,37 @@ function buildHairMessage(result, curHSL, tarHSL) {
     }
   }
 
-  return [line1, line2, line3, line4].filter(Boolean).join('\n');
+  /* ── 5️⃣ 보조 힌트 — 탈색 없이도 가능한 대안 ── */
+  var line5 = '';
+  var toneDir = window._toneDir;
+  var isWarmCur = ['YELLOW','YELLOW_GREEN','ORANGE'].indexOf(curUt) > -1;
+  var isCoolTar = ['BLUE','VIOLET','GRAY','TEAL','DARK_NEUTRAL'].indexOf(result.tarUndertone) > -1;
+  var isBleachProc = (proc === 'BLEACH_FIRST' || proc === 'BLEACH_SHORT_TONING');
+
+  /* 절대값 케이스 판별 — 대안 힌트 표시 안 함 */
+  var isAbsolute = false;
+  if (curUt === 'BLACK' && pastel) isAbsolute = true;
+  if (curUt === 'RED' && curHSL.s >= 65 && isCoolTar) isAbsolute = true;
+  if (Math.abs(tarHSL.l - curHSL.l) > 35) isAbsolute = true;
+
+  /* 조건: 톤업 + 난색→한색 + 파스텔 목표 아님 + 절대값 아님 */
+  if (toneDir === 'up' && isWarmCur && isCoolTar && isBleachProc && !pastel && !isAbsolute) {
+    if (curUt === 'YELLOW' || curUt === 'YELLOW_GREEN') {
+      line5 = '※ 탈색 없이도 현재 명도에서 밝은 바이올렛+고명도 애쉬를 믹스하면 어느 정도 표현 가능해요. 노랑기로 인해 탁도가 생길 수 있어요.';
+    } else if (curUt === 'ORANGE') {
+      line5 = '※ 탈색 없이 블루·애쉬로 중화하면서 시술하면 어느 정도 표현 가능해요. 주황기로 탁도가 생길 수 있어요.';
+    }
+  }
+
+  /* 절대값 케이스 — 확신 문구 추가 */
+  if (isAbsolute && isBleachProc) {
+    var absReason = curUt === 'BLACK' && pastel ? '블랙에서 파스텔까지'
+                  : curUt === 'RED' && isCoolTar ? '선명한 레드에서 한색으로'
+                  : '명도 차이가 너무 커서';
+    line5 = '이 경우 ' + absReason + ' 탈색이 필수예요. 다른 공정으로 대체가 어렵습니다.';
+  }
+
+  return [line1, line2, line3, line4, line5].filter(Boolean).join('\n');
 }
 
 /* ── 분석 결과 렌더링 (2안: 프론트 문장 → API 다듬기) ── */
@@ -2271,24 +2322,10 @@ function renderAnalysisResult(result) {
   if (tSwatch) tSwatch.style.background = hslStr(targetHSL.h, targetHSL.s, targetHSL.l);
   if (desc)    desc.textContent = curName + ' → ' + tarName;
 
-  /* 손상도 버튼 — BLEACH 계열에만 표시 */
-  var needsDmgBtn = (result.processType === 'BLEACH_FIRST' || result.processType === 'BLEACH_SHORT_TONING');
+  /* 팁 문구 — BLEACH 계열에만 표시 */
+  var needsDmgTip = (result.processType === 'BLEACH_FIRST' || result.processType === 'BLEACH_SHORT_TONING');
   var dmgWrap = document.getElementById('dmg-btn-wrap');
-  if (dmgWrap) dmgWrap.style.display = needsDmgBtn ? 'block' : 'none';
-  var dmgCurrent = result.damageLevel || window._currentDamageLevel || 'natural';
-  ['natural','damaged','ultra_damaged'].forEach(function(id) {
-    var btn = document.getElementById('dmg-btn-' + id);
-    if (!btn) return;
-    if (id === dmgCurrent) {
-      btn.style.borderColor = '#9E7FBF';
-      btn.style.background  = 'rgba(158,127,191,0.15)';
-      btn.style.color       = '#fff';
-    } else {
-      btn.style.borderColor = '#333';
-      btn.style.background  = '#111';
-      btn.style.color       = '#888';
-    }
-  });
+  if (dmgWrap) dmgWrap.style.display = needsDmgTip ? 'block' : 'none';
 
   var mainEl   = document.getElementById('rec-main');
   var detailEl = document.getElementById('rec-detail');
@@ -2309,6 +2346,9 @@ function renderAnalysisResult(result) {
     detailEl.style.whiteSpace = 'pre-line';
     detailEl.textContent = frontText;
   }
+
+  /* 체크리스트 빌드 */
+  buildChecklist(result);
 
   /* 한도 체크 */
   if (isLimitReached()) return;
@@ -2356,267 +2396,562 @@ function renderColorAnimation(result, curHSL, tarHSL) {
   container.innerHTML = '';
 
   var W = Math.max(container.clientWidth || 0, 300);
-  var H = 130;
+  var H = 140;
   var canvas = document.createElement('canvas');
-  canvas.width  = W * 2; /* 레티나 대응 */
+  canvas.width  = W * 2;
   canvas.height = H * 2;
   canvas.style.cssText = 'width:100%;height:' + H + 'px;border-radius:10px;display:block;';
   container.appendChild(canvas);
   var ctx = canvas.getContext('2d');
-  ctx.scale(2, 2); /* 레티나 */
+  ctx.scale(2, 2);
 
-  /* ── 색상 유틸 ── */
-  var curRgb = hslToRgb(curHSL.h, curHSL.s, curHSL.l);
-  var tarRgb = hslToRgb(tarHSL.h, tarHSL.s, tarHSL.l);
-  /* 실제 보색 (언더톤 기반) */
-  var compH = (function() {
-    var ut = result.curUndertone;
-    var map = { 'YELLOW':270,'YELLOW_GREEN':290,'ORANGE':210,'RED':130,'GREEN':330,'TEAL':20,'BLUE':30,'VIOLET':60,'PINK':140 };
-    return map[ut] !== undefined ? map[ut] : (curHSL.h + 180) % 360;
-  })();
-  var compS   = Math.min(curHSL.s + 15, 90);
-  var compL   = Math.max(curHSL.l - 5,  20);
-  var compRgb = hslToRgb(compH, compS, compL);
-  /* 아이보리 (탈색 최대) */
+  /* ── 색상 ── */
+  var curRgb  = hslToRgb(curHSL.h, curHSL.s, curHSL.l);
+  var tarRgb  = hslToRgb(tarHSL.h, tarHSL.s, tarHSL.l);
   var ivoryRgb = [255, 245, 210];
+  /* 언더톤별 실제 보색 */
+  var compH = (function(){
+    var m = {'YELLOW':270,'YELLOW_GREEN':290,'ORANGE':210,'RED':130,
+             'GREEN':330,'TEAL':20,'BLUE':30,'VIOLET':60,'PINK':140,'RED_VIOLET':130};
+    return (m[result.curUndertone] !== undefined) ? m[result.curUndertone] : (curHSL.h+180)%360;
+  })();
+  var compRgb = hslToRgb(compH, Math.min(curHSL.s+15,90), Math.max(curHSL.l-5,20));
+  /* 카키/매트 (보색 없이 섞이는 실패색) */
+  var matteRgb = hslToRgb(75, 28, 38);
 
-  var neut = result.neutralization;
   var proc = result.processType;
+  var neut = result.needNeutralization;
 
-  /* ── 공용 유틸 ── */
-  function lerp(a, b, t) { return a + (b - a) * t; }
-  function eio(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
-  function lc(c1, c2, t) {
-    return [Math.round(lerp(c1[0],c2[0],t)), Math.round(lerp(c1[1],c2[1],t)), Math.round(lerp(c1[2],c2[2],t))];
+  /* ── 유틸 ── */
+  function lerp(a,b,t){ return a+(b-a)*t; }
+  function eio(t){ return t<0.5?2*t*t:-1+(4-2*t)*t; }
+  function lc(c1,c2,t){
+    return [Math.round(lerp(c1[0],c2[0],t)),Math.round(lerp(c1[1],c2[1],t)),Math.round(lerp(c1[2],c2[2],t))];
   }
-  function rs(c, a) {
-    if (a === undefined) return 'rgb('+c[0]+','+c[1]+','+c[2]+')';
-    return 'rgba('+c[0]+','+c[1]+','+c[2]+','+a+')';
-  }
+  function rs(c){ return 'rgb('+c[0]+','+c[1]+','+c[2]+')'; }
 
-  function circle(x, y, r, color, alpha) {
-    ctx.save();
-    ctx.globalAlpha = Math.max(0, Math.min(1, alpha !== undefined ? alpha : 1));
-    ctx.beginPath();
-    ctx.arc(x, y, Math.max(1, r), 0, Math.PI * 2);
-    ctx.fillStyle = typeof color === 'string' ? color : rs(color);
-    ctx.fill();
+  function circ(x,y,r,rgb,a){
+    if(r<1)return;
+    ctx.save(); ctx.globalAlpha=Math.max(0,Math.min(1,a!=null?a:1));
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fillStyle=rs(rgb); ctx.fill(); ctx.restore();
+  }
+  function glow(x,y,r,rgb){
+    ctx.save(); ctx.globalAlpha=0.15;
+    var g=ctx.createRadialGradient(x,y,0,x,y,r*2);
+    g.addColorStop(0,rs(rgb)); g.addColorStop(1,'transparent');
+    ctx.beginPath(); ctx.arc(x,y,r*2,0,Math.PI*2);
+    ctx.fillStyle=g; ctx.fill(); ctx.restore();
+  }
+  function lbl(x,y,txt,a){
+    ctx.save(); ctx.globalAlpha=a!=null?a:0.7;
+    ctx.fillStyle='#fff'; ctx.font='600 10px -apple-system,sans-serif';
+    ctx.textAlign='center'; ctx.fillText(txt,x,y); ctx.restore();
+  }
+  function arw(x1,x2,cy2,a){
+    ctx.save(); ctx.globalAlpha=a||0.35; ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(x1,cy2); ctx.lineTo(x2-5,cy2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x2-5,cy2-3); ctx.lineTo(x2,cy2); ctx.lineTo(x2-5,cy2+3); ctx.stroke();
     ctx.restore();
   }
 
-  function glow(x, y, r, color) {
-    ctx.save();
-    ctx.globalAlpha = 0.18;
-    var g = ctx.createRadialGradient(x, y, 0, x, y, r * 1.8);
-    g.addColorStop(0, typeof color === 'string' ? color : rs(color));
-    g.addColorStop(1, 'transparent');
-    ctx.beginPath();
-    ctx.arc(x, y, r * 1.8, 0, Math.PI * 2);
-    ctx.fillStyle = g;
-    ctx.fill();
-    ctx.restore();
-  }
+  /* ── 시나리오 ── */
+  var SC;
+  if (neut && (proc==='BLEACH_FIRST'||proc==='BLEACH_SHORT_TONING')) SC='BLEACH_NEUT';
+  else if (proc==='BLEACH_FIRST'||proc==='BLEACH_SHORT_TONING')       SC='BLEACH';
+  else if (neut||proc==='NEUTRALIZATION_THEN_COLOR')                  SC='NEUT';
+  else if (proc==='TONING_THEN_COLOR')                                SC='TONING';
+  else if (proc==='TONE_DOWN_NEUTRALIZE'||proc==='TONE_DOWN_TONING')  SC='TONEDOWN_NEUT';
+  else if (proc==='TONE_DOWN')                                        SC='TONEDOWN';
+  else                                                                SC='DIRECT';
 
-  function label(x, y, text, alpha) {
-    ctx.save();
-    ctx.globalAlpha = alpha !== undefined ? alpha : 0.75;
-    ctx.fillStyle = '#fff';
-    ctx.font = '600 10px -apple-system,sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(text, x, y);
-    ctx.restore();
-  }
+  var R  = Math.min(26, W*0.085);
+  var cy = H * 0.44;
+  var LY = cy + R + 14; /* 라벨 y */
+  var t  = 0, dir = 1;
 
-  function arrow(x1, x2, y, alpha) {
-    ctx.save();
-    ctx.globalAlpha = alpha || 0.4;
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(x1, y);
-    ctx.lineTo(x2 - 5, y);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x2 - 5, y - 4);
-    ctx.lineTo(x2, y);
-    ctx.lineTo(x2 - 5, y + 4);
-    ctx.stroke();
-    ctx.restore();
-  }
+  function bg(){ ctx.fillStyle='#0e0e0e'; ctx.fillRect(0,0,W,H); }
 
-  /* ── 시나리오 판별 ── */
-  var neut    = result.needNeutralization;
-  var SCENARIO;
-  if (neut && (proc === 'BLEACH_FIRST' || proc === 'BLEACH_SHORT_TONING')) {
-    SCENARIO = 'BLEACH_THEN_NEUTRALIZE';
-  } else if (neut || proc === 'NEUTRALIZATION_THEN_COLOR' || proc === 'TONING_THEN_COLOR') {
-    SCENARIO = 'NEUTRALIZE';
-  } else if (proc === 'TONE_DOWN_NEUTRALIZE' || proc === 'TONE_DOWN_TONING') {
-    SCENARIO = 'NEUTRALIZE';             /* 톤다운+중화 → 중화 애니메이션 */
-  } else if (proc === 'BLEACH_FIRST' || proc === 'BLEACH_SHORT_TONING') {
-    SCENARIO = 'BLEACH';
-  } else if (proc === 'TONE_DOWN') {
-    SCENARIO = 'TONE_DOWN';
-  } else if (proc === 'CLEAR_MIX') {
-    SCENARIO = 'DIRECT';
-  } else {
-    SCENARIO = 'DIRECT';
-  }
-
-  var R   = Math.min(32, W * 0.10);
-  var cy  = H * 0.46;
-  var t   = 0;
-  var dir = 1;
-
-  function bg() {
-    ctx.fillStyle = '#0e0e0e';
-    ctx.fillRect(0, 0, W, H);
-  }
-
-  /* ════ 시나리오별 drawFrame ════ */
-
-  function drawNeutralize(e) {
-    /* 단계1(0~0.45): 현재색 + 보색이 서서히 접근·교집합
-       단계2(0.45~0.75): 교집합이 연브라운·베이지로 중화
-       단계3(0.75~1): 목표색 원이 등장 */
-    var x1 = W * 0.20, x2 = W * 0.50, x3 = W * 0.80;
-    var phase1 = Math.min(1, e / 0.45);
-    var phase2 = Math.max(0, Math.min(1, (e - 0.45) / 0.30));
-    var phase3 = Math.max(0, Math.min(1, (e - 0.75) / 0.25));
-
-    /* 현재색 */
-    glow(x1, cy, R, curRgb);
-    circle(x1, cy, R, curRgb, 0.9);
-    label(x1, cy + R + 13, '현재');
-
-    /* 보색 — 좌측에서 접근 */
-    var compX = x2 - (x2 - x1) * (1 - phase1) * 0.6;
-    glow(compX, cy, R * 0.85, compRgb);
-    circle(compX, cy, R * 0.85, compRgb, 0.75 + phase1 * 0.2);
-    label(compX, cy + R + 13, '보색', phase1);
-
-    /* 교집합 — 두 원 중간 */
-    if (phase1 > 0.5) {
-      var mixP  = (phase1 - 0.5) / 0.5;
-      var midX  = (x1 + compX) / 2;
-      var mixRgb = lc(lc(curRgb, compRgb, 0.5), [210, 185, 155], phase2 * 0.7);
-      circle(midX, cy, R * 0.55 * mixP, rs(mixRgb), 0.9 * mixP);
+  /* NEUT: 현재 + 보색접근 → 교집합중화 → 목표 */
+  function drawNeut(e){
+    var x1=W*0.18, x2=W*0.50, x3=W*0.82;
+    var p1=Math.min(1,e/0.4), p2=Math.max(0,Math.min(1,(e-0.4)/0.3)), p3=Math.max(0,Math.min(1,(e-0.72)/0.28));
+    glow(x1,cy,R,curRgb); circ(x1,cy,R,curRgb,0.9); lbl(x1,LY,'현재');
+    var cx2=x2-(x2-x1)*(1-p1)*0.55;
+    glow(cx2,cy,R*0.8,compRgb); circ(cx2,cy,R*0.8,compRgb,0.7+p1*0.25); lbl(cx2,LY,'보색중화',p1);
+    if(p1>0.45){
+      var mp=(p1-0.45)/0.55, midX=(x1+cx2)/2;
+      var mRgb=lc(lc(curRgb,compRgb,0.5),[215,195,165],p2*0.65);
+      circ(midX,cy,R*0.5*mp,mRgb,0.9*mp);
     }
-
-    /* 목표색 등장 */
-    if (phase3 > 0) {
-      glow(x3, cy, R, tarRgb);
-      circle(x3, cy, R * phase3, tarRgb, phase3 * 0.95);
-      label(x3, cy + R + 13, '목표', phase3);
-      if (phase3 > 0.3) arrow(x2 + R, x3 - R - 4, cy, phase3 * 0.5);
+    if(p3>0){
+      glow(x3,cy,R,tarRgb); circ(x3,cy,R*p3,tarRgb,p3*0.95); lbl(x3,LY,'목표',p3);
+      if(p3>0.25) arw(x2+R*0.6,x3-R-3,cy,p3*0.45);
     }
   }
 
-  function drawBleach(e) {
-    /* 단계1(0~0.5): 현재색 원이 서서히 밝아짐 (탈색)
-       단계2(0.5~1): 밝아진 원 옆에 목표색 등장·착색 */
-    var x1 = W * 0.28, x2 = W * 0.72;
-    var p1 = Math.min(1, e / 0.50);
-    var p2 = Math.max(0, Math.min(1, (e - 0.50) / 0.50));
-
-    var bleachedRgb = lc(curRgb, ivoryRgb, p1);
-    glow(x1, cy, R, bleachedRgb);
-    circle(x1, cy, R, bleachedRgb, 0.95);
-    label(x1, cy + R + 13, p1 > 0.7 ? '탈색완료' : '탈색중');
-
-    /* 탈색 진행 파티클 효과 */
-    if (p1 < 0.9) {
-      for (var i = 0; i < 4; i++) {
-        var ang = (p1 * 6 + i * 1.57) % (Math.PI * 2);
-        var px  = x1 + Math.cos(ang) * (R + 6 + i * 3);
-        var py  = cy + Math.sin(ang) * (R + 6 + i * 3);
-        circle(px, py, 2.5, ivoryRgb, (1 - p1) * 0.6);
+  /* BLEACH: 현재색이 점점 밝아짐 → 목표착색 */
+  function drawBleach(e){
+    var x1=W*0.28, x2=W*0.72;
+    var p1=Math.min(1,e/0.52), p2=Math.max(0,Math.min(1,(e-0.52)/0.48));
+    var blRgb=lc(curRgb,ivoryRgb,p1);
+    glow(x1,cy,R,blRgb); circ(x1,cy,R,blRgb,0.95);
+    lbl(x1,LY,p1>0.65?'탈색완료':'탈색중');
+    /* 파티클 */
+    if(p1<0.85){
+      for(var i=0;i<5;i++){
+        var ang=(p1*7+i*1.26)%(Math.PI*2);
+        circ(x1+Math.cos(ang)*(R+5+i*2.5),cy+Math.sin(ang)*(R+5+i*2.5),2,ivoryRgb,(1-p1)*0.5);
       }
     }
-
-    if (p2 > 0) {
-      glow(x2, cy, R, tarRgb);
-      circle(x2, cy, R * p2, tarRgb, p2 * 0.95);
-      label(x2, cy + R + 13, '착색', p2);
-      arrow(x1 + R + 2, x2 - R - 2, cy, p2 * 0.55);
-    }
+    if(p2>0){ glow(x2,cy,R,tarRgb); circ(x2,cy,R*p2,tarRgb,p2*0.95); lbl(x2,LY,'착색',p2); arw(x1+R+2,x2-R-2,cy,p2*0.5); }
   }
 
-  function drawBleachNeutralize(e) {
-    /* 4단계: 탈색→중화→착색 */
-    var x1 = W*0.15, x2 = W*0.38, x3 = W*0.62, x4 = W*0.85;
-    var p1 = Math.min(1, e / 0.30);
-    var p2 = Math.max(0, Math.min(1, (e-0.30)/0.25));
-    var p3 = Math.max(0, Math.min(1, (e-0.55)/0.20));
-    var p4 = Math.max(0, Math.min(1, (e-0.75)/0.25));
-
-    /* 현재 */
-    circle(x1, cy, R, curRgb, 0.9);
-    label(x1, cy+R+13, '현재');
-    /* 탈색 */
-    if (p1 > 0) {
-      var blRgb = lc(curRgb, ivoryRgb, p1);
-      circle(x2, cy, R*p1, blRgb, p1*0.9);
-      label(x2, cy+R+13, '탈색', p1);
-      if (p1 > 0.2) arrow(x1+R+2, x2-R-2, cy, p1*0.4);
-    }
-    /* 보색 중화 */
-    if (p2 > 0) {
-      circle(x3, cy, R*p2, compRgb, p2*0.85);
-      label(x3, cy+R+13, '중화', p2);
-      if (p2 > 0.2) arrow(x2+R+2, x3-R-2, cy, p2*0.4);
-    }
-    /* 목표 */
-    if (p4 > 0) {
-      glow(x4, cy, R, tarRgb);
-      circle(x4, cy, R*p4, tarRgb, p4*0.95);
-      label(x4, cy+R+13, '목표', p4);
-      if (p4 > 0.2) arrow(x3+R+2, x4-R-2, cy, p4*0.4);
-    }
+  /* BLEACH_NEUT: 현재 → 탈색 → 보색중화 → 목표 4단계 */
+  function drawBleachNeut(e){
+    var xs=[W*0.12,W*0.37,W*0.62,W*0.88];
+    var ps=[
+      Math.min(1,e/0.28),
+      Math.max(0,Math.min(1,(e-0.28)/0.24)),
+      Math.max(0,Math.min(1,(e-0.52)/0.20)),
+      Math.max(0,Math.min(1,(e-0.74)/0.26))
+    ];
+    circ(xs[0],cy,R,curRgb,0.9); lbl(xs[0],LY,'현재');
+    if(ps[0]>0){ var b=lc(curRgb,ivoryRgb,ps[0]); circ(xs[1],cy,R*ps[0],b,ps[0]*0.9); lbl(xs[1],LY,'탈색',ps[0]); if(ps[0]>0.2)arw(xs[0]+R,xs[1]-R-2,cy,ps[0]*0.4); }
+    if(ps[1]>0){ circ(xs[2],cy,R*ps[1],compRgb,ps[1]*0.85); lbl(xs[2],LY,'중화',ps[1]); if(ps[1]>0.2)arw(xs[1]+R,xs[2]-R-2,cy,ps[1]*0.4); }
+    if(ps[3]>0){ glow(xs[3],cy,R,tarRgb); circ(xs[3],cy,R*ps[3],tarRgb,ps[3]*0.95); lbl(xs[3],LY,'목표',ps[3]); if(ps[3]>0.2)arw(xs[2]+R,xs[3]-R-2,cy,ps[3]*0.4); }
   }
 
-  function drawToneDown(e) {
-    /* 현재색이 서서히 어두워지며 목표색으로 */
-    var x1 = W*0.30, x2 = W*0.70;
-    var transitRgb = lc(curRgb, tarRgb, e);
-    glow(x1, cy, R, curRgb);
-    circle(x1, cy, R, curRgb, 1 - e*0.3);
-    label(x1, cy+R+13, '현재');
-    glow(x2, cy, R, tarRgb);
-    circle(x2, cy, R*(0.3 + e*0.7), transitRgb, 0.4 + e*0.55);
-    label(x2, cy+R+13, '톤다운 목표', 0.4 + e*0.6);
-    arrow(x1+R+2, x2-R-2, cy, 0.3 + e*0.3);
+  /* TONING: 현재 → 토닝(흐려짐) → 목표 */
+  function drawToning(e){
+    var x1=W*0.22, x2=W*0.50, x3=W*0.78;
+    var p1=Math.min(1,e/0.45), p2=Math.max(0,Math.min(1,(e-0.45)/0.55));
+    glow(x1,cy,R,curRgb); circ(x1,cy,R,curRgb,0.9); lbl(x1,LY,'현재');
+    /* 토닝: 현재색이 옅어지며 중간색 */
+    var tonRgb=lc(curRgb,[180,170,165],p1*0.5);
+    circ(x2,cy,R*0.7*(0.3+p1*0.7),tonRgb,0.5+p1*0.4); lbl(x2,LY,'토닝',p1);
+    if(p1>0.2) arw(x1+R,x2-R*0.7-3,cy,p1*0.4);
+    if(p2>0){ glow(x3,cy,R,tarRgb); circ(x3,cy,R*p2,tarRgb,p2*0.95); lbl(x3,LY,'목표',p2); if(p2>0.3)arw(x2+R*0.7,x3-R-3,cy,p2*0.5); }
   }
 
-  function drawDirect(e) {
-    /* 현재→목표 서서히 전환 */
-    var x1 = W*0.28, x2 = W*0.72;
-    glow(x1, cy, R, curRgb);
-    circle(x1, cy, R, curRgb, 1 - e*0.25);
-    label(x1, cy+R+13, '현재');
-    glow(x2, cy, R, tarRgb);
-    circle(x2, cy, R*(0.25 + e*0.75), lc(curRgb, tarRgb, e), 0.3 + e*0.65);
-    label(x2, cy+R+13, '바로 시술', 0.3 + e*0.7);
-    arrow(x1+R+2, x2-R-2, cy, 0.25 + e*0.35);
+  /* TONEDOWN: 현재색이 점점 어두워짐 */
+  function drawToneDown(e){
+    var x1=W*0.28, x2=W*0.72;
+    glow(x1,cy,R,curRgb); circ(x1,cy,R,curRgb,1-e*0.3); lbl(x1,LY,'현재');
+    var tRgb=lc(curRgb,tarRgb,e);
+    glow(x2,cy,R,tarRgb); circ(x2,cy,R*(0.3+e*0.7),tRgb,0.35+e*0.6); lbl(x2,LY,'톤다운',0.35+e*0.65);
+    arw(x1+R+2,x2-R-2,cy,0.3+e*0.3);
   }
 
-  function drawFrame() {
+  /* TONEDOWN_NEUT: 현재 → 보색중화 → 어두운목표 */
+  function drawToneDownNeut(e){
+    var x1=W*0.18, x2=W*0.50, x3=W*0.82;
+    var p1=Math.min(1,e/0.45), p2=Math.max(0,Math.min(1,(e-0.45)/0.55));
+    glow(x1,cy,R,curRgb); circ(x1,cy,R,curRgb,0.9); lbl(x1,LY,'현재');
+    var cx2=x2-(x2-x1)*(1-p1)*0.5;
+    circ(cx2,cy,R*0.75,compRgb,0.65+p1*0.3); lbl(cx2,LY,'보색',p1);
+    if(p2>0){ glow(x3,cy,R,tarRgb); circ(x3,cy,R*(0.25+p2*0.75),lc(curRgb,tarRgb,p2),0.3+p2*0.65); lbl(x3,LY,'목표',0.3+p2*0.7); arw(x2+R*0.5,x3-R-3,cy,p2*0.45); }
+  }
+
+  /* DIRECT: 현재→목표 자연전환 */
+  function drawDirect(e){
+    var x1=W*0.28, x2=W*0.72;
+    glow(x1,cy,R,curRgb); circ(x1,cy,R,curRgb,1-e*0.2); lbl(x1,LY,'현재');
+    glow(x2,cy,R,tarRgb); circ(x2,cy,R*(0.2+e*0.8),lc(curRgb,tarRgb,e),0.25+e*0.7); lbl(x2,LY,'바로 시술',0.25+e*0.75);
+    arw(x1+R+2,x2-R-2,cy,0.2+e*0.4);
+  }
+
+  function drawFrame(){
     bg();
-    var e = eio(t);
+    var e=eio(t);
+    if     (SC==='NEUT')          drawNeut(e);
+    else if(SC==='BLEACH')        drawBleach(e);
+    else if(SC==='BLEACH_NEUT')   drawBleachNeut(e);
+    else if(SC==='TONING')        drawToning(e);
+    else if(SC==='TONEDOWN')      drawToneDown(e);
+    else if(SC==='TONEDOWN_NEUT') drawToneDownNeut(e);
+    else                          drawDirect(e);
+    t+=dir*0.009;
+    if(t>=1){t=1;dir=-1;} if(t<=0){t=0;dir=1;}
+    window._hairAnimRAF=requestAnimationFrame(drawFrame);
+  }
+  window._hairAnimRAF=requestAnimationFrame(drawFrame);
+}
 
-    if      (SCENARIO === 'NEUTRALIZE')           drawNeutralize(e);
-    else if (SCENARIO === 'BLEACH')               drawBleach(e);
-    else if (SCENARIO === 'BLEACH_THEN_NEUTRALIZE') drawBleachNeutralize(e);
-    else if (SCENARIO === 'TONE_DOWN')            drawToneDown(e);
-    else                                          drawDirect(e);
 
-    t += dir * 0.010;
-    if (t >= 1) { t = 1; dir = -1; }
-    if (t <= 0) { t = 0; dir =  1; }
-    window._hairAnimRAF = requestAnimationFrame(drawFrame);
+/* ════════════════════════════════════════
+   시술 레시피 카드 생성
+════════════════════════════════════════ */
+
+/* ── 체크리스트 항목 빌드 ── */
+var _lastResult = null;
+
+function buildChecklist(result) {
+  _lastResult = result;
+  var proc = result.processType;
+  var neut = result.needNeutralization;
+
+  /* 자동 항목 (공정 기반) */
+  var auto = [];
+  auto.push({ label: '현재 모발 상태 확인', checked: true, auto: true });
+
+  var hasBleach = proc === 'BLEACH_FIRST' || proc === 'BLEACH_SHORT_TONING';
+  var hasToning = proc === 'TONING_THEN_COLOR' || proc === 'TONE_DOWN_TONING' || proc === 'BLEACH_SHORT_TONING';
+  var hasNeut   = neut;
+  var hasClear  = proc === 'CLEAR_MIX';
+  var isToneDown = proc === 'TONE_DOWN' || proc === 'TONE_DOWN_NEUTRALIZE' || proc === 'TONE_DOWN_TONING';
+
+  /* 선택 항목 (디자이너 추가) */
+  var optional = [
+    { label: '전처리 (PPT·단백질 트리트먼트)', checked: false, auto: false },
+    { label: '탈색', checked: hasBleach, auto: hasBleach },
+    { label: '중간 크리닉 (탈색 후)', checked: hasBleach, auto: false },
+    { label: '토닝 (잔류색소 정리)', checked: hasToning, auto: hasToning },
+    { label: '보색 중화 믹스', checked: hasNeut, auto: hasNeut },
+    { label: '클리어 믹스 (색감 농도 조절)', checked: hasClear, auto: hasClear },
+    { label: '톤다운 염색', checked: isToneDown, auto: isToneDown },
+    { label: '착색 시술', checked: true, auto: true },
+    { label: '후처리 트리트먼트', checked: false, auto: false },
+  ];
+
+  var wrap = document.getElementById('checklist-items');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+
+  optional.forEach(function(item, i) {
+    var row = document.createElement('label');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px 8px;border-radius:8px;background:'+(item.auto?'rgba(158,127,191,0.08)':'rgba(255,255,255,0.03)')+';border:1px solid '+(item.auto?'rgba(158,127,191,0.2)':'#222')+';';
+    var cb = document.createElement('input');
+    cb.type = 'checkbox'; cb.checked = item.checked; cb.id = 'ck_'+i;
+    cb.style.cssText = 'width:15px;height:15px;accent-color:#9E7FBF;flex-shrink:0;cursor:pointer;';
+    var txt = document.createElement('span');
+    txt.style.cssText = 'font-size:12px;color:'+(item.auto?'#ccc':'#888')+';';
+    txt.textContent = item.label + (item.auto ? ' ✓' : '');
+    row.appendChild(cb); row.appendChild(txt);
+    wrap.appendChild(row);
+  });
+
+  var cw = document.getElementById('card-checklist-wrap');
+  if (cw) cw.style.display = 'block';
+}
+
+/* ── 카드 Canvas 생성 ── */
+function generateRecipeCard() {
+  var result = _lastResult;
+  if (!result) return;
+
+  /* 체크된 항목 수집 */
+  var steps = [];
+  var labels = document.querySelectorAll('#checklist-items label');
+  labels.forEach(function(row, i) {
+    var cb = row.querySelector('input[type=checkbox]');
+    var txt = row.querySelector('span');
+    if (cb && cb.checked && txt) {
+      steps.push(txt.textContent.replace(' ✓','').trim());
+    }
+  });
+
+  var W = 900, H = 1200;
+  var cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  var ctx = cv.getContext('2d');
+
+  /* ── 배경 ── */
+  var bg = ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#0e0e14');
+  bg.addColorStop(1,'#13111a');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0,0,W,H);
+
+  /* ── 상단 헤더 ── */
+  var hdrGrad = ctx.createLinearGradient(0,0,W,80);
+  hdrGrad.addColorStop(0,'#2a1f3d');
+  hdrGrad.addColorStop(1,'#1a1428');
+  ctx.fillStyle = hdrGrad;
+  roundRect(ctx,0,0,W,90,0);
+  ctx.fillStyle='rgba(158,127,191,0.3)';
+  ctx.fillRect(0,88,W,2);
+
+  ctx.fillStyle='#fff';
+  ctx.font='bold 28px -apple-system,sans-serif';
+  ctx.textAlign='left';
+  ctx.fillText('✂️  시술 레시피 카드',36,55);
+
+  /* 날짜 */
+  var today = new Date();
+  var dateStr = today.getFullYear()+'.'+(today.getMonth()+1).toString().padStart(2,'0')+'.'+today.getDate().toString().padStart(2,'0');
+  ctx.fillStyle='#666';
+  ctx.font='15px -apple-system,sans-serif';
+  ctx.textAlign='right';
+  ctx.fillText(dateStr, W-36, 55);
+
+  /* ── 스와치 영역 ── */
+  var swY = 115, swH = 130;
+  ctx.fillStyle='rgba(255,255,255,0.03)';
+  roundRect(ctx,30,swY,W-60,swH,16);
+
+  var curRgb = hslToRgb(currentHSL.h, currentHSL.s, currentHSL.l);
+  var tarRgb = hslToRgb(targetHSL.h, targetHSL.s, targetHSL.l);
+  var curName = hueToName(currentHSL.h, currentHSL.s, currentHSL.l);
+  var tarName = hueToName(targetHSL.h, targetHSL.s, targetHSL.l);
+
+  /* 현재 스와치 */
+  ctx.fillStyle = 'rgb('+curRgb[0]+','+curRgb[1]+','+curRgb[2]+')';
+  roundRect(ctx,54,swY+20,200,90,12);
+  ctx.fillStyle='rgba(255,255,255,0.6)';
+  ctx.font='bold 13px -apple-system,sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText('현재', 154, swY+128);
+
+  /* 화살표 */
+  ctx.fillStyle='#555';
+  ctx.font='bold 36px -apple-system,sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText('→', W/2, swY+75);
+
+  /* 목표 스와치 */
+  ctx.fillStyle = 'rgb('+tarRgb[0]+','+tarRgb[1]+','+tarRgb[2]+')';
+  roundRect(ctx,W-254,swY+20,200,90,12);
+  ctx.strokeStyle='rgba(158,127,191,0.8)';
+  ctx.lineWidth=2.5;
+  roundRectStroke(ctx,W-254,swY+20,200,90,12);
+  ctx.fillStyle='rgba(255,255,255,0.6)';
+  ctx.font='bold 13px -apple-system,sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText('목표', W-154, swY+128);
+
+  /* 색감명 */
+  ctx.fillStyle='#bbb';
+  ctx.font='16px -apple-system,sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText(curName, 154, swY+18);
+  ctx.fillText(tarName, W-154, swY+18);
+
+  /* ── 공정 시각화 ── */
+  var vizY = swY + swH + 24;
+  ctx.fillStyle='rgba(255,255,255,0.03)';
+  roundRect(ctx,30,vizY,W-60,200,16);
+
+  ctx.fillStyle='#666';
+  ctx.font='bold 13px -apple-system,sans-serif';
+  ctx.textAlign='left';
+  ctx.fillText('공정 흐름',54,vizY+24);
+
+  drawCardProcess(ctx, result, curRgb, tarRgb, W, vizY+40, 160);
+
+  /* ── 시술 순서 ── */
+  var listY = vizY + 220;
+  ctx.fillStyle='rgba(158,127,191,0.08)';
+  roundRect(ctx,30,listY,W-60,steps.length*46+50,16);
+  ctx.fillStyle='rgba(158,127,191,0.4)';
+  ctx.fillRect(30,listY,4,steps.length*46+50);
+
+  ctx.fillStyle='#9E7FBF';
+  ctx.font='bold 15px -apple-system,sans-serif';
+  ctx.textAlign='left';
+  ctx.fillText('📋  시술 순서',54,listY+28);
+
+  steps.forEach(function(step, i) {
+    var sy = listY + 52 + i*46;
+    /* 번호 배경 */
+    ctx.fillStyle='rgba(158,127,191,0.25)';
+    ctx.beginPath(); ctx.arc(68,sy+1,14,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#ddd';
+    ctx.font='bold 14px -apple-system,sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText(i+1, 68, sy+6);
+    /* 텍스트 */
+    ctx.fillStyle='#ccc';
+    ctx.font='16px -apple-system,sans-serif';
+    ctx.textAlign='left';
+    ctx.fillText(step, 94, sy+6);
+    /* 구분선 */
+    if(i < steps.length-1){
+      ctx.strokeStyle='rgba(255,255,255,0.05)';
+      ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(54,sy+20); ctx.lineTo(W-54,sy+20); ctx.stroke();
+    }
+  });
+
+  /* ── 분석 요약 문구 ── */
+  var sumY = listY + steps.length*46 + 68;
+  var detailEl = document.getElementById('rec-detail');
+  if (detailEl && detailEl.textContent) {
+    var lines = detailEl.textContent.split('\n').filter(function(l){ return l.trim() && l.indexOf('\ub0a8\uc740') === -1; });
+    ctx.fillStyle='rgba(255,255,255,0.03)';
+    roundRect(ctx,30,sumY,W-60,lines.length*30+44,16);
+    ctx.fillStyle='#9E7FBF';
+    ctx.font='bold 13px -apple-system,sans-serif';
+    ctx.textAlign='left';
+    ctx.fillText('💡  시술 포인트',54,sumY+24);
+    lines.forEach(function(line,i){
+      ctx.fillStyle='#aaa';
+      ctx.font='14px -apple-system,sans-serif';
+      ctx.fillText(line.trim(), 54, sumY+50+i*30);
+    });
+    sumY += lines.length*30+60;
   }
 
-  window._hairAnimRAF = requestAnimationFrame(drawFrame);
+  /* ── 워터마크 ── */
+  var wmY = Math.max(sumY+30, H-70);
+  ctx.fillStyle='rgba(158,127,191,0.15)';
+  ctx.fillRect(0, wmY, W, H-wmY);
+  ctx.fillStyle='rgba(158,127,191,0.6)';
+  ctx.font='bold 15px -apple-system,sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText('✂️  모발 색상 분석기  |  Hair Color Analyzer', W/2, wmY+32);
+  ctx.fillStyle='rgba(255,255,255,0.2)';
+  ctx.font='12px -apple-system,sans-serif';
+  ctx.fillText('이 카드는 참고용이며 실제 시술 결과는 모발 상태에 따라 다를 수 있습니다.', W/2, wmY+54);
+
+  /* ── PNG 다운로드 ── */
+  var link = document.createElement('a');
+  link.download = '시술레시피_' + dateStr + '.png';
+  link.href = cv.toDataURL('image/png', 1.0);
+  link.click();
+}
+
+/* ── 카드 공정 시각화 (정적) ── */
+function drawCardProcess(ctx, result, curRgb, tarRgb, W, y, h) {
+  var proc  = result.processType;
+  var neut  = result.needNeutralization;
+  var ivoryRgb = [255,245,210];
+  var compH = (function(){
+    var m={'YELLOW':270,'YELLOW_GREEN':290,'ORANGE':210,'RED':130,
+           'GREEN':330,'TEAL':20,'BLUE':30,'VIOLET':60,'PINK':140,'RED_VIOLET':130};
+    return m[result.curUndertone] !== undefined ? m[result.curUndertone] : (currentHSL.h+180)%360;
+  })();
+  var compRgb = hslToRgb(compH, Math.min(currentHSL.s+15,90), Math.max(currentHSL.l-5,20));
+
+  function circ(x, cy2, r, rgb, label) {
+    /* 글로우 */
+    var g = ctx.createRadialGradient(x,cy2,0,x,cy2,r*1.6);
+    g.addColorStop(0,'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+',0.25)');
+    g.addColorStop(1,'transparent');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,cy2,r*1.6,0,Math.PI*2); ctx.fill();
+    /* 원 */
+    ctx.fillStyle='rgb('+rgb[0]+','+rgb[1]+','+rgb[2]+')';
+    ctx.beginPath(); ctx.arc(x,cy2,r,0,Math.PI*2); ctx.fill();
+    /* 테두리 */
+    ctx.strokeStyle='rgba(255,255,255,0.25)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(x,cy2,r,0,Math.PI*2); ctx.stroke();
+    /* 라벨 */
+    ctx.fillStyle='rgba(255,255,255,0.75)';
+    ctx.font='bold 14px -apple-system,sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText(label, x, y+h+18);
+  }
+
+  function arwLine(x1,x2,cy2) {
+    ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=2;
+    ctx.setLineDash([5,4]);
+    ctx.beginPath(); ctx.moveTo(x1,cy2); ctx.lineTo(x2-8,cy2); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='rgba(255,255,255,0.3)';
+    ctx.beginPath(); ctx.moveTo(x2-8,cy2-5); ctx.lineTo(x2,cy2); ctx.lineTo(x2-8,cy2+5); ctx.fill();
+  }
+
+  var R  = 40;
+  var cy2 = y + h/2;
+  var pad = 80;
+
+  /* 시나리오별 배치 */
+  var hasBleach = proc==='BLEACH_FIRST'||proc==='BLEACH_SHORT_TONING';
+  var hasToning = proc==='TONING_THEN_COLOR'||proc==='TONE_DOWN_TONING';
+  var isToneDown = proc==='TONE_DOWN'||proc==='TONE_DOWN_NEUTRALIZE'||proc==='TONE_DOWN_TONING';
+
+  if (hasBleach && neut) {
+    /* 현재→탈색→중화→목표 4단계 */
+    var xs = [pad, W*0.35, W*0.62, W-pad];
+    circ(xs[0],cy2,R,curRgb,'현재');
+    arwLine(xs[0]+R,xs[1]-R,cy2);
+    circ(xs[1],cy2,R*0.85,ivoryRgb,'탈색');
+    arwLine(xs[1]+R*0.85,xs[2]-R*0.85,cy2);
+    circ(xs[2],cy2,R*0.85,compRgb,'중화');
+    arwLine(xs[2]+R*0.85,xs[3]-R,cy2);
+    circ(xs[3],cy2,R,tarRgb,'목표');
+  } else if (hasBleach) {
+    /* 현재→탈색→목표 3단계 */
+    var xs2 = [pad, W/2, W-pad];
+    circ(xs2[0],cy2,R,curRgb,'현재');
+    arwLine(xs2[0]+R,xs2[1]-R,cy2);
+    circ(xs2[1],cy2,R*0.9,ivoryRgb,'탈색');
+    arwLine(xs2[1]+R*0.9,xs2[2]-R,cy2);
+    circ(xs2[2],cy2,R,tarRgb,'목표');
+  } else if (neut) {
+    /* 현재+보색→안정화→목표 */
+    var xs3 = [pad, W*0.38, W*0.64, W-pad];
+    /* 교집합 표현 — 두 원 겹치기 */
+    circ(xs3[0],cy2,R,curRgb,'현재');
+    arwLine(xs3[0]+R,xs3[1]-R,cy2);
+    /* 보색 + 현재 겹침 */
+    ctx.globalAlpha=0.6;
+    circ(xs3[1]-14,cy2,R*0.75,curRgb,'');
+    circ(xs3[1]+14,cy2,R*0.75,compRgb,'');
+    ctx.globalAlpha=1;
+    ctx.fillStyle='rgba(210,190,160,0.9)';
+    ctx.beginPath(); ctx.arc(xs3[1],cy2,R*0.45,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.6)';
+    ctx.font='bold 14px -apple-system,sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText('중화',xs3[1],y+h+18);
+    arwLine(xs3[1]+R*0.85,xs3[2]-R*0.85,cy2);
+    /* 안정화 색 */
+    var stableRgb=[210,190,160];
+    circ(xs3[2],cy2,R*0.85,stableRgb,'안정화');
+    arwLine(xs3[2]+R*0.85,xs3[3]-R,cy2);
+    circ(xs3[3],cy2,R,tarRgb,'목표');
+  } else if (isToneDown) {
+    /* 현재→(그라데이션)→목표 */
+    var xs4=[pad,W/2,W-pad];
+    circ(xs4[0],cy2,R,curRgb,'현재');
+    arwLine(xs4[0]+R,xs4[1]-R*0.8,cy2);
+    /* 중간 그라데이션 원 */
+    var midRgb=[
+      Math.round((curRgb[0]+tarRgb[0])/2),
+      Math.round((curRgb[1]+tarRgb[1])/2),
+      Math.round((curRgb[2]+tarRgb[2])/2)
+    ];
+    circ(xs4[1],cy2,R*0.8,midRgb,'중간');
+    arwLine(xs4[1]+R*0.8,xs4[2]-R,cy2);
+    circ(xs4[2],cy2,R,tarRgb,'목표');
+  } else {
+    /* DIRECT */
+    var xs5=[W*0.3,W*0.7];
+    circ(xs5[0],cy2,R,curRgb,'현재');
+    arwLine(xs5[0]+R,xs5[1]-R,cy2);
+    circ(xs5[1],cy2,R,tarRgb,'목표');
+  }
+}
+
+/* ── Canvas 유틸 ── */
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+  ctx.fill();
+}
+function roundRectStroke(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+  ctx.stroke();
 }
 
 function hueToGroup(h, s) {
@@ -2640,7 +2975,9 @@ function hueToName(h, s, l) {
   if (l <= 18) return '블랙 계열';
 
   if ((h >= 0 && h < 15) || h >= 345) {
-    return l <= 30 ? '짙은 레드·와인 계열' : '레드 계열';
+    if (l <= 22) return '딥 버건디·블랙레드 계열';
+    if (l <= 35) return '와인·딥레드 계열';
+    return '레드 계열';
   }
   if (h >= 15 && h < 45) return '주황 계열';
   if (h >= 45 && h < 75)  return '노랑 계열';        /* 골든→노랑 */
@@ -2651,7 +2988,10 @@ function hueToName(h, s, l) {
     return s >= 40 ? '블루 계열' : '애쉬·쿨그레이 계열';
   }
   if (h >= 260 && h < 295) return s >= 40 ? '바이올렛·보라 계열' : '보라 애쉬 계열';
-  if (h >= 295 && h < 340) return s >= 40 ? '핑크·마젠타 계열' : '핑크 계열';
+  if (h >= 295 && h < 340) {
+    if (l <= 35) return s >= 40 ? '와인·로즈 계열' : '다크 핑크 계열';
+    return s >= 40 ? '핑크·마젠타 계열' : '핑크 계열';
+  }
   if (h >= 340 && h < 345) return '와인레드 계열';
   return '따뜻한 계열';
 }
