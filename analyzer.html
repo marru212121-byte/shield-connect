@@ -497,6 +497,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div id="recipe-target-swatch" style="width:52px;height:52px;border-radius:9px;border:2px solid #9E7FBF;flex-shrink:0;"></div>
       <div style="flex:1;font-size:12px;color:#888;line-height:1.5;" id="recipe-color-desc"></div>
     </div>
+    <!-- 손상도 인라인 선택 -->
+    <div style="margin-bottom:12px;">
+      <div style="font-size:10px;color:#555;margin-bottom:6px;font-weight:600;">탈색 횟수 기준 손상도</div>
+      <div style="display:flex;gap:6px;">
+        <button id="dmg-btn-natural" onclick="changeDamageLevel('natural')"
+          style="flex:1;padding:7px 4px;border-radius:9px;border:1px solid #333;background:#111;color:#888;font-size:11px;font-weight:700;cursor:pointer;">
+          🌿 일반
+        </button>
+        <button id="dmg-btn-damaged" onclick="changeDamageLevel('damaged')"
+          style="flex:1;padding:7px 4px;border-radius:9px;border:1px solid #333;background:#111;color:#888;font-size:11px;font-weight:700;cursor:pointer;">
+          🟠 손상
+        </button>
+        <button id="dmg-btn-ultra_damaged" onclick="changeDamageLevel('ultra_damaged')"
+          style="flex:1;padding:7px 4px;border-radius:9px;border:1px solid #333;background:#111;color:#888;font-size:11px;font-weight:700;cursor:pointer;">
+          🔴 고손상
+        </button>
+      </div>
+    </div>
     <!-- 색상 혼합 애니메이션 -->
     <div id="color-anim-wrap" style="width:100%;margin-bottom:14px;background:#111;border-radius:10px;overflow:hidden;min-height:110px;"></div>
     <div class="recipe-main" id="rec-main"></div>
@@ -1804,46 +1822,41 @@ function analyzeColorFlow(current, target, damageLevel) {
 
   /* ══════════════════════════════════════
      공정 판단 — 손상도 3단계 반영
-     natural:       탈색 0회, 탈색+보색중화 모두 가능
-     damaged:       탈색 1~3회, 탈색+보색중화+토닝 가능
-     ultra_damaged: 탈색 3회+, 탈색 1회 단시간+보색중화+토닝
+     핵심: TONE_DOWN과 보색중화는 동시에 발생 가능
+     processType은 주공정, needNeutralization은 별도 플래그로 분리
   ══════════════════════════════════════ */
   var dmg = damageLevel || 'natural';
   var processType;
+  /* 보색 중화 필요 여부를 별도 플래그로 관리 */
+  var needNeutralization = (neutralization !== 'NOT_REQUIRED');
 
   if (curUndertone === 'BLACK') {
-    /* 블랙 베이스 — 손상도 무관하게 탈색 필요 */
-    if (dmg === 'ultra_damaged') {
+    processType = (dmg === 'ultra_damaged') ? 'BLEACH_SHORT_TONING' : 'BLEACH_FIRST';
+
+  } else if (pastelTarget) {
+    if (cL >= 65) {
+      processType = 'CLEAR_MIX';
+    } else if (dmg === 'ultra_damaged') {
       processType = 'BLEACH_SHORT_TONING';
     } else {
       processType = 'BLEACH_FIRST';
-    }
-
-  } else if (pastelTarget) {
-    /* 파스텔 목표 */
-    if (cL >= 65) {
-      processType = 'CLEAR_MIX';               /* 이미 밝은 베이스 → 클리어 믹스 */
-    } else if (dmg === 'ultra_damaged') {
-      processType = 'BLEACH_SHORT_TONING';      /* 고손상 → 단시간 탈색 + 토닝 */
-    } else {
-      processType = 'BLEACH_FIRST';             /* 탈색 필요 */
     }
 
   } else if (levelChange === 'TONE_UP' && levelGap > 20) {
-    /* 명도 많이 올려야 함 */
-    if (dmg === 'ultra_damaged') {
-      processType = 'BLEACH_SHORT_TONING';
-    } else {
-      processType = 'BLEACH_FIRST';
-    }
+    processType = (dmg === 'ultra_damaged') ? 'BLEACH_SHORT_TONING' : 'BLEACH_FIRST';
 
   } else if (levelChange === 'TONE_DOWN') {
-    processType = 'TONE_DOWN';
+    /* 톤다운 — 보색중화 필요하면 함께 처리 (needNeutralization 플래그로) */
+    if (needNeutralization && (dmg === 'damaged' || dmg === 'ultra_damaged')) {
+      processType = 'TONE_DOWN_TONING';   /* 톤다운 + 토닝 중화 병행 */
+    } else if (needNeutralization) {
+      processType = 'TONE_DOWN_NEUTRALIZE'; /* 톤다운 + 보색중화 믹스 병행 */
+    } else {
+      processType = 'TONE_DOWN';
+    }
 
-  } else if (neutralization !== 'NOT_REQUIRED') {
-    /* 보색 중화 필요 */
+  } else if (needNeutralization) {
     if (dmg === 'damaged' || dmg === 'ultra_damaged') {
-      /* 손상모: 토닝으로 중화 가능 */
       processType = 'TONING_THEN_COLOR';
     } else {
       processType = 'NEUTRALIZATION_THEN_COLOR';
@@ -1874,37 +1887,55 @@ function analyzeColorFlow(current, target, damageLevel) {
   var tarNumbering = tarLevel + '.?';
 
   return {
-    curUndertone:   curUndertone,
-    tarUndertone:   tarUndertone,
-    bleachStage:    bleachStage,
-    toneDirection:  toneDirection,
-    levelChange:    levelChange,
-    levelGap:       Math.round(levelGap),
-    neutralization: neutralization,
-    processType:    processType,
-    pastelTarget:   pastelTarget,
-    damageLevel:    dmg,
-    risk:           risk,
-    curNumbering:   curNumbering,
-    tarNumbering:   tarNumbering
+    curUndertone:      curUndertone,
+    tarUndertone:      tarUndertone,
+    bleachStage:       bleachStage,
+    toneDirection:     toneDirection,
+    levelChange:       levelChange,
+    levelGap:          Math.round(levelGap),
+    neutralization:    neutralization,
+    needNeutralization: needNeutralization,
+    processType:       processType,
+    pastelTarget:      pastelTarget,
+    damageLevel:       dmg,
+    risk:              risk,
+    curNumbering:      curNumbering,
+    tarNumbering:      tarNumbering
   };
 }
 
 
-/* ── confirmTargetColor → 손상도 선택 카드 표시 ── */
+/* ── confirmTargetColor → 자동 추정 후 바로 분석 ── */
 function confirmTargetColor() {
   var s2 = document.getElementById('step2-card');
   if (s2) s2.style.display = 'none';
 
-  /* 손상도 자동 추정 (색감·명도 기반 힌트) */
-  var suggestedDamage = estimateDamageLevel(currentHSL, targetHSL);
-  highlightDamageButton(suggestedDamage);
-
-  var dc = document.getElementById('damage-card');
-  if (dc) {
-    dc.style.display = 'block';
-    dc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  /* 블랙 감지 → 별도 처리 */
+  if (currentHSL.l <= 22 && currentHSL.s < 25) {
+    showBlackChoiceCard();
+    return;
   }
+
+  /* 손상도 자동 추정 후 바로 분석 */
+  var autoDamage = estimateDamageLevel(currentHSL, targetHSL);
+  window._currentDamageLevel = autoDamage;
+  var result = analyzeColorFlow(currentHSL, targetHSL, autoDamage);
+  renderAnalysisResult(result);
+}
+
+/* ── 손상도 변경 (결과 화면에서) ── */
+function changeDamageLevel(level) {
+  window._currentDamageLevel = level;
+  /* 버튼 강조 */
+  ['natural','damaged','ultra_damaged'].forEach(function(id) {
+    var btn = document.getElementById('dmg-btn-' + id);
+    if (btn) { btn.style.borderColor = '#333'; btn.style.background = '#111'; btn.style.color = '#888'; }
+  });
+  var ab = document.getElementById('dmg-btn-' + level);
+  if (ab) { ab.style.borderColor = '#9E7FBF'; ab.style.background = 'rgba(158,127,191,0.15)'; ab.style.color = '#fff'; }
+
+  var result = analyzeColorFlow(currentHSL, targetHSL, level);
+  renderAnalysisResult(result);
 }
 
 /* ── 손상도 자동 추정 (힌트용, 디자이너가 바꿀 수 있음) ── */
@@ -2059,14 +2090,15 @@ function satToKo(s) {
    목표색: 채도우선 + hueToName         (원하는 색감 표현)
 ════════════════════════════════════════ */
 function buildHairMessage(result, curHSL, tarHSL) {
-  var tarName  = hueToName(tarHSL.h, tarHSL.s, tarHSL.l);
-  var curLvKo  = bleachStageToKo(result.bleachStage);
-  var tarSatKo = satToKo(tarHSL.s);
-  var curSatKo = satToKo(curHSL.s);
-  var curUt    = result.curUndertone;
-  var neut     = result.neutralization;
-  var proc     = result.processType;
-  var pastel   = result.pastelTarget;
+  var rawTarName = hueToName(tarHSL.h, tarHSL.s, tarHSL.l);
+  var curLvKo    = bleachStageToKo(result.bleachStage);
+  var tarSatKo   = satToKo(tarHSL.s);
+  var curSatKo   = satToKo(curHSL.s);
+  var curUt      = result.curUndertone;
+  var neut       = result.needNeutralization; /* needNeutralization 플래그 사용 */
+  var proc       = result.processType;
+  var pastel     = result.pastelTarget;
+  var dmg        = result.damageLevel || 'natural';
 
   /* ── 현재색: 명도 + 언더톤명 + "언더톤" ── */
   var utKo = UNDERTONE_KO[curUt] || '뉴트럴';
@@ -2081,25 +2113,30 @@ function buildHairMessage(result, curHSL, tarHSL) {
     curExpr = curLvKo + ' ' + utKo + ' 언더톤';
   }
 
-  /* ── 목표색: 채도 우선 + hueToName ── */
+  /* ── 목표색: 채도 우선 + hueToName
+     단, 어두운/블랙 계열에는 파스텔·선명한 접두어 금지 ── */
+  var isDarkTarget = (tarHSL.l <= 35 || (tarHSL.s < 15 && tarHSL.l <= 45));
   var tarExpr;
-  if (pastel) {
-    tarExpr = '파스텔 ' + tarName;
-  } else if (tarSatKo === '선명한') {
-    tarExpr = '선명한 ' + tarName;
-  } else if (tarSatKo === '파스텔') {
-    tarExpr = '파스텔 ' + tarName;
-  } else {
+  if (isDarkTarget) {
+    /* 어두운 계열 → 명도 표현만 */
     var tarLvKo = bleachStageToKo(getBleachStage(tarHSL.l));
-    tarExpr = tarLvKo + ' ' + tarName;
+    tarExpr = tarLvKo + ' ' + rawTarName;
+  } else if (pastel) {
+    tarExpr = '파스텔 ' + rawTarName;
+  } else if (tarSatKo === '선명한') {
+    tarExpr = '선명한 ' + rawTarName;
+  } else {
+    var tarLvKo2 = bleachStageToKo(getBleachStage(tarHSL.l));
+    tarExpr = tarLvKo2 + ' ' + rawTarName;
   }
+  var tarName = rawTarName; /* 하위 호환 */
 
   /* ── 1️⃣ 첫 문장 ── */
   var line1 = curExpr + '에서 ' + tarExpr + '으로 가시는군요.';
 
-  /* ── 2️⃣ 언더톤 문제 — 언더톤명 일관 사용 ── */
+  /* ── 2️⃣ 언더톤 문제 ── */
   var line2 = '';
-  if (neut !== 'NOT_REQUIRED') {
+  if (neut) {
     if (curUt === 'YELLOW') {
       line2 = '노랑 언더톤이 남아있어 그대로 들어가면 매트하게 빠질 수 있습니다.';
     } else if (curUt === 'YELLOW_GREEN') {
@@ -2117,7 +2154,7 @@ function buildHairMessage(result, curHSL, tarHSL) {
 
   /* ── 3️⃣ 보색 중화 — 언더톤 명시 ── */
   var line3 = '';
-  if (neut !== 'NOT_REQUIRED') {
+  if (neut) {
     if (curUt === 'YELLOW') {
       line3 = '바이올렛을 소량 믹스해 노랑 언더톤을 중화하면서 진행하세요.';
     } else if (curUt === 'YELLOW_GREEN') {
@@ -2137,7 +2174,6 @@ function buildHairMessage(result, curHSL, tarHSL) {
   }
 
   /* ── 4️⃣ 시술 방향 — 손상도 반영 ── */
-  var dmg  = result.damageLevel || 'natural';
   var line4 = '';
 
   if (proc === 'BLEACH_FIRST') {
@@ -2157,6 +2193,12 @@ function buildHairMessage(result, curHSL, tarHSL) {
 
   } else if (proc === 'CLEAR_MIX') {
     line4 = '베이스가 충분히 밝아 클리어 믹스로 색감 농도를 조절하면서 시술하세요.';
+
+  } else if (proc === 'TONE_DOWN_NEUTRALIZE') {
+    line4 = '보색을 소량 믹스해 언더톤을 중화하면서 ' + tarName + ' 계열로 톤다운하세요.';
+
+  } else if (proc === 'TONE_DOWN_TONING') {
+    line4 = '토닝으로 언더톤을 먼저 정리한 뒤 ' + tarName + ' 계열로 톤다운하세요.';
 
   } else if (proc === 'TONE_DOWN') {
     line4 = tarName + ' 계열 낮은 명도 염모제로 톤다운하세요.';
@@ -2188,6 +2230,22 @@ function renderAnalysisResult(result) {
   if (cSwatch) cSwatch.style.background = hslStr(currentHSL.h, currentHSL.s, currentHSL.l);
   if (tSwatch) tSwatch.style.background = hslStr(targetHSL.h, targetHSL.s, targetHSL.l);
   if (desc)    desc.textContent = curName + ' → ' + tarName;
+
+  /* 손상도 버튼 현재 선택 강조 */
+  var dmgCurrent = result.damageLevel || window._currentDamageLevel || 'natural';
+  ['natural','damaged','ultra_damaged'].forEach(function(id) {
+    var btn = document.getElementById('dmg-btn-' + id);
+    if (!btn) return;
+    if (id === dmgCurrent) {
+      btn.style.borderColor = '#9E7FBF';
+      btn.style.background  = 'rgba(158,127,191,0.15)';
+      btn.style.color       = '#fff';
+    } else {
+      btn.style.borderColor = '#333';
+      btn.style.background  = '#111';
+      btn.style.color       = '#888';
+    }
+  });
 
   var mainEl   = document.getElementById('rec-main');
   var detailEl = document.getElementById('rec-detail');
@@ -2344,17 +2402,22 @@ function renderColorAnimation(result, curHSL, tarHSL) {
   }
 
   /* ── 시나리오 판별 ── */
+  var neut    = result.needNeutralization;
   var SCENARIO;
-  if (neut !== 'NOT_REQUIRED' && proc === 'BLEACH_FIRST') {
-    SCENARIO = 'BLEACH_THEN_NEUTRALIZE'; /* 탈색 + 보색 중화 */
-  } else if (neut !== 'NOT_REQUIRED') {
-    SCENARIO = 'NEUTRALIZE';             /* 보색 중화 후 목표색 */
-  } else if (proc === 'BLEACH_FIRST') {
-    SCENARIO = 'BLEACH';                 /* 탈색 후 직접 */
+  if (neut && (proc === 'BLEACH_FIRST' || proc === 'BLEACH_SHORT_TONING')) {
+    SCENARIO = 'BLEACH_THEN_NEUTRALIZE';
+  } else if (neut || proc === 'NEUTRALIZATION_THEN_COLOR' || proc === 'TONING_THEN_COLOR') {
+    SCENARIO = 'NEUTRALIZE';
+  } else if (proc === 'TONE_DOWN_NEUTRALIZE' || proc === 'TONE_DOWN_TONING') {
+    SCENARIO = 'NEUTRALIZE';             /* 톤다운+중화 → 중화 애니메이션 */
+  } else if (proc === 'BLEACH_FIRST' || proc === 'BLEACH_SHORT_TONING') {
+    SCENARIO = 'BLEACH';
   } else if (proc === 'TONE_DOWN') {
-    SCENARIO = 'TONE_DOWN';              /* 톤다운 */
+    SCENARIO = 'TONE_DOWN';
+  } else if (proc === 'CLEAR_MIX') {
+    SCENARIO = 'DIRECT';
   } else {
-    SCENARIO = 'DIRECT';                 /* 직접 시술 */
+    SCENARIO = 'DIRECT';
   }
 
   var R   = Math.min(32, W * 0.10);
