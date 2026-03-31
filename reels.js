@@ -39,9 +39,17 @@ const REELS_DATA = [
     tag:   '염색'
   },
   {
+    thumb: './images/whc.jpeg',
+    url:   'https://www.instagram.com/reel/DWi5LoiD0-0/',
+    episode: 'EP.05',
+    title: '염색',
+    desc:  '새치염색을 하면 머리카락 속에서는 어떤 일이 일어날까요?',
+    tag:   '새치염색'
+  },
+  {
     thumb: './images/neutralize.jpeg',
     url:   'https://www.instagram.com/reel/DVSWamFDyJE/',
-    episode: 'EP.05',
+    episode: 'EP.06',
     title: '보색 중화',
     desc:  '보색 중화를 하면 머리카락 속에서는 어떤 일이 일어날까요?',
     tag:   '컬러'
@@ -49,7 +57,7 @@ const REELS_DATA = [
   {
     thumb: './images/smell.png',
     url:   'https://www.instagram.com/reel/DV_E96ej0N-/',
-    episode: 'EP.06',
+    episode: 'EP.07',
     title: '미용실 특유의 냄새',
     desc:  '미용실에서 나는 특유의 냄새는 무엇일까요?',
     tag:   '상식'
@@ -57,7 +65,7 @@ const REELS_DATA = [
   {
     thumb: './images/growth.png',
     url:   'https://www.instagram.com/reel/DWGRKGmj54p/',
-    episode: 'EP.07',
+    episode: 'EP.08',
     title: '모발 성장',
     desc:  '머리카락은 어떻게 자라날까요?',
     tag:   '두피'
@@ -65,7 +73,7 @@ const REELS_DATA = [
   {
     thumb: './images/clinic.jpeg',
     url:   'https://www.instagram.com/reel/DWOI9jIj-yj/',
-    episode: 'EP.08',
+    episode: 'EP.09',
     title: '크리닉',
     desc:  '크리닉을 하면 머리카락에서 어떤 일이 일어날까요?',
     tag:   '크리닉'
@@ -73,7 +81,7 @@ const REELS_DATA = [
   {
     thumb: './images/dry.png',
     url:   'https://www.instagram.com/reel/DVDWofYD-XU/',
-    episode: 'EP.09',
+    episode: 'EP.10',
     title: '드라이',
     desc:  '드라이를 하면 머리카락에서 어떤 일이 일어날까요?',
     tag:   '스타일'
@@ -81,7 +89,7 @@ const REELS_DATA = [
    {
     thumb: './images/colorbase.jpg',
     url:   'https://www.instagram.com/reel/DVxzDZcD2bz/',
-    episode: 'EP.10',
+    episode: 'EP.11',
     title: '염색약속 성분',
     desc:  '염색약 속에는 어떤것이 들어있을까요?',
     tag:   '염색약성분'
