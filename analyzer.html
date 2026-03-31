@@ -466,24 +466,28 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     </button>
   </div>
 
-  <!-- 손상도 선택 카드 -->
-  <div class="result-card" id="damage-card" style="display:none;">
-    <div class="result-card-title">모발 손상도 선택</div>
-    <div style="font-size:12px;color:#666;margin-bottom:14px;line-height:1.6;">
-      염색 시술 기준이에요. 탈색 횟수를 기준으로 선택해주세요.
+  <!-- 시술 방향 선택 카드 -->
+  <div class="result-card" id="tone-dir-card" style="display:none;">
+    <div class="result-card-title">시술 방향 선택</div>
+    <div style="font-size:11px;color:#555;margin-bottom:14px;line-height:1.7;">
+      매장 조명과 카메라 특성상 오차가 생길 수 있어요.<br>
+      한 가지만 더 선택해주시면 지금 바로 정확한 시술 방향을 확정할게요.
     </div>
     <div style="display:flex;flex-direction:column;gap:8px;">
-      <button onclick="selectDamageLevel('natural')"
-        style="padding:13px 14px;border-radius:12px;border:1px solid #333;background:#111;color:#ddd;font-size:13px;font-weight:600;cursor:pointer;text-align:left;line-height:1.6;">
-        🌿 일반모 — 탈색 0회, 일반 염색
+      <button onclick="selectToneDir('up')"
+        style="padding:14px;border-radius:12px;border:1px solid #333;background:#111;color:#ddd;font-size:13px;font-weight:600;cursor:pointer;text-align:left;line-height:1.6;">
+        ☀️ 지금보다 밝게 올리고 싶어요
+        <div style="font-size:11px;color:#666;margin-top:3px;font-weight:400;">탈색·톤업이 필요한 방향</div>
       </button>
-      <button onclick="selectDamageLevel('damaged')"
-        style="padding:13px 14px;border-radius:12px;border:1px solid #333;background:#111;color:#ddd;font-size:13px;font-weight:600;cursor:pointer;text-align:left;line-height:1.6;">
-        🟠 손상모 — 탈색 1~3회
+      <button onclick="selectToneDir('same')"
+        style="padding:14px;border-radius:12px;border:1px solid #333;background:#111;color:#ddd;font-size:13px;font-weight:600;cursor:pointer;text-align:left;line-height:1.6;">
+        🎨 밝기는 유지하고 색감만 바꾸고 싶어요
+        <div style="font-size:11px;color:#666;margin-top:3px;font-weight:400;">같은 명도 안에서 색상 전환</div>
       </button>
-      <button onclick="selectDamageLevel('ultra_damaged')"
-        style="padding:13px 14px;border-radius:12px;border:1px solid #333;background:#111;color:#ddd;font-size:13px;font-weight:600;cursor:pointer;text-align:left;line-height:1.6;">
-        🔴 고손상모 — 탈색 3회 이상
+      <button onclick="selectToneDir('down')"
+        style="padding:14px;border-radius:12px;border:1px solid #333;background:#111;color:#ddd;font-size:13px;font-weight:600;cursor:pointer;text-align:left;line-height:1.6;">
+        🌑 지금보다 어둡게 깔고 싶어요
+        <div style="font-size:11px;color:#666;margin-top:3px;font-weight:400;">톤다운 방향</div>
       </button>
     </div>
   </div>
@@ -497,8 +501,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div id="recipe-target-swatch" style="width:52px;height:52px;border-radius:9px;border:2px solid #9E7FBF;flex-shrink:0;"></div>
       <div style="flex:1;font-size:12px;color:#888;line-height:1.5;" id="recipe-color-desc"></div>
     </div>
-    <!-- 손상도 인라인 선택 -->
-    <div style="margin-bottom:12px;">
+    <!-- 손상도 인라인 선택 (탈색 필요 시에만 표시) -->
+    <div id="dmg-btn-wrap" style="display:none;margin-bottom:12px;">
       <div style="font-size:10px;color:#555;margin-bottom:6px;font-weight:600;">탈색 횟수 기준 손상도</div>
       <div style="display:flex;gap:6px;">
         <button id="dmg-btn-natural" onclick="changeDamageLevel('natural')"
@@ -1764,33 +1768,39 @@ function getBleachStage(l) {
 
 /* 보색 중화 필요 여부 판단 */
 function getNeutralization(curUndertone, tarUndertone) {
+  /* 저채도 한색 타겟(애쉬·그레이)은 BLUE/TEAL 계열로 처리 */
+  var tarForComp = tarUndertone;
+  if (tarUndertone === 'DARK_NEUTRAL' || tarUndertone === 'GRAY') {
+    tarForComp = 'BLUE';
+  }
+
   var comp = {
     'YELLOW':       ['VIOLET', 'BLUE'],
-    'YELLOW_GREEN': ['VIOLET', 'PINK'],
+    'YELLOW_GREEN': ['VIOLET', 'PINK', 'BLUE'],
     'ORANGE':       ['BLUE', 'TEAL'],
     'RED':          ['GREEN', 'TEAL'],
     'GREEN':        ['RED', 'PINK', 'RED_VIOLET'],
     'TEAL':         ['RED', 'ORANGE'],
-    'BLUE':         ['ORANGE', 'RED_ORANGE'],
+    'BLUE':         ['ORANGE'],
     'VIOLET':       ['YELLOW', 'YELLOW_GREEN'],
     'PINK':         ['GREEN'],
     'RED_VIOLET':   ['GREEN', 'TEAL']
   };
   var strongComp = {
-    'RED':   ['BLUE', 'TEAL', 'GREEN'],
-    'GREEN': ['RED', 'PINK'],
-    'ORANGE':['BLUE', 'VIOLET']
+    'RED':    ['BLUE', 'TEAL', 'GREEN'],
+    'GREEN':  ['RED', 'PINK'],
+    'ORANGE': ['BLUE', 'VIOLET']
   };
-  if (strongComp[curUndertone] && strongComp[curUndertone].indexOf(tarUndertone) > -1) {
+  if (strongComp[curUndertone] && strongComp[curUndertone].indexOf(tarForComp) > -1) {
     return 'STRONG_REQUIRED';
   }
-  if (comp[curUndertone] && comp[curUndertone].indexOf(tarUndertone) > -1) {
+  if (comp[curUndertone] && comp[curUndertone].indexOf(tarForComp) > -1) {
     return 'REQUIRED';
   }
   return 'NOT_REQUIRED';
 }
 
-function analyzeColorFlow(current, target, damageLevel) {
+function analyzeColorFlow(current, target, damageLevel, toneDir) {
   var cH = current.h, cS = current.s, cL = current.l;
   var tH = target.h,  tS = target.s,  tL = target.l;
 
@@ -1821,49 +1831,65 @@ function analyzeColorFlow(current, target, damageLevel) {
   var pastelTarget = tS <= 25 && tL >= 55;
 
   /* ══════════════════════════════════════
-     공정 판단 — 손상도 3단계 반영
-     핵심: TONE_DOWN과 보색중화는 동시에 발생 가능
-     processType은 주공정, needNeutralization은 별도 플래그로 분리
+     공정 판단
+     toneDir: 디자이너 선택 ('up'|'same'|'down'|null)
+     needNeutralization: HSL 기반 항상 독립 판단
+     processType: toneDir 우선, 없으면 자동 판단
   ══════════════════════════════════════ */
   var dmg = damageLevel || 'natural';
-  var processType;
-  /* 보색 중화 필요 여부를 별도 플래그로 관리 */
+  /* 보색 중화 필요 여부 — toneDir와 무관하게 항상 계산 */
   var needNeutralization = (neutralization !== 'NOT_REQUIRED');
+  var processType;
 
-  if (curUndertone === 'BLACK') {
-    processType = (dmg === 'ultra_damaged') ? 'BLEACH_SHORT_TONING' : 'BLEACH_FIRST';
-
-  } else if (pastelTarget) {
-    if (cL >= 65) {
-      processType = 'CLEAR_MIX';
-    } else if (dmg === 'ultra_damaged') {
+  if (toneDir === 'up') {
+    /* 디자이너가 "밝게 올리고 싶다" 선택 */
+    if (dmg === 'ultra_damaged') {
       processType = 'BLEACH_SHORT_TONING';
     } else {
       processType = 'BLEACH_FIRST';
     }
 
-  } else if (levelChange === 'TONE_UP' && levelGap > 20) {
-    processType = (dmg === 'ultra_damaged') ? 'BLEACH_SHORT_TONING' : 'BLEACH_FIRST';
-
-  } else if (levelChange === 'TONE_DOWN') {
-    /* 톤다운 — 보색중화 필요하면 함께 처리 (needNeutralization 플래그로) */
-    if (needNeutralization && (dmg === 'damaged' || dmg === 'ultra_damaged')) {
-      processType = 'TONE_DOWN_TONING';   /* 톤다운 + 토닝 중화 병행 */
+  } else if (toneDir === 'same') {
+    /* 디자이너가 "색감만 바꾸고 싶다" 선택 */
+    if (pastelTarget && cL >= 65) {
+      processType = 'CLEAR_MIX';
+    } else if (needNeutralization && (dmg === 'damaged' || dmg === 'ultra_damaged')) {
+      processType = 'TONING_THEN_COLOR';
     } else if (needNeutralization) {
-      processType = 'TONE_DOWN_NEUTRALIZE'; /* 톤다운 + 보색중화 믹스 병행 */
+      processType = 'NEUTRALIZATION_THEN_COLOR';
+    } else {
+      processType = 'DIRECT_COLOR';
+    }
+
+  } else if (toneDir === 'down') {
+    /* 디자이너가 "어둡게 깔고 싶다" 선택 */
+    if (needNeutralization && (dmg === 'damaged' || dmg === 'ultra_damaged')) {
+      processType = 'TONE_DOWN_TONING';
+    } else if (needNeutralization) {
+      processType = 'TONE_DOWN_NEUTRALIZE';
     } else {
       processType = 'TONE_DOWN';
     }
 
-  } else if (needNeutralization) {
-    if (dmg === 'damaged' || dmg === 'ultra_damaged') {
-      processType = 'TONING_THEN_COLOR';
-    } else {
-      processType = 'NEUTRALIZATION_THEN_COLOR';
-    }
-
   } else {
-    processType = 'DIRECT_COLOR';
+    /* toneDir 없음 — HSL 기반 자동 판단 */
+    if (curUndertone === 'BLACK') {
+      processType = (dmg === 'ultra_damaged') ? 'BLEACH_SHORT_TONING' : 'BLEACH_FIRST';
+    } else if (pastelTarget) {
+      if (cL >= 65) processType = 'CLEAR_MIX';
+      else if (dmg === 'ultra_damaged') processType = 'BLEACH_SHORT_TONING';
+      else processType = 'BLEACH_FIRST';
+    } else if (levelChange === 'TONE_UP' && levelGap > 20) {
+      processType = (dmg === 'ultra_damaged') ? 'BLEACH_SHORT_TONING' : 'BLEACH_FIRST';
+    } else if (levelChange === 'TONE_DOWN') {
+      if (needNeutralization && (dmg === 'damaged' || dmg === 'ultra_damaged')) processType = 'TONE_DOWN_TONING';
+      else if (needNeutralization) processType = 'TONE_DOWN_NEUTRALIZE';
+      else processType = 'TONE_DOWN';
+    } else if (needNeutralization) {
+      processType = (dmg === 'damaged' || dmg === 'ultra_damaged') ? 'TONING_THEN_COLOR' : 'NEUTRALIZATION_THEN_COLOR';
+    } else {
+      processType = 'DIRECT_COLOR';
+    }
   }
 
   /* 리스크 */
@@ -1905,7 +1931,7 @@ function analyzeColorFlow(current, target, damageLevel) {
 }
 
 
-/* ── confirmTargetColor → 자동 추정 후 바로 분석 ── */
+/* ── confirmTargetColor → 3방향 선택 카드 표시 ── */
 function confirmTargetColor() {
   var s2 = document.getElementById('step2-card');
   if (s2) s2.style.display = 'none';
@@ -1916,25 +1942,39 @@ function confirmTargetColor() {
     return;
   }
 
-  /* 손상도 자동 추정 후 바로 분석 */
-  var autoDamage = estimateDamageLevel(currentHSL, targetHSL);
-  window._currentDamageLevel = autoDamage;
-  var result = analyzeColorFlow(currentHSL, targetHSL, autoDamage);
+  /* 3방향 선택 카드 표시 */
+  var tc = document.getElementById('tone-dir-card');
+  if (tc) {
+    tc.style.display = 'block';
+    tc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+/* ── 방향 선택 후 분석 실행 ── */
+function selectToneDir(dir) {
+  window._toneDir = dir;
+  /* 카드 숨기기 */
+  var tc = document.getElementById('tone-dir-card');
+  if (tc) tc.style.display = 'none';
+  /* 자동 손상도 추정 */
+  var autoDmg = estimateDamageLevel(currentHSL, targetHSL);
+  window._currentDamageLevel = autoDmg;
+  var result = analyzeColorFlow(currentHSL, targetHSL, autoDmg, dir);
   renderAnalysisResult(result);
 }
 
-/* ── 손상도 변경 (결과 화면에서) ── */
+/* ── 손상도 변경 (결과 화면 인라인) ── */
 function changeDamageLevel(level) {
   window._currentDamageLevel = level;
-  /* 버튼 강조 */
   ['natural','damaged','ultra_damaged'].forEach(function(id) {
     var btn = document.getElementById('dmg-btn-' + id);
-    if (btn) { btn.style.borderColor = '#333'; btn.style.background = '#111'; btn.style.color = '#888'; }
+    if (!btn) return;
+    btn.style.borderColor = '#333'; btn.style.background = '#111'; btn.style.color = '#888';
   });
   var ab = document.getElementById('dmg-btn-' + level);
   if (ab) { ab.style.borderColor = '#9E7FBF'; ab.style.background = 'rgba(158,127,191,0.15)'; ab.style.color = '#fff'; }
-
-  var result = analyzeColorFlow(currentHSL, targetHSL, level);
+  var dir = window._toneDir || null;
+  var result = analyzeColorFlow(currentHSL, targetHSL, level, dir);
   renderAnalysisResult(result);
 }
 
@@ -2189,29 +2229,29 @@ function buildHairMessage(result, curHSL, tarHSL) {
     line4 = '고손상모로 탈색 1회 단시간만 진행 후 토닝으로 마무리하세요.';
 
   } else if (proc === 'TONING_THEN_COLOR') {
-    line4 = '토닝으로 언더톤을 먼저 정리한 뒤 ' + tarName + ' 계열로 진행하세요.';
+    line4 = '토닝으로 언더톤을 먼저 정리한 뒤 ' + tarName + '으로 진행하세요.';
 
   } else if (proc === 'CLEAR_MIX') {
     line4 = '베이스가 충분히 밝아 클리어 믹스로 색감 농도를 조절하면서 시술하세요.';
 
   } else if (proc === 'TONE_DOWN_NEUTRALIZE') {
-    line4 = '보색을 소량 믹스해 언더톤을 중화하면서 ' + tarName + ' 계열로 톤다운하세요.';
+    line4 = tarName + ' 계열 낮은 명도 염모제로 톤다운하세요. 보색 믹스를 함께 진행하세요.';
 
   } else if (proc === 'TONE_DOWN_TONING') {
-    line4 = '토닝으로 언더톤을 먼저 정리한 뒤 ' + tarName + ' 계열로 톤다운하세요.';
+    line4 = '토닝으로 언더톤을 먼저 정리한 뒤 ' + tarName + '으로 톤다운하세요.';
 
   } else if (proc === 'TONE_DOWN') {
-    line4 = tarName + ' 계열 낮은 명도 염모제로 톤다운하세요.';
+    line4 = tarName + ' 낮은 명도 염모제로 톤다운하세요.';
 
   } else if (proc === 'NEUTRALIZATION_THEN_COLOR') {
-    line4 = '중화 후 ' + tarName + ' 계열로 바로 시술 가능합니다.';
+    line4 = '중화 후 ' + tarName + '으로 바로 시술 가능합니다.';
 
   } else {
     /* DIRECT_COLOR */
     if (dmg === 'ultra_damaged') {
-      line4 = tarName + ' 계열로 바로 시술 가능합니다. 모발 상태를 확인하며 진행하세요.';
+      line4 = tarName + '으로 바로 시술 가능합니다. 모발 상태를 확인하며 진행하세요.';
     } else {
-      line4 = tarName + ' 계열로 바로 시술 가능합니다.';
+      line4 = tarName + '으로 바로 시술 가능합니다.';
     }
   }
 
@@ -2231,7 +2271,10 @@ function renderAnalysisResult(result) {
   if (tSwatch) tSwatch.style.background = hslStr(targetHSL.h, targetHSL.s, targetHSL.l);
   if (desc)    desc.textContent = curName + ' → ' + tarName;
 
-  /* 손상도 버튼 현재 선택 강조 */
+  /* 손상도 버튼 — BLEACH 계열에만 표시 */
+  var needsDmgBtn = (result.processType === 'BLEACH_FIRST' || result.processType === 'BLEACH_SHORT_TONING');
+  var dmgWrap = document.getElementById('dmg-btn-wrap');
+  if (dmgWrap) dmgWrap.style.display = needsDmgBtn ? 'block' : 'none';
   var dmgCurrent = result.damageLevel || window._currentDamageLevel || 'natural';
   ['natural','damaged','ultra_damaged'].forEach(function(id) {
     var btn = document.getElementById('dmg-btn-' + id);
@@ -3259,13 +3302,11 @@ function showRecipe(main, detail, ratio) {
 /* ── 다시 촬영 / 처음으로 ── */
 function retake() {
   stopStream();
+  window._toneDir = null;
+  window._currentDamageLevel = null;
   document.getElementById('result-section').style.display = 'none';
-  var bc = document.getElementById('black-choice-card');
-  if (bc) bc.style.display = 'none';
-  var dc = document.getElementById('damage-card');
-  if (dc) dc.style.display = 'none';
-  var rc = document.getElementById('recipe-card');
-  if (rc) rc.style.display = 'none';
+  var cards = ['black-choice-card','tone-dir-card','recipe-card'];
+  cards.forEach(function(id) { var el = document.getElementById(id); if (el) el.style.display = 'none'; });
   goToModeSelect();
 }
 
