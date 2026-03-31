@@ -39,7 +39,7 @@ const REELS_DATA = [
     tag:   '염색'
   },
   {
-    thumb: './images/whc.jpeg',
+    thumb: './images/whc.jpg',
     url:   'https://www.instagram.com/reel/DWi5LoiD0-0/',
     episode: 'EP.05',
     title: '새치염색',
