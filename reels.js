@@ -42,7 +42,7 @@ const REELS_DATA = [
     thumb: './images/whc.jpeg',
     url:   'https://www.instagram.com/reel/DWi5LoiD0-0/',
     episode: 'EP.05',
-    title: '염색',
+    title: '새치염색',
     desc:  '새치염색을 하면 머리카락 속에서는 어떤 일이 일어날까요?',
     tag:   '새치염색'
   },
