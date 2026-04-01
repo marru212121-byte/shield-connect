@@ -2195,6 +2195,39 @@ function confirmTargetColor() {
     }
   }
 
+  /* ══ 강한 보색 충돌 잠금 ══
+     RED↔GREEN, ORANGE↔BLUE 처럼 파워 강한 보색끼리
+     둘 다 선명(s≥50) + 명도차 ±10 이내 + 어두운 베이스(l<65)
+     → 보색중화로 절대 중화 불가, 탁한 브라운으로 발색
+     → 톤인톤·톤다운 잠금, 톤업만 허용
+     예외: 밝은 베이스(l≥65) → 잠금 없음 (어느 정도 발색 가능) */
+  var strongCompPairs = {
+    'RED':    ['GREEN','TEAL'],
+    'GREEN':  ['RED','RED_VIOLET'],
+    'ORANGE': ['BLUE','TEAL'],
+    'BLUE':   ['ORANGE','RED_ORANGE']
+  };
+  var isStrongComp = (strongCompPairs[curUt3] &&
+    strongCompPairs[curUt3].indexOf(tarUt2) > -1 &&
+    cS >= 50 && tS >= 50 &&
+    Math.abs(gap) <= 10 &&
+    cL < 65);
+
+  if (isStrongComp) {
+    lockBtn('same', '파워가 강한 보색끼리라 보색중화로는 선명한 발색이 안 돼요. 탈색 후 착색을 추천해요');
+    lockBtn('down', '레드·그린 등 강한 보색은 톤다운 시 탁한 브라운으로 발색돼요');
+    var upBtn2 = document.getElementById('tone-btn-up');
+    if (upBtn2 && upBtn2.disabled) {
+      upBtn2.disabled = false;
+      upBtn2.style.opacity = '1';
+      upBtn2.style.cursor = 'pointer';
+      upBtn2.style.borderColor = '#333';
+      upBtn2.style.background = '#111';
+      var upSub2 = upBtn2.querySelector('div');
+      if (upSub2) upSub2.textContent = '탈색·톤업이 필요한 방향';
+    }
+  }
+
   /* 카드 표시 + 분석중 딜레이 */
   var tc = document.getElementById('tone-dir-card');
   var ta = document.getElementById('tone-analyzing');
