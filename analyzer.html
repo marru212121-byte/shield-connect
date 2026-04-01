@@ -2170,7 +2170,15 @@ function confirmTargetColor() {
   /* 파스텔 조건 OR 저채도(s<30) — 애쉬바이올렛·애쉬핑크 계열 포함 */
   var isPastelPinkViolet = (pastelTar || tS < 30) &&
     (tarUt2 === 'PINK' || tarUt2 === 'VIOLET' || tarUt2 === 'RED_VIOLET');
-  if (isPastelPinkViolet && cL < 78) {
+
+  /* 현재 언더톤이 난색 계열일 때만 잠금
+     노랑·주황·레드 베이스: 보색 충돌로 애쉬 느낌 죽음 → 잠금
+     한색 베이스(BLUE·TEAL·VIOLET·GRAY): 보색 간섭 없음 → 잠금 불필요 */
+  var curUt3 = getUndertone(cH, cS, cL);
+  var isWarmBase = (curUt3 === 'YELLOW' || curUt3 === 'YELLOW_GREEN' ||
+                    curUt3 === 'ORANGE' || curUt3 === 'RED' || curUt3 === 'RED_VIOLET');
+
+  if (isPastelPinkViolet && isWarmBase && cL < 78) {
     /* 17레벨 이하 — 18레벨 이상 탈색 필요 */
     lockBtn('same', '탈색 없이 보색중화만으로는 탁해져요. 18레벨 이상 탈색 후 발색돼요');
     lockBtn('down', '파스텔 핑크·바이올렛은 톤다운으로 표현할 수 없어요');
