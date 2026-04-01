@@ -556,7 +556,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <!-- 색상 혼합 애니메이션 -->
     <div id="color-anim-wrap" style="width:100%;margin-bottom:14px;background:#111;border-radius:10px;overflow:hidden;min-height:110px;"></div>
     <div class="recipe-main" id="rec-main"></div>
-    <div class="recipe-detail" id="rec-detail" style="white-space:pre-line;margin-top:10px;font-size:13px;color:#ccc;line-height:1.9;"></div>
+
+    <!-- 🔬 테스트 비교 영역: 프론트 vs API -->
+    <div id="compare-wrap" style="margin-top:12px;">
+      <!-- 프론트 문장 -->
+      <div style="margin-bottom:10px;">
+        <div style="font-size:10px;font-weight:700;color:#5a8a5a;letter-spacing:0.5px;margin-bottom:5px;padding:3px 8px;background:rgba(90,138,90,0.12);border-radius:6px;display:inline-block;">
+          🟢 FRONT — 프론트 규칙 기반
+        </div>
+        <div id="rec-front" style="white-space:pre-line;font-size:13px;color:#bbb;line-height:1.9;padding:10px 12px;background:rgba(90,138,90,0.05);border-radius:8px;border:1px solid rgba(90,138,90,0.15);"></div>
+      </div>
+      <!-- API 문장 -->
+      <div>
+        <div style="font-size:10px;font-weight:700;color:#7a9fbf;letter-spacing:0.5px;margin-bottom:5px;padding:3px 8px;background:rgba(122,159,191,0.12);border-radius:6px;display:inline-block;">
+          🔵 API — 말투 다듬기 결과
+        </div>
+        <div id="rec-detail" style="white-space:pre-line;font-size:13px;color:#ccc;line-height:1.9;padding:10px 12px;background:rgba(122,159,191,0.05);border-radius:8px;border:1px solid rgba(122,159,191,0.15);"></div>
+      </div>
+    </div>
 
     <!-- 시술 체크리스트 + 카드 저장 -->
     <div id="card-checklist-wrap" style="margin-top:18px;display:none;">
@@ -2591,7 +2608,7 @@ function renderAnalysisResult(result) {
   }
 
   var mainEl   = document.getElementById('rec-main');
-  var detailEl = document.getElementById('rec-detail');
+  var detailEl = document.getElementById('rec-front'); /* 카드는 프론트 문장 기준 */
   if (mainEl) mainEl.textContent = '';
 
   /* 카드 표시 */
@@ -2604,20 +2621,28 @@ function renderAnalysisResult(result) {
   /* 프론트에서 문장 먼저 생성 */
   var frontText = buildHairMessage(result, currentHSL, targetHSL);
 
-  /* 즉시 표시 (로딩 없이) */
+  /* 🟢 프론트 문장 즉시 표시 */
+  var frontEl = document.getElementById('rec-front');
+  if (frontEl) {
+    frontEl.style.whiteSpace = 'pre-line';
+    frontEl.textContent = frontText;
+  }
+
+  /* 🔵 API 영역 로딩 표시 */
   if (detailEl) {
-    detailEl.style.whiteSpace = 'pre-line';
-    detailEl.textContent = frontText;
+    detailEl.innerHTML = '<span style="color:#888;font-size:12px;">✦ API 다듬는 중...</span>';
   }
 
   /* 체크리스트 빌드 */
   buildChecklist(result);
 
   /* 한도 체크 */
-  if (isLimitReached()) return;
+  if (isLimitReached()) {
+    if (detailEl) detailEl.textContent = '(일일 한도 도달 — API 호출 없음)';
+    return;
+  }
 
   /* API로 말투만 다듬기 */
-  if (detailEl) detailEl.innerHTML = '<span style="color:#888;font-size:12px;">✦ 다듬는 중...</span>';
   incrementUsage();
 
   var apiMsg = '아래 문장을 미용사가 디자이너에게 말하듯 자연스럽게만 다듬어줘. 의미·구조·문장 수 절대 변경 금지. 비율·수치 추가 금지. ** 기호 금지.\n\n' + frontText;
@@ -2628,15 +2653,14 @@ function renderAnalysisResult(result) {
       detailEl.textContent = text || frontText;
       var remaining = DAILY_LIMIT - getUsageCount();
       var hint = document.createElement('div');
-      hint.style.cssText = 'margin-top:10px;font-size:11px;color:#444;text-align:right;';
+      hint.style.cssText = 'margin-top:8px;font-size:11px;color:#444;text-align:right;';
       hint.textContent = '남은 횟수: ' + remaining + '회';
       detailEl.appendChild(hint);
     }
   }).catch(function() {
-    /* API 실패 시 프론트 문장 그대로 표시 */
     if (detailEl) {
       detailEl.style.whiteSpace = 'pre-line';
-      detailEl.textContent = frontText;
+      detailEl.textContent = '(API 실패 — 프론트 문장과 동일)';
     }
   });
 }
