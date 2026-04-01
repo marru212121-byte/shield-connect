@@ -482,17 +482,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       한 가지만 더 선택해주시면 지금 바로 정확한 시술 방향을 확정할게요.
     </div>
     <div style="display:flex;flex-direction:column;gap:8px;">
-      <button onclick="selectToneDir('up')"
+      <button id="tone-btn-up" onclick="selectToneDir('up')"
         style="padding:14px;border-radius:12px;border:1px solid #333;background:#111;color:#ddd;font-size:13px;font-weight:600;cursor:pointer;text-align:left;line-height:1.6;">
         ☀️ 지금보다 밝게 올리고 싶어요
         <div style="font-size:11px;color:#666;margin-top:3px;font-weight:400;">탈색·톤업이 필요한 방향</div>
       </button>
-      <button onclick="selectToneDir('same')"
+      <button id="tone-btn-same" onclick="selectToneDir('same')"
         style="padding:14px;border-radius:12px;border:1px solid #333;background:#111;color:#ddd;font-size:13px;font-weight:600;cursor:pointer;text-align:left;line-height:1.6;">
         🎨 밝기는 유지하고 색감만 바꾸고 싶어요
         <div style="font-size:11px;color:#666;margin-top:3px;font-weight:400;">탈색 없이 현재 명도에서 색상 전환 · 잔류색소로 완벽한 발색이 어려울 수 있어요</div>
       </button>
-      <button onclick="selectToneDir('down')"
+      <button id="tone-btn-down" onclick="selectToneDir('down')"
         style="padding:14px;border-radius:12px;border:1px solid #333;background:#111;color:#ddd;font-size:13px;font-weight:600;cursor:pointer;text-align:left;line-height:1.6;">
         🌑 지금보다 어둡게 깔고 싶어요
         <div style="font-size:11px;color:#666;margin-top:3px;font-weight:400;">톤다운 방향</div>
@@ -824,8 +824,14 @@ function applyXYPosition(event, which, snap) {
     XY_LIT.forEach(function(l) { var d = Math.abs(ry - l.pct/100); if (d < minDy) { minDy = d; bestLit = l; } });
 
     var hsl = which === 'm' ? manualHSL : which === 'c' ? currentHSL : targetHSL;
-    hsl.s = bestSat.val;
-    hsl.l = bestLit.val;
+    var snapS = bestSat.val;
+    var snapL = bestLit.val;
+    /* 색감이 사라지는 흰색 영역 소프트 클램프
+       밝음(l>78) + 파스텔(s<12) 동시 → 색 구분 불가
+       s를 12 이상으로 또는 l을 78 이하로 제한 */
+    if (snapL > 78 && snapS < 12) { snapS = 12; }
+    hsl.s = snapS;
+    hsl.l = snapL;
 
     if (dot) {
       dot.style.transition = 'left 0.12s, top 0.12s';
@@ -1455,18 +1461,11 @@ function getRatio(event, el) {
 }
 
 /* ── 관측 기준 Hue (보정 범위 제한용) ── */
-var _baseHue = null; /* 카메라 관측 또는 프리셋 선택 시 설정 */
-var HUE_RANGE = 50;  /* ±50도 이내로 제한 */
+var _baseHue = null; /* 카메라 관측 기준점 (참고용) */
 
 function clampHue(h, base, which) {
-  /* 목표색(t)은 제한 없음. 수동·현재색만 제한 */
-  if (which === 't' || base === null) return h;
-  var diff = h - base;
-  /* -180 ~ 180 정규화 */
-  while (diff > 180) diff -= 360;
-  while (diff < -180) diff += 360;
-  if (Math.abs(diff) <= HUE_RANGE) return h;
-  return (base + (diff > 0 ? HUE_RANGE : -HUE_RANGE) + 360) % 360;
+  /* hue 슬라이더 완전 자유 — 모든 방향 제한 없음 */
+  return h;
 }
 
 function startDrag(event, axis, which) {
@@ -1957,6 +1956,50 @@ function confirmTargetColor() {
   if (cs) cs.style.background = hslStr(currentHSL.h, currentHSL.s, currentHSL.l);
   if (ts) ts.style.background = hslStr(targetHSL.h, targetHSL.s, targetHSL.l);
   if (cd) cd.textContent = curN + ' → ' + tarN;
+
+  /* ── 명도차 기반 버튼 비활성화 ── */
+  var levelGap  = targetHSL.l - currentHSL.l;
+  var pastelTar = targetHSL.s <= 25 && targetHSL.l >= 55;
+
+  /* 버튼 기본 복원 */
+  ['up','same','down'].forEach(function(d) {
+    var btn = document.getElementById('tone-btn-' + d);
+    if (!btn) return;
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+    btn.style.borderColor = '#333';
+    btn.style.background = '#111';
+    var sub = btn.querySelector('div');
+    if (sub) {
+      if (d==='up')   sub.textContent = '탈색·톤업이 필요한 방향';
+      if (d==='same') sub.textContent = '탈색 없이 현재 명도에서 색상 전환 · 잔류색소로 완벽한 발색이 어려울 수 있어요';
+      if (d==='down') sub.textContent = '톤다운 방향';
+    }
+  });
+
+  function lockBtn(id, reason) {
+    var btn = document.getElementById('tone-btn-' + id);
+    if (!btn) return;
+    btn.disabled = true;
+    btn.style.opacity = '0.3';
+    btn.style.cursor = 'not-allowed';
+    btn.style.borderColor = '#1a1a1a';
+    btn.style.background = '#0a0a0a';
+    var sub = btn.querySelector('div');
+    if (sub) sub.textContent = '🔒 ' + reason;
+  }
+
+  /* 톤인톤·톤다운 잠금: 명도를 많이 올려야 하는 경우 */
+  if (levelGap > 22 || (pastelTar && currentHSL.l < 52)) {
+    lockBtn('same', '명도 차이가 커 탈색이 필요해요');
+    lockBtn('down',  '목표가 더 밝아 톤다운 불가해요');
+  }
+  /* 톤업·톤인톤 잠금: 명도를 많이 내려야 하는 경우 */
+  if (levelGap < -22) {
+    lockBtn('up',   '목표가 더 어두워 톤업 불가해요');
+    lockBtn('same', '명도 차이가 커 톤다운이 필요해요');
+  }
 
   /* 카드 표시 + 분석중 딜레이 */
   var tc = document.getElementById('tone-dir-card');
@@ -2591,27 +2634,25 @@ function buildChecklist(result) {
   var proc = result.processType;
   var neut = result.needNeutralization;
 
-  /* 자동 항목 (공정 기반) */
-  var auto = [];
-  auto.push({ label: '현재 모발 상태 확인', checked: true, auto: true });
-
-  var hasBleach = proc === 'BLEACH_FIRST' || proc === 'BLEACH_SHORT_TONING';
-  var hasToning = proc === 'TONING_THEN_COLOR' || proc === 'TONE_DOWN_TONING' || proc === 'BLEACH_SHORT_TONING';
-  var hasNeut   = neut;
-  var hasClear  = proc === 'CLEAR_MIX';
+  var hasBleach  = proc === 'BLEACH_FIRST' || proc === 'BLEACH_SHORT_TONING';
+  var hasToning  = proc === 'TONING_THEN_COLOR' || proc === 'TONE_DOWN_TONING' || proc === 'BLEACH_SHORT_TONING';
+  var hasNeut    = neut;
+  var hasClear   = proc === 'CLEAR_MIX';
   var isToneDown = proc === 'TONE_DOWN' || proc === 'TONE_DOWN_NEUTRALIZE' || proc === 'TONE_DOWN_TONING';
+  var tDir       = window._toneDir;
 
-  /* 선택 항목 (디자이너 추가) */
+  /* 방향 라벨 */
+  var dirLabel = tDir === 'up'   ? '톤업 (탈색 포함)'
+               : tDir === 'same' ? '톤인톤 (명도 유지)'
+               : tDir === 'down' ? '톤다운'
+               : '시술';
+
+  /* 단순화된 4개 항목 */
   var optional = [
-    { label: '전처리 (PPT·단백질 트리트먼트)', checked: false, auto: false },
-    { label: '탈색', checked: hasBleach, auto: hasBleach },
-    { label: '중간 크리닉 (탈색 후)', checked: hasBleach, auto: false },
-    { label: '토닝 (잔류색소 정리)', checked: hasToning, auto: hasToning },
-    { label: '보색 중화 믹스', checked: hasNeut, auto: hasNeut },
-    { label: '클리어 믹스 (색감 농도 조절)', checked: hasClear, auto: hasClear },
-    { label: '톤다운 염색', checked: isToneDown, auto: isToneDown },
-    { label: '착색 시술', checked: true, auto: true },
-    { label: '후처리 트리트먼트', checked: false, auto: false },
+    { label: '시술 전 크리닉 (전처리·PPT)', checked: false, auto: false },
+    { label: hasBleach ? '탈색 진행' : isToneDown ? '톤다운 염색' : hasClear ? '클리어 믹스 착색' : '착색 시술 (' + dirLabel + ')', checked: true, auto: true },
+    { label: hasBleach ? '탈색 중간·후 크리닉' : '시술 중 크리닉', checked: hasBleach, auto: false },
+    { label: '시술 후 크리닉 (트리트먼트)', checked: false, auto: false },
   ];
 
   var wrap = document.getElementById('checklist-items');
