@@ -2150,8 +2150,9 @@ function confirmTargetColor() {
 
   /* ══ 톤업 불가 판단 ══
      U1: 목표 명도가 현재보다 12 이상 낮음
-     U2: 채도 35이상 낮아지면서 명도도 내려감 (한색계열 다운케이스) */
-  var upImpossible = (gap < -12) || (cS - tS > 35 && gap < 0);
+     U2: 채도 35이상 낮아지면서 명도도 내려감 (한색계열 다운케이스)
+     예외: 파스텔 목표는 U2 제외 — 탈색 후 파스텔 착색이 필요한 방향이므로 톤업 허용 */
+  var upImpossible = (gap < -12) || (cS - tS > 35 && gap < 0 && !pastelTar);
 
   /* ══ 톤인톤 불가 판단 ══
      S1: 명도 22 이상 상승 또는 28 이상 하강
@@ -2162,18 +2163,28 @@ function confirmTargetColor() {
   if (upImpossible)   lockBtn('up',   '목표가 더 어두워 톤업이 필요 없어요');
   if (sameImpossible) lockBtn('same', '명도 차이가 커 현재 명도에서 색감 전환이 어려워요');
 
-  /* ══ 파스텔 핑크·바이올렛 — 15레벨 이하 베이스에서 톤인톤·톤다운 잠금 ══
-     주황·레드 언더톤에서 파스텔 PINK·VIOLET 착색 시
-     블루·애쉬 중화해도 애쉬브라운·애쉬그레이로 발색
-     (붉은기 강하면 중화된 브라운 계열)
-     파스텔 발색 불가 → 톤업만 허용 */
+  /* ══ 파스텔 핑크·바이올렛 — 18레벨 미만 베이스에서 톤인톤·톤다운 잠금 ══
+     탈색 없이 보색중화만으로는 탁해짐 → 18레벨 이상 탈색 필요
+     → 톤다운 잠금, 톤인톤 잠금, 톤업만 허용 */
   var tarUt2 = getUndertone(tH, tS, tL);
-  var isPastelPinkViolet = pastelTar &&
+  /* 파스텔 조건 OR 저채도(s<30) — 애쉬바이올렛·애쉬핑크 계열 포함 */
+  var isPastelPinkViolet = (pastelTar || tS < 30) &&
     (tarUt2 === 'PINK' || tarUt2 === 'VIOLET' || tarUt2 === 'RED_VIOLET');
   if (isPastelPinkViolet && cL < 78) {
     /* 17레벨 이하 — 18레벨 이상 탈색 필요 */
-    lockBtn('same', '파스텔 핑크·바이올렛은 18레벨 이상 탈색 후 발색돼요');
+    lockBtn('same', '탈색 없이 보색중화만으로는 탁해져요. 18레벨 이상 탈색 후 발색돼요');
     lockBtn('down', '파스텔 핑크·바이올렛은 톤다운으로 표현할 수 없어요');
+    /* 톤업이 upImpossible로 잠겼다면 해제 */
+    var upBtn = document.getElementById('tone-btn-up');
+    if (upBtn && upBtn.disabled) {
+      upBtn.disabled = false;
+      upBtn.style.opacity = '1';
+      upBtn.style.cursor = 'pointer';
+      upBtn.style.borderColor = '#333';
+      upBtn.style.background = '#111';
+      var upSub = upBtn.querySelector('div');
+      if (upSub) upSub.textContent = '탈색·톤업이 필요한 방향';
+    }
   }
 
   /* 카드 표시 + 분석중 딜레이 */
