@@ -2390,32 +2390,25 @@ function buildHairMessage(result, curHSL, tarHSL) {
   /* ── 2️⃣ 언더톤 경고 (생략 — line3에 통합) ── */
   var line2 = '';
 
-  /* ── 3️⃣ 보색 중화 + 경고 통합 — 한 문장으로 ── */
+  /* ── 3️⃣ 보색 중화 — 보색중화하며 목표색 표현 (중복 없이 한 문장) ── */
   var line3 = '';
+  var neutWarn = ' (보색은 소량만, 과하면 보색 색이 나올 수 있어요)';
   if (neut) {
-    /* 보색 주의 공통 문구 */
-    var neutWarn = ' 보색은 소량만 사용하세요. 과하면 보색 자체 색이 나타날 수 있어요.';
     if (curUt === 'YELLOW') {
-      line3 = '노랑기가 있어 그대로 애쉬를 입히면 매트하게 보일 수 있어요.\n'
-            + '애쉬 염모제에 바이올렛을 소량 믹스해 노랑기를 잡으면서 동시에 착색하세요.' + neutWarn;
+      line3 = '바이올렛을 소량 믹스해 노랑기를 보색중화하며 ' + tarName + '을 표현하세요.' + neutWarn;
     } else if (curUt === 'YELLOW_GREEN') {
-      line3 = '노랑·매트기가 있어 탁하게 보일 수 있어요.\n'
-            + '목표 염모제에 바이올렛이나 시나몬브라운을 소량 믹스해 매트기를 잡으면서 착색하세요.' + neutWarn;
+      line3 = '바이올렛이나 시나몬브라운을 소량 믹스해 노랑·매트기를 보색중화하며 ' + tarName + '을 표현하세요.' + neutWarn;
     } else if (curUt === 'ORANGE') {
-      line3 = '주황기가 있어 탁하게 보일 수 있어요.\n'
-            + '블루·애쉬 염모제가 주황 보색 역할을 하므로 블루 계열 목표라면 중화와 착색이 동시에 이루어져요.' + neutWarn;
+      line3 = '블루·애쉬를 소량 믹스해 주황기를 보색중화하며 ' + tarName + '을 표현하세요.' + neutWarn;
     } else if (curUt === 'RED') {
-      line3 = '붉은기가 있어 색이 왜곡될 수 있어요.\n'
-            + '목표 염모제에 그린 계열이나 애쉬를 소량 믹스해 붉은기를 잡으면서 착색하세요.' + neutWarn;
+      line3 = '그린 계열이나 애쉬를 소량 믹스해 붉은기를 보색중화하며 ' + tarName + '을 표현하세요.' + neutWarn;
     } else if (curUt === 'RED_VIOLET') {
-      line3 = '적보라기가 있어 색이 왜곡될 수 있어요.\n'
-            + '목표 염모제에 그린 계열을 소량 믹스해 적보라기를 잡으면서 착색하세요.' + neutWarn;
+      line3 = '그린 계열을 소량 믹스해 적보라기를 보색중화하며 ' + tarName + '을 표현하세요.' + neutWarn;
     } else if (curUt === 'GREEN') {
-      line3 = '그린·매트기가 있어 탁하게 보일 수 있어요.\n'
-            + '목표 염모제에 시나몬브라운이나 핑크를 소량 믹스해 그린기를 잡으면서 착색하세요.' + neutWarn;
+      line3 = '시나몬브라운이나 핑크를 소량 믹스해 그린기를 보색중화하며 ' + tarName + '을 표현하세요.' + neutWarn;
     } else {
       var compKo = COMP_COLOR_KO[curUt];
-      if (compKo) line3 = '목표 염모제에 ' + compKo + '을 소량 믹스해 언더톤을 잡으면서 착색하세요.' + neutWarn;
+      if (compKo) line3 = compKo + '을 소량 믹스해 언더톤을 보색중화하며 ' + tarName + '을 표현하세요.' + neutWarn;
     }
   }
 
@@ -2502,7 +2495,7 @@ function buildHairMessage(result, curHSL, tarHSL) {
     }
 
   } else if (proc === 'NEUTRALIZATION_THEN_COLOR') {
-    line4 = tarName + '에 보색을 소량 믹스해 언더톤을 잡으면서 착색하세요. 보색은 소량만 사용해야 목표색이 정확히 나와요.';
+    line4 = '위 방법대로 보색중화하며 바로 착색 가능합니다.';
 
   } else {
     /* DIRECT_COLOR */
