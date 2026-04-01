@@ -481,23 +481,28 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       매장 조명과 카메라 특성상 오차가 생길 수 있어요.<br>
       한 가지만 더 선택해주시면 지금 바로 정확한 시술 방향을 확정할게요.
     </div>
-    <div style="display:flex;flex-direction:column;gap:8px;">
-      <button id="tone-btn-up" onclick="selectToneDir('up')"
-        style="padding:14px;border-radius:12px;border:1px solid #333;background:#111;color:#ddd;font-size:13px;font-weight:600;cursor:pointer;text-align:left;line-height:1.6;">
-        ☀️ 지금보다 밝게 올리고 싶어요
-        <div style="font-size:11px;color:#666;margin-top:3px;font-weight:400;">탈색·톤업이 필요한 방향</div>
+    <div style="display:flex;flex-direction:column;gap:10px;" id="tone-btn-group">
+      <button id="tone-btn-up" onclick="pickToneDir('up')"
+        style="padding:16px 14px;border-radius:13px;border:1.5px solid #333;background:#111;color:#fff;font-size:15px;font-weight:700;cursor:pointer;text-align:left;line-height:1.4;transition:all 0.15s;">
+        <span style="font-size:18px;margin-right:8px;">↑</span>지금보다 밝게 올리고 싶어요
+        <div style="font-size:12px;color:#777;margin-top:5px;font-weight:400;line-height:1.6;">탈색 또는 톤업이 필요한 방향이에요.<br>탈색 횟수에 따라 발색 결과가 달라질 수 있어요.</div>
       </button>
-      <button id="tone-btn-same" onclick="selectToneDir('same')"
-        style="padding:14px;border-radius:12px;border:1px solid #333;background:#111;color:#ddd;font-size:13px;font-weight:600;cursor:pointer;text-align:left;line-height:1.6;">
-        🎨 밝기는 유지하고 색감만 바꾸고 싶어요
-        <div style="font-size:11px;color:#666;margin-top:3px;font-weight:400;">탈색 없이 현재 명도에서 색상 전환 · 잔류색소로 완벽한 발색이 어려울 수 있어요</div>
+      <button id="tone-btn-same" onclick="pickToneDir('same')"
+        style="padding:16px 14px;border-radius:13px;border:1.5px solid #333;background:#111;color:#fff;font-size:15px;font-weight:700;cursor:pointer;text-align:left;line-height:1.4;transition:all 0.15s;">
+        <span style="font-size:18px;margin-right:8px;">=</span>밝기는 유지하고 색감만 바꾸고 싶어요
+        <div style="font-size:12px;color:#777;margin-top:5px;font-weight:400;line-height:1.6;">탈색 없이 현재 명도에서 색상 전환이에요.<br>잔류색소로 인해 완벽한 발색이 어려울 수 있어요.</div>
       </button>
-      <button id="tone-btn-down" onclick="selectToneDir('down')"
-        style="padding:14px;border-radius:12px;border:1px solid #333;background:#111;color:#ddd;font-size:13px;font-weight:600;cursor:pointer;text-align:left;line-height:1.6;">
-        🌑 지금보다 어둡게 깔고 싶어요
-        <div style="font-size:11px;color:#666;margin-top:3px;font-weight:400;">톤다운 방향</div>
+      <button id="tone-btn-down" onclick="pickToneDir('down')"
+        style="padding:16px 14px;border-radius:13px;border:1.5px solid #333;background:#111;color:#fff;font-size:15px;font-weight:700;cursor:pointer;text-align:left;line-height:1.4;transition:all 0.15s;">
+        <span style="font-size:18px;margin-right:8px;">↓</span>지금보다 어둡게 깔고 싶어요
+        <div style="font-size:12px;color:#777;margin-top:5px;font-weight:400;line-height:1.6;">톤다운 방향이에요.<br>보색 중화가 필요한 경우 함께 안내해드려요.</div>
       </button>
     </div>
+    <!-- 확정 버튼 (선택 후 활성화) -->
+    <button id="tone-confirm-btn" onclick="confirmToneDir()" disabled
+      style="width:100%;margin-top:14px;padding:14px;border-radius:12px;border:none;background:#333;color:#666;font-size:14px;font-weight:700;cursor:not-allowed;transition:all 0.2s;letter-spacing:0.3px;">
+      방향을 선택해주세요
+    </button>
   </div>
 
   <!-- 레시피 -->
@@ -1783,18 +1788,20 @@ function getNeutralization(curUndertone, tarUndertone) {
     'YELLOW':       ['VIOLET', 'BLUE'],
     'YELLOW_GREEN': ['VIOLET', 'PINK', 'BLUE'],
     'ORANGE':       ['BLUE', 'TEAL'],
-    'RED':          ['GREEN', 'TEAL'],
+    'RED':          ['GREEN', 'TEAL', 'BLUE'],
     'GREEN':        ['RED', 'PINK', 'RED_VIOLET'],
     'TEAL':         ['RED', 'ORANGE'],
     'BLUE':         ['ORANGE'],
     'VIOLET':       ['YELLOW', 'YELLOW_GREEN'],
-    'PINK':         ['GREEN'],
-    'RED_VIOLET':   ['GREEN', 'TEAL']
+    'PINK':         ['GREEN', 'TEAL', 'BLUE'],      /* 핑크→한색 중화 필요 */
+    'RED_VIOLET':   ['GREEN', 'TEAL', 'BLUE']       /* 적보라→한색 중화 필요 */
   };
   var strongComp = {
-    'RED':    ['BLUE', 'TEAL', 'GREEN'],
-    'GREEN':  ['RED', 'PINK'],
-    'ORANGE': ['BLUE', 'VIOLET']
+    'RED':       ['BLUE', 'TEAL', 'GREEN'],
+    'GREEN':     ['RED', 'PINK'],
+    'ORANGE':    ['BLUE', 'VIOLET'],
+    'PINK':      ['BLUE', 'TEAL'],                  /* 선명한 핑크→한색 강한 중화 */
+    'RED_VIOLET':['BLUE', 'TEAL']                   /* 적보라→한색 강한 중화 */
   };
   if (strongComp[curUndertone] && strongComp[curUndertone].indexOf(tarForComp) > -1) {
     return 'STRONG_REQUIRED';
@@ -2014,18 +2021,48 @@ function confirmTargetColor() {
   }
 }
 
-/* ── 방향 선택 후 분석 실행 ── */
-function selectToneDir(dir) {
+/* ── 방향 선택 (선택만, 확정 아님) ── */
+function pickToneDir(dir) {
+  var btn = document.getElementById('tone-btn-' + dir);
+  if (btn && btn.disabled) return; /* 잠긴 버튼 무시 */
+  window._pendingToneDir = dir;
+  /* 버튼 선택 표시 */
+  ['up','same','down'].forEach(function(d) {
+    var b = document.getElementById('tone-btn-' + d);
+    if (!b || b.disabled) return;
+    b.style.borderColor = '#333';
+    b.style.background  = '#111';
+  });
+  if (btn) {
+    btn.style.borderColor = '#fff';
+    btn.style.background  = 'rgba(255,255,255,0.06)';
+  }
+  /* 확정 버튼 활성화 */
+  var cb = document.getElementById('tone-confirm-btn');
+  if (cb) {
+    cb.disabled = false;
+    cb.style.background = '#fff';
+    cb.style.color = '#000';
+    cb.style.cursor = 'pointer';
+    cb.textContent = '이 방향으로 분석하기 →';
+  }
+}
+
+/* ── 방향 확정 후 분석 실행 ── */
+function confirmToneDir() {
+  var dir = window._pendingToneDir;
+  if (!dir) return;
   window._toneDir = dir;
-  /* 카드 숨기기 */
   var tc = document.getElementById('tone-dir-card');
   if (tc) tc.style.display = 'none';
-  /* 자동 손상도 추정 */
   var autoDmg = estimateDamageLevel(currentHSL, targetHSL);
   window._currentDamageLevel = autoDmg;
   var result = analyzeColorFlow(currentHSL, targetHSL, autoDmg, dir);
   renderAnalysisResult(result);
 }
+
+/* ── 구 selectToneDir 호환 유지 ── */
+function selectToneDir(dir) { pickToneDir(dir); }
 
 /* ── 손상도 변경 (결과 화면 인라인) ── */
 function changeDamageLevel(level) {
@@ -2647,12 +2684,17 @@ function buildChecklist(result) {
                : tDir === 'down' ? '톤다운'
                : '시술';
 
-  /* 단순화된 4개 항목 */
+  /* 4항목: 서포트케어 / 크리닉케어 / 톤업 / 탈색 */
+  var mainLabel = hasBleach  ? '탈색 진행'
+                : isToneDown ? '톤다운 착색'
+                : hasClear   ? '클리어 믹스 착색'
+                : hasNeut    ? '보색 중화 후 착색'
+                : '착색 시술';
   var optional = [
-    { label: '시술 전 크리닉 (전처리·PPT)', checked: false, auto: false },
-    { label: hasBleach ? '탈색 진행' : isToneDown ? '톤다운 염색' : hasClear ? '클리어 믹스 착색' : '착색 시술 (' + dirLabel + ')', checked: true, auto: true },
-    { label: hasBleach ? '탈색 중간·후 크리닉' : '시술 중 크리닉', checked: hasBleach, auto: false },
-    { label: '시술 후 크리닉 (트리트먼트)', checked: false, auto: false },
+    { label: '서포트케어 (시술 전 PPT·단백질)', checked: false, auto: false },
+    { label: '크리닉케어 (탈색 중·후 크리닉)', checked: hasBleach, auto: false },
+    { label: mainLabel + ' (' + dirLabel + ')', checked: true, auto: true },
+    { label: '탈색', checked: hasBleach, auto: hasBleach },
   ];
 
   var wrap = document.getElementById('checklist-items');
@@ -3020,7 +3062,11 @@ function hueToName(h, s, l) {
     if (l <= 35) return '와인·딥레드 계열';
     return '레드 계열';
   }
-  if (h >= 15 && h < 45) return '주황 계열';
+  if (h >= 15 && h < 45) {
+    if (s <= 45 && l <= 42) return '브라운 계열';
+    if (s <= 35) return '주황빛 브라운 계열';
+    return '주황 계열';
+  }
   if (h >= 45 && h < 75)  return '노랑 계열';        /* 골든→노랑 */
   if (h >= 75 && h < 150) return s >= 40 ? '그린 계열' : '카키·매트 계열';
   if (h >= 150 && h < 210) return l <= 35 ? '네이비·블루블랙 계열' : '블루·청회색 계열';
@@ -3684,6 +3730,7 @@ function showRecipe(main, detail, ratio) {
 function retake() {
   stopStream();
   window._toneDir = null;
+  window._pendingToneDir = null;
   window._currentDamageLevel = null;
   document.getElementById('result-section').style.display = 'none';
   var cards = ['black-choice-card','tone-dir-card','recipe-card'];
