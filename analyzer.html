@@ -215,44 +215,67 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div>
 
 <!-- 수동 분석 화면 -->
-<div id="manual-section" style="display:none;padding:16px;">
+<div id="manual-section" style="display:none;padding:12px 16px 20px;">
   <div style="padding:0 0 8px;">
-    <button onclick="goToModeSelect()" style="background:none;border:none;color:#666;font-size:13px;cursor:pointer;padding:4px 0;">← 선택으로 돌아가기</button>
+    <button onclick="goToModeSelect()" style="background:none;border:none;color:#555;font-size:13px;cursor:pointer;padding:4px 0;">← 선택으로 돌아가기</button>
   </div>
   <div class="result-card">
     <div class="result-card-title">현재 모발색 선택</div>
-    <div style="font-size:12px;color:#666;margin-bottom:14px;">색상을 선택하고 명도·채도를 조절해주세요.</div>
-    <!-- 색상 프리셋 -->
-    <div style="margin-bottom:14px;">
-      <div style="font-size:10px;color:#777;margin-bottom:8px;font-weight:600;">색상</div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:6px;" id="preset-btns-m">
-        <button id="mpre-red" onclick="setPresetM('red')" style="padding:10px 4px;border-radius:10px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:700;cursor:pointer;color:#d06050;">빨강</button>
-        <button id="mpre-org" onclick="setPresetM('org')" style="padding:10px 4px;border-radius:10px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:700;cursor:pointer;color:#d08040;">주황</button>
-        <button id="mpre-yel" onclick="setPresetM('yel')" style="padding:10px 4px;border-radius:10px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:700;cursor:pointer;color:#d0b040;">노랑</button>
-        <button id="mpre-brn" onclick="setPresetM('brn')" style="padding:10px 4px;border-radius:10px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:700;cursor:pointer;color:#a06840;">브라운</button>
-        <button id="mpre-grn" onclick="setPresetM('grn')" style="padding:10px 4px;border-radius:10px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:700;cursor:pointer;color:#608050;">초록</button>
-        <button id="mpre-blu" onclick="setPresetM('blu')" style="padding:10px 4px;border-radius:10px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:700;cursor:pointer;color:#5080b0;">파랑</button>
-        <button id="mpre-vio" onclick="setPresetM('vio')" style="padding:10px 4px;border-radius:10px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:700;cursor:pointer;color:#8060b0;">보라</button>
-        <button id="mpre-pnk" onclick="setPresetM('pnk')" style="padding:10px 4px;border-radius:10px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:700;cursor:pointer;color:#c060a0;">핑크</button>
-        <button id="mpre-blk" onclick="setPresetM('blk')" style="padding:10px 4px;border-radius:10px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:700;cursor:pointer;color:#888;">블랙</button>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;">
-        <button id="mpre-ash" onclick="setPresetM('ash')" style="padding:10px 4px;border-radius:10px;border:1.5px solid #444;background:rgba(144,160,176,0.15);font-size:12px;font-weight:700;cursor:pointer;color:#90a0b0;">애쉬</button>
-        <button id="mpre-gry" onclick="setPresetM('gry')" style="padding:10px 4px;border-radius:10px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:700;cursor:pointer;color:#777;">다크애쉬</button>
-        <button id="mpre-ivo" onclick="setPresetM('ivo')" style="padding:10px 4px;border-radius:10px;border:1.5px solid #333;background:#111;font-size:12px;font-weight:700;cursor:pointer;color:#e8dcc8;">아이보리</button>
-      </div>
+    <!-- 스와치 미리보기 (상단 고정) -->
+    <div id="manual-swatch-box" style="width:100%;height:52px;border-radius:12px;border:2px solid #2a2a2a;margin-bottom:14px;transition:background 0.3s;"></div>
 
-      <!-- 색상(Hue) 미세 조정 슬라이더 -->
-      <div style="margin-bottom:12px;">
-        <div style="font-size:10px;color:#666;margin-bottom:6px;font-weight:600;">색상 미세 조정</div>
-        <div id="hue-bar-m" style="width:100%;height:22px;border-radius:11px;background:linear-gradient(to right,hsl(0,100%,50%),hsl(30,100%,50%),hsl(60,100%,50%),hsl(90,100%,50%),hsl(120,100%,50%),hsl(150,100%,50%),hsl(180,100%,50%),hsl(210,100%,50%),hsl(240,100%,50%),hsl(270,100%,50%),hsl(300,100%,50%),hsl(330,100%,50%),hsl(360,100%,50%));position:relative;cursor:pointer;touch-action:none;user-select:none;"
-          onpointerdown="startDrag(event,'hue','m')" onpointermove="onDrag(event,'hue','m')" onpointerup="endDrag()">
-          <div id="hue-thumb-m" style="position:absolute;top:-3px;width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.8);transform:translateX(-50%);pointer-events:none;left:8%;"></div>
-        </div>
+    <!-- 색상 프리셋 — 스와치 형태 -->
+    <div style="font-size:10px;color:#666;margin-bottom:8px;font-weight:600;letter-spacing:0.4px;">색상 선택</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:6px;" id="preset-btns-m">
+      <button id="mpre-red" onclick="setPresetM('red')" style="height:56px;border-radius:10px;border:2px solid transparent;background:hsl(0,70%,38%);cursor:pointer;position:relative;overflow:hidden;" title="빨강">
+        <span style="position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:10px;font-weight:700;color:rgba(255,255,255,0.9);text-shadow:0 1px 3px rgba(0,0,0,0.7);">빨강</span>
+      </button>
+      <button id="mpre-org" onclick="setPresetM('org')" style="height:56px;border-radius:10px;border:2px solid transparent;background:hsl(25,70%,45%);cursor:pointer;position:relative;overflow:hidden;" title="주황">
+        <span style="position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:10px;font-weight:700;color:rgba(255,255,255,0.9);text-shadow:0 1px 3px rgba(0,0,0,0.7);">주황</span>
+      </button>
+      <button id="mpre-yel" onclick="setPresetM('yel')" style="height:56px;border-radius:10px;border:2px solid transparent;background:hsl(50,75%,58%);cursor:pointer;position:relative;overflow:hidden;" title="노랑">
+        <span style="position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:10px;font-weight:700;color:rgba(0,0,0,0.6);text-shadow:none;">노랑</span>
+      </button>
+      <button id="mpre-brn" onclick="setPresetM('brn')" style="height:56px;border-radius:10px;border:2px solid transparent;background:hsl(25,55%,32%);cursor:pointer;position:relative;overflow:hidden;" title="브라운">
+        <span style="position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:10px;font-weight:700;color:rgba(255,255,255,0.9);text-shadow:0 1px 3px rgba(0,0,0,0.7);">브라운</span>
+      </button>
+      <button id="mpre-grn" onclick="setPresetM('grn')" style="height:56px;border-radius:10px;border:2px solid transparent;background:hsl(110,45%,38%);cursor:pointer;position:relative;overflow:hidden;" title="초록">
+        <span style="position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:10px;font-weight:700;color:rgba(255,255,255,0.9);text-shadow:0 1px 3px rgba(0,0,0,0.7);">초록</span>
+      </button>
+      <button id="mpre-blu" onclick="setPresetM('blu')" style="height:56px;border-radius:10px;border:2px solid transparent;background:hsl(215,60%,42%);cursor:pointer;position:relative;overflow:hidden;" title="파랑">
+        <span style="position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:10px;font-weight:700;color:rgba(255,255,255,0.9);text-shadow:0 1px 3px rgba(0,0,0,0.7);">파랑</span>
+      </button>
+      <button id="mpre-vio" onclick="setPresetM('vio')" style="height:56px;border-radius:10px;border:2px solid transparent;background:hsl(275,50%,42%);cursor:pointer;position:relative;overflow:hidden;" title="보라">
+        <span style="position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:10px;font-weight:700;color:rgba(255,255,255,0.9);text-shadow:0 1px 3px rgba(0,0,0,0.7);">보라</span>
+      </button>
+      <button id="mpre-pnk" onclick="setPresetM('pnk')" style="height:56px;border-radius:10px;border:2px solid transparent;background:hsl(315,45%,55%);cursor:pointer;position:relative;overflow:hidden;" title="핑크">
+        <span style="position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:10px;font-weight:700;color:rgba(255,255,255,0.9);text-shadow:0 1px 3px rgba(0,0,0,0.7);">핑크</span>
+      </button>
+      <button id="mpre-blk" onclick="setPresetM('blk')" style="height:56px;border-radius:10px;border:2px solid #333;background:hsl(0,5%,6%);cursor:pointer;position:relative;overflow:hidden;" title="블랙">
+        <span style="position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:10px;font-weight:700;color:rgba(255,255,255,0.7);">블랙</span>
+      </button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px;">
+      <button id="mpre-ash" onclick="setPresetM('ash')" style="height:56px;border-radius:10px;border:2px solid transparent;background:hsl(210,18%,48%);cursor:pointer;position:relative;overflow:hidden;" title="애쉬">
+        <span style="position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:10px;font-weight:700;color:rgba(255,255,255,0.9);text-shadow:0 1px 3px rgba(0,0,0,0.5);">애쉬</span>
+      </button>
+      <button id="mpre-gry" onclick="setPresetM('gry')" style="height:56px;border-radius:10px;border:2px solid transparent;background:hsl(210,12%,30%);cursor:pointer;position:relative;overflow:hidden;" title="다크애쉬">
+        <span style="position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:10px;font-weight:700;color:rgba(255,255,255,0.8);">다크애쉬</span>
+      </button>
+      <button id="mpre-ivo" onclick="setPresetM('ivo')" style="height:56px;border-radius:10px;border:2px solid #2a2a2a;background:hsl(35,18%,78%);cursor:pointer;position:relative;overflow:hidden;" title="아이보리">
+        <span style="position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:10px;font-weight:700;color:rgba(0,0,0,0.5);">아이보리</span>
+      </button>
+    </div>
+
+    <!-- Hue 미세 조정 -->
+    <div style="margin-bottom:14px;">
+      <div style="font-size:10px;color:#666;margin-bottom:6px;font-weight:600;">색상 미세 조정</div>
+      <div id="hue-bar-m" style="width:100%;height:22px;border-radius:11px;background:linear-gradient(to right,hsl(0,100%,50%),hsl(30,100%,50%),hsl(60,100%,50%),hsl(90,100%,50%),hsl(120,100%,50%),hsl(150,100%,50%),hsl(180,100%,50%),hsl(210,100%,50%),hsl(240,100%,50%),hsl(270,100%,50%),hsl(300,100%,50%),hsl(330,100%,50%),hsl(360,100%,50%));position:relative;cursor:pointer;touch-action:none;user-select:none;"
+        onpointerdown="startDrag(event,'hue','m')" onpointermove="onDrag(event,'hue','m')" onpointerup="endDrag()">
+        <div id="hue-thumb-m" style="position:absolute;top:-3px;width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.8);transform:translateX(-50%);pointer-events:none;left:8%;"></div>
       </div>
-    </div><!-- /.margin-bottom:14px 닫기 -->
-    <!-- 스와치 -->
-    <div id="manual-swatch-box" style="width:100%;height:56px;border-radius:12px;border:2px solid #333;margin-bottom:14px;transition:background 0.3s;"></div>
+    </div>
+
     <!-- XY 그리드 -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
       <div style="font-size:10px;color:#777;font-weight:600;">밝기(위↑) × 색의 파워(우→)</div>
@@ -267,7 +290,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <span style="font-size:11px;color:#aaa;font-weight:600;">선명</span>
       </div>
     </div>
-    <div style="display:flex;gap:6px;margin-bottom:16px;">
+    <div style="display:flex;gap:6px;margin-bottom:14px;">
       <div style="width:36px;display:flex;flex-direction:column;justify-content:space-between;padding:6px 0;">
         <span style="font-size:11px;color:#aaa;text-align:right;display:block;font-weight:600;">밝음</span>
         <span style="font-size:11px;color:#aaa;text-align:right;display:block;font-weight:600;">중고</span>
@@ -277,25 +300,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       </div>
       <div id="xy-grid-m" style="flex:1;height:190px;border-radius:12px;position:relative;cursor:crosshair;border:1.5px solid #2a2a2a;touch-action:none;user-select:none;"
         onpointerdown="startXYDrag(event,'m')" onpointermove="moveXYDrag(event,'m')" onpointerup="endXYDrag(event,'m')" onpointercancel="endXYDrag(event,'m')">
-        <!-- 모서리 라벨 -->
         <div style="position:absolute;top:6px;left:8px;font-size:11px;color:rgba(255,255,255,0.6);pointer-events:none;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,0.8);">아이보리</div>
         <div style="position:absolute;top:6px;right:8px;font-size:11px;color:rgba(255,255,255,0.9);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.6);">파스텔</div>
-        <div style="position:absolute;top:27%;right:8px;font-size:11px;color:rgba(255,255,255,0.5);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.8);">· · ·</div>
         <div style="position:absolute;top:44%;right:8px;font-size:11px;color:rgba(255,255,255,0.8);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.8);">비비드</div>
-        <div style="position:absolute;top:63%;right:8px;font-size:11px;color:rgba(255,255,255,0.65);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.9);">어두움</div>
         <div style="position:absolute;bottom:6px;left:8px;font-size:11px;color:rgba(255,255,255,0.5);pointer-events:none;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,0.9);">블랙</div>
         <div style="position:absolute;bottom:6px;right:8px;font-size:11px;color:rgba(255,255,255,0.7);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.8);">다크톤</div>
-        <!-- 최초 관측 마커 (카메라용) -->
         <div id="xy-origin-m" style="position:absolute;width:14px;height:14px;border-radius:50%;border:2.5px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.5),0 2px 6px rgba(0,0,0,0.7);transform:translate(-50%,-50%);pointer-events:none;display:none;"></div>
-        <!-- 현재 위치 닷 -->
         <div id="xy-dot-m" style="position:absolute;width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,0.9);transform:translate(-50%,-50%);pointer-events:none;left:62%;top:70%;"></div>
       </div>
     </div>
     <!-- 확대 버튼 -->
-    <button onclick="openExpandSheet('m')" style="width:100%;margin-bottom:12px;padding:10px;border-radius:10px;border:1.5px solid #333;background:#111;color:#aaa;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+    <button onclick="openExpandSheet('m')" style="width:100%;margin-bottom:10px;padding:10px;border-radius:10px;border:1.5px solid #2a2a2a;background:#0e0e0e;color:#777;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
       <span style="font-size:15px;">⤢</span> 확대해서 미세 조정
     </button>
-    <button onclick="confirmManualColor()" style="width:100%;padding:13px;border-radius:11px;background:#fff;border:none;color:#000;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.3px;">
+    <!-- 확정 버튼 항상 하단 고정 느낌 -->
+    <button onclick="confirmManualColor()" style="width:100%;padding:15px;border-radius:12px;background:#fff;border:none;color:#000;font-size:15px;font-weight:800;cursor:pointer;letter-spacing:0.3px;">
       이 색으로 확정 →
     </button>
   </div>
@@ -977,18 +996,19 @@ function setPresetM(key) {
   manualHSL.l = p.l;
   _baseHue = p.h; /* 보정 범위 기준점 설정 */
 
-  /* 버튼 강조 */
+  /* 스와치 버튼 강조 */
   var ids = ['red','org','yel','brn','grn','blu','vio','pnk','blk','ash','gry','ivo'];
   ids.forEach(function(id) {
     var btn = document.getElementById('mpre-' + id);
     if (!btn) return;
-    btn.style.borderColor = '#333';
+    btn.style.borderColor = 'transparent';
     btn.style.boxShadow   = 'none';
+    btn.style.outline     = 'none';
   });
   var active = document.getElementById('mpre-' + key);
   if (active) {
     active.style.borderColor = '#fff';
-    active.style.boxShadow   = '0 0 0 2px rgba(255,255,255,0.3)';
+    active.style.boxShadow   = '0 0 0 3px rgba(255,255,255,0.5), 0 0 14px rgba(255,255,255,0.15)';
   }
   _activePresetM = key;
 
@@ -2725,53 +2745,51 @@ function generateRecipeCard() {
 
   /* 체크된 항목 수집 */
   var steps = [];
-  var labels = document.querySelectorAll('#checklist-items label');
-  labels.forEach(function(row, i) {
-    var cb = row.querySelector('input[type=checkbox]');
+  document.querySelectorAll('#checklist-items label').forEach(function(row) {
+    var cb  = row.querySelector('input[type=checkbox]');
     var txt = row.querySelector('span');
-    if (cb && cb.checked && txt) {
-      steps.push(txt.textContent.replace(' ✓','').trim());
-    }
+    if (cb && cb.checked && txt) steps.push(txt.textContent.replace(' ✓','').trim());
   });
 
-  var W = 900, H = 1200;
+  var W = 1080, H = 1440; /* 고해상도 */
   var cv = document.createElement('canvas');
   cv.width = W; cv.height = H;
   var ctx = cv.getContext('2d');
 
-  /* ── 배경 ── */
-  var bg = ctx.createLinearGradient(0,0,0,H);
-  bg.addColorStop(0,'#0e0e14');
-  bg.addColorStop(1,'#13111a');
-  ctx.fillStyle = bg;
+  /* ── 배경: 크림 화이트 ── */
+  ctx.fillStyle = '#F8F6F2';
   ctx.fillRect(0,0,W,H);
 
-  /* ── 상단 헤더 ── */
-  var hdrGrad = ctx.createLinearGradient(0,0,W,80);
-  hdrGrad.addColorStop(0,'#2a1f3d');
-  hdrGrad.addColorStop(1,'#1a1428');
-  ctx.fillStyle = hdrGrad;
-  roundRect(ctx,0,0,W,90,0);
-  ctx.fillStyle='rgba(158,127,191,0.3)';
-  ctx.fillRect(0,88,W,2);
+  /* ── 상단 컬러 배너 ── */
+  var banner = ctx.createLinearGradient(0,0,W,0);
+  banner.addColorStop(0,'#2D1B4E');
+  banner.addColorStop(1,'#6B4FA0');
+  ctx.fillStyle = banner;
+  ctx.fillRect(0,0,W,110);
 
-  ctx.fillStyle='#fff';
-  ctx.font='bold 28px -apple-system,sans-serif';
-  ctx.textAlign='left';
-  ctx.fillText('✂️  시술 레시피 카드',36,55);
+  /* 배너 텍스트 */
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 32px -apple-system,sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('✂  시술 레시피 카드', 48, 68);
 
-  /* 날짜 */
   var today = new Date();
   var dateStr = today.getFullYear()+'.'+(today.getMonth()+1).toString().padStart(2,'0')+'.'+today.getDate().toString().padStart(2,'0');
-  ctx.fillStyle='#666';
-  ctx.font='15px -apple-system,sans-serif';
-  ctx.textAlign='right';
-  ctx.fillText(dateStr, W-36, 55);
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.font = '18px -apple-system,sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText(dateStr, W-48, 68);
 
-  /* ── 스와치 영역 ── */
-  var swY = 115, swH = 130;
-  ctx.fillStyle='rgba(255,255,255,0.03)';
-  roundRect(ctx,30,swY,W-60,swH,16);
+  /* ── 스와치 섹션 ── */
+  var swY = 130, pad = 48;
+  ctx.fillStyle = '#fff';
+  rr(ctx, pad, swY, W-pad*2, 160, 20);
+  /* 그림자 */
+  ctx.shadowColor = 'rgba(0,0,0,0.08)';
+  ctx.shadowBlur = 20;
+  ctx.fillStyle = '#fff';
+  rr(ctx, pad, swY, W-pad*2, 160, 20);
+  ctx.shadowBlur = 0;
 
   var curRgb = hslToRgb(currentHSL.h, currentHSL.s, currentHSL.l);
   var tarRgb = hslToRgb(targetHSL.h, targetHSL.s, targetHSL.l);
@@ -2780,119 +2798,186 @@ function generateRecipeCard() {
 
   /* 현재 스와치 */
   ctx.fillStyle = 'rgb('+curRgb[0]+','+curRgb[1]+','+curRgb[2]+')';
-  roundRect(ctx,54,swY+20,200,90,12);
-  ctx.fillStyle='rgba(255,255,255,0.6)';
-  ctx.font='bold 13px -apple-system,sans-serif';
-  ctx.textAlign='center';
-  ctx.fillText('현재', 154, swY+128);
+  rr(ctx, pad+20, swY+20, 220, 120, 14);
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.font = 'bold 14px -apple-system,sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('현재', pad+130, swY+155);
 
   /* 화살표 */
-  ctx.fillStyle='#555';
-  ctx.font='bold 36px -apple-system,sans-serif';
-  ctx.textAlign='center';
-  ctx.fillText('→', W/2, swY+75);
+  ctx.fillStyle = '#aaa';
+  ctx.font = 'bold 40px -apple-system,sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('→', W/2, swY+90);
 
   /* 목표 스와치 */
   ctx.fillStyle = 'rgb('+tarRgb[0]+','+tarRgb[1]+','+tarRgb[2]+')';
-  roundRect(ctx,W-254,swY+20,200,90,12);
-  ctx.strokeStyle='rgba(158,127,191,0.8)';
-  ctx.lineWidth=2.5;
-  roundRectStroke(ctx,W-254,swY+20,200,90,12);
-  ctx.fillStyle='rgba(255,255,255,0.6)';
-  ctx.font='bold 13px -apple-system,sans-serif';
-  ctx.textAlign='center';
-  ctx.fillText('목표', W-154, swY+128);
+  rr(ctx, W-pad-240, swY+20, 220, 120, 14);
+  /* 보라 테두리 */
+  ctx.strokeStyle = '#6B4FA0';
+  ctx.lineWidth = 3;
+  rrStroke(ctx, W-pad-240, swY+20, 220, 120, 14);
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.font = 'bold 14px -apple-system,sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('목표', W-pad-130, swY+155);
 
   /* 색감명 */
-  ctx.fillStyle='#bbb';
-  ctx.font='16px -apple-system,sans-serif';
-  ctx.textAlign='center';
-  ctx.fillText(curName, 154, swY+18);
-  ctx.fillText(tarName, W-154, swY+18);
+  ctx.fillStyle = '#555';
+  ctx.font = '15px -apple-system,sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(curName, pad+130, swY+16);
+  ctx.fillText(tarName, W-pad-130, swY+16);
 
-  /* ── 공정 시각화 ── */
-  var vizY = swY + swH + 24;
-  ctx.fillStyle='rgba(255,255,255,0.03)';
-  roundRect(ctx,30,vizY,W-60,200,16);
+  /* ── 공정 흐름 섹션 ── */
+  var procY = swY + 185;
+  ctx.fillStyle = '#fff';
+  ctx.shadowColor = 'rgba(0,0,0,0.06)';
+  ctx.shadowBlur = 16;
+  rr(ctx, pad, procY, W-pad*2, 230, 20);
+  ctx.shadowBlur = 0;
 
-  ctx.fillStyle='#666';
-  ctx.font='bold 13px -apple-system,sans-serif';
-  ctx.textAlign='left';
-  ctx.fillText('공정 흐름',54,vizY+24);
+  ctx.fillStyle = '#999';
+  ctx.font = 'bold 13px -apple-system,sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('공정 흐름', pad+24, procY+28);
 
-  drawCardProcess(ctx, result, curRgb, tarRgb, W, vizY+40, 160);
+  /* 구분선 */
+  ctx.strokeStyle = '#eee';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(pad+24, procY+38);
+  ctx.lineTo(W-pad-24, procY+38);
+  ctx.stroke();
 
-  /* ── 시술 순서 ── */
-  var listY = vizY + 220;
-  ctx.fillStyle='rgba(158,127,191,0.08)';
-  roundRect(ctx,30,listY,W-60,steps.length*46+50,16);
-  ctx.fillStyle='rgba(158,127,191,0.4)';
-  ctx.fillRect(30,listY,4,steps.length*46+50);
+  drawCardProcess(ctx, result, curRgb, tarRgb, W, procY+50, 160);
 
-  ctx.fillStyle='#9E7FBF';
-  ctx.font='bold 15px -apple-system,sans-serif';
-  ctx.textAlign='left';
-  ctx.fillText('📋  시술 순서',54,listY+28);
+  /* ── 시술 순서 섹션 ── */
+  var listY = procY + 248;
+  var listH = steps.length * 62 + 60;
+  ctx.fillStyle = '#fff';
+  ctx.shadowColor = 'rgba(0,0,0,0.06)';
+  ctx.shadowBlur = 16;
+  rr(ctx, pad, listY, W-pad*2, listH, 20);
+  ctx.shadowBlur = 0;
+
+  /* 보라 사이드바 */
+  ctx.fillStyle = '#6B4FA0';
+  rr(ctx, pad, listY, 6, listH, 3);
+
+  ctx.fillStyle = '#2D1B4E';
+  ctx.font = 'bold 17px -apple-system,sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('📋  시술 순서', pad+28, listY+34);
 
   steps.forEach(function(step, i) {
-    var sy = listY + 52 + i*46;
-    /* 번호 배경 */
-    ctx.fillStyle='rgba(158,127,191,0.25)';
-    ctx.beginPath(); ctx.arc(68,sy+1,14,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle='#ddd';
-    ctx.font='bold 14px -apple-system,sans-serif';
-    ctx.textAlign='center';
-    ctx.fillText(i+1, 68, sy+6);
+    var sy = listY + 58 + i*62;
+    /* 번호 원 */
+    ctx.fillStyle = '#6B4FA0';
+    ctx.beginPath(); ctx.arc(pad+44, sy+12, 16, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 14px -apple-system,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(i+1, pad+44, sy+17);
     /* 텍스트 */
-    ctx.fillStyle='#ccc';
-    ctx.font='16px -apple-system,sans-serif';
-    ctx.textAlign='left';
-    ctx.fillText(step, 94, sy+6);
+    ctx.fillStyle = '#333';
+    ctx.font = '17px -apple-system,sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(step, pad+72, sy+17);
     /* 구분선 */
-    if(i < steps.length-1){
-      ctx.strokeStyle='rgba(255,255,255,0.05)';
-      ctx.lineWidth=1;
-      ctx.beginPath(); ctx.moveTo(54,sy+20); ctx.lineTo(W-54,sy+20); ctx.stroke();
+    if (i < steps.length-1) {
+      ctx.strokeStyle = '#F0EDE8';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(pad+28, sy+38);
+      ctx.lineTo(W-pad-28, sy+38);
+      ctx.stroke();
     }
   });
 
-  /* ── 분석 요약 문구 ── */
-  var sumY = listY + steps.length*46 + 68;
+  /* ── 시술 포인트 섹션 ── */
   var detailEl = document.getElementById('rec-detail');
+  var sumY = listY + listH + 20;
   if (detailEl && detailEl.textContent) {
     var lines = detailEl.textContent.split('\n').filter(function(l){ return l.trim() && l.indexOf('\ub0a8\uc740') === -1; });
-    ctx.fillStyle='rgba(255,255,255,0.03)';
-    roundRect(ctx,30,sumY,W-60,lines.length*30+44,16);
-    ctx.fillStyle='#9E7FBF';
-    ctx.font='bold 13px -apple-system,sans-serif';
-    ctx.textAlign='left';
-    ctx.fillText('💡  시술 포인트',54,sumY+24);
-    lines.forEach(function(line,i){
-      ctx.fillStyle='#aaa';
-      ctx.font='14px -apple-system,sans-serif';
-      ctx.fillText(line.trim(), 54, sumY+50+i*30);
-    });
-    sumY += lines.length*30+60;
+    if (lines.length > 0) {
+      var tipH = lines.length * 34 + 60;
+      ctx.fillStyle = '#F0EBF8';
+      ctx.shadowColor = 'rgba(0,0,0,0.04)';
+      ctx.shadowBlur = 12;
+      rr(ctx, pad, sumY, W-pad*2, tipH, 20);
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#6B4FA0';
+      ctx.font = 'bold 15px -apple-system,sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('💡  시술 포인트', pad+24, sumY+28);
+      lines.forEach(function(line, i) {
+        ctx.fillStyle = '#4A3060';
+        ctx.font = '15px -apple-system,sans-serif';
+        ctx.fillText(line.trim(), pad+24, sumY+56+i*34);
+      });
+      sumY += tipH + 20;
+    }
   }
 
-  /* ── 워터마크 ── */
-  var wmY = Math.max(sumY+30, H-70);
-  ctx.fillStyle='rgba(158,127,191,0.15)';
-  ctx.fillRect(0, wmY, W, H-wmY);
-  ctx.fillStyle='rgba(158,127,191,0.6)';
-  ctx.font='bold 15px -apple-system,sans-serif';
-  ctx.textAlign='center';
-  ctx.fillText('✂️  모발 색상 분석기  |  Hair Color Analyzer', W/2, wmY+32);
-  ctx.fillStyle='rgba(255,255,255,0.2)';
-  ctx.font='12px -apple-system,sans-serif';
-  ctx.fillText('이 카드는 참고용이며 실제 시술 결과는 모발 상태에 따라 다를 수 있습니다.', W/2, wmY+54);
+  /* ── 주의 문구 ── */
+  ctx.fillStyle = '#bbb';
+  ctx.font = '13px -apple-system,sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('이 카드는 참고용이며 실제 시술 결과는 모발 상태에 따라 다를 수 있습니다.', W/2, sumY+24);
 
-  /* ── PNG 다운로드 ── */
+  /* ── 워터마크: 우측 하단 원형 ── */
+  var wmX = W - 100, wmY2 = H - 100, wmR = 72;
+  /* 원 배경 */
+  ctx.fillStyle = '#2D1B4E';
+  ctx.beginPath(); ctx.arc(wmX, wmY2, wmR, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#6B4FA0';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.arc(wmX, wmY2, wmR, 0, Math.PI*2); ctx.stroke();
+  /* 텍스트 */
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 11px -apple-system,sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Shield', wmX, wmY2-14);
+  ctx.fillText('Clinic', wmX, wmY2);
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.font = '10px -apple-system,sans-serif';
+  ctx.fillText('Connect', wmX, wmY2+14);
+  ctx.fillText('v9', wmX, wmY2+26);
+
+  /* ── PNG 저장 ── */
   var link = document.createElement('a');
   link.download = '시술레시피_' + dateStr + '.png';
   link.href = cv.toDataURL('image/png', 1.0);
   link.click();
 }
+
+/* ── 카드용 roundRect 유틸 ── */
+function rr(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath(); ctx.fill();
+}
+function rrStroke(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath(); ctx.stroke();
+}
+
 
 /* ── 카드 공정 시각화 (정적) ── */
 function drawCardProcess(ctx, result, curRgb, tarRgb, W, y, h) {
