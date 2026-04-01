@@ -701,61 +701,23 @@ function isLimitReached() {
 }
 
 /* ── 시스템 프롬프트 ── */
-var SYSTEM_PROMPT = `너는 미용실 염색 시술을 도와주는 전문가 AI야.
-디자이너가 입력한 색상 분석 데이터를 바탕으로 실무 가이드를 제공한다.
+var SYSTEM_PROMPT = `너는 미용실 염색 시술 전문가야.
+아래 분석 문구가 전달되면 말투만 자연스럽게 다듬어줘.
 
-[절대 규칙]
-- 구체적 비율 수치(1:1, 1:3 등) 절대 명시 금지
-- 정답 단정 금지, 항상 "추천" 형태로 말할 것
-- 모질·손상도는 파악 불가임을 인지하고 항상 "직접 확인하며 진행" 문구 포함
-- 리스크(탁해짐, 과발색, 색 먹어들어감 등) 반드시 포함
-- 탈색 권장 조건 포함
-- 비율 관련 질문에는 "소량씩 조절하며 테스트" 표현 사용
+[핵심 규칙]
+- 내용·순서·구조 절대 바꾸지 마
+- 문장 추가하거나 빼지 마
+- 번호·항목 형식으로 재구성하지 마
+- 원본 문장 순서 그대로 유지
+- 구체적 비율 수치(1:1 등) 금지
+- "반드시" "절대" 같은 단정 표현 → "추천드려요" "~하시면 좋아요" 로 부드럽게
+- 염모제·착색·보색중화 등 핵심 용어는 그대로 유지
 
-[색의 파워 순서 - 약→강]
-노랑 < 주황 < 레드 < 블루 < 보라 < 블랙
-
-[보색 관계]
-노랑 → 바이올렛·보라 계열로 중화
-주황 → 블루·애쉬 계열로 중화
-붉은색 → 그린 계열로 중화
-초록·카키 → 핑크·레드 계열 또는 시나몬브라운(애쉬+핑크가 가미된 브라운)으로 중화
-매트(노랑+초록) → 바이올렛 소량+따뜻함 또는 시나몬브라운
-노랑주황 → 청보라(애쉬+바이올렛 혼합) 계열
-
-[보색 중화 주의]
-- 같은 명도·파워로 맞춰야 효과적
-- 비율 틀리면 중화가 아닌 색이 먹어들어갈 수 있음
-- 전체 채도가 낮아지고 탁해질 수 있음
-
-[자연 탈색 단계]
-블랙 → 짙은레드 → 레드 → 레드주황 → 주황 → 주황노랑 → 노랑 → 바나나껍질색 → 바나나안쪽색 → 아이보리크림
-
-[명도별 한계]
-어두운: 색 변화 제한적, 파스텔·밝은 색은 탈색 필수
-중저: 잔류색 영향 큼, 보색 필요하지만 탁해짐 발생 가능
-중고: 대부분 가능, 보색 시 채도 감소, 손상도 고려
-밝은: 전부 가능, 파스텔 가능, 잔류색 제거 후 최적
-
-[버진모 특성]
-탈색 없이 한색 계열 → 오묘하고 청초한 브라운
-탈색 없이 난색 계열 → 와인빛·레드빛 브라운
-연모일수록 발색 잘 됨
-
-[출력 구조 - 반드시 이 순서로]
-1. 현재 상태 분석
-2. 문제 원인
-3. 해결 방향
-4. 실무 추천
-5. 결과 한계
-6. 최적 솔루션
-
-[스타일]
-- 디자이너에게 설명하듯 자연스럽게
-- 학술적 표현 금지
-- 각 항목 2~3줄 이내로 짧게
-- 핵심만 말하고 반복 금지
-- 전체 400자 이내로 작성`;
+[말투 스타일]
+- 현장 선배가 후배에게 설명하는 말투
+- 딱딱한 설명체 금지
+- 자연스럽고 친근하게
+- 전체 길이 원본과 비슷하게 유지`;
 
 /* ── API 호출 ── */
 async function callHairAPI(analysisResult) {
@@ -2154,11 +2116,23 @@ function confirmTargetColor() {
     btn.disabled = false;
     btn.style.opacity = '1';
     btn.style.cursor = 'pointer';
-    btn.style.borderColor = 'rgba(180,130,40,0.6)';
-    btn.style.background = 'rgba(180,130,40,0.08)';
+    btn.style.borderColor = 'rgba(180,130,40,0.7)';
+    btn.style.background = 'rgba(180,130,40,0.10)';
+    btn.style.color = '#d4a820';
     btn.dataset.warnReason = reason;
-    var sub = btn.querySelector('div');
-    if (sub) sub.textContent = '⚠ ' + reason;
+    /* 버튼 전체 내용 재구성 — 상단에 ⚠ 표시 */
+    var icons = {'up':'↑','same':'=','down':'↓'};
+    var labels = {
+      'up':'지금보다 밝게 올리고 싶어요',
+      'same':'밝기는 유지하고 색감만 바꾸고 싶어요',
+      'down':'지금보다 어둡게 깔고 싶어요'
+    };
+    var icon = icons[id] || '';
+    var label = labels[id] || '';
+    btn.innerHTML = '<span style="font-size:16px;margin-right:6px;">⚠</span>'
+      + '<span style="font-size:14px;font-weight:700;">' + label + '</span>'
+      + '<div style="font-size:11px;color:#c49a20;margin-top:5px;font-weight:400;line-height:1.6;">'
+      + reason + '</div>';
   }
 
   /* 톤업 추천 문구 표시 */
@@ -2278,19 +2252,27 @@ function confirmTargetColor() {
 /* ── 방향 선택 (선택만, 확정 아님) ── */
 function pickToneDir(dir) {
   var btn = document.getElementById('tone-btn-' + dir);
-  if (btn && btn.disabled) return; /* 잠긴 버튼 무시 */
+  if (btn && btn.disabled) return;
   window._pendingToneDir = dir;
-  /* 버튼 선택 표시 */
+  /* warnReason 저장 */
+  window._warnReason = (btn && btn.dataset.warnReason) ? btn.dataset.warnReason : '';
+
+  /* 버튼 선택 표시 — ⚠ 경고 버튼은 노란빛 유지 */
   ['up','same','down'].forEach(function(d) {
     var b = document.getElementById('tone-btn-' + d);
     if (!b || b.disabled) return;
-    b.style.borderColor = '#333';
-    b.style.background  = '#111';
+    var isWarn = !!b.dataset.warnReason;
+    if (d === dir) {
+      /* 선택된 버튼 */
+      b.style.borderColor = isWarn ? 'rgba(180,130,40,0.9)' : '#fff';
+      b.style.background  = isWarn ? 'rgba(180,130,40,0.15)' : 'rgba(255,255,255,0.06)';
+    } else {
+      /* 미선택 버튼 */
+      b.style.borderColor = isWarn ? 'rgba(180,130,40,0.4)' : '#333';
+      b.style.background  = isWarn ? 'rgba(180,130,40,0.06)' : '#111';
+    }
   });
-  if (btn) {
-    btn.style.borderColor = '#fff';
-    btn.style.background  = 'rgba(255,255,255,0.06)';
-  }
+
   /* 확정 버튼 활성화 */
   var cb = document.getElementById('tone-confirm-btn');
   if (cb) {
@@ -2561,6 +2543,24 @@ function buildHairMessage(result, curHSL, tarHSL) {
   /* ── 1️⃣ 첫 문장 ── */
   var line1 = curExpr + '에서 ' + tarExpr + '으로 가시는군요.';
 
+  /* ⚠ 경고 방향 선택 시 — 발색 결과 예측 문구 추가 */
+  var warnR = window._warnReason || '';
+  if (warnR) {
+    if (warnR.indexOf('브라운빛') > -1 || warnR.indexOf('탁한') > -1) {
+      /* 강한 보색 충돌 */
+      line1 += '\n⚠ 보색 충돌로 원하는 색감보다 탁한 브라운빛으로 발색될 수 있어요. 톤업(탈색) 방향을 추천드려요.';
+    } else if (warnR.indexOf('바이올렛이 강하게') > -1) {
+      /* 파스텔 핑크·바이올렛 난색 베이스 */
+      line1 += '\n⚠ 현재 베이스의 노랑기로 인해 애쉬 느낌보다 바이올렛이 더 강하게 연출될 수 있어요. 18레벨 탈색 후 착색하면 더 맑은 발색이 가능해요.';
+    } else if (warnR.indexOf('애쉬 느낌') > -1) {
+      /* 어두운 애쉬바이올렛 */
+      line1 += '\n⚠ 어두운 명도의 애쉬바이올렛으로 착색 시 퍼플 느낌보다 애쉬 계열로 발색돼요.';
+    } else if (warnR.indexOf('채도 죽은') > -1) {
+      /* 강한 보색 톤다운 */
+      line1 += '\n⚠ 채도가 죽은 브라운 계열로 발색될 수 있어요. 선명한 색감을 원하시면 톤업을 추천드려요.';
+    }
+  }
+
   /* ── 2️⃣ 언더톤 경고 (생략 — line3에 통합) ── */
   var line2 = '';
 
@@ -2820,6 +2820,27 @@ function buildHairMessage(result, curHSL, tarHSL) {
 function renderAnalysisResult(result) {
   var curName = hueToName(currentHSL.h, currentHSL.s, currentHSL.l);
   var tarName = hueToName(targetHSL.h, targetHSL.s, targetHSL.l);
+
+  /* ⚠ 경고 방향 선택 시 — 결과 상단에 주의 배너 표시 */
+  var warnNotice = document.getElementById('warn-notice');
+  if (!warnNotice) {
+    warnNotice = document.createElement('div');
+    warnNotice.id = 'warn-notice';
+    warnNotice.style.cssText = 'display:none;margin-bottom:10px;padding:10px 13px;' +
+      'background:rgba(180,130,40,0.1);border-radius:10px;' +
+      'border:1px solid rgba(180,130,40,0.3);font-size:12px;' +
+      'color:#b08020;line-height:1.6;';
+    var recipeCard = document.getElementById('recipe-card');
+    if (recipeCard) recipeCard.insertBefore(warnNotice, recipeCard.firstChild);
+  }
+  var wr = window._warnReason || '';
+  if (wr) {
+    warnNotice.style.display = 'block';
+    warnNotice.innerHTML = '<strong>⚠ 주의</strong> — ' + wr + '<br>' +
+      '<span style="font-size:11px;opacity:0.8;">↑ 톤업 방향을 추천드려요. 위 방향으로도 시술 가능하지만 결과가 다를 수 있어요.</span>';
+  } else {
+    warnNotice.style.display = 'none';
+  }
 
   /* 스와치 */
   var cSwatch = document.getElementById('recipe-current-swatch');
