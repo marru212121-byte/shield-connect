@@ -1803,6 +1803,11 @@ function confirmCurrentColor() {
 ════════════════════════════════════════ */
 function getUndertone(h, s, l) {
   if (l <= 12 || (l <= 22 && s < 25)) return 'BLACK';
+  /* 저명도 + 고채도 와인·레드계열 → BLACK이 아닌 실제 언더톤으로 처리 */
+  if (l <= 22 && s >= 25) {
+    if ((h >= 295 && h < 345) || (h >= 0 && h < 15) || h >= 345) return 'RED_VIOLET';
+    if (h >= 200 && h < 295) return 'BLUE';
+  }
   if (s < 15) {
     if (l <= 40) return 'DARK_NEUTRAL';
     if (l <= 65) return 'GRAY';
@@ -3321,6 +3326,15 @@ function hueToName(h, s, l) {
   if (l <= 12) return '블랙 계열';
   if (l <= 22 && s < 25) return '블랙·짙은 다크 계열';
 
+  /* ── 저명도 + 고채도 → 블랙처럼 보이는 와인·레드계열 별도 처리 ── */
+  if (l <= 22 && s >= 25) {
+    if ((h >= 295 && h < 345) || (h >= 0 && h < 15) || h >= 345) {
+      return '딥 와인·블랙레드 계열'; /* 블랙처럼 보이지만 레드·와인 색소 포함 */
+    }
+    if (h >= 200 && h < 295) return '딥 네이비·블랙 계열';
+    return '딥 다크 계열';
+  }
+
   if (s < 15) {
     if (l <= 40) return '다크 그레이·애쉬 계열';
     if (l <= 65) return '실버·그레이 계열';
@@ -3339,7 +3353,7 @@ function hueToName(h, s, l) {
     if (s <= 35) return '주황빛 브라운 계열';
     return '주황 계열';
   }
-  if (h >= 45 && h < 75)  return '노랑 계열';        /* 골든→노랑 */
+  if (h >= 45 && h < 75)  return '노랑 계열';
   if (h >= 75 && h < 150) return s >= 40 ? '그린 계열' : '카키·매트 계열';
   if (h >= 150 && h < 210) return l <= 35 ? '네이비·블루블랙 계열' : '블루·청회색 계열';
   if (h >= 210 && h < 260) {
@@ -3348,6 +3362,7 @@ function hueToName(h, s, l) {
   }
   if (h >= 260 && h < 295) return s >= 40 ? '바이올렛·보라 계열' : '보라 애쉬 계열';
   if (h >= 295 && h < 340) {
+    if (l <= 22) return '딥 와인·블랙레드 계열'; /* 저명도 와인 추가 */
     if (l <= 35) return s >= 40 ? '와인·로즈 계열' : '다크 핑크 계열';
     return s >= 40 ? '핑크·마젠타 계열' : '핑크 계열';
   }
