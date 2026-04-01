@@ -305,6 +305,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <div style="position:absolute;top:44%;right:8px;font-size:11px;color:rgba(255,255,255,0.8);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.8);">비비드</div>
         <div style="position:absolute;bottom:6px;left:8px;font-size:11px;color:rgba(255,255,255,0.5);pointer-events:none;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,0.9);">블랙</div>
         <div style="position:absolute;bottom:6px;right:8px;font-size:11px;color:rgba(255,255,255,0.7);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.8);">다크톤</div>
+        <!-- 색감 힌트 유도선 -->
+        <div id="xy-hint-m" style="position:absolute;pointer-events:none;display:none;">
+          <div id="xy-hint-box-m" style="position:absolute;border-radius:8px;border:1.5px dashed rgba(255,255,255,0.35);background:rgba(255,255,255,0.04);"></div>
+          <div id="xy-hint-label-m" style="position:absolute;font-size:10px;font-weight:700;color:rgba(255,255,255,0.7);text-shadow:0 1px 3px rgba(0,0,0,0.9);white-space:nowrap;"></div>
+        </div>
         <div id="xy-origin-m" style="position:absolute;width:14px;height:14px;border-radius:50%;border:2.5px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.5),0 2px 6px rgba(0,0,0,0.7);transform:translate(-50%,-50%);pointer-events:none;display:none;"></div>
         <div id="xy-dot-m" style="position:absolute;width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,0.9);transform:translate(-50%,-50%);pointer-events:none;left:62%;top:70%;"></div>
       </div>
@@ -470,6 +475,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <div style="position:absolute;top:63%;right:8px;font-size:11px;color:rgba(255,255,255,0.65);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.9);">어두움</div>
         <div style="position:absolute;bottom:6px;left:8px;font-size:11px;color:rgba(255,255,255,0.5);pointer-events:none;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,0.9);">블랙</div>
         <div style="position:absolute;bottom:6px;right:8px;font-size:11px;color:rgba(255,255,255,0.7);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.8);">다크톤</div>
+        <!-- 색감 힌트 유도선 (hue 기반 동적 표시) -->
+        <div id="xy-hint-t" style="position:absolute;pointer-events:none;display:none;">
+          <div id="xy-hint-box-t" style="position:absolute;border-radius:8px;border:1.5px dashed rgba(255,255,255,0.35);background:rgba(255,255,255,0.04);"></div>
+          <div id="xy-hint-label-t" style="position:absolute;font-size:10px;font-weight:700;color:rgba(255,255,255,0.7);text-shadow:0 1px 3px rgba(0,0,0,0.9);white-space:nowrap;"></div>
+        </div>
         <!-- 최초 관측 마커 (카메라용) -->
         <div id="xy-origin-t" style="position:absolute;width:14px;height:14px;border-radius:50%;border:2.5px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.5),0 2px 6px rgba(0,0,0,0.7);transform:translate(-50%,-50%);pointer-events:none;display:none;"></div>
         <!-- 현재 위치 닷 -->
@@ -825,12 +835,44 @@ function toNumbering(hsl, presetKey) {
   return lv + '.' + ref;
 }
 
+/* ── XY 그리드 색감 힌트 유도선 ── */
+function updateXYHint(which, h) {
+  var hintWrap  = document.getElementById('xy-hint-' + which);
+  var hintBox   = document.getElementById('xy-hint-box-' + which);
+  var hintLabel = document.getElementById('xy-hint-label-' + which);
+  if (!hintWrap || !hintBox || !hintLabel) return;
+  var hints = null;
+  if (h >= 160 && h <= 270) {
+    hints = { l:0, t:5, w:28, h:55, label:'← 애쉬·쿨그레이' };
+  } else if (h >= 255 && h <= 295) {
+    hints = { l:0, t:5, w:30, h:50, label:'← 파스텔·애쉬바이올렛' };
+  } else if (h >= 295 && h <= 340) {
+    hints = { l:0, t:5, w:32, h:45, label:'← 파스텔핑크·애쉬핑크' };
+  } else if ((h >= 0 && h < 45) || h >= 345) {
+    hints = { l:0, t:42, w:38, h:38, label:'← 브라운·다크톤' };
+  } else if (h >= 45 && h < 75) {
+    hints = { l:0, t:5, w:30, h:38, label:'← 아이보리·파스텔' };
+  }
+  if (hints) {
+    hintWrap.style.display = 'block';
+    hintBox.style.cssText  = 'position:absolute;border-radius:8px;border:1.5px dashed rgba(255,255,255,0.3);background:rgba(255,255,255,0.04);left:'+hints.l+'%;top:'+hints.t+'%;width:'+hints.w+'%;height:'+hints.h+'%;';
+    hintLabel.style.cssText= 'position:absolute;font-size:10px;font-weight:700;color:rgba(255,255,255,0.65);text-shadow:0 1px 3px rgba(0,0,0,0.9);white-space:nowrap;left:'+(hints.l+2)+'%;top:'+(hints.t+2)+'%;';
+    hintLabel.textContent  = hints.label;
+  } else {
+    hintWrap.style.display = 'none';
+  }
+}
+
 /* XY 그리드 배경 그라데이션 업데이트 */
 function updateXYGrid(which) {
   var hsl  = which === 'm' ? manualHSL : which === 'c' ? currentHSL : targetHSL;
   var grid = document.getElementById('xy-grid-' + which);
   if (!grid) return;
   var h = hsl.h;
+  /* 힌트 유도선 업데이트 */
+  if (typeof updateXYHint === 'function') updateXYHint(which, h);
+  /* 힌트 유도선 업데이트 */
+  updateXYHint(which, h);
   /*
     미용 파스텔 기준:
     좌상(밝음+저채도) = 미색·아이보리
@@ -1810,7 +1852,7 @@ function getUndertone(h, s, l) {
   }
   if (s < 15) {
     if (l <= 40) return 'DARK_NEUTRAL';
-    if (l <= 65) return 'GRAY';
+    if (l <= 75) return 'GRAY';  /* l65~75 실버그레이 포함 */
     return 'WHITE';
   }
   if ((h >= 0 && h < 15) || h >= 345) return 'RED';
@@ -3334,7 +3376,7 @@ function hueToName(h, s, l) {
 
   if (s < 15) {
     if (l <= 40) return '다크 그레이·애쉬 계열';
-    if (l <= 65) return '실버·그레이 계열';
+    if (l <= 75) return '실버·그레이 계열';  /* l65~75 실버그레이 포함 */
     return '화이트·아이보리 계열';
   }
   if (l >= 80 && s <= 20) return '화이트블론드·백금 계열';
