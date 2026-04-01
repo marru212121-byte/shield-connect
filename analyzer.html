@@ -526,7 +526,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
   <!-- 레시피 -->
   <div class="recipe-card" id="recipe-card" style="display:none;">
-    <div class="recipe-title">✂️ 시술 방향</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div class="recipe-title" style="margin-bottom:0;">✂️ 시술 방향</div>
+      <div id="tone-dir-badge" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;background:rgba(158,127,191,0.15);border:1px solid rgba(158,127,191,0.3);color:#9E7FBF;"></div>
+    </div>
+    <!-- 다른 방향으로 보기 -->
+    <div id="alt-dir-wrap" style="display:none;margin-bottom:12px;">
+      <div style="font-size:10px;color:#555;margin-bottom:6px;font-weight:600;">다른 방향으로도 볼 수 있어요</div>
+      <div style="display:flex;gap:6px;" id="alt-dir-btns"></div>
+    </div>
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;">
       <div id="recipe-current-swatch" style="width:52px;height:52px;border-radius:9px;border:2px solid #333;flex-shrink:0;"></div>
       <div style="font-size:20px;color:#555;">→</div>
@@ -2430,7 +2438,17 @@ function buildHairMessage(result, curHSL, tarHSL) {
       line4 = '탈색 후 ' + tarName + '으로 착색하세요. 탈색 반응을 확인하며 진행하는 것을 권장해요.';
 
     } else {
-      line4 = '명도 차이가 커서 탈색 후 시술을 추천합니다.';
+      /* LOW 리스크 — 언더톤별 세분화 */
+      if ((result.tarUndertone === 'PINK' || result.tarUndertone === 'VIOLET' || result.tarUndertone === 'RED_VIOLET') && curUt !== 'PINK' && curUt !== 'VIOLET') {
+        line4 = '탈색 후 높은 명도의 밝은 ' + tarName + '으로 착색하세요.\n'
+              + '탈색 후에도 노랑기가 남아 있다면 보라빛이 조금 진하게 보일 수 있어요.\n'
+              + '노랑 잔류색소가 완전히 빠진 상태에서 착색하면 더 맑은 색감이 나와요.';
+      } else if (isCoolTar2 && (curUt === 'YELLOW' || curUt === 'YELLOW_GREEN' || curUt === 'ORANGE')) {
+        line4 = '탈색 후 ' + tarName + '으로 착색하세요.\n'
+              + '노랑·주황 잔류색소가 남아 있다면 보색 중화를 소량 믹스해 착색하면 더 깨끗한 발색이 가능해요.';
+      } else {
+        line4 = '명도 차이가 커서 탈색 후 시술을 추천합니다.';
+      }
     }
 
   } else if (proc === 'BLEACH_SHORT_TONING') {
@@ -2521,6 +2539,44 @@ function renderAnalysisResult(result) {
   if (cSwatch) cSwatch.style.background = hslStr(currentHSL.h, currentHSL.s, currentHSL.l);
   if (tSwatch) tSwatch.style.background = hslStr(targetHSL.h, targetHSL.s, targetHSL.l);
   if (desc)    desc.textContent = curName + ' → ' + tarName;
+
+  /* 방향 뱃지 */
+  var badge = document.getElementById('tone-dir-badge');
+  var dirLabels = { up:'↑ 톤업 방향으로 선택하셨어요', same:'= 톤인톤 방향으로 선택하셨어요', down:'↓ 톤다운 방향으로 선택하셨어요' };
+  var curDir = window._toneDir;
+  if (badge && curDir) badge.textContent = dirLabels[curDir] || '';
+
+  /* 다른 방향 버튼 생성 (API 호출 없이 프론트만) */
+  var altWrap = document.getElementById('alt-dir-wrap');
+  var altBtns = document.getElementById('alt-dir-btns');
+  if (altWrap && altBtns && curDir) {
+    altBtns.innerHTML = '';
+    var ALL_DIRS = [
+      { key:'up',   label:'↑ 톤업으로 보기' },
+      { key:'same', label:'= 톤인톤으로 보기' },
+      { key:'down', label:'↓ 톤다운으로 보기' }
+    ];
+    var hasAlt = false;
+    ALL_DIRS.forEach(function(d) {
+      if (d.key === curDir) return; /* 현재 방향 제외 */
+      /* 잠긴 버튼도 제외 */
+      var lockedBtn = document.getElementById('tone-btn-' + d.key);
+      if (lockedBtn && lockedBtn.disabled) return;
+      var b = document.createElement('button');
+      b.textContent = d.label;
+      b.style.cssText = 'flex:1;padding:8px 6px;border-radius:9px;border:1px solid #333;background:#0e0e0e;color:#888;font-size:11px;font-weight:600;cursor:pointer;';
+      b.onclick = (function(dk){ return function() {
+        window._toneDir = dk;
+        var autoDmg = estimateDamageLevel(currentHSL, targetHSL);
+        window._currentDamageLevel = autoDmg;
+        var r2 = analyzeColorFlow(currentHSL, targetHSL, autoDmg, dk);
+        renderAnalysisResult(r2);
+      }; })(d.key);
+      altBtns.appendChild(b);
+      hasAlt = true;
+    });
+    altWrap.style.display = hasAlt ? 'block' : 'none';
+  }
 
   /* 팁 문구 — BLEACH 계열에만 표시 */
   var needsDmgTip = (result.processType === 'BLEACH_FIRST' || result.processType === 'BLEACH_SHORT_TONING');
