@@ -1984,9 +1984,13 @@ function confirmTargetColor() {
   if (ts) ts.style.background = hslStr(targetHSL.h, targetHSL.s, targetHSL.l);
   if (cd) cd.textContent = curN + ' → ' + tarN;
 
-  /* ── 명도차 기반 버튼 비활성화 ── */
-  var levelGap  = targetHSL.l - currentHSL.l;
-  var pastelTar = targetHSL.s <= 25 && targetHSL.l >= 55;
+  /* ── 이론 기반 버튼 잠금 ── */
+  var cL = currentHSL.l, cS = currentHSL.s, cH = currentHSL.h;
+  var tL = targetHSL.l,  tS = targetHSL.s,  tH = targetHSL.h;
+  var gap = tL - cL;
+  var pastelTar = tS <= 25 && tL >= 55;
+  var hueDiff = Math.min(Math.abs(tH-cH), 360-Math.abs(tH-cH));
+  var satGap  = tS - cS;
 
   /* 버튼 기본 복원 */
   ['up','same','down'].forEach(function(d) {
@@ -2017,16 +2021,28 @@ function confirmTargetColor() {
     if (sub) sub.textContent = '🔒 ' + reason;
   }
 
-  /* 톤인톤·톤다운 잠금: 명도를 많이 올려야 하는 경우 */
-  if (levelGap > 22 || (pastelTar && currentHSL.l < 52)) {
-    lockBtn('same', '명도 차이가 커 탈색이 필요해요');
-    lockBtn('down',  '목표가 더 밝아 톤다운 불가해요');
-  }
-  /* 톤업·톤인톤 잠금: 명도를 많이 내려야 하는 경우 */
-  if (levelGap < -22) {
-    lockBtn('up',   '목표가 더 어두워 톤업 불가해요');
-    lockBtn('same', '명도 차이가 커 톤다운이 필요해요');
-  }
+  /* ══ 톤다운 불가 판단 ══
+     D1: 목표 명도가 현재보다 높음
+         예외: 동일계열(hue차<20) + 채도차 작음 + 명도차 ≤15 → 착색으로 소폭 밝아짐 가능
+     D2: 채도 30 이상 올라가면서 명도도 유지 (고채도는 밝은 베이스 필요) */
+  var D1 = tL > cL;
+  var D1_ok = (hueDiff < 20 && Math.abs(tS-cS) < 20 && gap <= 15);
+  var D2 = (satGap > 30) && (tL >= cL - 8) && (hueDiff > 20);
+  var downImpossible = (D1 && !D1_ok) || D2;
+
+  /* ══ 톤업 불가 판단 ══
+     U1: 목표 명도가 현재보다 12 이상 낮음
+     U2: 채도 35이상 낮아지면서 명도도 내려감 (한색계열 다운케이스) */
+  var upImpossible = (gap < -12) || (cS - tS > 35 && gap < 0);
+
+  /* ══ 톤인톤 불가 판단 ══
+     S1: 명도 22 이상 상승 또는 28 이상 하강
+     S2: 파스텔 목표 + 베이스 매우 어두움(l<38) */
+  var sameImpossible = (gap > 22 || gap < -28) || (pastelTar && cL < 38);
+
+  if (downImpossible) lockBtn('down', '목표가 더 밝거나 채도가 높아 톤다운으로 달성할 수 없어요');
+  if (upImpossible)   lockBtn('up',   '목표가 더 어두워 톤업이 필요 없어요');
+  if (sameImpossible) lockBtn('same', '명도 차이가 커 현재 명도에서 색감 전환이 어려워요');
 
   /* 카드 표시 + 분석중 딜레이 */
   var tc = document.getElementById('tone-dir-card');
