@@ -539,6 +539,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         💡 탈색 이력이 많을수록 추가 탈색 시 모발 손상 위험이 높아요.<br>고손상모(탈색 3회+)라면 단시간 탈색 후 토닝으로 마무리하는 것을 추천해요.
       </div>
     </div>
+    <!-- 다크애쉬·뉴트럴 주의 -->
+    <div id="dark-ash-warn" style="display:none;margin-bottom:12px;padding:10px 12px;background:rgba(100,140,180,0.07);border-radius:10px;border:1px solid rgba(100,140,180,0.15);">
+      <div style="font-size:11px;color:#7aa0c0;line-height:1.7;">
+        🟡 다크 애쉬·그레이 계열은 새치 자연모, 탈색모 토닝, 염색 이력 등에 따라 탈색 결과가 달라져요.<br>염색 이력이 있다면 1회 탈색 후 반응을 확인하며 진행하는 것을 권장해요.
+      </div>
+    </div>
     <!-- 색상 혼합 애니메이션 -->
     <div id="color-anim-wrap" style="width:100%;margin-bottom:14px;background:#111;border-radius:10px;overflow:hidden;min-height:110px;"></div>
     <div class="recipe-main" id="rec-main"></div>
@@ -566,6 +572,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     </div>
     <div style="font-size:13px;color:#aaa;margin-bottom:14px;line-height:1.7;">
       어두운 모발이 감지됐어요.<br>정확한 가이드를 위해 현재 모발 상태를 선택해주세요.
+    </div>
+    <div style="background:rgba(220,60,60,0.08);border:1px solid rgba(220,60,60,0.2);border-radius:10px;padding:11px 13px;margin-bottom:14px;">
+      <div style="font-size:12px;color:#cc6060;line-height:1.8;">
+        🔴 <strong>블랙 계열 주의</strong><br>
+        블랙 염색 이력이 있다면 탈색 외에는 밝게 할 수 없어요.<br>
+        탈색 2~3회 이상이 필요할 수 있으며 한 번에 밝은 색으로 가는 것은 모발 손상 위험이 높아요.<br>
+        탈색 후 진한 색으로 먼저 착색하고 재방문 시 서서히 목표색으로 진행하는 것을 권장해요.
+      </div>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;">
       <button onclick="selectBlackType('virgin')"
@@ -2185,6 +2199,24 @@ function showBlackChoiceCard() {
   var btns = document.querySelectorAll('#black-choice-card button');
   btns.forEach(function(b) { b.style.borderColor = '#333'; b.style.background = '#111'; });
   document.getElementById('black-recipe-result').style.display = 'none';
+
+  /* 블랙 절대값 경고 배너 */
+  var warn = document.getElementById('black-warning-banner');
+  if (!warn) {
+    warn = document.createElement('div');
+    warn.id = 'black-warning-banner';
+    warn.style.cssText = 'background:rgba(220,50,50,0.10);border:1px solid rgba(220,80,80,0.25);'
+      + 'border-radius:12px;padding:13px 15px;margin-bottom:14px;font-size:12px;'
+      + 'color:#e08080;line-height:1.85;';
+    warn.innerHTML = '<strong style="color:#e05555;font-size:13px;">⚠️ 블랙 계열 — 탈색 외 방법 없음</strong><br>'
+      + '블랙 염색 이력이 있다면 탈색 2~3회 이상이 필요할 수 있어요.<br>'
+      + '한 번에 밝은 색으로 가는 것은 모발 손상 위험이 매우 높습니다.<br>'
+      + '탈색 후 <strong>진한 색으로 먼저 착색</strong>하고, 재방문 시 서서히 목표색으로 진행하는 것을 권장해요.<br>'
+      + '<strong>고객과 시술 횟수·목표를 충분히 상담 후 진행하세요.</strong>';
+    var card2 = document.getElementById('black-choice-card');
+    if (card2) card2.insertBefore(warn, card2.firstChild);
+  }
+
   document.getElementById('black-choice-card').style.display = 'block';
   document.getElementById('recipe-card').style.display = 'none';
   document.getElementById('black-choice-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2212,6 +2244,20 @@ function selectBlackType(type) {
    API는 말투 다듬기만 (20%)
 ════════════════════════════════════════ */
 
+/* ── 리스크 레벨 판단 (HSL 기반) ── */
+function getRiskLevel(hsl) {
+  var h = hsl.h, s = hsl.s, l = hsl.l;
+  /* 🔴 위험: 저명도+저채도(탁함) / 블랙 / 난색 고채도(강한 인공색소) */
+  if (l <= 22) return 'HIGH';                          /* 블랙 계열 */
+  if (l <= 42 && s <= 32) return 'HIGH';               /* 탁한 다크 브라운·죽은 애쉬 */
+  if ((h < 45 || h >= 345) && s >= 62 && l <= 45) return 'HIGH'; /* 선명 레드·주황 저명도 */
+  /* 🟡 주의: 중명도·중채도 혼합 가능성 */
+  if (l <= 55 && s <= 45) return 'MID';
+  if (l <= 40 && s < 15) return 'MID';                /* 다크 애쉬그레이 */
+  /* 🟢 안전: 고명도 또는 선명한 채도 */
+  return 'LOW';
+}
+
 /* 언더톤 → 한국어 언더톤명 (현재색 표현 전용) */
 var UNDERTONE_KO = {
   'BLACK':        '블랙',
@@ -2225,7 +2271,7 @@ var UNDERTONE_KO = {
   'YELLOW_GREEN': '노랑·매트',
   'GREEN':        '그린·매트',
   'TEAL':         '청록',
-  'BLUE':         '블루',
+  'BLUE':         '블루·쿨톤',
   'VIOLET':       '바이올렛',
   'PINK':         '핑크',
   'NEUTRAL':      '뉴트럴'
@@ -2350,20 +2396,46 @@ function buildHairMessage(result, curHSL, tarHSL) {
     }
   }
 
-  /* ── 4️⃣ 시술 방향 — 손상도 반영 ── */
+  /* ── 4️⃣ 시술 방향 — 리스크 × 공정 × 목표 ── */
   var line4 = '';
+  var risk  = getRiskLevel(curHSL);
+  var isCoolTar2 = ['BLUE','VIOLET','GRAY','TEAL','DARK_NEUTRAL','WHITE'].indexOf(result.tarUndertone) > -1;
 
   if (proc === 'BLEACH_FIRST') {
+
     if (pastel) {
-      line4 = '파스텔 발색을 위해 충분한 탈색 후 시술하세요.';
-    } else if (dmg === 'damaged') {
-      line4 = '탈색 진행 가능합니다. 토닝 병행을 추천합니다.';
+      /* 파스텔 목표 — 리스크별 경로 분기 */
+      if (risk === 'HIGH') {
+        line4 = '아이보리 빛(18레벨 이상)까지 충분히 탈색 후 파스텔 착색을 권장해요.\n'
+              + '탈색 1~2회 진행 후 ' + tarName + '보다 진한 색감으로 먼저 착색하고, 다음 방문 시 서서히 파스텔로 밝혀가는 방법이 안전해요.\n'
+              + '색소 축적 가능성이 높아 탈색이 균일하게 진행되지 않을 수 있어요. 탈색 반응을 단계마다 확인하며 진행하고, 고객과 목표·시술 횟수를 충분히 상담 후 시작하세요.';
+      } else if (risk === 'MID') {
+        line4 = '파스텔 발색을 위해 충분한 탈색이 필요해요. 아이보리 빛까지 탈색 후 착색을 권장해요.\n'
+              + '한 번에 파스텔로 가기 어려울 수 있어요. 진한 색감으로 먼저 착색 후 다음 방문 시 파스텔로 진행하는 방안도 고려하세요.';
+      } else {
+        line4 = '베이스가 밝아 파스텔 발색에 유리해요. 충분한 탈색 후 바로 착색 가능합니다.';
+      }
+
+    } else if (isCoolTar2 && risk === 'HIGH') {
+      /* 난색 고리스크 → 한색 계열 */
+      line4 = '현재 색소 축적 가능성이 높아 탈색이 균일하게 진행되지 않을 수 있어요.\n'
+            + '탈색 후 ' + tarName + '과 보색 중화를 함께 믹스해 착색하세요.\n'
+            + '한 번에 원하는 색감이 나오지 않을 수 있으니 단계적 시술을 추천해요.';
+
+    } else if (risk === 'HIGH') {
+      line4 = '현재 색소 축적 가능성이 높아 탈색 시 색이 고르게 빠지지 않을 수 있어요.\n'
+            + '탈색 후 반응을 확인하며 단계적으로 진행하세요. 고객과 충분한 상담 후 시작하세요.';
+
+    } else if (risk === 'MID') {
+      line4 = '탈색 후 ' + tarName + '으로 착색하세요. 탈색 반응을 확인하며 진행하는 것을 권장해요.';
+
     } else {
       line4 = '명도 차이가 커서 탈색 후 시술을 추천합니다.';
     }
 
   } else if (proc === 'BLEACH_SHORT_TONING') {
-    line4 = '고손상모로 탈색 1회 단시간만 진행 후 토닝으로 마무리하세요.';
+    line4 = '고손상모로 탈색 1회 단시간만 진행 후 토닝으로 마무리하세요.\n'
+          + '탈색을 짧게 진행하고 색 반응을 확인한 뒤 착색하세요.';
 
   } else if (proc === 'TONING_THEN_COLOR') {
     line4 = '토닝으로 언더톤을 먼저 정리한 뒤 ' + tarName + '으로 진행하세요.';
@@ -2372,54 +2444,66 @@ function buildHairMessage(result, curHSL, tarHSL) {
     line4 = '베이스가 충분히 밝아 클리어 믹스로 색감 농도를 조절하면서 시술하세요.';
 
   } else if (proc === 'TONE_DOWN_NEUTRALIZE') {
-    line4 = tarName + ' 계열 낮은 명도 염모제로 톤다운하세요. 보색 믹스를 함께 진행하세요.';
+    line4 = tarName + ' 낮은 명도 염모제로 톤다운하세요. 보색 믹스를 함께 진행하세요.';
 
   } else if (proc === 'TONE_DOWN_TONING') {
     line4 = '토닝으로 언더톤을 먼저 정리한 뒤 ' + tarName + '으로 톤다운하세요.';
 
   } else if (proc === 'TONE_DOWN') {
-    line4 = tarName + ' 낮은 명도 염모제로 톤다운하세요.';
+    if (risk === 'HIGH') {
+      line4 = tarName + ' 낮은 명도 염모제로 톤다운하세요.\n'
+            + '현재 색소가 많이 축적되어 있을 수 있어 발색이 예상과 다를 수 있어요.';
+    } else {
+      line4 = tarName + ' 낮은 명도 염모제로 톤다운하세요.';
+    }
 
   } else if (proc === 'NEUTRALIZATION_THEN_COLOR') {
     line4 = '중화 후 ' + tarName + '으로 바로 시술 가능합니다.';
 
   } else {
     /* DIRECT_COLOR */
-    if (dmg === 'ultra_damaged') {
-      line4 = tarName + '으로 바로 시술 가능합니다. 모발 상태를 확인하며 진행하세요.';
+    if (risk === 'HIGH') {
+      line4 = tarName + '으로 시술 가능하나, 색소 축적 가능성이 있어 발색이 예상과 다를 수 있어요.\n'
+            + '모발 상태를 확인하며 진행하세요.';
     } else {
       line4 = tarName + '으로 바로 시술 가능합니다.';
     }
   }
 
-  /* ── 5️⃣ 보조 힌트 — 탈색 없이도 가능한 대안 ── */
+  /* ── 5️⃣ 보조 힌트 / 절대값 문구 ── */
   var line5 = '';
-  var toneDir = window._toneDir;
-  var isWarmCur = ['YELLOW','YELLOW_GREEN','ORANGE'].indexOf(curUt) > -1;
-  var isCoolTar = ['BLUE','VIOLET','GRAY','TEAL','DARK_NEUTRAL'].indexOf(result.tarUndertone) > -1;
+  var toneDir    = window._toneDir;
+  var isWarmCur  = ['YELLOW','YELLOW_GREEN','ORANGE'].indexOf(curUt) > -1;
+  var isCoolTar  = ['BLUE','VIOLET','GRAY','TEAL','DARK_NEUTRAL'].indexOf(result.tarUndertone) > -1;
   var isBleachProc = (proc === 'BLEACH_FIRST' || proc === 'BLEACH_SHORT_TONING');
 
-  /* 절대값 케이스 판별 — 대안 힌트 표시 안 함 */
+  /* 절대값 케이스 */
   var isAbsolute = false;
   if (curUt === 'BLACK' && pastel) isAbsolute = true;
   if (curUt === 'RED' && curHSL.s >= 65 && isCoolTar) isAbsolute = true;
   if (Math.abs(tarHSL.l - curHSL.l) > 35) isAbsolute = true;
 
-  /* 조건: 톤업 + 난색→한색 + 파스텔 목표 아님 + 절대값 아님 */
-  if (toneDir === 'up' && isWarmCur && isCoolTar && isBleachProc && !pastel && !isAbsolute) {
+  if (isAbsolute && isBleachProc) {
+    if (curUt === 'BLACK' && pastel) {
+      line5 = '블랙에서 파스텔까지는 탈색 2~3회 이상이 필요한 고난도 시술이에요.\n'
+            + '탈색 후 진한 ' + tarName + '으로 먼저 착색하고, 재방문 시 서서히 파스텔로 밝혀가는 방법을 강력 권장해요.\n'
+            + '한 번에 파스텔로 가려는 시도는 모발 손상 위험이 매우 높습니다. 고객과 충분히 상담 후 진행하세요.';
+    } else if (curUt === 'RED' && curHSL.s >= 65 && isCoolTar) {
+      line5 = '선명한 레드에서 한색 계열로의 전환은 탈색이 필수예요.\n'
+            + '붉은 잔류색소가 강해 탈색 2회 이상 후 보색 중화와 함께 착색해야 해요.\n'
+            + '고객과 단계적 시술 계획을 상담 후 진행하세요.';
+    } else {
+      line5 = '명도 차이가 매우 커서 탈색 없이는 불가능한 시술이에요.\n'
+            + '아이보리 빛까지 충분한 탈색 후 단계적으로 진행하세요. 고객과 충분히 상담 후 시작하세요.';
+    }
+
+  } else if (toneDir === 'up' && isWarmCur && isCoolTar && isBleachProc && !pastel && !isAbsolute) {
+    /* 탈색 없이 가능한 대안 힌트 */
     if (curUt === 'YELLOW' || curUt === 'YELLOW_GREEN') {
       line5 = '※ 탈색 없이도 현재 명도에서 밝은 바이올렛+고명도 애쉬를 믹스하면 어느 정도 표현 가능해요. 노랑기로 인해 탁도가 생길 수 있어요.';
     } else if (curUt === 'ORANGE') {
       line5 = '※ 탈색 없이 블루·애쉬로 중화하면서 시술하면 어느 정도 표현 가능해요. 주황기로 탁도가 생길 수 있어요.';
     }
-  }
-
-  /* 절대값 케이스 — 확신 문구 추가 */
-  if (isAbsolute && isBleachProc) {
-    var absReason = curUt === 'BLACK' && pastel ? '블랙에서 파스텔까지'
-                  : curUt === 'RED' && isCoolTar ? '선명한 레드에서 한색으로'
-                  : '명도 차이가 너무 커서';
-    line5 = '이 경우 ' + absReason + ' 탈색이 필수예요. 다른 공정으로 대체가 어렵습니다.';
   }
 
   return [line1, line2, line3, line4, line5].filter(Boolean).join('\n');
@@ -2442,6 +2526,13 @@ function renderAnalysisResult(result) {
   var needsDmgTip = (result.processType === 'BLEACH_FIRST' || result.processType === 'BLEACH_SHORT_TONING');
   var dmgWrap = document.getElementById('dmg-btn-wrap');
   if (dmgWrap) dmgWrap.style.display = needsDmgTip ? 'block' : 'none';
+
+  /* 다크애쉬·뉴트럴 주의 문구 */
+  var darkAshWrap = document.getElementById('dark-ash-warn');
+  if (darkAshWrap) {
+    var isDarkAsh = (currentHSL.l <= 40 && currentHSL.s < 15);
+    darkAshWrap.style.display = isDarkAsh ? 'block' : 'none';
+  }
 
   var mainEl   = document.getElementById('rec-main');
   var detailEl = document.getElementById('rec-detail');
