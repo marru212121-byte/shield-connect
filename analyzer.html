@@ -2489,10 +2489,12 @@ function buildHairMessage(result, curHSL, tarHSL) {
   /* ── 2️⃣ 언더톤 경고 (생략 — line3에 통합) ── */
   var line2 = '';
 
-  /* ── 3️⃣ 보색 중화 — 보색중화하며 목표색 표현 (중복 없이 한 문장) ── */
+  /* ── 3️⃣ 보색 중화 — 톤인톤·톤다운 선택 시에만 표시
+     톤업 선택 시: 탈색 후 착색이 전제 → 보색중화 문구 불필요 ── */
   var line3 = '';
+  var toneDir = window._toneDir;
   var neutWarn = ' (보색은 소량만, 과하면 보색 색이 나올 수 있어요)';
-  if (neut) {
+  if (neut && toneDir !== 'up') {
     if (curUt === 'YELLOW') {
       line3 = '바이올렛을 소량 믹스해 노랑기를 보색중화하며 ' + tarName + '을 표현하세요.' + neutWarn;
     } else if (curUt === 'YELLOW_GREEN') {
@@ -2658,14 +2660,25 @@ function buildHairMessage(result, curHSL, tarHSL) {
             + '15레벨 이상 노랑기까지, 선명한 발색은 18레벨 아이보리까지 탈색 후 단계적으로 진행하세요. 고객과 충분히 상담 후 시작하세요.';
     }
 
-  } else if (toneDir === 'up' && isWarmCur && isCoolTar && isBleachProc && !pastel && !isAbsolute) {
-    /* 탈색 없이 가능한 대안 힌트 — 실제 발색 결과 명시 */
-    if (curUt === 'YELLOW' || curUt === 'YELLOW_GREEN') {
-      line5 = '※ 탈색 없이 바이올렛+애쉬를 믹스해 시술하면 애쉬그레이 계열로 연출 가능해요.\n노랑기가 강하면 목표보다 따뜻한 톤으로 발색될 수 있어요.';
-    } else if (curUt === 'ORANGE') {
-      line5 = '※ 탈색 없이 블루·애쉬로 중화하면 파스텔 보라가 아닌 애쉬브라운 또는 애쉬그레이로 발색돼요.\n주황기가 강할수록 따뜻한 브라운 계열로 나올 수 있어요.';
-    } else if (curUt === 'RED') {
-      line5 = '※ 탈색 없이 중화만 하면 붉은기가 중화된 브라운 계열로 발색돼요.\n원하는 색감이 아닐 수 있으니 고객과 충분히 상담 후 진행하세요.';
+  } else if (toneDir === 'up' && isWarmCur && isCoolTar && isBleachProc && !isAbsolute) {
+    /* 톤업 선택 — 파스텔 목표 여부에 따라 분기 */
+    var tarUt3 = getUndertone(tarHSL.h, tarHSL.s, tarHSL.l);
+    var isPPVline5 = (pastel || tarHSL.s < 30) &&
+      (tarUt3 === 'PINK' || tarUt3 === 'VIOLET' || tarUt3 === 'RED_VIOLET');
+
+    if (isPPVline5) {
+      /* 파스텔 핑크·바이올렛 — 탈색 공정 안내 */
+      line5 = '18레벨 아이보리까지 탈색 후 고명도 ' + tarName + '으로 착색하세요.\n'
+            + '탈색 후 노랑기가 남아있다면 바이올렛 소량으로 먼저 눌러주고 착색하면 더 맑은 색감이 나와요.';
+    } else if (!pastel) {
+      /* 비비드·보통 채도 목표 — 탈색 없이 대안 힌트 */
+      if (curUt === 'YELLOW' || curUt === 'YELLOW_GREEN') {
+        line5 = '※ 탈색 없이 바이올렛+애쉬를 믹스해 시술하면 애쉬그레이 계열로 연출 가능해요.\n노랑기가 강하면 목표보다 따뜻한 톤으로 발색될 수 있어요.';
+      } else if (curUt === 'ORANGE') {
+        line5 = '※ 탈색 없이 블루·애쉬로 중화하면 파스텔 보라가 아닌 애쉬브라운 또는 애쉬그레이로 발색돼요.\n주황기가 강할수록 따뜻한 브라운 계열로 나올 수 있어요.';
+      } else if (curUt === 'RED') {
+        line5 = '※ 탈색 없이 중화만 하면 붉은기가 중화된 브라운 계열로 발색돼요.\n원하는 색감이 아닐 수 있으니 고객과 충분히 상담 후 진행하세요.';
+      }
     }
   }
 
