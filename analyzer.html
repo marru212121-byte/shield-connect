@@ -430,15 +430,40 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         onpointerdown="startDrag(event,'hue','t')" onpointermove="onDrag(event,'hue','t')" onpointerup="endDrag()">
         <div id="hue-thumb-t" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:32px;height:32px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,0.8);pointer-events:none;left:60%;transition:left 0.05s;"></div>
       </div>
-      <!-- 애쉬 빠른선택 버튼 (파랑 계열 근처에서 표시) -->
+      <!-- 애쉬 계열 확장 선택 (파랑·바이올렛·핑크 계열 근처에서 표시) -->
       <div id="ash-hint-t" style="display:none;margin-top:10px;">
-        <div style="font-size:10px;color:#557799;margin-bottom:6px;line-height:1.5;">
-          💡 블루 계열에서 채도를 낮추면 애쉬·쿨그레이가 표현돼요.
+        <div style="font-size:10px;color:#557799;margin-bottom:8px;line-height:1.5;">
+          💡 채도를 낮추면 애쉬 계열이 표현돼요. 원하는 뉘앙스를 선택하세요.
         </div>
-        <div style="display:flex;gap:8px;">
-          <button onclick="setAshPreset('ash')" style="flex:1;padding:9px 0;border-radius:10px;border:1.5px solid rgba(144,160,176,0.5);background:rgba(144,160,176,0.12);color:#90a0b0;font-size:13px;font-weight:700;cursor:pointer;">애쉬</button>
-          <button onclick="setAshPreset('darkash')" style="flex:1;padding:9px 0;border-radius:10px;border:1.5px solid #333;background:#111;color:#607080;font-size:13px;font-weight:700;cursor:pointer;">다크애쉬</button>
-          <button onclick="setAshPreset('silver')" style="flex:1;padding:9px 0;border-radius:10px;border:1.5px solid #444;background:rgba(180,190,200,0.1);color:#aab0bb;font-size:13px;font-weight:700;cursor:pointer;">실버그레이</button>
+        <!-- 1행: 그레이 계열 -->
+        <div style="display:flex;gap:6px;margin-bottom:6px;">
+          <button onclick="setAshPreset('ash')"
+            style="flex:1;padding:8px 0;border-radius:10px;border:1.5px solid rgba(144,160,176,0.5);background:hsl(210,18%,48%);color:#fff;font-size:11px;font-weight:700;cursor:pointer;">
+            애쉬그레이
+          </button>
+          <button onclick="setAshPreset('darkash')"
+            style="flex:1;padding:8px 0;border-radius:10px;border:1.5px solid #333;background:hsl(210,12%,30%);color:#aaa;font-size:11px;font-weight:700;cursor:pointer;">
+            다크애쉬
+          </button>
+          <button onclick="setAshPreset('silver')"
+            style="flex:1;padding:8px 0;border-radius:10px;border:1.5px solid #444;background:hsl(210,10%,65%);color:#fff;font-size:11px;font-weight:700;cursor:pointer;">
+            실버그레이
+          </button>
+        </div>
+        <!-- 2행: 컬러 애쉬 -->
+        <div style="display:flex;gap:6px;">
+          <button onclick="setAshPreset('blueash')"
+            style="flex:1;padding:8px 0;border-radius:10px;border:1.5px solid rgba(80,120,200,0.4);background:hsl(220,35%,48%);color:#fff;font-size:11px;font-weight:700;cursor:pointer;">
+            블루애쉬
+          </button>
+          <button onclick="setAshPreset('ashviolet')"
+            style="flex:1;padding:8px 0;border-radius:10px;border:1.5px solid rgba(140,100,200,0.4);background:hsl(260,22%,52%);color:#fff;font-size:11px;font-weight:700;cursor:pointer;">
+            애쉬바이올렛
+          </button>
+          <button onclick="setAshPreset('ashpink')"
+            style="flex:1;padding:8px 0;border-radius:10px;border:1.5px solid rgba(200,130,160,0.4);background:hsl(320,18%,62%);color:#fff;font-size:11px;font-weight:700;cursor:pointer;">
+            애쉬핑크
+          </button>
         </div>
       </div>
     </div>
@@ -931,10 +956,14 @@ function applyXYPosition(event, which, snap) {
     var hsl = which === 'm' ? manualHSL : which === 'c' ? currentHSL : targetHSL;
     var snapS = bestSat.val;
     var snapL = bestLit.val;
-    /* 색감이 사라지는 흰색 영역 소프트 클램프
-       밝음(l>78) + 파스텔(s<12) 동시 → 색 구분 불가
-       s를 12 이상으로 또는 l을 78 이하로 제한 */
+    /* 흰색 영역 소프트 클램프 */
     if (snapL > 78 && snapS < 12) { snapS = 12; }
+    /* 색감 범위 클램프: 선택한 색상 계열에서 완전히 벗어난 채도 방지
+       저채도 영역(파스텔)에서도 최소 채도 유지로 색 정체성 보존 */
+    var hslForClamp = which === 'm' ? manualHSL : which === 'c' ? currentHSL : targetHSL;
+    var curH = hslForClamp.h;
+    /* 애쉬·한색 계열(h160~340): 채도 최대 50 (너무 비비드 방지) */
+    if (curH >= 160 && curH <= 340 && snapS > 50) { snapS = 50; }
     hsl.s = snapS;
     hsl.l = snapL;
 
@@ -960,7 +989,7 @@ function applyXYPosition(event, which, snap) {
       updatePickerUI(which);
       if (which === 't') {
         var ashHint = document.getElementById('ash-hint-t');
-        if (ashHint) ashHint.style.display = (adjHsl.h >= 170 && adjHsl.h <= 265) ? 'block' : 'none';
+        if (ashHint) ashHint.style.display = (adjHsl.h >= 160 && adjHsl.h <= 340) ? 'block' : 'none';
       }
     }
   } else {
@@ -1024,9 +1053,12 @@ function updateManualSwatch() {
 
 /* ── 애쉬 빠른선택 (목표색 step2) ── */
 var ASH_PRESET_HSL = {
-  'ash':     { h: 210, s: 18, l: 55 },  /* 애쉬 — 밝은 쿨그레이 */
-  'darkash': { h: 210, s: 14, l: 32 },  /* 다크애쉬 */
-  'silver':  { h: 210, s: 10, l: 68 }   /* 실버그레이 */
+  'ash':       { h: 210, s: 18, l: 55 },  /* 애쉬그레이 */
+  'darkash':   { h: 210, s: 14, l: 32 },  /* 다크애쉬 */
+  'silver':    { h: 210, s: 10, l: 68 },  /* 실버그레이 */
+  'blueash':   { h: 220, s: 35, l: 48 },  /* 블루애쉬 — 파란 기반 애쉬 */
+  'ashviolet': { h: 260, s: 22, l: 52 },  /* 애쉬바이올렛 — 청보라 */
+  'ashpink':   { h: 320, s: 18, l: 62 }   /* 애쉬핑크 */
 };
 
 function setAshPreset(key) {
@@ -1631,7 +1663,7 @@ function updatePickerUI(which) {
     /* 파랑 계열(160~270도) 근처에서만 애쉬 빠른선택 버튼 표시 */
     var ashHint = document.getElementById('ash-hint-t');
     if (ashHint) {
-      ashHint.style.display = (hsl.h >= 160 && hsl.h <= 270) ? 'block' : 'none';
+      ashHint.style.display = (hsl.h >= 160 && hsl.h <= 340) ? 'block' : 'none';
     }
   }
 
@@ -1829,7 +1861,7 @@ function confirmCurrentColor() {
 
   /* 애쉬 힌트 */
   var ashHint = document.getElementById('ash-hint-t');
-  if (ashHint) ashHint.style.display = (targetHSL.h >= 170 && targetHSL.h <= 265) ? 'block' : 'none';
+  if (ashHint) ashHint.style.display = (targetHSL.h >= 160 && targetHSL.h <= 340) ? 'block' : 'none';
 
   try {
     if (step2 && step2.scrollIntoView) step2.scrollIntoView({ behavior: 'smooth', block: 'start' });
