@@ -712,11 +712,20 @@ var SYSTEM_PROMPT = `너는 미용실 염색 시술 전문가야.
 - 블루·바이올렛·파스텔: 18lv 아이보리색까지 탈색 필요
 - 그린: 15lv까지 탈색 필요
 
-[염모제 톤업 — 탈색 없이 가능]
-시술 방향이 "염모제 톤업 (탈색 없이)"인 경우:
-- 탈색 안내 절대 금지
-- 산화염모제로 명도 상승 가능함을 안내
-- 저손상 시술임을 안내
+[톤업 유형별 설명 방식]
+
+toneUpType = "염모제 톤업 (탈색 없이)" 인 경우:
+- 탈색 언급 절대 금지
+- 산화염모제로 명도 상승 가능함을 설명
+- 자연 멜라닌에서 표현 가능한 색 범위 기준
+- 붉은기·주황기 잔여색 고려하여 색 선택 안내
+- 예: "산화염모제로 명도 상승 가능해요. 자연 잔류색을 고려해 [목표색] 염모제를 선택하세요."
+
+toneUpType = "톤업 (탈색)" 인 경우:
+- 기존 탈색 설명 유지
+- 단계적 탈색 과정 설명
+- 레벨 상승 및 언더톤 변화 설명
+- 탈색 후 착색 흐름 유지
 
 [문구 틀 - 반드시 이 틀 사용]
 톤업(염모제): "[목표색] 염모제로 바로 시술 가능해요. 탈색 없이 산화염모제로 명도 상승이 가능한 케이스예요."
@@ -3492,30 +3501,48 @@ function buildChecklist(result) {
   _lastResult = result;
   var proc = result.processType;
   var neut = result.needNeutralization;
+  var tDir = window._toneDir;
+  var toneUpType = window._toneUpType || 'bleach';
 
-  var hasBleach  = proc === 'BLEACH_FIRST' || proc === 'BLEACH_SHORT_TONING';
+  var hasBleach  = (proc === 'BLEACH_FIRST' || proc === 'BLEACH_SHORT_TONING')
+                   && !(tDir === 'up' && toneUpType === 'dye');
   var hasToning  = proc === 'TONING_THEN_COLOR' || proc === 'TONE_DOWN_TONING' || proc === 'BLEACH_SHORT_TONING';
   var hasNeut    = neut;
   var hasClear   = proc === 'CLEAR_MIX';
   var isToneDown = proc === 'TONE_DOWN' || proc === 'TONE_DOWN_NEUTRALIZE' || proc === 'TONE_DOWN_TONING';
-  var tDir       = window._toneDir;
 
   /* 방향 라벨 */
-  var dirLabel = tDir === 'up'   ? '톤업 (탈색 포함)'
-               : tDir === 'same' ? '톤인톤 (명도 유지)'
-               : tDir === 'down' ? '톤다운'
-               : '시술';
+  var dirLabel;
+  if (tDir === 'up') {
+    dirLabel = toneUpType === 'dye' ? '시술 (탈색 없음)' : '톤업 (탈색 포함)';
+  } else if (tDir === 'same') {
+    dirLabel = '톤인톤 (명도 유지)';
+  } else if (tDir === 'down') {
+    dirLabel = '톤다운';
+  } else {
+    dirLabel = '시술';
+  }
 
-  /* 4항목: 서포트케어 / 크리닉케어 / 톤업 / 탈색 */
-  var mainLabel = hasBleach  ? '탈색 진행'
-                : isToneDown ? '톤다운 착색'
-                : hasClear   ? '클리어 믹스 착색'
-                : hasNeut    ? '보색 중화 후 착색'
-                : '착색 시술';
+  /* 메인 항목 라벨 */
+  var mainLabel;
+  if (tDir === 'up' && toneUpType === 'dye') {
+    mainLabel = '산화염모제 시술';
+  } else if (hasBleach) {
+    mainLabel = '탈색 진행';
+  } else if (isToneDown) {
+    mainLabel = '톤다운 착색';
+  } else if (hasClear) {
+    mainLabel = '클리어 믹스 착색';
+  } else if (hasNeut) {
+    mainLabel = '보색 중화 후 착색';
+  } else {
+    mainLabel = '착색 시술';
+  }
+
   var optional = [
     { label: '서포트케어 (시술 전 PPT·단백질)', checked: false, auto: false },
-    { label: '크리닉케어 (탈색 중·후 크리닉)', checked: hasBleach, auto: false },
-    { label: mainLabel + ' (' + dirLabel + ')', checked: true, auto: true },
+    { label: '크리닉케어 (탈색 중·후 크리닉)',  checked: hasBleach, auto: false },
+    { label: mainLabel + ' (' + dirLabel + ')',  checked: true, auto: true },
     { label: '탈색', checked: hasBleach, auto: hasBleach },
   ];
 
