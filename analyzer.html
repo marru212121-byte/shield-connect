@@ -2329,6 +2329,7 @@ function confirmTargetColor() {
 
   /* ══ 한색(애쉬·그레이·블루) 현재 → 바이올렛·핑크 톤인톤 경고 ══
      기존 애쉬 베이스에서 바이올렛 착색 시 발색 오차 가능 */
+  /* ══ 한색(애쉬·그레이) 현재 → 바이올렛·핑크 톤인톤 경고 ══ */
   var isCoolToViolet = (curUt3 === 'GRAY' || curUt3 === 'DARK_NEUTRAL' ||
                         curUt3 === 'BLUE' || curUt3 === 'TEAL') &&
     (tarUt2 === 'VIOLET' || tarUt2 === 'PINK' || tarUt2 === 'RED_VIOLET') &&
@@ -2337,20 +2338,28 @@ function confirmTargetColor() {
     warnBtn('same', '애쉬 베이스에 바이올렛 착색 시 명도에 따라 발색 오차 범위가 생길 수 있어요');
   }
 
-  /* ══ 그린 → 레드 톤인톤: ✅ 열림 강제 ══
-     그린 베이스에서 레드를 착색하면 보색이 오히려 중화 역할
-     → 경고 없이 바로 착색 가능 */
+  /* ══ 애쉬그레이 현재 → 블루애쉬 톤인톤: 🔒 잠금 ══
+     한색 잔여 누적으로 탁한 블루·먹색으로 발색됨
+     선명한 블루는 탈색 후에만 가능 */
+  if ((curUt3 === 'GRAY' || curUt3 === 'DARK_NEUTRAL') &&
+      (tarUt2 === 'BLUE' || tarUt2 === 'TEAL') && !sameImpossible) {
+    lockBtn('same', '한색 잔여 누적으로 탁한 블루·먹색으로 발색돼요. 선명한 블루는 탈색 후 가능해요.');
+  }
+
+  /* ══ 애쉬그레이 현재 → 레드 톤인톤: 🔒 잠금 ══
+     한색 잔여와 레드 보색 충돌 → 브라운·탁한 레드로 발색
+     선명한 레드는 탈색 후에만 가능 */
+  if ((curUt3 === 'GRAY' || curUt3 === 'DARK_NEUTRAL') &&
+      (tarUt2 === 'RED' || tarUt2 === 'RED_VIOLET' || tarUt2 === 'ORANGE') &&
+      !sameImpossible) {
+    lockBtn('same', '한색 잔여와 보색 충돌로 브라운·탁한 레드로 발색돼요. 선명한 레드는 탈색 후 가능해요.');
+  }
+
+  /* ══ 그린 → 레드 톤인톤: 🔒 잠금 ══
+     보색 관계로 색이 중화되며 선명한 레드 아닌 브라운·탁한 레드로 발색
+     정확한 레드는 탈색 후 진행 필요 */
   if (curUt3 === 'GREEN' && (tarUt2 === 'RED' || tarUt2 === 'RED_VIOLET') && !sameImpossible) {
-    var sameBtn = document.getElementById('tone-btn-same');
-    if (sameBtn && !sameBtn.disabled) {
-      /* 경고가 붙어있을 수 있으므로 정상화 */
-      sameBtn.style.borderColor = '#333';
-      sameBtn.style.background = '#111';
-      sameBtn.style.color = '#fff';
-      sameBtn.dataset.warnReason = '';
-      var sameSub = sameBtn.querySelector('div');
-      if (sameSub) sameSub.textContent = '탈색 없이 현재 명도에서 색상 전환 · 잔류색소로 완벽한 발색이 어려울 수 있어요';
-    }
+    lockBtn('same', '보색 관계로 색이 중화되며 브라운·탁한 레드로 발색돼요. 선명한 레드는 탈색 후 가능해요.');
   }
 
   var tc = document.getElementById('tone-dir-card');
@@ -2766,10 +2775,7 @@ function buildHairMessage(result, curHSL, tarHSL) {
 
   } else if (toneDir === 'same') {
     /* 톤인톤 틀 */
-    if (curUt === 'GREEN' && (tarUt === 'RED' || tarUt === 'RED_VIOLET')) {
-      /* 그린→레드: 레드 자체가 보색 역할 */
-      line3 = tarName + ' 염모제 자체가 그린의 보색이에요. 바로 착색하면 그린기가 중화되며 발색돼요.';
-    } else if (neut && compColor) {
+    if (neut && compColor) {
       /* 보색중화 필요 틀 */
       line3 = tarName + ' 염모제에 ' + compColor + josa(compColor) + ' 소량 섞어 '
             + utKo + '기를 보색중화하면서 착색하세요.';
