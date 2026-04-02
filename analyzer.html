@@ -2812,6 +2812,11 @@ function selectBlackType(type) {
   event.currentTarget.style.borderColor = '#fff';
   event.currentTarget.style.background = 'rgba(255,255,255,0.07)';
 
+  /* 블랙 → toneUpType 계산 후 주입 */
+  var tarNorm = normalizeColor(targetHSL.h, targetHSL.s, targetHSL.l, 'tar');
+  window._toneUpType = getToneUpType(tarNorm.base, tarNorm.tone, targetHSL.l);
+  window._toneDir = 'up'; /* 블랙은 항상 톤업 */
+
   /* 블랙 베이스 → 손상도는 탈색 이력 기반으로 추정 */
   var dmgGuess = (type === 'bleached') ? 'damaged' : 'natural';
   var result = analyzeColorFlow(currentHSL, targetHSL, dmgGuess);
@@ -3031,18 +3036,26 @@ function buildHairMessage(result, curHSL, tarHSL) {
   ────────────────────────────── */
 
   if (toneDir === 'up') {
-    /* 톤업 틀: [탈색목표] + [착색] + [잔류색소] */
+    /* ── toneUpType 분기 ── */
+    var toneUpType = window._toneUpType || 'bleach';
 
-    /* 애쉬그레이 목표: 18lv 무조건 아님 — 노랑기 조건으로 분기 */
-    if (tarUt === 'GRAY' || tarUt === 'DARK_NEUTRAL') {
-      line3 = tarName + ' 염모제로 착색하세요.\n노랑기 남았다면 애쉬 염모제에 보라를 소량 섞어 보색중화하면서 착색하세요.';
+    if (toneUpType === 'dye') {
+      /* 염모제 톤업 — 탈색 없이 산화염모제로 명도 상승 */
+      line3 = tarName + ' 염모제로 바로 시술 가능해요.\n탈색 없이 산화염모제로 명도 상승이 가능한 케이스예요.';
+
     } else {
-      line3 = bleachTarget + tarName + ' 염모제로 착색하세요.';
-      if (isYellowCur && isCoolTar) {
-        /* 노랑 베이스 → 한색: 노랑기 잔류 처리 */
-        line3 += '\n노랑기 남았다면 애쉬 염모제에 보라를 소량 섞어 보색중화하면서 착색하세요.';
-      } else if (resGuide) {
-        line3 += '\n' + resGuide;
+      /* 탈색 톤업 */
+
+      /* 애쉬그레이 목표: 노랑기 조건 분기 */
+      if (tarUt === 'GRAY' || tarUt === 'DARK_NEUTRAL') {
+        line3 = tarName + ' 염모제로 착색하세요.\n노랑기 남았다면 애쉬 염모제에 보라를 소량 섞어 보색중화하면서 착색하세요.';
+      } else {
+        line3 = bleachTarget + tarName + ' 염모제로 착색하세요.';
+        if (isYellowCur && isCoolTar) {
+          line3 += '\n노랑기 남았다면 애쉬 염모제에 보라를 소량 섞어 보색중화하면서 착색하세요.';
+        } else if (resGuide) {
+          line3 += '\n' + resGuide;
+        }
       }
     }
 
@@ -3185,7 +3198,7 @@ function renderAnalysisResult(result) {
   var isBleach  = (result.processType === 'BLEACH_FIRST' || result.processType === 'BLEACH_SHORT_TONING');
 
   var toneUpType = window._toneUpType || 'bleach';
-  var dirKo;
+  console.log('[toneUpType]', toneUpType, '| toneDir:', toneDir, '| tar:', normalizeColor(targetHSL.h, targetHSL.s, targetHSL.l, 'tar'));
   if (toneDir === 'up') {
     dirKo = toneUpType === 'dye' ? '염모제 톤업 (탈색 없이)' : '톤업 (탈색)';
   } else if (toneDir === 'same') {
