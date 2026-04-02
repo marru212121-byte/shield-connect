@@ -2499,18 +2499,20 @@ function satToKo(s) {
    목표색: 채도우선 + hueToName         (원하는 색감 표현)
 ════════════════════════════════════════ */
 function buildHairMessage(result, curHSL, tarHSL) {
-  var rawTarName = hueToName(tarHSL.h, tarHSL.s, tarHSL.l);
-  var curLvKo    = bleachStageToKo(result.bleachStage);
-  var tarSatKo   = satToKo(tarHSL.s);
-  var curSatKo   = satToKo(curHSL.s);
-  var curUt      = result.curUndertone;
-  var neut       = result.needNeutralization; /* needNeutralization 플래그 사용 */
-  var proc       = result.processType;
-  var pastel     = result.pastelTarget;
-  var dmg        = result.damageLevel || 'natural';
+  var curUt   = result.curUndertone;
+  var tarUt   = result.tarUndertone;
+  var toneDir = window._toneDir || 'same';
+  var proc    = result.processType;
+  var pastel  = result.pastelTarget;
+  var neut    = result.needNeutralization;
+  var risk    = getRiskLevel(curHSL);
+  var tarName = hueToName(tarHSL.h, tarHSL.s, tarHSL.l);
+  var warnR   = window._warnReason || '';
 
-  /* ── 현재색: 명도 + 언더톤명 + "언더톤" ── */
-  var utKo = UNDERTONE_KO[curUt] || '뉴트럴';
+  /* ── 현재색·목표색 표현 ── */
+  var utKo    = UNDERTONE_KO[curUt] || '뉴트럴';
+  var curSatKo = satToKo(curHSL.s);
+  var curLvKo  = bleachStageToKo(result.bleachStage);
   var curExpr;
   if (curUt === 'BLACK' || curUt === 'DARK_NEUTRAL') {
     curExpr = '블랙 계열';
@@ -2521,300 +2523,129 @@ function buildHairMessage(result, curHSL, tarHSL) {
   } else {
     curExpr = curLvKo + ' ' + utKo + ' 언더톤';
   }
-
-  /* ── 목표색: 채도 우선 + hueToName
-     단, 어두운/블랙 계열에는 파스텔·선명한 접두어 금지 ── */
+  var tarSatKo = satToKo(tarHSL.s);
   var isDarkTarget = (tarHSL.l <= 35 || (tarHSL.s < 15 && tarHSL.l <= 45));
   var tarExpr;
   if (isDarkTarget) {
-    /* 어두운 계열 → 명도 표현만 */
-    var tarLvKo = bleachStageToKo(getBleachStage(tarHSL.l));
-    tarExpr = tarLvKo + ' ' + rawTarName;
+    tarExpr = bleachStageToKo(getBleachStage(tarHSL.l)) + ' ' + tarName;
   } else if (pastel) {
-    tarExpr = '파스텔 ' + rawTarName;
+    tarExpr = '파스텔 ' + tarName;
   } else if (tarSatKo === '선명한') {
-    tarExpr = '선명한 ' + rawTarName;
+    tarExpr = '선명한 ' + tarName;
   } else {
-    var tarLvKo2 = bleachStageToKo(getBleachStage(tarHSL.l));
-    tarExpr = tarLvKo2 + ' ' + rawTarName;
+    tarExpr = tarName;
   }
-  var tarName = rawTarName; /* 하위 호환 */
 
-  /* ── 1️⃣ 첫 문장 ── */
+  /* ══ LINE1: 현재→목표 (항상 출력) ══ */
   var line1 = curExpr + '에서 ' + tarExpr + '으로 가시는군요.';
 
-  /* ⚠ 경고 방향 선택 시 — 발색 결과 예측 문구 추가 */
-  var warnR = window._warnReason || '';
-  if (warnR) {
-    if (warnR.indexOf('브라운빛') > -1 || warnR.indexOf('탁한') > -1) {
-      /* 강한 보색 충돌 */
-      line1 += '\n⚠ 보색 충돌로 원하는 색감보다 탁한 브라운빛으로 발색될 수 있어요. 톤업(탈색) 방향을 추천드려요.';
-    } else if (warnR.indexOf('바이올렛이 강하게') > -1) {
-      /* 파스텔 핑크·바이올렛 난색 베이스 */
-      line1 += '\n⚠ 현재 베이스의 노랑기로 인해 애쉬 느낌보다 바이올렛이 더 강하게 연출될 수 있어요. 18레벨 탈색 후 착색하면 더 맑은 발색이 가능해요.';
-    } else if (warnR.indexOf('애쉬 느낌') > -1) {
-      /* 어두운 애쉬바이올렛 */
-      line1 += '\n⚠ 어두운 명도의 애쉬바이올렛으로 착색 시 퍼플 느낌보다 애쉬 계열로 발색돼요.';
-    } else if (warnR.indexOf('채도 죽은') > -1) {
-      /* 강한 보색 톤다운 */
-      line1 += '\n⚠ 채도가 죽은 브라운 계열로 발색될 수 있어요. 선명한 색감을 원하시면 톤업을 추천드려요.';
-    }
-  }
-
-  /* ── 2️⃣ 언더톤 경고 (생략 — line3에 통합) ── */
+  /* ══ LINE2: 핵심 경고 (⚠ 있을 때만, 1줄) ══ */
   var line2 = '';
 
-  /* ── 3️⃣ 보색 중화 — 톤인톤·톤다운 선택 시에만 표시
-     톤업 선택 시: 탈색 후 착색이 전제 → 보색중화 문구 불필요 ── */
+  /* ══ LINE3: 시술 방법 (핵심 1~2줄) ══ */
   var line3 = '';
-  var toneDir = window._toneDir;
-  var neutWarn = ' (보색은 소량만, 과하면 보색 색이 나올 수 있어요)';
-  if (neut && toneDir !== 'up') {
-    if (curUt === 'YELLOW') {
-      line3 = '바이올렛을 소량 믹스해 노랑기를 중화하면서 ' + tarName + ' 염모제로 착색하세요.' + neutWarn;
-    } else if (curUt === 'YELLOW_GREEN') {
-      line3 = '바이올렛이나 시나몬브라운을 소량 믹스해 노랑·매트기를 중화하면서 ' + tarName + ' 염모제로 착색하세요.' + neutWarn;
-    } else if (curUt === 'ORANGE') {
-      line3 = '블루·애쉬를 소량 믹스해 주황기를 중화하면서 ' + tarName + ' 염모제로 착색하세요.' + neutWarn;
-    } else if (curUt === 'RED') {
-      line3 = '그린 계열이나 애쉬를 소량 믹스해 붉은기를 중화하면서 ' + tarName + ' 염모제로 착색하세요.' + neutWarn;
-    } else if (curUt === 'RED_VIOLET') {
-      line3 = '그린 계열을 소량 믹스해 적보라기를 중화하면서 ' + tarName + ' 염모제로 착색하세요.' + neutWarn;
-    } else if (curUt === 'GREEN') {
-      var tarUt4 = getUndertone(tarHSL.h, tarHSL.s, tarHSL.l);
-      if (tarUt4 === 'RED' || tarUt4 === 'RED_VIOLET') {
-        line3 = '레드 염모제 자체가 그린의 보색이에요. 레드 염모제를 바로 착색하면 그린기가 중화되며 발색돼요.' + neutWarn;
-      } else {
-        line3 = '시나몬브라운이나 핑크를 소량 믹스해 그린기를 중화하면서 ' + tarName + ' 염모제로 착색하세요.' + neutWarn;
-      }
-    } else if (curUt === 'VIOLET') {
-      /* 바이올렛→난색(주황·노랑): 노랑 계열 소량 믹스 */
-      line3 = '노랑 계열을 소량 믹스해 바이올렛기를 중화하면서 ' + tarName + ' 염모제로 착색하세요.' + neutWarn;
-    } else if (curUt === 'PINK') {
-      /* 핑크→한색(블루·그린): 그린 소량 믹스 */
-      line3 = '그린 계열을 소량 믹스해 핑크기를 중화하면서 ' + tarName + ' 염모제로 착색하세요.' + neutWarn;
-    } else if (curUt === 'BLUE') {
-      /* 블루→난색(주황): 주황이 보색이지만 파워 강함 → 시나몬브라운 방향 */
-      line3 = '시나몬브라운이나 코퍼 계열을 소량 믹스해 블루기를 중화하면서 ' + tarName + ' 염모제로 착색하세요.' + neutWarn;
-    } else if (curUt === 'TEAL') {
-      /* 틸→난색(레드·주황): 레드오렌지 소량 */
-      line3 = '레드오렌지 계열을 소량 믹스해 틸·청록기를 중화하면서 ' + tarName + ' 염모제로 착색하세요.' + neutWarn;
+
+  /* ── 케이스 테이블 lookup ── */
+  var key = curUt + '_' + tarUt + '_' + toneDir;
+
+  /* 보색 안내 맵 */
+  var neutMap = {
+    'YELLOW':       tarName + ' 염모제에 바이올렛을 소량 믹스해 노랑기를 중화하면서 착색하세요.',
+    'YELLOW_GREEN': tarName + ' 염모제에 바이올렛이나 시나몬브라운을 소량 믹스해 노랑·매트기를 중화하면서 착색하세요.',
+    'ORANGE':       tarName + ' 염모제에 블루·애쉬를 소량 믹스해 주황기를 중화하면서 착색하세요.',
+    'RED':          tarName + ' 염모제에 그린·애쉬를 소량 믹스해 붉은기를 중화하면서 착색하세요.',
+    'RED_VIOLET':   tarName + ' 염모제에 그린 계열을 소량 믹스해 적보라기를 중화하면서 착색하세요.',
+    'GREEN':        tarName + ' 염모제에 시나몬브라운이나 핑크를 소량 믹스해 그린기를 중화하면서 착색하세요.',
+    'VIOLET':       tarName + ' 염모제에 노랑 계열을 소량 믹스해 바이올렛기를 중화하면서 착색하세요.',
+    'PINK':         tarName + ' 염모제에 그린 계열을 소량 믹스해 핑크기를 중화하면서 착색하세요.',
+    'BLUE':         tarName + ' 염모제에 시나몬브라운을 소량 믹스해 블루기를 중화하면서 착색하세요.',
+    'TEAL':         tarName + ' 염모제에 레드오렌지 계열을 소량 믹스해 틸기를 중화하면서 착색하세요.'
+  };
+
+  /* 잔류색소 안내 맵 */
+  var residualMap = {
+    'YELLOW':       '노랑기가 남아있다면 바이올렛을 소량 먼저 눌러주고 착색하세요.',
+    'YELLOW_GREEN': '노랑·매트기가 남아있다면 바이올렛이나 시나몬브라운을 소량 믹스해 착색하세요.',
+    'ORANGE':       '주황기가 남아있다면 블루·애쉬를 소량 믹스해 중화 후 착색하세요.',
+    'RED':          '붉은기·주황기가 남아있다면 애쉬+카키를 소량 믹스해 먼저 착색하고, 다음 방문 시 목표색으로 진행하세요.',
+    'RED_VIOLET':   '적보라기가 남아있다면 그린·애쉬를 소량 믹스해 중화 후 착색하세요.'
+  };
+  var resGuide = residualMap[curUt] || '';
+
+  var isBleach = (proc === 'BLEACH_FIRST' || proc === 'BLEACH_SHORT_TONING');
+  var isPPV = (pastel || tarHSL.s < 30) && (tarUt === 'PINK' || tarUt === 'VIOLET' || tarUt === 'RED_VIOLET');
+  var isWarmCur = ['YELLOW','YELLOW_GREEN','ORANGE','RED','RED_VIOLET'].indexOf(curUt) > -1;
+  var isCoolTar = ['BLUE','VIOLET','GRAY','TEAL','DARK_NEUTRAL'].indexOf(tarUt) > -1;
+
+  /* ══ 방향별 문구 분기 ══ */
+
+  if (toneDir === 'up') {
+    /* ── 톤업 ── */
+    if (isPPV && isWarmCur) {
+      /* 파스텔·애쉬 핑크·바이올렛 목표 + 난색 베이스 */
+      line2 = '⚠ 15레벨 이하에서는 애쉬보다 보라 느낌이 강해질 수 있어요.';
+      line3 = '18레벨까지 탈색 후 밝은 ' + tarName + ' 염모제로 착색하세요.\n' + (resGuide || '');
+    } else if (tarUt === 'GREEN' || tarUt === 'YELLOW_GREEN') {
+      line3 = '15레벨까지 탈색 후 ' + tarName + ' 염모제로 착색하세요.\n' + (resGuide || '');
+    } else if (tarUt === 'BLUE' || tarUt === 'TEAL') {
+      line3 = '18레벨까지 탈색 후 ' + tarName + ' 염모제로 착색하세요.\n15레벨(노랑기)까지만 됐다면 바이올렛+블루 염모제를 믹스해 네이비로 착색하세요.';
+    } else if (tarUt === 'GRAY' || tarUt === 'DARK_NEUTRAL') {
+      line3 = '탈색 후 ' + tarName + ' 염모제로 착색하세요.\n' + (resGuide || '');
+    } else if ((curUt === 'RED' || curUt === 'RED_VIOLET') && isCoolTar) {
+      line3 = '18레벨 아이보리까지 탈색 후 ' + tarName + ' 염모제로 착색하세요.\n15레벨(노랑기)까지만 됐다면 바이올렛+블루 염모제를 믹스해 네이비로 착색하세요.';
     } else {
-      var compKo = COMP_COLOR_KO[curUt];
-      if (compKo) line3 = compKo + '을 소량 믹스해 언더톤을 중화하면서 ' + tarName + ' 염모제로 착색하세요.' + neutWarn;
-    }
-  }
-
-  /* ── 4️⃣ 시술 방향 — 리스크 × 공정 × 목표 ── */
-  var line4 = '';
-  var risk  = getRiskLevel(curHSL);
-  var isCoolTar2 = ['BLUE','VIOLET','GRAY','TEAL','DARK_NEUTRAL','WHITE'].indexOf(result.tarUndertone) > -1;
-
-  if (proc === 'BLEACH_FIRST') {
-
-    if (pastel) {
-      /* 파스텔 목표 — 리스크별 경로 분기 */
-      if (risk === 'HIGH') {
-        line4 = '15레벨(노랑기) 이상, 가능하면 18레벨 페일옐로우·아이보리까지 탈색 후 파스텔 착색을 권장해요.\n'
-              + '탈색 1~2회 진행 후 ' + tarName + '보다 진한 색감으로 먼저 착색하고, 다음 방문 시 서서히 파스텔로 밝혀가는 방법이 안전해요.\n'
-              + '색소 축적 가능성이 높아 탈색이 균일하게 진행되지 않을 수 있어요. 탈색 반응을 단계마다 확인하며 진행하고, 고객과 목표·시술 횟수를 충분히 상담 후 시작하세요.';
-      } else if (risk === 'MID') {
-        line4 = '파스텔 발색을 위해 15레벨 이상, 가능하면 18레벨 아이보리까지 탈색 후 착색을 권장해요.\n'
-              + '한 번에 파스텔로 가기 어려울 수 있어요. 진한 색감으로 먼저 착색 후 다음 방문 시 파스텔로 진행하는 방안도 고려하세요.';
-      } else if (curHSL.l < 78) {
-        line4 = '거의 다 왔어요. 추가 탈색 1회 후 18레벨 아이보리까지 밝히면 파스텔 발색 가능해요.';
-      } else {
-        line4 = '18레벨 이상 베이스로 파스텔 발색이 가능한 상태예요. 바로 착색 가능합니다.';
-      }
-
-    } else if (isCoolTar2 && risk === 'HIGH') {
-      /* 난색 고리스크 → 한색 계열 */
-      line4 = '현재 색소 축적 가능성이 높아 탈색이 균일하게 진행되지 않을 수 있어요.\n'
-            + '탈색 후 ' + tarName + '과 보색 중화를 함께 믹스해 착색하세요.\n'
-            + '한 번에 원하는 색감이 나오지 않을 수 있으니 단계적 시술을 추천해요.';
-
-    } else if (risk === 'HIGH') {
-      /* 목표색이 베이지·크림·연주황 계열 (샌드베이지)인지 확인 */
-      var isSandBeige = (result.tarUndertone === 'ORANGE' || result.tarUndertone === 'YELLOW')
-                        && targetHSL.s <= 35 && targetHSL.l >= 55;
-      if (isSandBeige) {
-        line4 = '한 번에 원하는 크림·베이지 발색을 위해서는 붉은빛이 사라질 때까지 탈색이 필요해요.\n'
-              + '15~18레벨(노랑기~아이보리)까지 탈색 후 브라운 계열로 착색하는 것을 권장해요.\n'
-              + '탈색 1~2회 후 노랑기가 남아 있다면 바이올렛+베이지 계열 믹스로 착색하세요.\n'
-              + '주황·붉은기가 잘 안 빠진 경우에는 청보라+브라운 믹스로 파스텔보다 진한 크림색으로 먼저 연출하고, 다음 방문 시 목표색으로 밝혀가세요.\n'
-              + '고객과 시술 횟수와 중간 단계 색감을 충분히 상담 후 시작하세요.';
-      } else {
-        line4 = '현재 색소 축적 가능성이 높아 탈색 시 색이 고르게 빠지지 않을 수 있어요.\n'
-              + '탈색 후 반응을 확인하며 단계적으로 진행하세요. 고객과 충분한 상담 후 시작하세요.';
-      }
-
-    } else if (risk === 'MID') {
-      line4 = '탈색 후 ' + tarName + '으로 착색하세요. 탈색 반응을 확인하며 진행하는 것을 권장해요.';
-
-    } else {
-      /* LOW 리스크 — 핑크·애쉬핑크 목표 명도별 세분화 */
-      var isPinkTar = (result.tarUndertone === 'PINK');
-      if (isPinkTar) {
-        if (curHSL.l < 55) {
-          /* 11레벨 이하 (오렌지 구간) */
-          line4 = '현재 베이스(11레벨 이하, 오렌지 구간)에서 핑크 착색 시 바이올렛·적보라로 발색될 가능성이 높아요.\n'
-                + '파스텔 핑크는 최소 15레벨(노랑기) 이상, 선명한 발색은 18레벨 아이보리까지 탈색 후 착색해야 해요.\n'
-                + '탈색 횟수 제약이 있다면, 15레벨(노랑기)까지 탈색 후 바이올렛으로 중화하며 진한 바이올렛으로 먼저 착색하고 다음 방문 시 파스텔 핑크로 밝혀가세요.\n'
-                + '고객과 충분한 상담 후 진행하세요.';
-        } else if (curHSL.l < 72) {
-          /* 12~14레벨 (옐로오렌지 구간) */
-          line4 = '현재 베이스(14레벨 이하)에서도 핑크보다 바이올렛·적보라로 발색될 수 있어요.\n'
-                + '18레벨 아이보리까지 탈색이 필요해요.\n'
-                + '탈색 후 잔류색소 반응을 확인하고 착색하세요.';
-        } else if (curHSL.l < 78) {
-          /* 15~17레벨 (노랑기~페일옐로우 구간) */
-          line4 = '거의 다 왔어요. 추가 탈색 1회 후 18레벨 아이보리까지 밝히면 파스텔 핑크 발색 가능해요.\n'
-                + '탈색 후 잔류색소 반응을 확인하고 착색하세요.';
-        } else {
-          /* 18레벨 이상 — 발색 가능 */
-          line4 = '18레벨 이상 베이스로 파스텔 핑크 발색이 가능한 상태예요.\n'
-                + '잔류 레드·주황 색소가 남아 있다면 핑크보다 살구·코랄로 발색될 수 있어요.\n'
-                + '탈색 후 잔류색소 반응을 확인하고 착색하세요.';
-        }
-      } else if ((result.tarUndertone === 'VIOLET' || result.tarUndertone === 'RED_VIOLET') && curUt !== 'PINK' && curUt !== 'VIOLET') {
-        line4 = '탈색 후 높은 명도의 밝은 ' + tarName + '으로 착색하세요.\n'
-              + '탈색 후에도 노랑기가 남아 있다면 보라빛이 조금 진하게 보일 수 있어요.\n'
-              + '노랑 잔류색소가 완전히 빠진 상태에서 착색하면 더 맑은 색감이 나와요.';
-      } else if (isCoolTar2 && (curUt === 'YELLOW' || curUt === 'YELLOW_GREEN' || curUt === 'ORANGE')) {
-        line4 = '탈색 후 ' + tarName + '으로 착색하세요.\n'
-              + '노랑·주황 잔류색소가 남아 있다면 보색 중화를 소량 믹스해 착색하면 더 깨끗한 발색이 가능해요.';
-      } else {
-        line4 = '명도 차이가 커서 탈색 후 시술을 추천합니다.';
-      }
+      line3 = '탈색 후 ' + tarName + ' 염모제로 착색하세요.\n' + (resGuide || '');
     }
 
-  } else if (proc === 'BLEACH_SHORT_TONING') {
-    line4 = '고손상모로 탈색 1회 단시간만 진행 후 토닝으로 마무리하세요.\n'
-          + '탈색을 짧게 진행하고 색 반응을 확인한 뒤 착색하세요.';
-
-  } else if (proc === 'TONING_THEN_COLOR') {
-    line4 = '토닝으로 언더톤을 먼저 정리한 뒤 ' + tarName + ' 염모제로 진행하세요.';
-
-  } else if (proc === 'CLEAR_MIX') {
-    line4 = '베이스가 충분히 밝아 ' + tarName + ' 염모제를 클리어와 믹스해 농도를 조절하며 착색하세요.';
-
-  } else if (proc === 'TONE_DOWN_NEUTRALIZE') {
-    line4 = neut
-      ? '' /* line3에 보색+착색 통합 — line4 생략 */
-      : tarName + ' 계열 낮은 명도 염모제로 착색하세요. 보색을 소량 믹스해 중화하며 진행하세요.';
-
-  } else if (proc === 'TONE_DOWN_TONING') {
-    line4 = '토닝으로 언더톤을 먼저 정리한 뒤 ' + tarName + ' 계열 낮은 명도 염모제로 착색하세요.';
-
-  } else if (proc === 'TONE_DOWN') {
-    if (risk === 'HIGH') {
-      line4 = neut
-        ? '' /* line3에 통합 */
-        : tarName + ' 계열 낮은 명도 염모제로 착색하세요.\n'
-          + '현재 색소가 많이 축적되어 있을 수 있어 발색이 예상과 다를 수 있어요.';
-    } else {
-      line4 = neut
-        ? '' /* line3에 통합 */
-        : tarName + ' 계열 낮은 명도 염모제로 착색하세요.';
+  } else if (toneDir === 'same') {
+    /* ── 톤인톤 ── */
+    if (warnR) {
+      /* 경고 방향 선택 */
+      if (warnR.indexOf('브라운빛') > -1) {
+        line2 = '⚠ 보색 충돌로 원하는 색감보다 탁한 브라운빛으로 발색될 수 있어요.';
+      } else if (warnR.indexOf('바이올렛이 강하게') > -1 || isPPV) {
+        line2 = '⚠ 노랑기로 인해 바이올렛이 메인으로 표현되는 게 최선이에요.';
+      } else if (warnR.indexOf('살구') > -1 || warnR.indexOf('코랄') > -1) {
+        line2 = '⚠ 주황기로 인해 살구·코랄로 발색될 수 있어요.';
+      }
     }
-
-  } else if (proc === 'NEUTRALIZATION_THEN_COLOR') {
-    /* line3에 보색+목표색 착색 통합됨 → line4 생략 */
-    line4 = '';
+    if (neut && neutMap[curUt]) {
+      if (curUt === 'GREEN' && (tarUt === 'RED' || tarUt === 'RED_VIOLET')) {
+        line3 = '레드 염모제 자체가 그린의 보색이에요. 레드 염모제를 바로 착색하면 그린기가 중화되며 발색돼요.';
+      } else if ((tarUt === 'VIOLET' || tarUt === 'PINK') && curUt === 'YELLOW') {
+        /* 노랑→바이올렛·핑크 톤인톤 전용 */
+        line3 = '노랑기로 인해 바이올렛이 메인으로 표현되는 게 최선이에요.\n'
+              + tarName + ' 염모제에 바이올렛을 소량 믹스해 중화하면서 착색하세요.';
+      } else {
+        line3 = neutMap[curUt];
+      }
+    } else {
+      line3 = tarName + ' 염모제로 바로 착색 가능해요.';
+    }
 
   } else {
-    /* DIRECT_COLOR */
-    if (risk === 'HIGH') {
-      line4 = tarName + ' 염모제로 착색 가능하나, 색소 축적 가능성이 있어 발색이 예상과 다를 수 있어요.\n'
-            + '모발 상태를 확인하며 진행하세요.';
+    /* ── 톤다운 ── */
+    if (warnR) {
+      if (warnR.indexOf('브라운빛') > -1 || warnR.indexOf('채도 죽은') > -1) {
+        line2 = '⚠ 채도가 죽은 브라운으로 발색될 수 있어요.';
+      } else if (warnR.indexOf('애쉬 느낌') > -1) {
+        line2 = '⚠ 어두운 명도 착색 시 퍼플보다 애쉬 느낌으로 발색돼요.';
+      }
+    }
+    if (neut && neutMap[curUt]) {
+      line3 = neutMap[curUt].replace('착색하세요.', '낮은 명도로 착색하세요.');
     } else {
-      line4 = neut
-        ? '' /* line3에 보색+착색 통합 */
-        : tarName + ' 염모제로 바로 착색 가능합니다.';
+      line3 = tarName + ' 계열의 낮은 명도 염모제로 착색하세요.';
     }
   }
 
-  /* ── 5️⃣ 보조 힌트 / 절대값 문구 ── */
-  var line5 = '';
-  var toneDir    = window._toneDir;
-  var isWarmCur  = ['YELLOW','YELLOW_GREEN','ORANGE'].indexOf(curUt) > -1;
-  var isCoolTar  = ['BLUE','VIOLET','GRAY','TEAL','DARK_NEUTRAL'].indexOf(result.tarUndertone) > -1;
-  var isBleachProc = (proc === 'BLEACH_FIRST' || proc === 'BLEACH_SHORT_TONING');
-
-  /* 절대값 케이스 */
-  var isAbsolute = false;
-  if (curUt === 'BLACK' && pastel) isAbsolute = true;
-  if (curUt === 'RED' && curHSL.s >= 65 && isCoolTar) isAbsolute = true;
-  if (Math.abs(tarHSL.l - curHSL.l) > 35) isAbsolute = true;
-
-  if (isAbsolute && isBleachProc) {
-    if (curUt === 'BLACK' && pastel) {
-      line5 = '블랙에서 파스텔까지는 탈색 2~3회 이상이 필요한 고난도 시술이에요.\n'
-            + '탈색 후 진한 ' + tarName + '으로 먼저 착색하고, 재방문 시 서서히 파스텔로 밝혀가는 방법을 강력 권장해요.\n'
-            + '한 번에 파스텔로 가려는 시도는 모발 손상 위험이 매우 높습니다. 고객과 충분히 상담 후 진행하세요.';
-    } else if ((curUt === 'RED' || curUt === 'RED_VIOLET') && isCoolTar) {
-      line5 = '어두운 와인·로즈 언더톤에서 선명한 블루 계열로 가시는군요.\n'
-            + '명도 차이가 매우 커서 탈색 없이는 불가능한 시술이에요.\n'
-            + '18레벨 이상 아이보리 빛까지 탈색이 가능하다면, 스카이블루 염모제를 바로 입히면 돼요.\n'
-            + '15레벨(노랑기 구간)까지만 탈색하셨다면 바이올렛과 블루 염모제를 믹스하여 네이비 계열까지는 연출 가능해요.\n'
-            + '고객과 목표 색감과 탈색 횟수를 충분히 상담 후 진행하세요.';
-    } else {
-      line5 = '명도 차이가 매우 커서 탈색 없이는 불가능한 시술이에요.\n'
-            + '18레벨 아이보리까지 탈색 후 ' + tarName + ' 염모제로 착색하세요.\n'
-            + '15레벨(노랑기 구간)까지만 탈색 가능하다면, 보색 중화와 함께 ' + tarName + '보다 진한 색감으로 먼저 착색하고 다음 방문 시 목표색으로 진행하세요.\n'
-            + '고객과 충분히 상담 후 단계적으로 진행하세요.';
-    }
-
-  } else if (toneDir === 'up' && isWarmCur && isCoolTar && isBleachProc && !isAbsolute) {
-    var tarUt3 = getUndertone(tarHSL.h, tarHSL.s, tarHSL.l);
-    var isPPVline5 = (pastel || tarHSL.s < 30) &&
-      (tarUt3 === 'PINK' || tarUt3 === 'VIOLET' || tarUt3 === 'RED_VIOLET');
-
-    /* 언더톤별 잔류색소 보색 안내 */
-    var residualGuide = {
-      'YELLOW':       '노랑기가 남아있다면 바이올렛을 소량 믹스해 중화하면서 ' + tarName + ' 염모제로 착색하세요.',
-      'YELLOW_GREEN': '노랑·매트기가 남아있다면 바이올렛이나 시나몬브라운을 소량 믹스해 중화하면서 ' + tarName + ' 염모제로 착색하세요.',
-      'ORANGE':       '주황기가 남아있다면 블루·애쉬를 소량 믹스해 중화하면서 ' + tarName + ' 염모제로 착색하세요.',
-      'RED':          '붉은기·주황기가 남아있다면 애쉬와 카키를 소량 믹스해 애쉬카키 방향으로 먼저 착색하고, 다음 방문 시 목표색으로 진행하세요.',
-      'RED_VIOLET':   '적보라기가 남아있다면 그린 계열과 애쉬를 소량 믹스해 중화하면서 착색하세요.'
-    };
-    var resGuide = residualGuide[curUt] || '잔류색소가 남아있다면 보색을 소량 믹스해 중화하면서 착색하세요.';
-
-    if (isPPVline5) {
-      /* 파스텔 핑크·바이올렛: 18레벨 필수 */
-      line5 = '18레벨 아이보리까지 탈색 후 고명도 ' + tarName + ' 염모제로 착색하세요.\n'
-            + resGuide;
-
-    } else if (tarUt3 === 'GREEN' || tarUt3 === 'YELLOW_GREEN') {
-      /* 그린 목표: 붉은기만 제거되면 충분 (15레벨까지면 OK) */
-      line5 = '15레벨(노랑기 구간)까지 탈색하면 ' + tarName + ' 염모제로 착색 가능해요.\n'
-            + resGuide;
-
-    } else if (tarUt3 === 'BLUE' || tarUt3 === 'TEAL') {
-      /* 블루 목표: 15레벨에서 노랑기 중화 필요, 18레벨이면 바로 가능 */
-      line5 = '18레벨 아이보리까지 탈색 가능하다면 ' + tarName + ' 염모제로 바로 착색하세요.\n'
-            + '15레벨(노랑기 구간)까지만 탈색됐다면 노랑기가 남아있다면 바이올렛+블루 염모제를 믹스해 네이비 계열로 착색하세요.';
-
-    } else if (tarUt3 === 'VIOLET' || tarUt3 === 'PINK' || tarUt3 === 'RED_VIOLET') {
-      /* 바이올렛·핑크 (비파스텔): 15~18레벨 */
-      line5 = '15레벨(노랑기 구간)까지 탈색 후 ' + tarName + ' 염모제로 착색하세요.\n'
-            + '탈색 후에도 노랑기가 남아있다면 바이올렛을 소량 믹스해 중화하면서 착색하세요.\n'
-            + '파스텔보다 바이올렛 베이스에 가깝게 발색될 수 있으니 고객과 미리 상담하세요.';
-
-    } else if (tarUt3 === 'GRAY' || tarUt3 === 'DARK_NEUTRAL') {
-      /* 애쉬·그레이 목표: 15레벨이면 충분, 18레벨이면 더 맑게 */
-      line5 = '15레벨(노랑기 구간)까지 탈색 후 ' + tarName + ' 염모제로 착색하세요.\n'
-            + '18레벨까지 탈색하면 더 맑은 애쉬 발색이 가능해요.\n'
-            + resGuide;
-
-    } else {
-      /* 기타 */
-      line5 = '18레벨 아이보리까지 탈색 가능하다면 ' + tarName + ' 염모제로 바로 착색하세요.\n'
-            + '15레벨(노랑기 구간)까지만 탈색됐다면 ' + resGuide;
-    }
+  /* ══ HIGH 리스크일 때만 상담 문구 추가 ══ */
+  var line4 = '';
+  if (risk === 'HIGH' && isBleach) {
+    line4 = '색소 축적 가능성이 있어요. 탈색 반응을 확인하며 단계적으로 진행하고 고객과 충분히 상담 후 시작하세요.';
   }
 
-  return [line1, line2, line3, line4, line5].filter(Boolean).join('\n');
+  return [line1, line2, line3, line4].filter(Boolean).join('\n');
 }
 
 /* ── 분석 결과 렌더링 (2안: 프론트 문장 → API 다듬기) ── */
