@@ -2180,29 +2180,51 @@ function confirmTargetColor() {
   var isWarmBase = (curUt3 === 'YELLOW' || curUt3 === 'YELLOW_GREEN' ||
                     curUt3 === 'ORANGE' || curUt3 === 'RED' || curUt3 === 'RED_VIOLET');
 
-  /* ── 난색 베이스 + 애쉬핑크·바이올렛 계열 잠금/경고 ──
-     노랑/주황/레드 베이스 → 애쉬핑크·애쉬바이올렛:
-       - 톤인톤: 잠금 (노랑/주황기로 보색 발색 제대로 안 됨)
-       - 톤다운: 잠금
-       - 톤업: 허용 (경고 포함)
-     단, 노랑 베이스 → 바이올렛 계열 톤인톤은 경고(⚠)로 허용 (스크린샷 Image2 기준)
+  /* ══ 파스텔·애쉬 계열(핑크·바이올렛) + 난색 베이스 분기 ══
+     자연 멜라닌 탈색 순서 기반:
+       주황/레드 베이스: 보색 파워 너무 강해 발색 자체가 의미없음 → 톤인톤·톤다운 잠금
+       노랑 베이스(밝음, cL≥60): 예측 가능한 발색 → 톤인톤 경고로 열어둠
+       노랑 베이스(어두움, cL<60): 발색 불안정 → 톤인톤 잠금
+       톤다운은 모든 경우 잠금 — 어두운 명도에서 파스텔 표현 불가
+       톤업은 항상 열림 (정석 루트)
   */
   if (isPastelPinkViolet && isWarmBase && cL < 78) {
-    if (curUt3 === 'YELLOW' && (tarUt2 === 'VIOLET' || tarUt2 === 'RED_VIOLET')) {
-      /* 노랑 → 바이올렛: 톤인톤 경고, 톤다운 잠금 */
-      warnBtn('same', '노랑기로 보라가 메인으로 표현되는 게 최선이에요. 애쉬바이올렛 염모제에 보라를 소량 섞어 보색중화하면서 착색하세요.');
-      if (!downImpossible) lockBtn('down', '어두운 명도에서 애쉬바이올렛보다 더 애쉬 느낌으로 발색돼요.');
-    } else if (curUt3 === 'YELLOW' && tarUt2 === 'PINK') {
-      /* 노랑 → 핑크: 톤인톤 경고, 톤다운 잠금 */
-      warnBtn('same', '노랑기로 살구·코랄로 발색될 수 있어요. 18레벨 탈색을 권장드려요.');
-      if (!downImpossible) lockBtn('down', '노랑기로 저채도 계열로 발색될 수 있어요.');
-    } else {
-      /* 주황/레드 → 바이올렛·핑크: 톤인톤 잠금, 톤다운 잠금 */
-      if (!sameImpossible) lockBtn('same', '주황기·붉은기로 제대로 발색이 어려워요. 18레벨 탈색 후 착색 추천.');
-      if (!downImpossible) lockBtn('down', '어두운 명도에서도 주황·붉은기로 발색이 탁해져요.');
+
+    var isOrangeRedBase = (curUt3 === 'ORANGE' || curUt3 === 'RED' ||
+                           curUt3 === 'RED_VIOLET' || curUt3 === 'YELLOW_GREEN');
+    var isYellowBase    = (curUt3 === 'YELLOW');
+
+    /* ── 노랑 베이스 전용 경고 문구 ── */
+    var ppvSameWarn = '';
+    if (isYellowBase) {
+      if (tarUt2 === 'VIOLET' || tarUt2 === 'RED_VIOLET') {
+        ppvSameWarn = '바이올렛에 애쉬 한 방울 느낌으로 나와요. 순수 애쉬바이올렛보단 보라가 메인이에요. 고객이 이 발색을 원한다면 진행 가능해요.';
+      } else if (tarUt2 === 'PINK') {
+        ppvSameWarn = '노랑기로 살구·코랄 느낌으로 나와요. 순수 애쉬핑크보단 따뜻한 핑크가 메인이에요. 고객이 원한다면 진행 가능해요.';
+      }
     }
+
+    if (isOrangeRedBase) {
+      /* 주황·레드 베이스 — 명도 무관 전체 잠금
+         자연멜라닌 기준 보색 파워가 너무 강해 발색 자체가 탁해짐 */
+      if (!sameImpossible) lockBtn('same', '탈색이 불가피해요. 현재 잔류색소로는 원하는 발색이 나오지 않아요.');
+      if (!downImpossible) lockBtn('down', '탈색이 불가피해요. 어두운 명도에서는 더욱 발색이 어려워요.');
+
+    } else if (isYellowBase) {
+      /* 노랑 베이스 — 명도 기준 분기 */
+      if (cL >= 60) {
+        /* 밝은 노랑(약 13레벨 이상) — 경고로 열어둠 */
+        if (!sameImpossible) warnBtn('same', ppvSameWarn);
+        if (!downImpossible) lockBtn('down', '어두운 명도에서는 파스텔 표현이 불가해요.');
+      } else {
+        /* 어두운 노랑(약 13레벨 미만) — 잠금 */
+        if (!sameImpossible) lockBtn('same', '탈색이 불가피해요. 현재 노랑기로는 파스텔 발색이 어려워요.');
+        if (!downImpossible) lockBtn('down', '어두운 명도에서는 파스텔 표현이 불가해요.');
+      }
+    }
+
     showUpRecommend();
-    /* 톤업이 upImpossible로 잠겼다면 해제 */
+    /* 톤업이 잠겼다면 해제 */
     var upBtn = document.getElementById('tone-btn-up');
     if (upBtn && upBtn.disabled) {
       upBtn.disabled = false;
@@ -2258,19 +2280,23 @@ function confirmTargetColor() {
     }
   }
 
-  /* ══ 노랑/주황 → 블루 계열: 톤인톤 경고, 톤다운 잠금 ══
-     노랑이나 주황 베이스에서 블루 목표는 보색 충돌
-     톤인톤: 경고 (브라운+애쉬로 발색 가능)
-     톤다운: 잠금 (목표가 더 밝으므로 대부분 D1으로 이미 잠기나, 안 잠긴 경우 처리) */
+  /* ══ 노랑/주황 → 블루 계열 ══
+     자연멜라닌 기준:
+       주황 베이스: 주황+파랑 = 브라운·머드, 발색 의미없음 → 잠금
+       노랑 베이스: 노랑+파랑 = 네이비블루, 예측 가능 → 경고로 열어둠 */
   var isYellowOrangeToBlueSeries = (curUt3 === 'YELLOW' || curUt3 === 'ORANGE') &&
     (tarUt2 === 'BLUE' || tarUt2 === 'TEAL' || tarUt2 === 'VIOLET') &&
-    !isStrongComp;  /* 이미 처리됐으면 중복 방지 */
+    !isPastelPinkViolet &&  /* PPV에서 이미 처리된 경우 제외 */
+    !isStrongComp;
   if (isYellowOrangeToBlueSeries) {
-    if (!sameImpossible) {
-      warnBtn('same', '주황+블루 보색 충돌로 탁한 브라운빛으로 발색될 수 있어요. 선명한 블루 원하면 톤업 추천');
+    if (curUt3 === 'YELLOW') {
+      /* 노랑 → 블루: 경고로 열어둠 (네이비블루 발색 가능) */
+      if (!sameImpossible) warnBtn('same', '노랑기로 블루가 탁해져 네이비블루 쪽으로 빠질 수 있어요. 파스텔한 블루애쉬를 원하면 탈색 추천해요.');
+    } else {
+      /* 주황 → 블루: 잠금 (브라운·머드로 발색) */
+      if (!sameImpossible) lockBtn('same', '탈색이 불가피해요. 주황기와 블루 보색 충돌로 탁한 브라운으로 발색돼요.');
     }
-    /* 톤다운도 잠금 (D1으로 안 잠긴 경우 대비) */
-    if (!downImpossible) lockBtn('down', '노랑/주황→블루 톤다운 방향은 발색이 어려워요');
+    if (!downImpossible) lockBtn('down', '탈색 없이는 블루 계열 톤다운 발색이 어려워요.');
     showUpRecommend();
     var upBtn3 = document.getElementById('tone-btn-up');
     if (upBtn3 && upBtn3.disabled) {
@@ -2687,22 +2713,40 @@ function buildHairMessage(result, curHSL, tarHSL) {
 
   } else if (toneDir === 'same') {
     /* ── 톤인톤 ── */
+
+    /* warnR에서 line2 추출 — confirmTargetColor의 ppvSameWarn/blueWarn을 그대로 활용 */
     if (warnR) {
-      /* 경고 방향 선택 */
-      if (warnR.indexOf('브라운빛') > -1) {
+      if (warnR.indexOf('네이비블루') > -1 || warnR.indexOf('카키·브라운') > -1) {
+        /* 노랑/주황→블루 계열 경고 */
+        line2 = '⚠ ' + warnR;
+      } else if (warnR.indexOf('바이올렛에 애쉬 한 방울') > -1 || warnR.indexOf('보라가 메인') > -1 ||
+                 warnR.indexOf('붉은 바이올렛') > -1 || warnR.indexOf('레드바이올렛') > -1) {
+        /* 파스텔 바이올렛 계열 경고 */
+        line2 = '⚠ ' + warnR;
+      } else if (warnR.indexOf('살구') > -1 || warnR.indexOf('코랄') > -1 || warnR.indexOf('피치') > -1 || warnR.indexOf('로즈') > -1) {
+        /* 파스텔 핑크 계열 경고 */
+        line2 = '⚠ ' + warnR;
+      } else if (warnR.indexOf('브라운빛') > -1 || warnR.indexOf('탁한') > -1) {
         line2 = '⚠ 보색 충돌로 탁한 브라운빛으로 발색될 수 있어요.';
-      } else if (warnR.indexOf('바이올렛이 메인') > -1 || warnR.indexOf('바이올렛이 강하게') > -1) {
-        line2 = '⚠ 노랑기로 바이올렛이 메인으로 표현되는 게 최선이에요.';
-      } else if (warnR.indexOf('살구') > -1 || warnR.indexOf('코랄') > -1) {
-        line2 = '⚠ 노랑기로 바이올렛으로 보색중화 하면서 바이올렛 메인으로  발색될 수 있어요.';
-      } else if (warnR.indexOf('주황기·붉은기') > -1) {
-        line2 = '⚠ 주황+블루 보색 충돌로 브라운에 가까운 애쉬로 표현되요.';
       }
     }
-    /* 노랑/주황 → 블루·바이올렛(비파스텔) 톤인톤 */
+
+    /* 노랑/주황 → 블루·틸·바이올렛(비파스텔) 톤인톤 */
     if ((curUt === 'YELLOW' || curUt === 'ORANGE') && (tarUt === 'BLUE' || tarUt === 'TEAL' || tarUt === 'VIOLET')) {
-      if (!line2) line2 = '⚠ 노랑기로 파랑이 탁하게 발색될 수 있어요. 18레벨 탈색을 권장드려요.';
+      if (!line2) {
+        line2 = curUt === 'YELLOW'
+          ? '⚠ 노랑기로 블루가 탁해져 네이비블루 쪽으로 빠질 수 있어요.'
+          : '⚠ 주황기로 블루가 탁해져 카키·브라운 블루로 발색될 수 있어요.';
+      }
       line3 = tarName + ' 염모제에 보라를 소량 섞어 보색중화하면서 착색하세요. 선명한 블루 원하면 탈색 추천.';
+    /* 파스텔·애쉬 바이올렛·핑크 계열 → 밝은 베이스에서 경고로 열린 경우 */
+    } else if (isPPV && isWarmCur) {
+      /* line2는 warnR에서 이미 설정됨 */
+      if (tarUt === 'VIOLET' || tarUt === 'RED_VIOLET') {
+        line3 = tarName + ' 염모제에 보라를 소량 섞어 보색중화하면서 착색하세요.\n보라가 메인이 되는 발색이에요. 탈색 후에 정확한 ' + tarName + '이 나와요.';
+      } else {
+        line3 = tarName + ' 염모제에 보라를 소량 섞어 보색중화하면서 착색하세요.\n현재 잔류색소로 따뜻한 핑크 톤이 메인이에요. 탈색 후에 정확한 ' + tarName + '이 나와요.';
+      }
     /* 주황·레드 → 애쉬그레이 톤인톤 */
     } else if ((curUt === 'ORANGE' || curUt === 'RED' || curUt === 'RED_VIOLET') && (tarUt === 'GRAY' || tarUt === 'DARK_NEUTRAL')) {
       if (!line2) line2 = '⚠ 주황·붉은기로 브라운빛 애쉬가 나올 수 있어요.';
