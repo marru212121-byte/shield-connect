@@ -3633,30 +3633,32 @@ function hueToGroup(h, s) {
 
 function hueToName(h, s, l) {
   /* ── 명도 최우선 체크 ── */
-  if (l <= 12) return '블랙 계열';
-  if (l <= 22 && s < 25) return '블랙·짙은 다크 계열';
+  if (l <= 12) return '블랙';
+  if (l <= 22 && s < 25) return '블랙';
 
   /* ── 저명도 + 고채도 → 블랙처럼 보이는 와인·레드계열 별도 처리 ── */
   if (l <= 22 && s >= 25) {
     if ((h >= 295 && h < 345) || (h >= 0 && h < 15) || h >= 345) {
-      return '딥 와인·블랙레드 계열'; /* 블랙처럼 보이지만 레드·와인 색소 포함 */
+      return '딥 와인·블랙레드'; /* 블랙처럼 보이지만 레드·와인 색소 포함 */
     }
-    if (h >= 200 && h < 295) return '딥 네이비·블랙 계열';
-    return '딥 다크 계열';
+    if (h >= 200 && h < 295) return '딥 네이비';
+    return '딥 다크';
   }
 
   if (s < 15) {
-    if (l <= 40) return '다크 그레이·애쉬 계열';
-    if (l <= 75) return '실버·그레이 계열';  /* l65~75 실버그레이 포함 */
-    return '화이트·아이보리 계열';
+    if (l <= 40) return '다크 애쉬';
+    if (l <= 75) return '실버그레이';  /* l65~75 실버그레이 포함 */
+    return '아이보리';
   }
-  if (l >= 80 && s <= 20) return '화이트블론드·백금 계열';
-  if (l <= 18) return '블랙 계열';
+  if (l >= 80 && s <= 20) return '백금';
+  if (l <= 18) return '블랙';
 
   if ((h >= 0 && h < 15) || h >= 345) {
-    if (l <= 22) return '딥 버건디·블랙레드 계열';
-    if (l <= 35) return '와인·딥레드 계열';
-    return '레드 계열';
+    if (l <= 22) return '딥 버건디·블랙레드';
+    if (l <= 35) return '와인·딥레드';
+    if (s < 28)  return '애쉬핑크';   /* 낮은 채도 → 애쉬핑크 */
+    if (l >= 60) return '핑크';        /* 밝은 명도 → 핑크 */
+    return '레드';
   }
   if (h >= 15 && h < 45) {
     if (s <= 45 && l <= 42) return '브라운 계열';
@@ -3683,8 +3685,12 @@ function hueToName(h, s, l) {
     if (l <= 50) return '로즈·딥핑크';
     return '핑크';
   }
-  if (h >= 340 && h < 345) return '와인레드 계열';
-  return '따뜻한 계열';
+  if (h >= 340 && h < 345) {
+    if (s < 28) return '애쉬핑크';
+    if (l >= 55) return '핑크';
+    return '와인레드';
+  }
+  return '핑크';
 }
 
 
