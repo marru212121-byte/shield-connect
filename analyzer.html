@@ -719,9 +719,9 @@ toneUpType = "산화염모제 직접" 인 경우 (버진모 저명도):
 - 7~9레벨 산화염모제로 직접 시술 가능함을 설명
 - 버진모 자연 멜라닌 기준 3가지 방향 제시:
   1. 따뜻한 브라운: 자연 멜라닌의 붉은빛이 살아있는 브라운
-  2. 청초한 브라운: 블루·카키 염모제로 붉은빛 완전 억제한 브라운
-  3. 한색 브라운: 애쉬 염모제로 차분한 한색 계열 브라운
-- 예: "7~9레벨 산화염모제로 바로 시술 가능해요. 붉은빛 살린 따뜻한 브라운, 블루·카키로 억제한 청초한 브라운, 애쉬 한색 브라운 중 원하는 방향을 선택하세요."
+  2. 중화된 브라운: 블루·그린 염모제로 붉은빛 억제한 브라운
+  3. 차분한 브라운: 애쉬 염모제 기반 저채도 차분한 브라운
+- 예: "7~9레벨 산화염모제로 바로 시술 가능해요. 따뜻한 브라운, 중화된 브라운, 차분한 브라운 중 원하는 방향을 선택하세요."
 
 toneUpType = "고명도 혼합" 인 경우 (버진모 중명도):
 - 탈색 언급 절대 금지
@@ -2860,6 +2860,25 @@ function showBlackChoiceCard() {
   btns.forEach(function(b) { b.style.borderColor = '#333'; b.style.background = '#111'; });
   document.getElementById('black-recipe-result').style.display = 'none';
 
+  /* 블랙에서 톤다운·톤인톤 잠금
+     블랙 = 레벨 1~3, 가장 어두운 상태
+     톤다운: 개념적으로 불가능
+     톤인톤: 블랙에서 명도 유지 = 의미없음 */
+  var downBtn = document.getElementById('tone-btn-down');
+  var sameBtn = document.getElementById('tone-btn-same');
+  function lockBlackBtn(btn, reason) {
+    if (!btn) return;
+    btn.disabled = true;
+    btn.style.opacity = '0.3';
+    btn.style.cursor = 'not-allowed';
+    btn.style.borderColor = '#1a1a1a';
+    btn.style.background = '#0a0a0a';
+    var sub = btn.querySelector('div');
+    if (sub) sub.textContent = '🔒 ' + reason;
+  }
+  lockBlackBtn(downBtn, '블랙에서 더 어둡게는 불가능해요');
+  lockBlackBtn(sameBtn, '블랙 명도에서 색감 전환은 의미없어요');
+
   /* 블랙 절대값 경고 배너 */
   var warn = document.getElementById('black-warning-banner');
   if (!warn) {
@@ -3484,22 +3503,22 @@ function renderColorAnimation(result, curHSL, tarHSL) {
     var isHighlift = (_tut === 'highlift');
     var lAdj = isHighlift ? 10 : 0; /* highlift면 더 밝게 */
 
-    /* 3가지 스와치 색상 */
+    /* 3가지 스와치 색상 — 브라운 80% + 색감 20% 기준 */
     var swatches = [
       {
-        rgb: hslToRgb(15, 52, 32 + lAdj),
+        rgb: hslToRgb(18, 48, 30 + lAdj),
         label: '따뜻한 브라운',
-        desc: '자연 멜라닌의\n붉은빛이 살아있어요'
+        desc: '자연 멜라닌 붉은빛\n살아있는 브라운'
       },
       {
-        rgb: hslToRgb(195, 28, 30 + lAdj),
-        label: '청초한 브라운',
-        desc: '블루·카키로\n붉은빛을 완전 억제해요'
+        rgb: hslToRgb(28, 22, 30 + lAdj),
+        label: '중화된 브라운',
+        desc: '블루·그린으로 레드\n억제한 브라운'
       },
       {
-        rgb: hslToRgb(25, 20, 34 + lAdj),
-        label: '한색 브라운',
-        desc: '애쉬 염모제로\n차분한 한색 계열이에요'
+        rgb: hslToRgb(30, 12, 32 + lAdj),
+        label: '차분한 브라운',
+        desc: '애쉬 기반 저채도\n차분한 브라운'
       }
     ];
 
