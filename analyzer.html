@@ -2190,7 +2190,7 @@ function confirmTargetColor() {
   if (isPastelPinkViolet && isWarmBase && cL < 78) {
     if (curUt3 === 'YELLOW' && (tarUt2 === 'VIOLET' || tarUt2 === 'RED_VIOLET')) {
       /* 노랑 → 바이올렛: 톤인톤 경고, 톤다운 잠금 */
-      warnBtn('same', '노랑기로 바이올렛이 메인으로 표현되는 게 최선이에요. 애쉬바이올렛 염모제에 바이올렛 소량 믹스해 중화하면서 착색하세요.');
+      warnBtn('same', '노랑기로 보라가 메인으로 표현되는 게 최선이에요. 애쉬바이올렛 염모제에 보라를 소량 섞어 보색중화하면서 착색하세요.');
       if (!downImpossible) lockBtn('down', '어두운 명도에서 애쉬바이올렛보다 더 애쉬 느낌으로 발색돼요.');
     } else if (curUt3 === 'YELLOW' && tarUt2 === 'PINK') {
       /* 노랑 → 핑크: 톤인톤 경고, 톤다운 잠금 */
@@ -2631,27 +2631,27 @@ function buildHairMessage(result, curHSL, tarHSL) {
   /* ── 케이스 테이블 lookup ── */
   var key = curUt + '_' + tarUt + '_' + toneDir;
 
-  /* 보색 안내 맵 */
+  /* 보색 안내 맵 — 보색중화=염색약에 보색을 섞어 한번에 착색 */
   var neutMap = {
-    'YELLOW':       tarName + ' 염모제에 바이올렛을 소량 믹스해 노랑기를 중화하면서 착색하세요.',
-    'YELLOW_GREEN': tarName + ' 염모제에 바이올렛이나 시나몬브라운을 소량 믹스해 노랑·매트기를 중화하면서 착색하세요.',
-    'ORANGE':       tarName + ' 염모제에 블루·애쉬를 소량 믹스해 주황기를 중화하면서 착색하세요.',
-    'RED':          tarName + ' 염모제에 그린·애쉬를 소량 믹스해 붉은기를 중화하면서 착색하세요.',
-    'RED_VIOLET':   tarName + ' 염모제에 그린 계열을 소량 믹스해 적보라기를 중화하면서 착색하세요.',
-    'GREEN':        tarName + ' 염모제에 시나몬브라운이나 핑크를 소량 믹스해 그린기를 중화하면서 착색하세요.',
-    'VIOLET':       tarName + ' 염모제에 노랑 계열을 소량 믹스해 바이올렛기를 중화하면서 착색하세요.',
-    'PINK':         tarName + ' 염모제에 그린 계열을 소량 믹스해 핑크기를 중화하면서 착색하세요.',
-    'BLUE':         tarName + ' 염모제에 시나몬브라운을 소량 믹스해 블루기를 중화하면서 착색하세요.',
-    'TEAL':         tarName + ' 염모제에 레드오렌지 계열을 소량 믹스해 틸기를 중화하면서 착색하세요.'
+    'YELLOW':       tarName + ' 염모제에 보라를 소량 섞어 보색중화하면서 착색하세요.',
+    'YELLOW_GREEN': tarName + ' 염모제에 보라나 시나몬브라운을 소량 섞어 보색중화하면서 착색하세요.',
+    'ORANGE':       tarName + ' 염모제에 파랑·애쉬를 소량 섞어 보색중화하면서 착색하세요.',
+    'RED':          tarName + ' 염모제에 그린·애쉬를 소량 섞어 보색중화하면서 착색하세요.',
+    'RED_VIOLET':   tarName + ' 염모제에 그린을 소량 섞어 보색중화하면서 착색하세요.',
+    'GREEN':        tarName + ' 염모제에 시나몬브라운이나 핑크를 소량 섞어 보색중화하면서 착색하세요.',
+    'VIOLET':       tarName + ' 염모제에 노랑을 소량 섞어 보색중화하면서 착색하세요.',
+    'PINK':         tarName + ' 염모제에 그린을 소량 섞어 보색중화하면서 착색하세요.',
+    'BLUE':         tarName + ' 염모제에 시나몬브라운을 소량 섞어 보색중화하면서 착색하세요.',
+    'TEAL':         tarName + ' 염모제에 레드오렌지를 소량 섞어 보색중화하면서 착색하세요.'
   };
 
-  /* 잔류색소 안내 맵 */
+  /* 잔류색소 안내 맵 — 보색을 염색약에 섞어 한번에 처리 */
   var residualMap = {
-    'YELLOW':       '노랑기가 남아있다면 바이올렛을 소량 먼저 눌러주고 착색하세요.',
-    'YELLOW_GREEN': '노랑·매트기가 남아있다면 바이올렛이나 시나몬브라운을 소량 믹스해 착색하세요.',
-    'ORANGE':       '주황기가 남아있다면 블루·애쉬를 소량 믹스해 중화 후 착색하세요.',
-    'RED':          '붉은기·주황기가 남아있다면 애쉬+카키를 소량 믹스해 먼저 착색하고, 다음 방문 시 목표색으로 진행하세요.',
-    'RED_VIOLET':   '적보라기가 남아있다면 그린·애쉬를 소량 믹스해 중화 후 착색하세요.'
+    'YELLOW':       '노랑기 남았으면 보라를 소량 섞어 보색중화하면서 착색하세요.',
+    'YELLOW_GREEN': '노랑·매트기 남았으면 보라나 시나몬브라운을 소량 섞어 보색중화하면서 착색하세요.',
+    'ORANGE':       '주황기 남았으면 파랑·애쉬를 소량 섞어 보색중화하면서 착색하세요.',
+    'RED':          '붉은기·주황기 남았으면 애쉬+카키를 소량 섞어 보색중화하면서 착색. 한 번에 안 되면 다음 방문에 목표색으로.',
+    'RED_VIOLET':   '적보라기 남았으면 그린·애쉬를 소량 섞어 보색중화하면서 착색하세요.'
   };
   var resGuide = residualMap[curUt] || '';
 
@@ -2671,16 +2671,16 @@ function buildHairMessage(result, curHSL, tarHSL) {
     } else if (tarUt === 'GREEN' || tarUt === 'YELLOW_GREEN') {
       line3 = '15레벨 탈색 후 ' + tarName + ' 염모제로 착색하세요.\n' + (resGuide || '');
     } else if (tarUt === 'BLUE' || tarUt === 'TEAL') {
-      line3 = '18레벨 탈색 후 블루 염모제로 착색하세요.\n노랑기가 남으면 블루+바이올렛 믹스해 네이비블루 로 착색.';
+      line3 = '18레벨 탈색 후 블루 염모제로 착색하세요.\n노랑기가 남으면 파랑+보라를 섞어 네이비블루로 착색.';
     } else if (tarUt === 'GRAY' || tarUt === 'DARK_NEUTRAL') {
       /* 노랑/주황 → 애쉬그레이 톤업 */
       if (curUt === 'YELLOW' || curUt === 'ORANGE') {
-        line3 = '18lv 탈색 후 노랑기없으면 애쉬염색 착색.\n탈색후 노랑기남았다면 애쉬에 보라 소량믹스하여 보색중화하면서 착색';
+        line3 = '18lv 탈색 후 노랑기없으면 애쉬염색 착색.\n탈색후 노랑기 남으면 애쉬 염모제에 보라를 소량 섞어 보색중화하면서 착색';
       } else {
         line3 = '탈색 후 노랑기 없으면 실버·파스텔 애쉬 착색.\n' + (resGuide || '');
       }
     } else if ((curUt === 'RED' || curUt === 'RED_VIOLET') && isCoolTar) {
-      line3 = '18레벨 아이보리까지 탈색 후 스카이블루 염모제로 착색하세요.\n15레벨까지만 됐다면 블루·바이올렛 믹스해 네이비블루 착색.';
+      line3 = '18레벨 아이보리까지 탈색 후 스카이블루 염모제로 착색하세요.\n15레벨까지만 됐다면 파랑·보라를 섞어 네이비블루로 착색.';
     } else {
       line3 = '탈색 후 ' + tarName + ' 염모제로 착색하세요.\n' + (resGuide || '');
     }
@@ -2699,30 +2699,27 @@ function buildHairMessage(result, curHSL, tarHSL) {
         line2 = '⚠ 주황+블루 보색 충돌로 브라운에 가까운 애쉬로 표현되요.';
       }
     }
-    /* 노랑/주황 → 블루·바이올렛(비파스텔) 톤인톤 경고 처리 */
+    /* 노랑/주황 → 블루·바이올렛(비파스텔) 톤인톤 */
     if ((curUt === 'YELLOW' || curUt === 'ORANGE') && (tarUt === 'BLUE' || tarUt === 'TEAL' || tarUt === 'VIOLET')) {
-      if (!line2) line2 = '⚠ 노랑기로  바이올렛으로 보색중화하면서 네이비 메인으로 표현할수있어요';
-      line3 = '18레벨 탈색을 권장드려요.';
-    /* 주황·레드 → 애쉬그레이 톤인톤 경고 */
+      if (!line2) line2 = '⚠ 노랑기로 파랑이 탁하게 발색될 수 있어요. 18레벨 탈색을 권장드려요.';
+      line3 = tarName + ' 염모제에 보라를 소량 섞어 보색중화하면서 착색하세요. 선명한 블루 원하면 탈색 추천.';
+    /* 주황·레드 → 애쉬그레이 톤인톤 */
     } else if ((curUt === 'ORANGE' || curUt === 'RED' || curUt === 'RED_VIOLET') && (tarUt === 'GRAY' || tarUt === 'DARK_NEUTRAL')) {
-      if (!line2) line2 = '⚠ 주활기·붉은기로 브라운에 가까운 애쉬가 표현될 수 있어요 (애쉬브라운)';
-      line3 = tarName + ' 염모제에 블루·그린 소량 믹스해 잔류색소 중화하면서 착색.';
-    /* 노랑/주황 → 애쉬그레이 톤인톤: 바이올렛 소량 믹스 */
-    } else if ((curUt === 'YELLOW' || curUt === 'ORANGE') && (tarUt === 'GRAY' || tarUt === 'DARK_NEUTRAL')) {
-      if (!line2) line2 = '⚠ 주활기로 브라운에 가까운 애쉬가 표현될수있어요 (애쉬브라운)';
-      line3 = tarName + ' 염모제에 블루 소량 믹스해 주황기 중화하면서 착색.';
-    /* 한색(애쉬·그레이) → 바이올렛·핑크 톤인톤 경고 */
+      if (!line2) line2 = '⚠ 주황·붉은기로 브라운빛 애쉬가 나올 수 있어요.';
+      line3 = tarName + ' 염모제에 파랑·그린을 소량 섞어 보색중화하면서 착색하세요.';
+    /* 노랑 → 애쉬그레이 톤인톤 */
+    } else if (curUt === 'YELLOW' && (tarUt === 'GRAY' || tarUt === 'DARK_NEUTRAL')) {
+      line3 = tarName + ' 염모제에 보라를 소량 섞어 보색중화하면서 착색하세요.';
+    /* 한색(애쉬·그레이) → 애쉬바이올렛·핑크 톤인톤 */
     } else if ((curUt === 'GRAY' || curUt === 'DARK_NEUTRAL' || curUt === 'BLUE' || curUt === 'TEAL') &&
                (tarUt === 'VIOLET' || tarUt === 'PINK' || tarUt === 'RED_VIOLET')) {
-      if (!line2) line2 = '⚠ 애쉬 베이스에서 바이올렛 착색 시 명도에 따라 발색 오차가 생길 수 있어요.';
-      line3 = '바이올렛 계열 염모제로 바로 착색. 밝은 탈색모에 입혔느냐 어두운 명도에서 그레이이므로 입혔느냐에 따라 오차범위가 있어요.';
+      if (!line2) line2 = '⚠ 현재 애쉬 베이스에 바이올렛 착색 시 명도에 따라 발색 오차가 있을 수 있어요.';
+      line3 = tarName + ' 염모제 바로 착색. 밝은 탈색모냐 어두운 그레이 베이스냐에 따라 발색이 조금씩 달라요.';
     } else if (neut && neutMap[curUt]) {
       if (curUt === 'GREEN' && (tarUt === 'RED' || tarUt === 'RED_VIOLET')) {
         line3 = '레드 염모제 자체가 그린의 보색이에요. 레드 착색하면 그린기가 중화되며 발색돼요.';
       } else if ((tarUt === 'VIOLET' || tarUt === 'PINK' || tarUt === 'RED_VIOLET') && curUt === 'YELLOW') {
-        /* 노랑→바이올렛·핑크 톤인톤 전용 */
-        line3 = '노랑기로 바이올렛이 메인으로 표현되는 게 최선이에요.\n'
-              + tarName + ' 염모제에 바이올렛 소량 믹스해 중화하면서 착색하세요.';
+        line3 = tarName + ' 염모제에 보라를 소량 섞어 보색중화하면서 착색하세요.\n노랑기로 보라가 메인이 되는 게 최선이에요.';
       } else {
         line3 = neutMap[curUt];
       }
@@ -2736,18 +2733,18 @@ function buildHairMessage(result, curHSL, tarHSL) {
       if (warnR.indexOf('브라운빛') > -1 || warnR.indexOf('채도 죽은') > -1) {
         line2 = '⚠ 채도가 죽은 브라운으로 발색될 수 있어요.';
       } else if (warnR.indexOf('애쉬 느낌') > -1) {
-        line2 = '⚠ 어두운 명도 착색 시 퍼플보다 애쉬 느낌으로 발색돼요.';
+        line2 = '⚠ 어두운 명도 착색 시 바이올렛보다 애쉬 느낌으로 발색돼요.';
       } else if (warnR.indexOf('어두운 명도에서 애쉬바이올렛') > -1) {
         line2 = '⚠ 어두운 명도에서 착색 시 애쉬바이올렛보다 더 애쉬 느낌으로 발색돼요.';
       }
     }
-    /* 노랑/주황 → 애쉬그레이 톤다운 특수 처리 */
+    /* 노랑/주황 → 애쉬그레이 톤다운 */
     if ((curUt === 'YELLOW' || curUt === 'ORANGE') && (tarUt === 'GRAY' || tarUt === 'DARK_NEUTRAL')) {
-      line3 = '애쉬 염모제에 바이올렛 소량 믹스해 노랑기 중화하면서 착색.';
+      line3 = tarName + ' 어두운 명도 염모제에 보라를 소량 섞어 보색중화하면서 착색하세요.';
     } else if (neut && neutMap[curUt]) {
       line3 = neutMap[curUt].replace('착색하세요.', '낮은 명도로 착색하세요.');
     } else {
-      line3 = tarName + ' 계열 낮은 명도 염모제로 착색하세요.';
+      line3 = tarName + ' 낮은 명도 염모제로 착색하세요.';
     }
   }
 
@@ -3587,19 +3584,25 @@ function hueToName(h, s, l) {
     if (s <= 35) return '주황빛 브라운 계열';
     return '주황 계열';
   }
-  if (h >= 45 && h < 75)  return '노랑 계열';
-  if (h >= 75 && h < 150) return s >= 40 ? '그린 계열' : '카키·매트 계열';
-  if (h >= 150 && h < 210) return l <= 35 ? '네이비·블루블랙 계열' : '블루·청회색 계열';
+  if (h >= 45 && h < 75)  return '노랑';
+  if (h >= 75 && h < 150) return s >= 40 ? '그린' : '카키·매트';
+  if (h >= 150 && h < 210) return l <= 35 ? '네이비' : '블루·청회색';
   if (h >= 210 && h < 260) {
-    if (l <= 30) return '네이비·블루블랙 계열';
-    return s >= 40 ? '블루 계열' : '애쉬·쿨그레이 계열';
+    if (l <= 30) return '네이비·블루블랙';
+    if (s < 20)  return '애쉬그레이';
+    if (s < 40)  return '블루애쉬';
+    return '블루';
   }
-  if (h >= 260 && h < 295) return s >= 40 ? '바이올렛·보라 계열' : '보라 애쉬 계열';
+  if (h >= 260 && h < 295) {
+    if (s < 30)  return '애쉬바이올렛';
+    return '바이올렛';
+  }
   if (h >= 295 && h < 340) {
-    if (l <= 22) return '딥 와인·블랙레드 계열';
-    if (l <= 35) return s >= 40 ? '와인·로즈 계열' : '와인·로즈 계열';  /* 어두운 핑크 → 와인·로즈로 통일 */
-    if (l <= 50) return s >= 40 ? '로즈·딥핑크 계열' : '로즈 계열';
-    return s >= 40 ? '핑크·마젠타 계열' : '핑크 계열';
+    if (l <= 22) return '딥 와인·블랙레드';
+    if (l <= 35) return '와인·로즈';
+    if (s < 28)  return '애쉬핑크';
+    if (l <= 50) return '로즈·딥핑크';
+    return '핑크';
   }
   if (h >= 340 && h < 345) return '와인레드 계열';
   return '따뜻한 계열';
@@ -3757,7 +3760,7 @@ function updateRecipe() {
     } else if (T0 === 'bleach') {
       ivoryDetail = '이미 아이보리·백금에 가까운 밝은 베이스예요.\n추가 탈색이 필요하다면 소량으로 조절하세요.\n\n화이트블론드·백금발을 원하신다면\n연핑크와 베이지 계열 소량 토닝을 추천해요.';
     } else if (T0 === 'pastel') {
-      ivoryDetail = '아이보리·백금 베이스에서 파스텔은 가장 선명하게 표현되는 구간이에요.\n\n추천:\n1. 바로 파스텔 토닝 가능해요\n2. 노랑기가 살짝 남아있다면 바이올렛 소량으로 눌러주고 진행';
+      ivoryDetail = '아이보리·백금 베이스에서 파스텔은 가장 선명하게 표현되는 구간이에요.\n\n추천:\n1. 바로 파스텔 토닝 가능해요\n2. 노랑기가 살짝 남아있다면 보라를 소량 섞어 보색중화하면서 착색';
     } else if (T0 === 'blonde') {
       ivoryDetail = '탈색을 충분히 한 깨끗한 베이스네요.\n어느 색감으로 가든 수월한 상태예요.\n\n완전한 화이트블론드·백금발을 원하신다면\n연핑크와 베이지 계열을 소량 토닝하는 걸 추천해요.';
     } else if (['blue-black','ash-gray','ash-brown','cool-beige'].indexOf(T0) > -1) {
@@ -3987,9 +3990,9 @@ function updateRecipe() {
 
     } else if (residualType === 'yellow' && isCold) {
       lines.push('노랑 잔류 위에 차가운 계열을 바로 올리면 카키빛으로 변질될 수 있어요.');
-      lines.push('바이올렛 계열을 소량 먼저 섞어 노랑을 중화한 뒤 차가운 계열을 올리는 순서가 중요해요.');
+      lines.push('보라를 소량 섞어 보색중화하면서 차가운 계열을 올리는 순서가 중요해요.');
       if (lvBright) {
-        lines.push('밝은 명도(' + lv + '레벨)에서는 바이올렛 소량으로도 효과적으로 중화돼요.');
+        lines.push('밝은 명도(' + lv + '레벨)에서는 보라 소량으로도 효과적으로 보색중화돼요.');
       }
       lines.push('');
       lines.push('추천:');
@@ -4051,7 +4054,7 @@ function updateRecipe() {
         lines.push('이미 밝은 명도(' + lv + '레벨)라 바로 가능해요.');
         lines.push('');
         lines.push('추천:');
-        lines.push('1. 바이올렛 소량으로 노랑기를 눌러주고 토닝');
+        lines.push('1. 보라를 소량 섞어 보색중화하면서 토닝');
         lines.push('2. 파스텔은 레벨 17 이상 아이보리에서 가장 선명해요');
         if (residualType !== 'none') risks.push('잔류색이 남아있어 결과가 예상과 다를 수 있어요. 탈색 후 시술이 확실해요.');
       } else {
