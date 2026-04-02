@@ -712,7 +712,14 @@ var SYSTEM_PROMPT = `너는 미용실 염색 시술 전문가야.
 - 블루·바이올렛·파스텔: 18lv 아이보리색까지 탈색 필요
 - 그린: 15lv까지 탈색 필요
 
+[염모제 톤업 — 탈색 없이 가능]
+시술 방향이 "염모제 톤업 (탈색 없이)"인 경우:
+- 탈색 안내 절대 금지
+- 산화염모제로 명도 상승 가능함을 안내
+- 저손상 시술임을 안내
+
 [문구 틀 - 반드시 이 틀 사용]
+톤업(염모제): "[목표색] 염모제로 바로 시술 가능해요. 탈색 없이 산화염모제로 명도 상승이 가능한 케이스예요."
 톤업(애쉬그레이): "노랑기 없으면 [목표색] 염모제 바로 착색. 노랑기 남았다면 애쉬 염모제에 보라를 소량 섞어 보색중화하면서 착색하세요."
 톤업(블루·파스텔): "18lv 아이보리색까지 탈색 후 [목표색] 염모제로 착색하세요. 노랑기 남았다면 애쉬 염모제에 보라를 소량 섞어 보색중화하면서 착색."
 톤인톤(보색필요): "[목표색] 염모제에 [보색]을 소량 섞어 [현재언더톤]기를 보색중화하면서 착색하세요."
@@ -1984,6 +1991,35 @@ function getRuleBase(base) {
   return base;
 }
 
+/* ── getToneUpType: 톤업 유형 분기 ──
+   normalize → RULE_TABLE 판단 → 이후 실행
+   'dye'    = 염모제 톤업 (탈색 불필요)
+   'bleach' = 탈색 톤업 (탈색 필수)
+
+   기준:
+     dye:    tarBase = orange/orange_red/yellow_orange + tone = dark/warm/neutral
+     bleach: tone = pastel/vivid
+             OR (tone = ash AND tarL >= 55)
+             OR tarBase = blue/violet/green/pink
+*/
+function getToneUpType(tarBase, tarTone, tarL) {
+  /* 탈색 필수 조건 — 명도·채도 기준 */
+  if (tarTone === 'pastel' || tarTone === 'vivid') return 'bleach';
+  if (tarTone === 'ash' && tarL >= 55) return 'bleach';
+
+  /* 탈색 필수 조건 — 색상 기준 */
+  var bleachBases = ['blue', 'violet', 'green', 'pink'];
+  if (bleachBases.indexOf(tarBase) > -1 && tarTone !== 'dark') return 'bleach';
+
+  /* 염모제 톤업 가능 조건 */
+  var dyeBases = ['orange', 'orange_red', 'yellow_orange', 'yellow', 'red'];
+  var dyeTones = ['dark', 'warm', 'neutral'];
+  if (dyeBases.indexOf(tarBase) > -1 && dyeTones.indexOf(tarTone) > -1) return 'dye';
+
+  /* 기본값 — 불확실한 경우 탈색으로 안전하게 */
+  return 'bleach';
+}
+
 /* ── lookupRule: 안전한 RULE_TABLE 접근 ── */
 function lookupRule(curBase, tarBase, dir) {
   var rCur = getRuleBase(curBase);
@@ -2572,6 +2608,23 @@ function confirmTargetColor() {
     }
   });
 
+  /* ── toneUpType 분기 — RULE_TABLE 판단 이후 실행 ── */
+  var tarNormForType = normalizeColor(targetHSL.h, targetHSL.s, targetHSL.l, 'tar');
+  window._toneUpType = getToneUpType(tarNormForType.base, tarNormForType.tone, targetHSL.l);
+
+  /* 톤업 버튼 서브텍스트 업데이트 */
+  var upBtn = document.getElementById('tone-btn-up');
+  if (upBtn && !upBtn.disabled) {
+    var upSub = upBtn.querySelector('div');
+    if (upSub) {
+      if (window._toneUpType === 'dye') {
+        upSub.textContent = '산화염모제로 명도 상승 (탈색 없이 시술 가능)';
+      } else {
+        upSub.textContent = '탈색 후 원하는 색감으로 착색';
+      }
+    }
+  }
+
   /* ── 톤업 추천 표시 (잠금/경고 케이스) ── */
   var sameBtn = document.getElementById('tone-btn-same');
   var downBtn = document.getElementById('tone-btn-down');
@@ -3131,15 +3184,29 @@ function renderAnalysisResult(result) {
   var risk      = getRiskLevel(currentHSL);
   var isBleach  = (result.processType === 'BLEACH_FIRST' || result.processType === 'BLEACH_SHORT_TONING');
 
-  var dirKo = { up:'톤업(탈색)', same:'톤인톤', down:'톤다운' }[toneDir] || toneDir;
+  var toneUpType = window._toneUpType || 'bleach';
+  var dirKo;
+  if (toneDir === 'up') {
+    dirKo = toneUpType === 'dye' ? '염모제 톤업 (탈색 없이)' : '톤업 (탈색)';
+  } else if (toneDir === 'same') {
+    dirKo = '톤인톤';
+  } else {
+    dirKo = '톤다운';
+  }
+
   var neutYN = neut ? '필요 (보색: ' + compColor + ')' : '불필요';
   var isAshGrayTar  = (tarUt === 'GRAY' || tarUt === 'DARK_NEUTRAL');
   var isGreenTar    = (tarUt === 'GREEN' || tarUt === 'YELLOW_GREEN');
-  var bleachCondition = isAshGrayTar
-    ? '노랑기 없으면 바로 착색, 노랑기 있으면 보라 소량 섞어 보색중화 후 착색'
-    : isBleach
-      ? (isGreenTar ? '15lv까지 탈색 필요' : '18lv 아이보리색까지 탈색 필요')
-      : '탈색 불필요';
+  var bleachCondition;
+  if (toneDir === 'up' && toneUpType === 'dye') {
+    bleachCondition = '탈색 불필요 — 산화염모제로 명도 상승';
+  } else if (isAshGrayTar) {
+    bleachCondition = '노랑기 없으면 바로 착색, 노랑기 있으면 보라 소량 섞어 보색중화 후 착색';
+  } else if (isBleach) {
+    bleachCondition = isGreenTar ? '15lv까지 탈색 필요' : '18lv 아이보리색까지 탈색 필요';
+  } else {
+    bleachCondition = '탈색 불필요';
+  }
 
   var isWarmCur    = ['YELLOW','YELLOW_GREEN','ORANGE','RED','RED_VIOLET'].indexOf(curUt) > -1;
   var isYellowCur  = (curUt === 'YELLOW' || curUt === 'YELLOW_GREEN');
