@@ -2583,7 +2583,7 @@ var UNDERTONE_KO = {
 var COMP_COLOR_KO = {
   'YELLOW':       '보라',
   'YELLOW_GREEN': '보라·시나몬브라운',
-  'ORANGE':       '파랑·애쉬',
+  'ORANGE':       '파랑',        /* 기본값 — getCompColor()로 목표색별 세분화 */
   'RED':          '그린·애쉬',
   'RED_VIOLET':   '그린',
   'GREEN':        '시나몬브라운',
@@ -2592,6 +2592,28 @@ var COMP_COLOR_KO = {
   'VIOLET':       '노랑',
   'PINK':         '그린'
 };
+
+/* 현재 언더톤 + 목표색 언더톤 기반으로 정확한 보색 계산
+   실무 기준:
+     주황 → 애쉬그레이: 파랑 (애쉬그레이 염모제에 파랑 소량)
+     주황 → 블루·블루애쉬: 애쉬 (블루 염모제에 채도 낮추는 애쉬 소량)
+     노랑 → 애쉬계열: 보라
+     레드 → 애쉬계열: 그린·애쉬
+*/
+function getCompColor(curUt, tarUt) {
+  /* 주황 베이스 — 목표색에 따라 분기 */
+  if (curUt === 'ORANGE') {
+    if (tarUt === 'BLUE' || tarUt === 'TEAL') return '애쉬';     /* 블루 목표: 블루 염모제에 애쉬 소량 */
+    return '파랑';                                                 /* 애쉬그레이 등: 애쉬 염모제에 파랑 소량 */
+  }
+  /* 노랑 베이스 — 목표색에 따라 분기 */
+  if (curUt === 'YELLOW' || curUt === 'YELLOW_GREEN') {
+    if (tarUt === 'BLUE' || tarUt === 'TEAL') return '애쉬';     /* 블루 목표: 블루 염모제에 애쉬 소량 */
+    return '보라';                                                 /* 애쉬·바이올렛 계열: 보라 소량 */
+  }
+  /* 나머지는 기존 맵 사용 */
+  return COMP_COLOR_KO[curUt] || '';
+}
 
 /* 명도 단계 → 한국어 표현 */
 function bleachStageToKo(stage) {
@@ -2628,7 +2650,7 @@ function buildHairMessage(result, curHSL, tarHSL) {
 
   /* ── 현재색 표현 ── */
   var utKo     = UNDERTONE_KO[curUt] || '뉴트럴';
-  var compColor = COMP_COLOR_KO[curUt] || '';
+  var compColor = getCompColor(curUt, tarUt);
   var curSatKo = satToKo(curHSL.s);
   var curLvKo  = bleachStageToKo(result.bleachStage);
   var curExpr;
@@ -2874,7 +2896,7 @@ function renderAnalysisResult(result) {
   var toneDir   = window._toneDir || 'same';
   var curUt     = result.curUndertone;
   var tarUt     = result.tarUndertone;
-  var compColor = COMP_COLOR_KO[curUt] || '';
+  var compColor = getCompColor(curUt, tarUt);
   var utKo      = UNDERTONE_KO[curUt] || '';
   var tarName   = hueToName(targetHSL.h, targetHSL.s, targetHSL.l);
   var warnR     = window._warnReason || '';
