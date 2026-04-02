@@ -714,18 +714,32 @@ var SYSTEM_PROMPT = `너는 미용실 염색 시술 전문가야.
 
 [톤업 유형별 설명 방식]
 
-toneUpType = "염모제 톤업 (탈색 없이)" 인 경우:
+toneUpType = "산화염모제 직접" 인 경우 (버진모 저명도):
 - 탈색 언급 절대 금지
-- 산화염모제로 명도 상승 가능함을 설명
-- 자연 멜라닌에서 표현 가능한 색 범위 기준
-- 붉은기·주황기 잔여색 고려하여 색 선택 안내
-- 예: "산화염모제로 명도 상승 가능해요. 자연 잔류색을 고려해 [목표색] 염모제를 선택하세요."
+- 7~9레벨 산화염모제로 직접 시술 가능함을 설명
+- 버진모 자연 멜라닌 기준 3가지 방향 제시:
+  1. 따뜻한 브라운: 자연 멜라닌의 붉은빛이 살아있는 브라운
+  2. 청초한 브라운: 블루·카키 염모제로 붉은빛 완전 억제한 브라운
+  3. 한색 브라운: 애쉬 염모제로 차분한 한색 계열 브라운
+- 예: "7~9레벨 산화염모제로 바로 시술 가능해요. 붉은빛 살린 따뜻한 브라운, 블루·카키로 억제한 청초한 브라운, 애쉬 한색 브라운 중 원하는 방향을 선택하세요."
 
-toneUpType = "톤업 (탈색)" 인 경우:
+toneUpType = "고명도 혼합" 인 경우 (버진모 중명도):
+- 탈색 언급 절대 금지
+- 13~15레벨 고명도 염모제 + 7~9레벨 혼용 방식 설명
+- 위 3가지 방향 동일하게 제시 (더 밝은 버전)
+- 예: "13~15레벨 고명도 염모제와 7~9레벨을 혼합하면 탈색 없이 중명도 브라운 표현이 가능해요."
+
+toneUpType = "탈색" 인 경우:
 - 기존 탈색 설명 유지
 - 단계적 탈색 과정 설명
-- 레벨 상승 및 언더톤 변화 설명
-- 탈색 후 착색 흐름 유지
+
+잔류 위험 = "있음" 인 경우:
+- "잔류색소 영향으로 결과가 달라질 수 있어요" 반드시 포함
+- 1회 시술 후 반응 확인 권장
+
+모발 상태 = "블랙 염색모" 인 경우:
+- 색소 축적 가능성 반드시 언급
+- 단계적 진행 권장
 
 [문구 틀 - 반드시 이 틀 사용]
 톤업(염모제): "[목표색] 염모제로 바로 시술 가능해요. 탈색 없이 산화염모제로 명도 상승이 가능한 케이스예요."
@@ -2011,6 +2025,59 @@ function getRuleBase(base) {
              OR (tone = ash AND tarL >= 55)
              OR tarBase = blue/violet/green/pink
 */
+/* ── getBlackToneUpType: 블랙 베이스 전용 toneUpType 판단 ──
+   curL: 현재 명도, tarL: 목표 명도
+   hairState: 'virgin' | 'blackDyed' | 'darkDyed'
+   tarBase: normalizeColor base
+   tarTone: normalizeColor tone
+
+   dye      = 산화염모제로 직접 (저명도 변화)
+   highlift = 13~15lv + 7~9lv 혼용 (중명도 변화)
+   bleach   = 탈색 필수
+*/
+function getBlackToneUpType(curL, tarL, hairState, tarBase, tarTone) {
+  var deltaL = tarL - curL;
+
+  var dyeBases = ['yellow','yellow_orange','orange','orange_red','red'];
+
+  /* vivid는 항상 탈색 */
+  if (tarTone === 'vivid') return 'bleach';
+
+  if (hairState === 'virgin') {
+    /* 애쉬·파스텔 계열 */
+    if (tarTone === 'ash' || tarTone === 'pastel') {
+      if (deltaL <= 20) return 'dye';    /* 애쉬브라운 저명도 — 염모제 가능 */
+      return 'bleach';                   /* 밝은 애쉬 — 탈색 필요 */
+    }
+
+    /* 난색 브라운 계열 */
+    if (dyeBases.indexOf(tarBase) > -1) {
+      if (deltaL <= 20) return 'dye';        /* 7~9lv 단독 */
+      if (deltaL <= 35) return 'highlift';   /* 13~15lv + 7~9lv 혼용 */
+      return 'bleach';                       /* 너무 밝음 — 탈색 필요 */
+    }
+
+    /* 한색 계열 (blue/violet/green/pink) */
+    return 'bleach';
+  }
+
+  if (hairState === 'blackDyed') {
+    /* 블랙 염색모 — 색소 축적으로 항상 탈색 */
+    return 'bleach';
+  }
+
+  if (hairState === 'darkDyed') {
+    /* 어두운 염색모 — 브라운 계열만 dye 가능 (잔류 위험 있음) */
+    if (dyeBases.indexOf(tarBase) > -1 && tarTone !== 'vivid') {
+      window._residualRisk = true;
+      return 'dye';
+    }
+    return 'bleach';
+  }
+
+  return 'bleach';
+}
+
 function getToneUpType(tarBase, tarTone, tarL) {
   /* 탈색 필수 조건 — 명도·채도 기준 */
   if (tarTone === 'pastel' || tarTone === 'vivid') return 'bleach';
@@ -2821,12 +2888,23 @@ function selectBlackType(type) {
   event.currentTarget.style.borderColor = '#fff';
   event.currentTarget.style.background = 'rgba(255,255,255,0.07)';
 
-  /* 블랙 → toneUpType 계산 후 주입 */
-  var tarNorm = normalizeColor(targetHSL.h, targetHSL.s, targetHSL.l, 'tar');
-  window._toneUpType = getToneUpType(tarNorm.base, tarNorm.tone, targetHSL.l);
-  window._toneDir = 'up'; /* 블랙은 항상 톤업 */
+  /* hairState 확정 */
+  var hairState = (type === 'virgin') ? 'virgin'
+                : (type === 'dyed')   ? 'blackDyed'
+                :                       'darkDyed';
+  window._hairState = hairState;
+  window._residualRisk = false;
 
-  /* 블랙 베이스 → 손상도는 탈색 이력 기반으로 추정 */
+  /* 블랙 전용 toneUpType 계산 */
+  var tarNorm = normalizeColor(targetHSL.h, targetHSL.s, targetHSL.l, 'tar');
+  window._toneUpType = getBlackToneUpType(
+    currentHSL.l, targetHSL.l,
+    hairState,
+    tarNorm.base, tarNorm.tone
+  );
+  window._toneDir = 'up';
+
+  /* 손상도 추정 */
   var dmgGuess = (type === 'bleached') ? 'damaged' : 'natural';
   var result = analyzeColorFlow(currentHSL, targetHSL, dmgGuess);
   document.getElementById('black-recipe-result').style.display = 'block';
@@ -3207,9 +3285,13 @@ function renderAnalysisResult(result) {
   var isBleach  = (result.processType === 'BLEACH_FIRST' || result.processType === 'BLEACH_SHORT_TONING');
 
   var toneUpType = window._toneUpType || 'bleach';
-  console.log('[toneUpType]', toneUpType, '| toneDir:', toneDir, '| tar:', normalizeColor(targetHSL.h, targetHSL.s, targetHSL.l, 'tar'));
+  var hairState  = window._hairState  || '';
+  var residualRisk = window._residualRisk || false;
+  console.log('[toneUpType]', toneUpType, '| toneDir:', toneDir, '| hairState:', hairState, '| tar:', normalizeColor(targetHSL.h, targetHSL.s, targetHSL.l, 'tar'));
   if (toneDir === 'up') {
-    dirKo = toneUpType === 'dye' ? '염모제 톤업 (탈색 없이)' : '톤업 (탈색)';
+    if (toneUpType === 'dye')           dirKo = '염모제 톤업 (탈색 없이)';
+    else if (toneUpType === 'highlift') dirKo = '고명도 혼합 톤업 (탈색 없이)';
+    else                                dirKo = '톤업 (탈색)';
   } else if (toneDir === 'same') {
     dirKo = '톤인톤';
   } else {
@@ -3221,7 +3303,9 @@ function renderAnalysisResult(result) {
   var isGreenTar    = (tarUt === 'GREEN' || tarUt === 'YELLOW_GREEN');
   var bleachCondition;
   if (toneDir === 'up' && toneUpType === 'dye') {
-    bleachCondition = '탈색 불필요 — 산화염모제로 명도 상승';
+    bleachCondition = '탈색 불필요 — 7~9lv 산화염모제로 직접 시술';
+  } else if (toneDir === 'up' && toneUpType === 'highlift') {
+    bleachCondition = '탈색 불필요 — 13~15lv 고명도 + 7~9lv 혼용';
   } else if (isAshGrayTar) {
     bleachCondition = '노랑기 없으면 바로 착색, 노랑기 있으면 보라 소량 섞어 보색중화 후 착색';
   } else if (isBleach) {
@@ -3249,6 +3333,9 @@ function renderAnalysisResult(result) {
     '보색중화: ' + neutYN,
     '탈색 조건: ' + bleachCondition,
     '잔류색소 처리: ' + (residual || '없음'),
+    '모발 상태: ' + (hairState === 'virgin' ? '자연모 (버진모)' : hairState === 'blackDyed' ? '블랙 염색모' : hairState === 'darkDyed' ? '어두운 염색모' : '일반'),
+    '톤업 유형: ' + (toneUpType === 'dye' ? '산화염모제 직접' : toneUpType === 'highlift' ? '고명도 혼합' : '탈색'),
+    '잔류 위험: ' + (residualRisk ? '있음 — 잔류색소 영향으로 결과가 달라질 수 있음' : '없음'),
     '경고: ' + (warnR || '없음'),
     '고위험: ' + (risk === 'HIGH' && isBleach ? '색소 축적 가능성, 단계적 진행 필요' : '없음')
   ].join('\n');
@@ -3367,14 +3454,104 @@ function renderColorAnimation(result, curHSL, tarHSL) {
   /* ── 시나리오 ── */
   var SC;
   var _td = window._toneDir;
-  /* 톤업 선택 시: 탈색 후 착색이 전제 → 보색중화 원 불필요, BLEACH로 처리 */
-  if (neut && (proc==='BLEACH_FIRST'||proc==='BLEACH_SHORT_TONING') && _td !== 'up') SC='BLEACH_NEUT';
-  else if (proc==='BLEACH_FIRST'||proc==='BLEACH_SHORT_TONING')       SC='BLEACH';
-  else if (neut||proc==='NEUTRALIZATION_THEN_COLOR')                  SC='NEUT';
-  else if (proc==='TONING_THEN_COLOR')                                SC='TONING';
-  else if (proc==='TONE_DOWN_NEUTRALIZE'||proc==='TONE_DOWN_TONING')  SC='TONEDOWN_NEUT';
-  else if (proc==='TONE_DOWN')                                        SC='TONEDOWN';
-  else                                                                SC='DIRECT';
+  var _tut = window._toneUpType || 'bleach';
+  var _hs  = window._hairState || '';
+
+  /* 버진모 dye/highlift → 스와치 표시 */
+  if (_td === 'up' && (_tut === 'dye' || _tut === 'highlift') && _hs === 'virgin') {
+    SC = 'VIRGIN_SWATCH';
+  } else if (neut && (proc==='BLEACH_FIRST'||proc==='BLEACH_SHORT_TONING') && _td !== 'up') {
+    SC = 'BLEACH_NEUT';
+  } else if (proc==='BLEACH_FIRST'||proc==='BLEACH_SHORT_TONING') {
+    SC = 'BLEACH';
+  } else if (neut||proc==='NEUTRALIZATION_THEN_COLOR') {
+    SC = 'NEUT';
+  } else if (proc==='TONING_THEN_COLOR') {
+    SC = 'TONING';
+  } else if (proc==='TONE_DOWN_NEUTRALIZE'||proc==='TONE_DOWN_TONING') {
+    SC = 'TONEDOWN_NEUT';
+  } else if (proc==='TONE_DOWN') {
+    SC = 'TONEDOWN';
+  } else {
+    SC = 'DIRECT';
+  }
+
+  /* ── 버진모 스와치 그리기 ── */
+  function drawVirginSwatch() {
+    if (window._hairAnimRAF) { cancelAnimationFrame(window._hairAnimRAF); window._hairAnimRAF = null; }
+
+    /* highlift 여부에 따라 밝기 조정 */
+    var isHighlift = (_tut === 'highlift');
+    var lAdj = isHighlift ? 10 : 0; /* highlift면 더 밝게 */
+
+    /* 3가지 스와치 색상 */
+    var swatches = [
+      {
+        rgb: hslToRgb(15, 52, 32 + lAdj),
+        label: '따뜻한 브라운',
+        desc: '자연 멜라닌의\n붉은빛이 살아있어요'
+      },
+      {
+        rgb: hslToRgb(195, 28, 30 + lAdj),
+        label: '청초한 브라운',
+        desc: '블루·카키로\n붉은빛을 완전 억제해요'
+      },
+      {
+        rgb: hslToRgb(25, 20, 34 + lAdj),
+        label: '한색 브라운',
+        desc: '애쉬 염모제로\n차분한 한색 계열이에요'
+      }
+    ];
+
+    ctx.fillStyle = '#0e0e0e';
+    ctx.fillRect(0, 0, W, H);
+
+    var sw = Math.floor(W / 3) - 8;
+    var sh = H - 36;
+    var sy = 8;
+    var r  = 7;
+
+    swatches.forEach(function(s, i) {
+      var sx = i * (sw + 8) + 4;
+      var col = rs(s.rgb);
+
+      /* 네모 스와치 (둥근 모서리) */
+      ctx.beginPath();
+      ctx.moveTo(sx + r, sy);
+      ctx.lineTo(sx + sw - r, sy);
+      ctx.quadraticCurveTo(sx + sw, sy, sx + sw, sy + r);
+      ctx.lineTo(sx + sw, sy + sh - r);
+      ctx.quadraticCurveTo(sx + sw, sy + sh, sx + sw - r, sy + sh);
+      ctx.lineTo(sx + r, sy + sh);
+      ctx.quadraticCurveTo(sx, sy + sh, sx, sy + sh - r);
+      ctx.lineTo(sx, sy + r);
+      ctx.quadraticCurveTo(sx, sy, sx + r, sy);
+      ctx.closePath();
+      ctx.fillStyle = col;
+      ctx.fill();
+
+      /* 라벨 */
+      ctx.save();
+      ctx.fillStyle = '#fff';
+      ctx.font = '600 9px -apple-system,sans-serif';
+      ctx.textAlign = 'center';
+      ctx.globalAlpha = 0.9;
+      ctx.fillText(s.label, sx + sw/2, sy + sh + 14);
+      ctx.restore();
+    });
+
+    /* 하단 안내 텍스트 */
+    ctx.save();
+    ctx.fillStyle = '#888';
+    ctx.font = '500 8.5px -apple-system,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.globalAlpha = 0.8;
+    var subTxt = isHighlift
+      ? '13~15lv + 7~9lv 혼용 시 표현 가능한 색감이에요'
+      : '7~9lv 산화염모제로 표현 가능한 색감이에요';
+    ctx.fillText(subTxt, W/2, H - 2);
+    ctx.restore();
+  }
 
   var R  = Math.min(26, W*0.085);
   var cy = H * 0.44;
@@ -3475,18 +3652,25 @@ function renderColorAnimation(result, curHSL, tarHSL) {
   function drawFrame(){
     bg();
     var e=eio(t);
-    if     (SC==='NEUT')          drawNeut(e);
-    else if(SC==='BLEACH')        drawBleach(e);
-    else if(SC==='BLEACH_NEUT')   drawBleachNeut(e);
-    else if(SC==='TONING')        drawToning(e);
-    else if(SC==='TONEDOWN')      drawToneDown(e);
-    else if(SC==='TONEDOWN_NEUT') drawToneDownNeut(e);
-    else                          drawDirect(e);
+    if     (SC==='VIRGIN_SWATCH')  { drawVirginSwatch(); return; }
+    else if(SC==='NEUT')           drawNeut(e);
+    else if(SC==='BLEACH')         drawBleach(e);
+    else if(SC==='BLEACH_NEUT')    drawBleachNeut(e);
+    else if(SC==='TONING')         drawToning(e);
+    else if(SC==='TONEDOWN')       drawToneDown(e);
+    else if(SC==='TONEDOWN_NEUT')  drawToneDownNeut(e);
+    else                           drawDirect(e);
     t+=dir*0.009;
     if(t>=1){t=1;dir=-1;} if(t<=0){t=0;dir=1;}
     window._hairAnimRAF=requestAnimationFrame(drawFrame);
   }
-  window._hairAnimRAF=requestAnimationFrame(drawFrame);
+
+  /* 버진모 스와치는 정적 — 한번만 그리고 종료 */
+  if (SC === 'VIRGIN_SWATCH') {
+    drawVirginSwatch();
+  } else {
+    window._hairAnimRAF=requestAnimationFrame(drawFrame);
+  }
 }
 
 
@@ -3505,7 +3689,7 @@ function buildChecklist(result) {
   var toneUpType = window._toneUpType || 'bleach';
 
   var hasBleach  = (proc === 'BLEACH_FIRST' || proc === 'BLEACH_SHORT_TONING')
-                   && !(tDir === 'up' && toneUpType === 'dye');
+                   && !(tDir === 'up' && (toneUpType === 'dye' || toneUpType === 'highlift'));
   var hasToning  = proc === 'TONING_THEN_COLOR' || proc === 'TONE_DOWN_TONING' || proc === 'BLEACH_SHORT_TONING';
   var hasNeut    = neut;
   var hasClear   = proc === 'CLEAR_MIX';
@@ -3514,7 +3698,9 @@ function buildChecklist(result) {
   /* 방향 라벨 */
   var dirLabel;
   if (tDir === 'up') {
-    dirLabel = toneUpType === 'dye' ? '시술 (탈색 없음)' : '톤업 (탈색 포함)';
+    if (toneUpType === 'dye')      dirLabel = '시술 (탈색 없음)';
+    else if (toneUpType === 'highlift') dirLabel = '고명도 혼합 (탈색 없음)';
+    else                           dirLabel = '톤업 (탈색 포함)';
   } else if (tDir === 'same') {
     dirLabel = '톤인톤 (명도 유지)';
   } else if (tDir === 'down') {
@@ -3525,7 +3711,9 @@ function buildChecklist(result) {
 
   /* 메인 항목 라벨 */
   var mainLabel;
-  if (tDir === 'up' && toneUpType === 'dye') {
+  if (tDir === 'up' && toneUpType === 'highlift') {
+    mainLabel = '고명도 혼합 시술';
+  } else if (tDir === 'up' && toneUpType === 'dye') {
     mainLabel = '산화염모제 시술';
   } else if (hasBleach) {
     mainLabel = '탈색 진행';
