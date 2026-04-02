@@ -1849,6 +1849,413 @@ function confirmCurrentColor() {
    문장 출력 없음, 도출값만 반환
    API 연동 시 이 값을 그대로 넘긴다
 ════════════════════════════════════════ */
+/* ════════════════════════════════════════
+   normalizeColor — HSL 연속값 → 고정 카테고리 키
+   경계값 흔들림 없이 항상 동일한 키 반환
+   반환 키 목록:
+     현재색: black / dark_brown / brown / red / red_violet
+             orange / yellow / green / teal
+             blue / violet / pink / ash_gray / dark_neutral
+     목표색: ash_gray / dark_ash / blue_ash / ash_violet
+             ash_pink / red / orange / yellow / brown / green / blue / violet / pink
+════════════════════════════════════════ */
+/* ════════════════════════════════════════
+   히스테리시스용 이전값 저장
+   현재색/목표색 각각 별도 관리
+════════════════════════════════════════ */
+var _prevCurBase = null;
+var _prevTarBase = null;
+
+/* 경계값 목록 — classify() 함수의 실제 경계선과 정확히 일치
+   yellow↔yellow_orange: 35, yellow_orange↔orange: 20 등
+   ±5도 범위에서만 이전값 유지 */
+var HUE_BOUNDARIES = [10, 20, 35, 50, 80, 155, 210, 270, 300, 350];
+
+function isNearBoundary(h) {
+  for (var i = 0; i < HUE_BOUNDARIES.length; i++) {
+    var b = HUE_BOUNDARIES[i];
+    var diff = Math.min(Math.abs(h - b), 360 - Math.abs(h - b));
+    if (diff <= 5) return true;
+  }
+  return false;
+}
+
+/* ── getBase: hue(h)만으로 결정, s/l 절대 사용 금지 ──
+   base 9개:
+     yellow / yellow_orange / orange / orange_red / red
+     green / blue / violet / pink
+   히스테리시스: 경계 근처일 때만 이전값 유지
+*/
+function getBase(h, prevBase) {
+  function classify(h) {
+    if ((h >= 0 && h < 10) || h >= 350) return 'red';
+    if (h >= 10  && h < 20) return 'orange_red';
+    if (h >= 20  && h < 35) return 'orange';
+    if (h >= 35  && h < 50) return 'yellow_orange';
+    if (h >= 50  && h < 80) return 'yellow';
+    if (h >= 80  && h < 155) return 'green';
+    if (h >= 155 && h < 210) return 'blue';
+    if (h >= 210 && h < 270) return 'blue';
+    if (h >= 270 && h < 300) return 'violet';
+    if (h >= 300 && h < 350) return 'pink';
+    return 'yellow';
+  }
+
+  var newBase = classify(h);
+
+  /* 첫 진입 */
+  if (!prevBase) return newBase;
+
+  /* 경계 근처일 때만 이전값 유지 */
+  if (isNearBoundary(h) && prevBase !== newBase) {
+    return prevBase;
+  }
+
+  return newBase;
+}
+
+/* ── getTone: 채도·명도로 판단 ──
+   tone 6개: ash / pastel / vivid / neutral / warm / dark
+   base를 바꾸지 않음 — 설명/레시피에만 사용
+*/
+function getTone(s, l) {
+  if (s < 18)           return 'ash';
+  if (s < 35 && l >= 55) return 'pastel';
+  if (s >= 65)           return 'vivid';
+  if (l <= 35)           return 'dark';
+  if (l <= 45)           return 'warm';
+  return 'neutral';
+}
+
+/* ── normalizeColor: base + tone 반환 ──
+   which: 'cur' | 'tar' — 히스테리시스 각각 관리
+*/
+function normalizeColor(h, s, l, which) {
+  /* 블랙 예외 처리 */
+  if (l <= 12 || (l <= 22 && s < 25)) {
+    if (which === 'cur') _prevCurBase = 'red';
+    if (which === 'tar') _prevTarBase = 'red';
+    return { base: 'black', tone: 'dark', display: '블랙' };
+  }
+
+  /* 저채도 → ash tone */
+  var tone = getTone(s, l);
+
+  /* base 결정 (히스테리시스 적용) */
+  var prevBase = (which === 'cur') ? _prevCurBase : _prevTarBase;
+  var base = getBase(h, prevBase);
+
+  /* 이전값 업데이트 */
+  if (which === 'cur') _prevCurBase = base;
+  if (which === 'tar') _prevTarBase = base;
+
+  /* display 이름 */
+  var displayMap = {
+    'yellow':        '노랑',
+    'yellow_orange': '노랑주황',
+    'orange':        '주황',
+    'orange_red':    '주황레드',
+    'red':           '레드',
+    'green':         '그린',
+    'blue':          '블루',
+    'violet':        '바이올렛',
+    'pink':          '핑크',
+    'black':         '블랙'
+  };
+  var toneDisplay = {
+    'ash': '애쉬', 'pastel': '파스텔', 'vivid': '선명한',
+    'dark': '어두운', 'warm': '따뜻한', 'neutral': ''
+  };
+
+  var baseName = displayMap[base] || base;
+  var toneName = toneDisplay[tone] || '';
+  var display = toneName ? toneName + ' ' + baseName : baseName;
+
+  return { base: base, tone: tone, display: display };
+}
+
+/* ── getRuleBase: 중간색 → RULE_TABLE 매핑 ──
+   RULE_TABLE은 건드리지 않고 매핑으로 해결
+*/
+function getRuleBase(base) {
+  if (base === 'yellow_orange') return 'yellow';
+  if (base === 'orange_red')    return 'orange';
+  if (base === 'black')         return 'red';
+  return base;
+}
+
+/* ── lookupRule: 안전한 RULE_TABLE 접근 ── */
+function lookupRule(curBase, tarBase, dir) {
+  var rCur = getRuleBase(curBase);
+  var rTar = getRuleBase(tarBase);
+  var table = RULE_TABLE[rCur];
+  if (!table) {
+    console.error('RULE_TABLE miss — curBase:', rCur, 'tarBase:', rTar, 'dir:', dir);
+    return { state: 'warn', msg: '정의되지 않은 케이스예요. 디자이너가 직접 판단해주세요.' };
+  }
+  var row = table[rTar];
+  if (!row) {
+    console.error('RULE_TABLE miss — row:', rCur, '→', rTar, 'dir:', dir);
+    return { state: 'warn', msg: '정의되지 않은 케이스예요. 디자이너가 직접 판단해주세요.' };
+  }
+  return row[dir] || { state: 'warn', msg: '정의되지 않은 방향이에요.' };
+}
+/* ════════════════════════════════════════
+   RULE_TABLE — 확정된 염색 규칙 테이블
+   [현재색][목표색][방향] = 상태
+   상태: 'open' | 'warn' | 'lock'
+════════════════════════════════════════ */
+var RULE_TABLE = (function() {
+
+  /* 기본값 생성 헬퍼 */
+  function o(up, same, down, warnUp, warnSame, warnDown) {
+    return {
+      up:   { state: up,   msg: warnUp   || '' },
+      same: { state: same, msg: warnSame || '' },
+      down: { state: down, msg: warnDown || '' }
+    };
+  }
+
+  var W_BLEACH     = '탈색이 불가피해요. 현재 잔류색소로는 원하는 발색이 나오지 않아요.';
+  var W_ORANGE_ASH = '주황기로 브라운 베이스의 애쉬가 살짝 표현돼요. 파랑을 소량 섞어 보색중화하면서 착색하세요.';
+  var W_YELLOW_BLU = '노랑기로 블루가 탁해져 네이비블루 쪽으로 빠질 수 있어요. 파스텔한 블루애쉬를 원하면 탈색 추천해요.';
+  var W_YELLOW_PPV = '보라가 메인으로 발색돼요. 탈색 후에 정확한 발색이 가능해요.';
+  var W_YELLOW_PNK = '살구·코랄 톤으로 발색돼요. 탈색 후에 정확한 발색이 가능해요.';
+  var W_ASH_VIO    = '현재 베이스 명도에 따라 발색이 조금씩 달라요.';
+  var W_STRONG     = '보색 충돌로 탁한 브라운빛으로 발색될 수 있어요.';
+  var W_GREEN_ASH  = '카키·매트 느낌으로 발색될 수 있어요.';
+  var W_DARK_NEEDED = '명도 차이가 커 현재 명도에서 색감 전환이 어려워요.';
+
+  return {
+
+    /* ── 노랑 베이스 ── */
+    'yellow': {
+      'ash_gray':   o('open','open', 'open'),
+      'dark_ash':   o('open','open', 'open'),
+      'blue_ash':   o('open','warn', 'lock', '', W_YELLOW_BLU),
+      'ash_violet': o('open','warn', 'lock', '', W_YELLOW_PPV),
+      'ash_pink':   o('open','warn', 'lock', '', W_YELLOW_PNK),
+      'blue':       o('open','warn', 'lock', '', W_YELLOW_BLU),
+      'violet':     o('open','warn', 'lock', '', W_YELLOW_PPV),
+      'pink':       o('open','warn', 'lock', '', W_YELLOW_PNK),
+      'red':        o('open','open', 'open'),
+      'orange':     o('lock','open', 'open', W_DARK_NEEDED),
+      'brown':      o('lock','open', 'open', W_DARK_NEEDED),
+      'green':      o('open','warn', 'lock', '', W_GREEN_ASH),
+    },
+
+    /* ── 주황 베이스 ── */
+    'orange': {
+      'ash_gray':   o('open','warn', 'open', '', W_ORANGE_ASH),
+      'dark_ash':   o('open','warn', 'open', '', W_ORANGE_ASH),
+      'blue_ash':   o('open','lock', 'lock', '', W_BLEACH),
+      'ash_violet': o('open','lock', 'lock', '', W_BLEACH),
+      'ash_pink':   o('open','lock', 'lock', '', W_BLEACH),
+      'blue':       o('open','lock', 'lock', '', W_BLEACH),
+      'violet':     o('open','lock', 'lock', '', W_BLEACH),
+      'pink':       o('open','lock', 'lock', '', W_BLEACH),
+      'red':        o('open','open', 'open'),
+      'orange':     o('lock','open', 'open', W_DARK_NEEDED),
+      'brown':      o('lock','open', 'open', W_DARK_NEEDED),
+      'green':      o('open','lock', 'lock', '', W_BLEACH),
+    },
+
+    /* ── 레드 베이스 ── */
+    'red': {
+      'ash_gray':   o('open','lock', 'lock', '', W_BLEACH),
+      'dark_ash':   o('open','warn', 'open', '', '붉은기로 브라운빛 다크애쉬가 나올 수 있어요.'),
+      'blue_ash':   o('open','lock', 'lock', '', W_BLEACH),
+      'ash_violet': o('open','lock', 'lock', '', W_BLEACH),
+      'ash_pink':   o('open','lock', 'lock', '', W_BLEACH),
+      'blue':       o('open','lock', 'lock', '', W_BLEACH),
+      'violet':     o('open','lock', 'lock', '', W_BLEACH),
+      'pink':       o('open','lock', 'lock', '', W_BLEACH),
+      'red':        o('lock','open', 'open', W_DARK_NEEDED),
+      'orange':     o('open','lock', 'lock', '', W_BLEACH),
+      'brown':      o('open','lock', 'lock', '', W_BLEACH),
+      'green':      o('open','lock', 'lock', '', W_BLEACH),
+    },
+
+    /* ── 레드바이올렛 베이스 ── */
+    'red_violet': {
+      'ash_gray':   o('open','lock', 'lock', '', W_BLEACH),
+      'dark_ash':   o('open','warn', 'open', '', '적보라기로 브라운빛 다크애쉬가 나올 수 있어요.'),
+      'blue_ash':   o('open','lock', 'lock', '', W_BLEACH),
+      'ash_violet': o('open','lock', 'lock', '', W_BLEACH),
+      'ash_pink':   o('open','lock', 'lock', '', W_BLEACH),
+      'blue':       o('open','lock', 'lock', '', W_BLEACH),
+      'violet':     o('open','lock', 'lock', '', W_BLEACH),
+      'pink':       o('open','lock', 'lock', '', W_BLEACH),
+      'red':        o('open','open', 'open'),
+      'orange':     o('open','lock', 'lock', '', W_BLEACH),
+      'brown':      o('open','lock', 'lock', '', W_BLEACH),
+      'green':      o('open','lock', 'lock', '', W_BLEACH),
+    },
+
+    /* ── 그린 베이스 ── */
+    'green': {
+      'ash_gray':   o('open','warn', 'warn', '', W_GREEN_ASH, W_GREEN_ASH),
+      'dark_ash':   o('open','warn', 'open', '', W_GREEN_ASH),
+      'blue_ash':   o('open','warn', 'lock', '', W_STRONG),
+      'ash_violet': o('open','warn', 'lock', '', W_STRONG),
+      'ash_pink':   o('open','open', 'open'),
+      'blue':       o('open','warn', 'lock', '', W_STRONG),
+      'violet':     o('open','warn', 'lock', '', W_STRONG),
+      'pink':       o('open','open', 'open'),
+      'red':        o('open','lock', 'open', '', W_BLEACH),
+      'orange':     o('open','open', 'open'),
+      'brown':      o('open','open', 'open'),
+      'green':      o('lock','open', 'open', W_DARK_NEEDED),
+    },
+
+    /* ── 블루 베이스 ── */
+    'blue': {
+      'ash_gray':   o('open','open', 'open'),
+      'dark_ash':   o('open','open', 'open'),
+      'blue_ash':   o('open','open', 'open'),
+      'ash_violet': o('open','open', 'open'),
+      'ash_pink':   o('open','warn', 'warn', '', W_ASH_VIO, W_ASH_VIO),
+      'blue':       o('lock','open', 'open', W_DARK_NEEDED),
+      'violet':     o('open','open', 'open'),
+      'pink':       o('open','warn', 'warn', '', W_ASH_VIO),
+      'red':        o('open','lock', 'open', '', W_BLEACH),
+      'orange':     o('open','lock', 'open', '', W_BLEACH),
+      'brown':      o('open','warn', 'open', '', '블루기로 브라운이 차갑게 발색될 수 있어요.'),
+      'green':      o('open','warn', 'lock', '', W_STRONG),
+    },
+
+    /* ── 바이올렛 베이스 ── */
+    'violet': {
+      'ash_gray':   o('open','open', 'open'),
+      'dark_ash':   o('open','open', 'open'),
+      'blue_ash':   o('open','open', 'open'),
+      'ash_violet': o('lock','open', 'open', W_DARK_NEEDED),
+      'ash_pink':   o('open','open', 'open'),
+      'blue':       o('open','open', 'open'),
+      'violet':     o('lock','open', 'open', W_DARK_NEEDED),
+      'pink':       o('open','open', 'open'),
+      'red':        o('open','open', 'open'),
+      'orange':     o('open','warn', 'open', '', '보라기로 주황이 따뜻하게 발색될 수 있어요.'),
+      'brown':      o('open','open', 'open'),
+      'green':      o('open','warn', 'lock', '', W_STRONG),
+    },
+
+    /* ── 핑크 베이스 ── */
+    'pink': {
+      'ash_gray':   o('open','open', 'open'),
+      'dark_ash':   o('open','open', 'open'),
+      'blue_ash':   o('open','warn', 'lock', '', W_STRONG),
+      'ash_violet': o('open','open', 'open'),
+      'ash_pink':   o('lock','open', 'open', W_DARK_NEEDED),
+      'blue':       o('open','warn', 'lock', '', W_STRONG),
+      'violet':     o('open','open', 'open'),
+      'pink':       o('lock','open', 'open', W_DARK_NEEDED),
+      'red':        o('open','open', 'open'),
+      'orange':     o('open','open', 'open'),
+      'brown':      o('open','open', 'open'),
+      'green':      o('open','warn', 'lock', '', W_STRONG),
+    },
+
+    /* ── 애쉬그레이 베이스 ── */
+    'ash_gray': {
+      'ash_gray':   o('lock','open', 'open', W_DARK_NEEDED),
+      'dark_ash':   o('lock','open', 'open', W_DARK_NEEDED),
+      'blue_ash':   o('open','lock', 'open', '', W_BLEACH),
+      'ash_violet': o('open','warn', 'open', '', W_ASH_VIO),
+      'ash_pink':   o('open','warn', 'open', '', W_ASH_VIO),
+      'blue':       o('open','lock', 'lock', '', W_BLEACH),
+      'violet':     o('open','warn', 'open', '', W_ASH_VIO),
+      'pink':       o('open','warn', 'open', '', W_ASH_VIO),
+      'red':        o('open','lock', 'open', '', W_BLEACH),
+      'orange':     o('open','lock', 'open', '', W_BLEACH),
+      'brown':      o('open','open', 'open'),
+      'green':      o('open','lock', 'lock', '', W_BLEACH),
+    },
+
+    /* ── 다크뉴트럴 베이스 ── */
+    'dark_neutral': {
+      'ash_gray':   o('open','open', 'open'),
+      'dark_ash':   o('lock','open', 'open', W_DARK_NEEDED),
+      'blue_ash':   o('open','lock', 'lock', '', W_BLEACH),
+      'ash_violet': o('open','lock', 'lock', '', W_BLEACH),
+      'ash_pink':   o('open','lock', 'lock', '', W_BLEACH),
+      'blue':       o('open','lock', 'lock', '', W_BLEACH),
+      'violet':     o('open','lock', 'lock', '', W_BLEACH),
+      'pink':       o('open','lock', 'lock', '', W_BLEACH),
+      'red':        o('open','open', 'open'),
+      'orange':     o('open','open', 'open'),
+      'brown':      o('open','open', 'open'),
+      'green':      o('open','lock', 'lock', '', W_BLEACH),
+    },
+
+    /* ── 브라운 베이스 ── */
+    'brown': {
+      'ash_gray':   o('open','warn', 'open', '', W_ORANGE_ASH),
+      'dark_ash':   o('open','warn', 'open', '', W_ORANGE_ASH),
+      'blue_ash':   o('open','lock', 'lock', '', W_BLEACH),
+      'ash_violet': o('open','lock', 'lock', '', W_BLEACH),
+      'ash_pink':   o('open','lock', 'lock', '', W_BLEACH),
+      'blue':       o('open','lock', 'lock', '', W_BLEACH),
+      'violet':     o('open','lock', 'lock', '', W_BLEACH),
+      'pink':       o('open','lock', 'lock', '', W_BLEACH),
+      'red':        o('open','open', 'open'),
+      'orange':     o('open','open', 'open'),
+      'brown':      o('lock','open', 'open', W_DARK_NEEDED),
+      'green':      o('open','lock', 'lock', '', W_BLEACH),
+    },
+
+    /* ── 블루애쉬 베이스 ── */
+    'blue_ash': {
+      'ash_gray':   o('open','open', 'open'),
+      'dark_ash':   o('open','open', 'open'),
+      'blue_ash':   o('lock','open', 'open', W_DARK_NEEDED),
+      'ash_violet': o('open','open', 'open'),
+      'ash_pink':   o('open','warn', 'warn', '', W_ASH_VIO),
+      'blue':       o('open','open', 'open'),
+      'violet':     o('open','open', 'open'),
+      'pink':       o('open','warn', 'warn', '', W_ASH_VIO),
+      'red':        o('open','lock', 'open', '', W_BLEACH),
+      'orange':     o('open','lock', 'open', '', W_BLEACH),
+      'brown':      o('open','open', 'open'),
+      'green':      o('open','warn', 'lock', '', W_STRONG),
+    },
+
+    /* ── 애쉬바이올렛 베이스 ── */
+    'ash_violet': {
+      'ash_gray':   o('open','open', 'open'),
+      'dark_ash':   o('open','open', 'open'),
+      'blue_ash':   o('open','open', 'open'),
+      'ash_violet': o('lock','open', 'open', W_DARK_NEEDED),
+      'ash_pink':   o('open','open', 'open'),
+      'blue':       o('open','open', 'open'),
+      'violet':     o('open','open', 'open'),
+      'pink':       o('open','open', 'open'),
+      'red':        o('open','warn', 'open', '', '보라기로 레드가 따뜻하게 발색될 수 있어요.'),
+      'orange':     o('open','warn', 'open', '', '보라기로 주황이 탁하게 발색될 수 있어요.'),
+      'brown':      o('open','open', 'open'),
+      'green':      o('open','warn', 'lock', '', W_STRONG),
+    },
+
+    /* ── 애쉬핑크 베이스 ── */
+    'ash_pink': {
+      'ash_gray':   o('open','open', 'open'),
+      'dark_ash':   o('open','open', 'open'),
+      'blue_ash':   o('open','warn', 'lock', '', W_STRONG),
+      'ash_violet': o('open','open', 'open'),
+      'ash_pink':   o('lock','open', 'open', W_DARK_NEEDED),
+      'blue':       o('open','warn', 'lock', '', W_STRONG),
+      'violet':     o('open','open', 'open'),
+      'pink':       o('open','open', 'open'),
+      'red':        o('open','open', 'open'),
+      'orange':     o('open','open', 'open'),
+      'brown':      o('open','open', 'open'),
+      'green':      o('open','warn', 'lock', '', W_STRONG),
+    },
+
+  };
+})();
+
+
 function getUndertone(h, s, l) {
   if (l <= 12 || (l <= 22 && s < 25)) return 'BLACK';
   /* 저명도 + 고채도 와인·레드계열 → BLACK이 아닌 실제 언더톤으로 처리 */
@@ -2066,7 +2473,7 @@ function confirmTargetColor() {
     return;
   }
 
-  /* 스와치 미리 세팅 */
+  /* ── 스와치 세팅 ── */
   var curN = hueToName(currentHSL.h, currentHSL.s, currentHSL.l);
   var tarN = hueToName(targetHSL.h, targetHSL.s, targetHSL.l);
   var cs = document.getElementById('tone-cur-swatch');
@@ -2076,15 +2483,28 @@ function confirmTargetColor() {
   if (ts) ts.style.background = hslStr(targetHSL.h, targetHSL.s, targetHSL.l);
   if (cd) cd.textContent = curN + ' → ' + tarN;
 
-  /* ── 이론 기반 버튼 잠금 ── */
-  var cL = currentHSL.l, cS = currentHSL.s, cH = currentHSL.h;
-  var tL = targetHSL.l,  tS = targetHSL.s,  tH = targetHSL.h;
-  var gap = tL - cL;
-  var pastelTar = tS <= 25 && tL >= 55;
-  var hueDiff = Math.min(Math.abs(tH-cH), 360-Math.abs(tH-cH));
-  var satGap  = tS - cS;
+  /* ── normalizeColor로 카테고리 확정 ── */
+  var curNorm = normalizeColor(currentHSL.h, currentHSL.s, currentHSL.l, 'cur');
+  var tarNorm = normalizeColor(targetHSL.h, targetHSL.s, targetHSL.l, 'tar');
+  var curKey = curNorm.base;
+  var tarKey = tarNorm.base;
 
-  /* 버튼 기본 복원 */
+  /* 명도 기반 기본 불가 판단 */
+  var cL = currentHSL.l, tL = targetHSL.l;
+  var cH = currentHSL.h, cS = currentHSL.s;
+  var tH = targetHSL.h, tS = targetHSL.s;
+  var gap = tL - cL;
+  var hueDiff = Math.min(Math.abs(tH-cH), 360-Math.abs(tH-cH));
+  var satGap = tS - cS;
+
+  var D1 = tL > cL;
+  var D1_ok = (hueDiff < 20 && Math.abs(tS-cS) < 20 && gap <= 15);
+  var D2 = (satGap > 30) && (tL >= cL - 8) && (hueDiff > 20);
+  var downImpossible = (D1 && !D1_ok) || D2;
+  var upImpossible   = (gap < -12);
+  var sameImpossible = (gap > 22 || gap < -28);
+
+  /* ── 버튼 기본 복원 ── */
   var recDiv = document.getElementById('tone-up-recommend');
   if (recDiv) recDiv.style.display = 'none';
   ['up','same','down'].forEach(function(d) {
@@ -2095,11 +2515,12 @@ function confirmTargetColor() {
     btn.style.cursor = 'pointer';
     btn.style.borderColor = '#333';
     btn.style.background = '#111';
+    btn.style.color = '#fff';
     btn.dataset.warnReason = '';
     var sub = btn.querySelector('div');
     if (sub) {
       if (d==='up')   sub.textContent = '탈색·톤업이 필요한 방향';
-      if (d==='same') sub.textContent = '탈색 없이 현재 명도에서 색상 전환 · 잔류색소로 완벽한 발색이 어려울 수 있어요';
+      if (d==='same') sub.textContent = '탈색 없이 현재 명도에서 색상 전환';
       if (d==='down') sub.textContent = '톤다운 방향';
     }
   });
@@ -2116,252 +2537,50 @@ function confirmTargetColor() {
     if (sub) sub.textContent = '🔒 ' + reason;
   }
 
-  /* ⚠ 주의 버튼 — 열리지만 경고 표시 */
   function warnBtn(id, reason) {
     var btn = document.getElementById('tone-btn-' + id);
     if (!btn) return;
-    btn.disabled = false;
-    btn.style.opacity = '1';
-    btn.style.cursor = 'pointer';
+    if (btn.disabled) return;
     btn.style.borderColor = 'rgba(180,130,40,0.7)';
     btn.style.background = 'rgba(180,130,40,0.10)';
     btn.style.color = '#d4a820';
     btn.dataset.warnReason = reason;
-    /* 버튼 전체 내용 재구성 — 상단에 ⚠ 표시 */
-    var icons = {'up':'↑','same':'=','down':'↓'};
+    var icons = {up:'↑',same:'=',down:'↓'};
     var labels = {
-      'up':'지금보다 밝게 올리고 싶어요',
-      'same':'밝기는 유지하고 색감만 바꾸고 싶어요',
-      'down':'지금보다 어둡게 깔고 싶어요'
+      up:'지금보다 밝게 올리고 싶어요',
+      same:'밝기는 유지하고 색감만 바꾸고 싶어요',
+      down:'지금보다 어둡게 깔고 싶어요'
     };
-    var icon = icons[id] || '';
-    var label = labels[id] || '';
     btn.innerHTML = '<span style="font-size:16px;margin-right:6px;">⚠</span>'
-      + '<span style="font-size:14px;font-weight:700;">' + label + '</span>'
+      + '<span style="font-size:14px;font-weight:700;">' + labels[id] + '</span>'
       + '<div style="font-size:11px;color:#c49a20;margin-top:5px;font-weight:400;line-height:1.6;">'
       + reason + '</div>';
   }
 
-  /* 톤업 추천 문구 표시 */
-  function showUpRecommend() {
-    var rec = document.getElementById('tone-up-recommend');
-    if (rec) rec.style.display = 'block';
-  }
-
-  /* ══ 톤다운 불가 판단 ══
-     D1: 목표 명도가 현재보다 높음
-         예외: 동일계열(hue차<20) + 채도차 작음 + 명도차 ≤15 → 착색으로 소폭 밝아짐 가능
-     D2: 채도 30 이상 올라가면서 명도도 유지 (고채도는 밝은 베이스 필요) */
-  var D1 = tL > cL;
-  var D1_ok = (hueDiff < 20 && Math.abs(tS-cS) < 20 && gap <= 15);
-  var D2 = (satGap > 30) && (tL >= cL - 8) && (hueDiff > 20);
-  var downImpossible = (D1 && !D1_ok) || D2;
-
-  /* ══ 톤업 불가 판단 ══
-     U1: 목표 명도가 현재보다 12 이상 낮음
-     U2: 채도 35이상 낮아지면서 명도도 내려감 (한색계열 다운케이스)
-     예외: 파스텔 목표는 U2 제외 — 탈색 후 파스텔 착색이 필요한 방향이므로 톤업 허용 */
-  var upImpossible = (gap < -12) || (cS - tS > 35 && gap < 0 && !pastelTar);
-
-  /* ══ 톤인톤 불가 판단 ══
-     S1: 명도 22 이상 상승 또는 28 이상 하강
-     S2: 파스텔 목표 + 베이스 매우 어두움(l<38) */
-  var sameImpossible = (gap > 22 || gap < -28) || (pastelTar && cL < 38);
-
+  /* ── 명도 기반 기본 잠금 ── */
   if (downImpossible) lockBtn('down', '목표가 더 밝거나 채도가 높아 톤다운으로 달성할 수 없어요');
   if (upImpossible)   lockBtn('up',   '목표가 더 어두워 톤업이 필요 없어요');
   if (sameImpossible) lockBtn('same', '명도 차이가 커 현재 명도에서 색감 전환이 어려워요');
 
-  /* ══ 파스텔 핑크·바이올렛 — 18레벨 미만 베이스에서 톤인톤·톤다운 잠금 ══
-     탈색 없이 보색중화만으로는 탁해짐 → 18레벨 이상 탈색 필요
-     → 톤다운 잠금, 톤인톤 잠금, 톤업만 허용 */
-  var tarUt2 = getUndertone(tH, tS, tL);
-  /* 파스텔 조건 OR 저채도(s<30) — 애쉬바이올렛·애쉬핑크 계열 포함 */
-  var isPastelPinkViolet = (pastelTar || tS < 30) &&
-    (tarUt2 === 'PINK' || tarUt2 === 'VIOLET' || tarUt2 === 'RED_VIOLET');
-
-  /* 현재 언더톤이 난색 계열일 때만 잠금
-     노랑·주황·레드 베이스: 보색 충돌로 애쉬 느낌 죽음 → 잠금
-     한색 베이스(BLUE·TEAL·VIOLET·GRAY): 보색 간섭 없음 → 잠금 불필요 */
-  var curUt3 = getUndertone(cH, cS, cL);
-  var isWarmBase = (curUt3 === 'YELLOW' || curUt3 === 'YELLOW_GREEN' ||
-                    curUt3 === 'ORANGE' || curUt3 === 'RED' || curUt3 === 'RED_VIOLET');
-
-  /* ══ 파스텔·애쉬 계열(핑크·바이올렛) + 난색 베이스 분기 ══
-     자연 멜라닌 탈색 순서 기반:
-       주황/레드 베이스: 보색 파워 너무 강해 발색 자체가 의미없음 → 톤인톤·톤다운 잠금
-       노랑 베이스(밝음, cL≥60): 예측 가능한 발색 → 톤인톤 경고로 열어둠
-       노랑 베이스(어두움, cL<60): 발색 불안정 → 톤인톤 잠금
-       톤다운은 모든 경우 잠금 — 어두운 명도에서 파스텔 표현 불가
-       톤업은 항상 열림 (정석 루트)
-  */
-  if (isPastelPinkViolet && isWarmBase && cL < 78) {
-
-    var isOrangeRedBase = (curUt3 === 'ORANGE' || curUt3 === 'RED' ||
-                           curUt3 === 'RED_VIOLET' || curUt3 === 'YELLOW_GREEN');
-    var isYellowBase    = (curUt3 === 'YELLOW');
-
-    /* ── 노랑 베이스 전용 경고 문구 ── */
-    var ppvSameWarn = '';
-    if (isYellowBase) {
-      if (tarUt2 === 'VIOLET' || tarUt2 === 'RED_VIOLET') {
-        ppvSameWarn = '바이올렛에 애쉬 한 방울 느낌으로 나와요. 순수 애쉬바이올렛보단 보라가 메인이에요. 고객이 이 발색을 원한다면 진행 가능해요.';
-      } else if (tarUt2 === 'PINK') {
-        ppvSameWarn = '노랑기로 살구·코랄 느낌으로 나와요. 순수 애쉬핑크보단 따뜻한 핑크가 메인이에요. 고객이 원한다면 진행 가능해요.';
-      }
+  /* ── RULE_TABLE 기반 잠금/경고 적용 ── */
+  ['up','same','down'].forEach(function(dir) {
+    var rule = lookupRule(curKey, tarKey, dir);
+    if (rule.state === 'lock') {
+      lockBtn(dir, rule.msg || '이 방향으로는 시술이 어려워요.');
+    } else if (rule.state === 'warn') {
+      warnBtn(dir, rule.msg || '주의가 필요해요.');
     }
+  });
 
-    if (isOrangeRedBase) {
-      /* 주황·레드 베이스 — 명도 무관 전체 잠금
-         자연멜라닌 기준 보색 파워가 너무 강해 발색 자체가 탁해짐 */
-      if (!sameImpossible) lockBtn('same', '탈색이 불가피해요. 현재 잔류색소로는 원하는 발색이 나오지 않아요.');
-      if (!downImpossible) lockBtn('down', '탈색이 불가피해요. 어두운 명도에서는 더욱 발색이 어려워요.');
-
-    } else if (isYellowBase) {
-      /* 노랑 베이스 — 명도 기준 분기 */
-      if (cL >= 60) {
-        /* 밝은 노랑(약 13레벨 이상) — 경고로 열어둠 */
-        if (!sameImpossible) warnBtn('same', ppvSameWarn);
-        if (!downImpossible) lockBtn('down', '어두운 명도에서는 파스텔 표현이 불가해요.');
-      } else {
-        /* 어두운 노랑(약 13레벨 미만) — 잠금 */
-        if (!sameImpossible) lockBtn('same', '탈색이 불가피해요. 현재 노랑기로는 파스텔 발색이 어려워요.');
-        if (!downImpossible) lockBtn('down', '어두운 명도에서는 파스텔 표현이 불가해요.');
-      }
-    }
-
-    showUpRecommend();
-    /* 톤업이 잠겼다면 해제 */
-    var upBtn = document.getElementById('tone-btn-up');
-    if (upBtn && upBtn.disabled) {
-      upBtn.disabled = false;
-      upBtn.style.opacity = '1';
-      upBtn.style.cursor = 'pointer';
-      upBtn.style.borderColor = '#333';
-      upBtn.style.background = '#111';
-      var upSub = upBtn.querySelector('div');
-      if (upSub) upSub.textContent = '탈색·톤업이 필요한 방향';
-    }
+  /* ── 톤업 추천 표시 (잠금/경고 케이스) ── */
+  var sameBtn = document.getElementById('tone-btn-same');
+  var downBtn = document.getElementById('tone-btn-down');
+  if ((sameBtn && sameBtn.disabled) || (downBtn && downBtn.disabled)) {
+    var rec = document.getElementById('tone-up-recommend');
+    if (rec) rec.style.display = 'block';
   }
 
-  /* ══ 강한 보색 충돌 잠금 ══
-     RED↔GREEN, ORANGE↔BLUE 처럼 파워 강한 보색끼리
-     둘 다 선명(s≥50) + 명도차 ±10 이내 + 어두운 베이스(l<65)
-     → 보색중화로 절대 중화 불가, 탁한 브라운으로 발색
-     → 톤인톤·톤다운 잠금, 톤업만 허용
-     예외: 밝은 베이스(l≥65) → 잠금 없음 (어느 정도 발색 가능) */
-  var strongCompPairs = {
-    'RED':    ['GREEN','TEAL'],
-    'GREEN':  ['RED','RED_VIOLET'],
-    'ORANGE': ['BLUE','TEAL'],
-    'BLUE':   ['ORANGE','RED_ORANGE']
-  };
-  var isStrongComp = (strongCompPairs[curUt3] &&
-    strongCompPairs[curUt3].indexOf(tarUt2) > -1 &&
-    cS >= 50 && tS >= 50 &&
-    Math.abs(gap) <= 10 &&
-    cL < 65);
-
-  if (isStrongComp) {
-    /* 톤인톤: 경고 허용 (보색 역할로 발색되지만 탁한 결과) */
-    warnBtn('same', '보색 충돌로 탁한 브라운빛 발색 가능. 선명한 색 원하면 톤업 추천');
-    /* 톤다운: 주황→블루 등 강보색은 잠금 (채도 완전히 죽음) */
-    if ((curUt3 === 'ORANGE' && (tarUt2 === 'BLUE' || tarUt2 === 'TEAL')) ||
-        (curUt3 === 'RED' && (tarUt2 === 'GREEN' || tarUt2 === 'TEAL'))) {
-      if (!downImpossible) lockBtn('down', '보색 충돌로 채도가 완전히 죽어 탁한 브라운으로 발색돼요.');
-    } else {
-      warnBtn('down', '채도 죽은 브라운으로 발색돼요. 선명한 색 원하면 톤업 추천');
-    }
-    /* 톤업 추천 문구 표시 */
-    showUpRecommend();
-    /* 톤업이 잠겨있으면 해제 */
-    var upBtn2 = document.getElementById('tone-btn-up');
-    if (upBtn2 && upBtn2.disabled) {
-      upBtn2.disabled = false;
-      upBtn2.style.opacity = '1';
-      upBtn2.style.cursor = 'pointer';
-      upBtn2.style.borderColor = '#333';
-      upBtn2.style.background = '#111';
-      var upSub2 = upBtn2.querySelector('div');
-      if (upSub2) upSub2.textContent = '탈색·톤업이 필요한 방향';
-    }
-  }
-
-  /* ══ 노랑/주황 → 블루 계열 ══
-     자연멜라닌 기준:
-       주황 베이스: 주황+파랑 = 브라운·머드, 발색 의미없음 → 잠금
-       노랑 베이스: 노랑+파랑 = 네이비블루, 예측 가능 → 경고로 열어둠 */
-  var isYellowOrangeToBlueSeries = (curUt3 === 'YELLOW' || curUt3 === 'ORANGE') &&
-    (tarUt2 === 'BLUE' || tarUt2 === 'TEAL' || tarUt2 === 'VIOLET') &&
-    !isPastelPinkViolet &&  /* PPV에서 이미 처리된 경우 제외 */
-    !isStrongComp;
-  if (isYellowOrangeToBlueSeries) {
-    if (curUt3 === 'YELLOW') {
-      /* 노랑 → 블루: 경고로 열어둠 (네이비블루 발색 가능) */
-      if (!sameImpossible) warnBtn('same', '노랑기로 블루가 탁해져 네이비블루 쪽으로 빠질 수 있어요. 파스텔한 블루애쉬를 원하면 탈색 추천해요.');
-    } else {
-      /* 주황 → 블루: 잠금 (브라운·머드로 발색) */
-      if (!sameImpossible) lockBtn('same', '탈색이 불가피해요. 주황기와 블루 보색 충돌로 탁한 브라운으로 발색돼요.');
-    }
-    if (!downImpossible) lockBtn('down', '탈색 없이는 블루 계열 톤다운 발색이 어려워요.');
-    showUpRecommend();
-    var upBtn3 = document.getElementById('tone-btn-up');
-    if (upBtn3 && upBtn3.disabled) {
-      upBtn3.disabled = false;
-      upBtn3.style.opacity = '1';
-      upBtn3.style.cursor = 'pointer';
-      upBtn3.style.borderColor = '#333';
-      upBtn3.style.background = '#111';
-      var upSub3 = upBtn3.querySelector('div');
-      if (upSub3) upSub3.textContent = '탈색·톤업이 필요한 방향';
-    }
-  }
-
-  /* ══ 난색(주황·레드·레드바이올렛) → 애쉬그레이 톤인톤 경고 ══
-     보색중화 없이 착색하면 브라운빛 애쉬로 발색됨
-     노랑→애쉬는 제외 (노랑은 바이올렛 소량 믹스로 정상 발색 가능) */
-  var isWarmToAsh = (curUt3 === 'ORANGE' || curUt3 === 'RED' || curUt3 === 'RED_VIOLET') &&
-    (tarUt2 === 'GRAY' || tarUt2 === 'DARK_NEUTRAL') &&
-    !sameImpossible;
-  if (isWarmToAsh) {
-    warnBtn('same', '주황기가 남아있어 브라운 베이스의 애쉬가 살짝 표현돼요. 애쉬 염모제에 파랑을 소량 섞어 보색중화하면서 착색하세요.');
-  }
-
-  /* ══ 한색(애쉬·그레이·블루) 현재 → 바이올렛·핑크 톤인톤 경고 ══
-     기존 애쉬 베이스에서 바이올렛 착색 시 발색 오차 가능 */
-  /* ══ 한색(애쉬·그레이) 현재 → 바이올렛·핑크 톤인톤 경고 ══ */
-  var isCoolToViolet = (curUt3 === 'GRAY' || curUt3 === 'DARK_NEUTRAL' ||
-                        curUt3 === 'BLUE' || curUt3 === 'TEAL') &&
-    (tarUt2 === 'VIOLET' || tarUt2 === 'PINK' || tarUt2 === 'RED_VIOLET') &&
-    !sameImpossible;
-  if (isCoolToViolet) {
-    warnBtn('same', '애쉬 베이스에 바이올렛 착색 시 명도에 따라 발색 오차 범위가 생길 수 있어요');
-  }
-
-  /* ══ 애쉬그레이 현재 → 블루애쉬 톤인톤: 🔒 잠금 ══
-     한색 잔여 누적으로 탁한 블루·먹색으로 발색됨
-     선명한 블루는 탈색 후에만 가능 */
-  if ((curUt3 === 'GRAY' || curUt3 === 'DARK_NEUTRAL') &&
-      (tarUt2 === 'BLUE' || tarUt2 === 'TEAL') && !sameImpossible) {
-    lockBtn('same', '한색 잔여 누적으로 탁한 블루·먹색으로 발색돼요. 선명한 블루는 탈색 후 가능해요.');
-  }
-
-  /* ══ 애쉬그레이 현재 → 레드 톤인톤: 🔒 잠금 ══
-     한색 잔여와 레드 보색 충돌 → 브라운·탁한 레드로 발색
-     선명한 레드는 탈색 후에만 가능 */
-  if ((curUt3 === 'GRAY' || curUt3 === 'DARK_NEUTRAL') &&
-      (tarUt2 === 'RED' || tarUt2 === 'RED_VIOLET' || tarUt2 === 'ORANGE') &&
-      !sameImpossible) {
-    lockBtn('same', '한색 잔여와 보색 충돌로 브라운·탁한 레드로 발색돼요. 선명한 레드는 탈색 후 가능해요.');
-  }
-
-  /* ══ 그린 → 레드 톤인톤: 🔒 잠금 ══
-     보색 관계로 색이 중화되며 선명한 레드 아닌 브라운·탁한 레드로 발색
-     정확한 레드는 탈색 후 진행 필요 */
-  if (curUt3 === 'GREEN' && (tarUt2 === 'RED' || tarUt2 === 'RED_VIOLET') && !sameImpossible) {
-    lockBtn('same', '보색 관계로 색이 중화되며 브라운·탁한 레드로 발색돼요. 선명한 레드는 탈색 후 가능해요.');
-  }
-
+  /* ── 카드 표시 ── */
   var tc = document.getElementById('tone-dir-card');
   var ta = document.getElementById('tone-analyzing');
   if (tc) {
@@ -2375,6 +2594,7 @@ function confirmTargetColor() {
 }
 
 /* ── 방향 선택 (선택만, 확정 아님) ── */
+
 function pickToneDir(dir) {
   var btn = document.getElementById('tone-btn-' + dir);
   if (btn && btn.disabled) return;
