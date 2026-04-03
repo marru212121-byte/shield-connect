@@ -3149,7 +3149,7 @@ var CASE_TABLE = {
 
   /* ── 톤업 (up) ── */
   'up_yellow_ash': {
-    summary: '현재 노랑 언더톤 상태에서 탈색 후 애쉬 시술을 권장해요.\n18lv 아이보리까지 탈색 후 노랑기가 남으면 보라를 소량 믹스해 시술하세요.',
+    summary: '18lv 아이보리까지 탈색 후 애쉬 염모제로 시술하세요.\n노랑기가 남아있다면 보라를 소량 믹스해 염색하세요.',
     detail:  MATTE_DETAIL
   },
   'up_orange_ash': {
@@ -3293,60 +3293,82 @@ var CASE_TABLE = {
 ════════════════════════════════════════ */
 var UNDERTONE_RULE = {
   'yellow': {
-    mix:       '보라',
-    mixReason: '노랑의 보색',
-    result:    '매트하게 표현될 수 있어요',
-    detail:    MATTE_DETAIL,
-    canSame:   true,
-    canDown:   true
+    mix:          '보라',
+    mixReason:    '노랑의 보색',
+    result:       '매트하게 표현될 수 있어요',
+    detail:       MATTE_DETAIL,
+    canSame:      true,
+    canDown:      true,
+    /* 탈색 후 잔류 언더톤 규칙 */
+    bleachTarget: '18lv 아이보리',
+    residual:     '노랑기가 남아있다면 보라를 소량 믹스해 염색하세요.',
+    residualColor:'보라'
   },
   'orange': {
-    mix:       '블루',
-    mixReason: '주황의 보색',
-    result:    '브라운에 가까운 애쉬가 나올 수 있어요',
-    detail:    ORANGE_DETAIL,
-    canSame:   true,   /* 경고 포함 */
-    canDown:   true    /* 경고 포함 */
+    mix:          '블루',
+    mixReason:    '주황의 보색',
+    result:       '브라운에 가까운 애쉬가 나올 수 있어요',
+    detail:       ORANGE_DETAIL,
+    canSame:      true,
+    canDown:      true,
+    bleachTarget: '18lv 아이보리',
+    residual:     '노랑기가 남으면 보라, 주황기가 남으면 블루를 소량 믹스해 염색하세요.',
+    residualColor:'블루'
   },
   'red': {
-    mix:       null,   /* 보색으로 해결 불가 */
-    mixReason: null,
-    result:    '탈색 없이 애쉬 발색이 어려워요',
-    detail:    RED_DETAIL,
-    canSame:   false,  /* 탈색 필요 */
-    canDown:   false
+    mix:          null,
+    mixReason:    null,
+    result:       '탈색 없이 애쉬 발색이 어려워요',
+    detail:       RED_DETAIL,
+    canSame:      false,
+    canDown:      false,
+    bleachTarget: '18lv 아이보리',
+    residual:     '노랑기가 남으면 보라, 주황기가 남으면 블루를 소량 믹스해 염색하세요.',
+    residualColor:'블루'
   },
   'green': {
-    mix:       null,
-    mixReason: null,
-    result:    '카키 느낌으로 발색될 수 있어요',
-    detail:    '',
-    canSame:   false,
-    canDown:   false
+    mix:          null,
+    mixReason:    null,
+    result:       '카키 느낌으로 발색될 수 있어요',
+    detail:       '',
+    canSame:      false,
+    canDown:      false,
+    bleachTarget: '15lv',
+    residual:     '',
+    residualColor:null
   },
   'blue': {
-    mix:       null,
-    mixReason: null,
-    result:    '쿨톤 베이스라 애쉬 표현에 유리해요',
-    detail:    '',
-    canSame:   true,
-    canDown:   true
+    mix:          null,
+    mixReason:    null,
+    result:       '쿨톤 베이스라 애쉬 표현에 유리해요',
+    detail:       '',
+    canSame:      true,
+    canDown:      true,
+    bleachTarget: '18lv 아이보리',
+    residual:     '',
+    residualColor:null
   },
   'violet': {
-    mix:       null,
-    mixReason: null,
-    result:    '쿨톤 베이스라 애쉬 표현에 유리해요',
-    detail:    '',
-    canSame:   true,
-    canDown:   true
+    mix:          null,
+    mixReason:    null,
+    result:       '쿨톤 베이스라 애쉬 표현에 유리해요',
+    detail:       '',
+    canSame:      true,
+    canDown:      true,
+    bleachTarget: '18lv 아이보리',
+    residual:     '',
+    residualColor:null
   },
   'neutral': {
-    mix:       null,
-    mixReason: null,
-    result:    '중성 베이스라 애쉬 표현이 수월해요',
-    detail:    '',
-    canSame:   true,
-    canDown:   true
+    mix:          null,
+    mixReason:    null,
+    result:       '중성 베이스라 애쉬 표현이 수월해요',
+    detail:       '',
+    canSame:      true,
+    canDown:      true,
+    bleachTarget: '18lv 아이보리',
+    residual:     '',
+    residualColor:null
   }
 };
 
@@ -3375,20 +3397,17 @@ function generateHairMessage(caseKey, curTone, targetType, toneDir, targetSubTyp
     detail = '';
 
   } else if (toneDir === 'up') {
-    /* ── 톤업 + ash ── */
-    if (curTone === 'yellow') {
-      summary = '노랑 언더톤에서 ' + tLabel + '로 밝게 올리시는군요.\n18lv 아이보리까지 탈색 후 시술하세요.\n탈색 후 노랑기가 남으면 보라를 소량 믹스해 중화하세요.';
-    } else if (curTone === 'orange') {
-      summary = '주황 언더톤에서 ' + tLabel + '로 밝게 올리시는군요.\n18lv 아이보리까지 탈색 후 시술하세요.\n탈색 후 노랑기가 남으면 보라, 주황기가 남으면 블루를 소량 믹스하세요.';
-    } else if (curTone === 'red') {
-      summary = '레드 베이스에서 ' + tLabel + '로 가시는군요.\n18lv 아이보리까지 탈색이 필수예요.\n탈색 후 노랑기가 남으면 보라, 주황기가 남으면 블루를 소량 믹스하세요.';
-    } else if (curTone === 'green') {
-      summary = '그린 베이스에서 ' + tLabel + '로 가시는군요.\n그린기 제거를 위해 15lv까지 탈색 후 시술하세요.';
-      detail = '';
-    } else {
-      summary = curKo + ' 베이스에서 ' + tLabel + '로 밝게 올리시는군요.\n18lv 아이보리까지 탈색 후 ' + tLabel + ' 염모제로 시술하세요.';
-      detail = '';
-    }
+    /* ── 톤업 + ash ──
+       문장 구조:
+       1번: "{bleachTarget}까지 탈색 후 {tLabel} 염모제로 시술하세요."
+       2번: 잔류 언더톤 조건부 보정 (rule.residual)
+       규칙 데이터로 처리 — if 분기 최소화
+    */
+    var bTarget = rule.bleachTarget || '18lv 아이보리';
+    var line1   = bTarget + '까지 탈색 후 ' + tLabel + ' 염모제로 시술하세요.';
+    var line2   = rule.residual || '';
+    summary = line1 + (line2 ? '\n' + line2 : '');
+    if (!rule.residualColor) detail = ''; /* 잔류 보정 불필요 케이스 */
 
   } else if (toneDir === 'same') {
     /* ── 톤인톤 + ash ── */
