@@ -599,7 +599,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
     <!-- 시술 문구 영역 -->
     <div id="compare-wrap" style="margin-top:12px;">
-      <div id="rec-detail" style="white-space:pre-line;font-size:13px;color:#ccc;line-height:1.9;padding:10px 12px;background:rgba(122,159,191,0.05);border-radius:8px;border:1px solid rgba(122,159,191,0.15);"></div>
+      <!-- summary: 항상 표시 -->
+      <div id="rec-summary" style="white-space:pre-line;font-size:13px;color:#ccc;line-height:1.9;padding:10px 12px;background:rgba(122,159,191,0.05);border-radius:8px;border:1px solid rgba(122,159,191,0.15);margin-bottom:8px;"></div>
+      <!-- 이유보기 버튼 -->
+      <button id="rec-reason-btn" onclick="toggleDetail()"
+        style="display:none;width:100%;padding:8px;border-radius:8px;border:1px solid #333;background:transparent;color:#777;font-size:12px;cursor:pointer;margin-bottom:8px;">
+        💡 이유보기 ▾
+      </button>
+      <!-- detail: 숨김 상태 -->
+      <div id="rec-detail" style="display:none;white-space:pre-line;font-size:12px;color:#aaa;line-height:1.8;padding:10px 12px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid #222;"></div>
     </div>
 
     <!-- 시술 체크리스트 + 카드 저장 -->
@@ -672,6 +680,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 var ANTHROPIC_API_KEY = 'VERCEL_PROXY'; /* 키는 버셀 환경변수에 있음 - 여기 수정 불필요 */
 var API_MODEL = 'claude-haiku-4-5-20251001';
 var DAILY_LIMIT = 9999; /* 테스트 중 — 제한 없음 */
+
+/* ── summary / detail 토글 ── */
+function toggleDetail() {
+  var det = document.getElementById('rec-detail');
+  var btn = document.getElementById('rec-reason-btn');
+  if (!det || !btn) return;
+  var isOpen = det.style.display !== 'none';
+  det.style.display = isOpen ? 'none' : 'block';
+  btn.textContent = isOpen ? '💡 이유보기 ▾' : '💡 이유접기 ▴';
+}
 
 /* ── 일일 사용량 체크 ── */
 function getTodayKey() {
@@ -772,12 +790,42 @@ toneUpType = "탈색" 인 경우:
 톤인톤(직접): "[목표색] 염모제로 바로 착색 가능해요."
 톤다운: "[목표색] 낮은 명도 염모제로 착색하세요."
 
-[출력 규칙]
-- 현재색 → 목표색으로 가시는군요. (1줄, 항상)
-- 경고 있으면 ⚠ 1줄
-- 시술 방법 1~2줄
-- 총 3~4줄 이내
-- 현장 선배가 후배에게 말하듯 자연스럽게`;
+[출력 구조 — 반드시 이 형식으로 출력]
+두 파트를 구분자 "---"로 나눠서 출력해야 한다.
+
+SUMMARY (1~2줄, 행동 지시만):
+- 시술자가 바로 행동할 수 있는 지시형 문장
+- 판단 결과만 표현
+- 설명, 이유, 원리 포함 금지
+- 18lv 명시 필수 (탈색 케이스에 한해)
+- "노랑기가 남아있다면 보라를 소량 사용해 중화합니다" 는 유지 (조건문이라 항상 안전)
+
+예시:
+  톤업(탈색): "18lv 아이보리색까지 탈색 후 시술합니다.\n노랑기가 남아있다면 보라를 소량 사용해 중화합니다."
+  톤인톤: "애쉬 염모제에 보라를 소량 믹스하여 시술하세요."
+  톤다운: "[목표색] 낮은 명도 염모제로 착색하세요."
+
+---
+
+DETAIL (원리 설명, 이유보기 클릭 시 노출):
+- 보색중화 필요 = "필요" 이고 노랑기 수준 ≠ none 일 때만 생성
+- 보색중화 필요 = "불필요" 또는 노랑기 수준 = none 이면 → DETAIL 없음 (빈 문자열)
+- 포함 내용:
+  "현재 모발에 남아있는 노랑 언더톤의 영향으로
+   애쉬 계열 색상은 매트하게 표현될 수 있어요.
+   보라를 소량 사용하면 보다 선명한 애쉬 표현이 가능합니다.
+   소량 사용이 핵심이에요."
+
+출력 형식 (반드시 지켜야 함):
+[SUMMARY]
+(summary 내용)
+---
+[DETAIL]
+(detail 내용 또는 빈 값)
+
+- 현장 선배가 후배에게 말하듯 자연스럽게
+- 총 길이 과하지 않게`;
+
 
 /* ── API 호출 ── */
 async function callHairAPI(analysisResult) {
@@ -3424,10 +3472,13 @@ function renderAnalysisResult(result) {
     '고위험: ' + (risk === 'HIGH' && isBleach ? '색소 축적 가능성, 단계적 진행 필요' : '없음')
   ].join('\n');
 
-  /* 🔵 API 영역 로딩 표시 */
-  if (detailEl) {
-    detailEl.innerHTML = '<span style="color:#888;font-size:12px;">✦ 분석 중...</span>';
-  }
+  /* 🔵 로딩 표시 */
+  var summaryElLoad = document.getElementById('rec-summary');
+  var reasonBtnLoad = document.getElementById('rec-reason-btn');
+  var detailElLoad  = document.getElementById('rec-detail');
+  if (summaryElLoad) summaryElLoad.innerHTML = '<span style="color:#888;font-size:12px;">✦ 분석 중...</span>';
+  if (reasonBtnLoad) reasonBtnLoad.style.display = 'none';
+  if (detailElLoad)  { detailElLoad.style.display = 'none'; detailElLoad.textContent = ''; }
 
   /* 체크리스트 빌드 */
   buildChecklist(result);
@@ -3440,21 +3491,57 @@ function renderAnalysisResult(result) {
 
   incrementUsage();
 
+  var summaryEl = document.getElementById('rec-summary');
+  var detailEl2 = document.getElementById('rec-detail');
+  var reasonBtn = document.getElementById('rec-reason-btn');
+
   callHairAPI({ _rawMsg: apiData }).then(function(text) {
-    if (detailEl) {
-      detailEl.style.whiteSpace = 'pre-line';
-      detailEl.textContent = text || '분석 결과를 불러오지 못했어요.';
-      var remaining = DAILY_LIMIT - getUsageCount();
-      var hint = document.createElement('div');
-      hint.style.cssText = 'margin-top:8px;font-size:11px;color:#444;text-align:right;';
-      hint.textContent = '남은 횟수: ' + remaining + '회';
-      detailEl.appendChild(hint);
+    if (!text) { text = '분석 결과를 불러오지 못했어요.'; }
+
+    /* summary / detail 파싱 */
+    var summaryText = text;
+    var detailText  = '';
+
+    if (text.indexOf('[SUMMARY]') > -1 && text.indexOf('[DETAIL]') > -1) {
+      var sMatch = text.match(/\[SUMMARY\]([\s\S]*?)---/);
+      var dMatch = text.match(/\[DETAIL\]([\s\S]*?)$/);
+      summaryText = sMatch ? sMatch[1].trim() : text;
+      detailText  = dMatch ? dMatch[1].trim() : '';
+    } else if (text.indexOf('---') > -1) {
+      /* 구분자만 있는 경우 */
+      var parts = text.split('---');
+      summaryText = parts[0].trim();
+      detailText  = parts[1] ? parts[1].trim() : '';
     }
+
+    /* summary 표시 */
+    if (summaryEl) {
+      summaryEl.style.whiteSpace = 'pre-line';
+      summaryEl.textContent = summaryText;
+    }
+
+    /* detail 표시 — yellowLevel = 'none' 이면 버튼 숨김 */
+    var showDetail = (yellowLevel !== 'none') && detailText.length > 0;
+    if (reasonBtn) reasonBtn.style.display = showDetail ? 'block' : 'none';
+    if (detailEl2) {
+      detailEl2.style.display = 'none'; /* 항상 숨김 상태로 시작 */
+      detailEl2.style.whiteSpace = 'pre-line';
+      detailEl2.textContent = detailText;
+    }
+
+    /* 남은 횟수 */
+    var remaining = DAILY_LIMIT - getUsageCount();
+    var hint = document.createElement('div');
+    hint.style.cssText = 'margin-top:6px;font-size:11px;color:#444;text-align:right;';
+    hint.textContent = '남은 횟수: ' + remaining + '회';
+    if (summaryEl) summaryEl.appendChild(hint);
+
   }).catch(function() {
-    if (detailEl) {
-      detailEl.style.whiteSpace = 'pre-line';
-      detailEl.textContent = '분석 결과를 불러오지 못했어요. 다시 시도해주세요.';
+    if (summaryEl) {
+      summaryEl.style.whiteSpace = 'pre-line';
+      summaryEl.textContent = '분석 결과를 불러오지 못했어요. 다시 시도해주세요.';
     }
+    if (reasonBtn) reasonBtn.style.display = 'none';
   });
 }
 
