@@ -4378,11 +4378,10 @@ function clearRecipe() {
   var card = document.getElementById('recipe-card');
   if (card) card.style.display = 'none';
   var m = document.getElementById('rec-main');
-  var d = document.getElementById('rec-detail');
   var r = document.getElementById('rec-ratio');
   if (m) m.textContent = '';
-  if (d) d.textContent = '';
   if (r) r.innerHTML = '';
+  /* rec-summary / rec-detail 은 renderAnalysisResult 전용 — 건드리지 않음 */
 }
 
 /* ── 색감 선택 ── */
@@ -4900,24 +4899,14 @@ function showRecipe(main, detail, ratio) {
   var card = document.getElementById('recipe-card');
   if (card) card.style.display = 'block';
   var m = document.getElementById('rec-main');
-  var d = document.getElementById('rec-detail');
   var r = document.getElementById('rec-ratio');
-  if (m) m.textContent = main;
-  if (d) {
-    var parts = detail.split('\n\n⚠️');
-    var mainText = parts[0];
-    var riskText = parts.length > 1 ? '⚠️' + parts.slice(1).join('\n\n⚠️') : '';
-    d.innerHTML = '';
-    var mainDiv = document.createElement('div');
-    mainDiv.style.cssText = 'white-space:pre-line;line-height:1.8;';
-    mainDiv.textContent = mainText;
-    d.appendChild(mainDiv);
-    if (riskText) {
-      var riskDiv = document.createElement('div');
-      riskDiv.style.cssText = 'margin-top:10px;padding:10px 12px;background:rgba(255,80,80,0.08);border-radius:8px;border-left:3px solid #FF6060;font-size:12px;color:#FF9090;white-space:pre-line;line-height:1.7;';
-      riskDiv.textContent = riskText;
-      d.appendChild(riskDiv);
-    }
+  /* rec-detail은 renderAnalysisResult 전용 — 건드리지 않음 */
+  if (m) {
+    m.style.whiteSpace = 'pre-line';
+    m.style.fontSize = '13px';
+    m.style.color = '#ccc';
+    m.style.lineHeight = '1.9';
+    m.textContent = detail ? (main + '\n\n' + detail) : main;
   }
   if (r) {
     if (ratio) {
