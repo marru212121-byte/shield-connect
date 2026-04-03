@@ -3493,7 +3493,8 @@ function renderAnalysisResult(result) {
 
   /* 한도 체크 */
   if (isLimitReached()) {
-    if (detailEl) detailEl.textContent = '(일일 한도 도달)';
+    var _sumEl = document.getElementById('rec-summary');
+    if (_sumEl) _sumEl.textContent = '(일일 한도 도달)';
     return;
   }
 
@@ -3528,10 +3529,11 @@ function renderAnalysisResult(result) {
       summaryEl.textContent = summaryText;
     }
 
-    /* ── 버튼: 상태 기준 (yellowLevel)
-       노랑기 있으면 무조건 버튼 표시
-       needNeutralize와 무관 ── */
-    var showDetail = (yellowLevel !== 'none');
+    /* ── 버튼: 복수 조건 기준
+       1. 탈색 케이스 (toneDir = 'up') → 항상 표시
+       2. 잔류색소 안내 필요 (yellowLevel ≠ 'none') → 표시
+       두 조건 독립적으로 작동 ── */
+    var showDetail = (toneDir === 'up') || (yellowLevel !== 'none');
 
     /* ── detail 내용: 판단 기준 (needNeutralize)
        API detailText 우선, 없으면 폴백 ── */
