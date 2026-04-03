@@ -810,10 +810,8 @@ toneUpType = "탈색" 인 경우:
 아니면 빈 값.
 
 DETAIL 내용 (해당될 때만):
-"노랑 언더톤의 영향으로
-애쉬 계열 색상이 매트하게 표현될 수 있어요.
-보라는 노랑의 보색으로
-색감을 정리하는 역할을 합니다."
+"언더톤의 노랑기와 애쉬가 만나 매트하게 연출될 수 있습니다.
+보색 중화가 필요하여 노랑의 보색인 보라를 소량 믹스해야 합니다."
 
 주의: [SUMMARY]와 [DETAIL] 태그와 --- 구분자는 반드시 포함
 - 현장 선배가 후배에게 말하듯 자연스럽게`;
@@ -3244,45 +3242,49 @@ function buildHairMessage(result, curHSL, tarHSL) {
   }
 
   /* ──────────────────────────────
-     ③ line3: 4케이스 통합 (단일 흐름 문장)
-     SUMMARY = 행동만 / 원리·설명 금지
-     "보라 소량 믹스해 시술" 표현으로 통일
+     ③ line3: 완성 문장 선택 구조
+     순서 1: toneDir 고정 문장
+     순서 2: yellowLevel 있으면 보정 문장 추가
+     절대 합치지 않음 / 순서 바꾸지 않음
   ────────────────────────────── */
 
-  /* yellowLevel — window에서 읽음 */
-  var yLevel = window._yellowLevel || 'mid';
+  var yLevel   = window._yellowLevel || 'mid';
   var hasYellow = (yLevel !== 'none');
-
-  /* 애쉬 목표 여부 */
-  var isAshTar = (tarUt === 'GRAY' || tarUt === 'DARK_NEUTRAL')
-              || (tarHSL.s < 20);
+  var isAshTar  = (tarUt === 'GRAY' || tarUt === 'DARK_NEUTRAL') || (tarHSL.s < 20);
 
   if (toneDir === 'up') {
     var toneUpType = window._toneUpType || 'bleach';
 
     if (toneUpType === 'dye') {
-      /* ── 케이스 A: 염모제 톤업 (탈색 없음) ── */
+      /* ── 염모제 톤업 (탈색 없음) ── */
       line3 = tarName + ' 염모제로 바로 시술 가능해요.\n탈색 없이 산화염모제로 명도 상승이 가능한 케이스예요.';
 
-    } else {
-      /* ── 케이스 B: 탈색 톤업 ── */
-      if (hasYellow && isAshTar) {
-        /* 탈색 후 노랑기 남을 수 있음 */
-        line3 = bleachTarget + '노랑기가 남아있다면\n애쉬 염모제에 보라를 소량 믹스해 시술하세요.';
-      } else if (hasYellow && !isAshTar) {
-        /* 탈색 후 노랑기 + 난색 목표 */
-        line3 = bleachTarget + tarName + ' 염모제로 착색하세요.';
-        if (resGuide) line3 += '\n' + resGuide;
-      } else {
-        /* yellowLevel = none → 바로 착색 */
-        line3 = bleachTarget + tarName + ' 염모제로 바로 시술하세요.';
+    } else if (isAshTar) {
+      /* ── 탈색 톤업 + 애쉬 목표 ── */
+      /* 순서 1: toneDir 고정 */
+      line3 = bleachTarget + '애쉬 염모제로 시술하세요.';
+      /* 순서 2: yellowLevel 보정 */
+      if (hasYellow) {
+        line3 += '\n노랑기가 남아있다면 애쉬 염모제에 보라를 소량 믹스해 시술하세요.';
       }
+
+    } else {
+      /* ── 탈색 톤업 + 비애쉬 목표 ── */
+      line3 = bleachTarget + tarName + ' 염모제로 시술하세요.';
+      if (hasYellow && resGuide) line3 += '\n' + resGuide;
     }
 
   } else if (toneDir === 'same') {
-    /* ── 케이스 C: 톤인톤 ── */
-    if (hasYellow && isAshTar) {
-      line3 = tarName + ' 염모제에 보라를 소량 믹스해 시술하세요.';
+    /* ── 톤인톤 ── */
+    if (isAshTar) {
+      if (hasYellow) {
+        /* 순서 1: toneDir 고정 */
+        line3 = '애쉬 염모제에 보라를 소량 믹스해 시술하세요.';
+        /* 순서 2: 보색 과할 때 주의 안내 */
+        line3 += '\n보색이 과하면 색감이 탁해질 수 있어요.';
+      } else {
+        line3 = '애쉬 염모제로 바로 시술하세요.';
+      }
     } else if (neut && compColor) {
       line3 = tarName + ' 염모제에 ' + compColor + josa(compColor) + ' 소량 섞어 시술하세요.';
     } else {
@@ -3290,9 +3292,13 @@ function buildHairMessage(result, curHSL, tarHSL) {
     }
 
   } else {
-    /* ── 케이스 D: 톤다운 ── */
-    if (hasYellow && isAshTar) {
-      line3 = tarName + ' 염모제에 보라를 소량 믹스해 시술하세요.';
+    /* ── 톤다운 ── */
+    if (isAshTar) {
+      if (hasYellow) {
+        line3 = '애쉬 염모제에 보라를 소량 믹스해 시술하세요.';
+      } else {
+        line3 = tarName + ' 낮은 명도 염모제로 착색하세요.';
+      }
     } else if (neut && compColor) {
       line3 = tarName + ' 낮은 명도 염모제에 ' + compColor + josa(compColor) + ' 소량 섞어 시술하세요.';
     } else {
@@ -3548,12 +3554,10 @@ function renderAnalysisResult(result) {
        두 조건 독립적으로 작동 ── */
     var showDetail = (toneDir === 'up') || (yellowLevel !== 'none');
 
-    /* ── detail 내용: 원리 설명만 (행동 지시 금지)
-       API detailText 우선, 없으면 폴백 ── */
+    /* ── detail 내용: 원리 설명만 (행동 지시 금지) ── */
     if (!detailText || detailText.length < 3) {
-      if (needNeutralize || (yellowLevel !== 'none' && showDetail)) {
-        /* 원리 설명만 — 행동 문장 없음 */
-        detailText = '노랑 언더톤의 영향으로\n애쉬 계열 색상이 매트하게 표현될 수 있어요.\n\n보라는 노랑의 보색으로\n색감을 정리하는 역할을 합니다.';
+      if (showDetail) {
+        detailText = '언더톤의 노랑기와 애쉬가 만나 매트하게 연출될 수 있습니다.\n보색 중화가 필요하여 노랑의 보색인 보라를 소량 믹스해야 합니다.';
       }
     }
 
