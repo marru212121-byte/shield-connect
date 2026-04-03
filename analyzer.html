@@ -794,25 +794,29 @@ toneUpType = "탈색" 인 경우:
 반드시 아래 형식으로만 출력해야 한다. 다른 형식 사용 금지.
 
 [SUMMARY]
-(1~2줄, 시술자가 바로 행동할 수 있는 지시형 문장만)
-(설명·이유·원리 포함 절대 금지)
-(톤업 탈색 케이스: "18lv 아이보리색까지 탈색 후 시술합니다." 반드시 1번째 문장)
-(노랑기 조건: "노랑기가 남아있다면 보라를 소량 사용해 중화합니다." 2번째 문장으로 분리)
+행동 지시만. 원리·설명·이유 절대 포함 금지.
+1~2줄 이내. 디자이너가 바로 시술에 옮길 수 있는 문장.
+
+핵심 규칙:
+- 보라·중화 관련 문장은 "애쉬 염모제에 보라를 소량 믹스해 시술하세요." 이 표현만 사용
+- "바이올렛", "블루애쉬", "보색중화제" 표현 절대 금지
+- "중화 후 염색" 표현 절대 금지 → "섞어서 시술"만 허용
+- 보색중화 필요 = "불필요" 또는 yellowLevel = none → 보라 언급 금지
+- 탈색 언급 허용 = "절대금지" → 탈색 관련 문장 금지
 ---
 [DETAIL]
-(이유보기 클릭 시 노출되는 원리 설명)
-(보색중화 필요 = "필요" 이고 노랑기 수준 ≠ none 일 때만 작성)
-(아니면 빈 값으로 출력)
+원리 설명만. 행동 지시 절대 포함 금지.
+보색중화 필요 = "필요" 이고 노랑기 수준 ≠ none 일 때만 작성.
+아니면 빈 값.
 
 DETAIL 내용 (해당될 때만):
-"현재 모발에 남아있는 노랑 언더톤의 영향으로
-애쉬 계열 색상은 매트하게 표현될 수 있어요.
-보라를 소량 사용하면 보다 선명한 애쉬 표현이 가능합니다.
-소량 사용이 핵심이에요."
+"노랑 언더톤의 영향으로
+애쉬 계열 색상이 매트하게 표현될 수 있어요.
+보라는 노랑의 보색으로
+색감을 정리하는 역할을 합니다."
 
-주의: [SUMMARY]와 [DETAIL] 태그와 --- 구분자는 반드시 포함해야 함
-- 현장 선배가 후배에게 말하듯 자연스럽게
-- 단정형 표현 지양 (반드시, 무조건 등 금지)`;
+주의: [SUMMARY]와 [DETAIL] 태그와 --- 구분자는 반드시 포함
+- 현장 선배가 후배에게 말하듯 자연스럽게`;
 
 
 
@@ -3241,11 +3245,11 @@ function buildHairMessage(result, curHSL, tarHSL) {
 
   /* ──────────────────────────────
      ③ line3: 4케이스 통합 (단일 흐름 문장)
-     toneDir + yellowLevel 조합으로 완성된 문장 1개 생성
-     "중화 후 착색" 2단계 표현 금지 → "섞어서 착색" 1단계로 통합
+     SUMMARY = 행동만 / 원리·설명 금지
+     "보라 소량 믹스해 시술" 표현으로 통일
   ────────────────────────────── */
 
-  /* yellowLevel — window에서 읽음 (renderAnalysisResult에서 저장) */
+  /* yellowLevel — window에서 읽음 */
   var yLevel = window._yellowLevel || 'mid';
   var hasYellow = (yLevel !== 'none');
 
@@ -3263,38 +3267,33 @@ function buildHairMessage(result, curHSL, tarHSL) {
     } else {
       /* ── 케이스 B: 탈색 톤업 ── */
       if (hasYellow && isAshTar) {
-        /* 탈색 후 노랑기 남을 수 있음 → 섞어서 착색 */
-        line3 = bleachTarget + '노랑기가 남아있다면\n애쉬 염모제에 보라를 소량 섞어 시술하세요.';
+        /* 탈색 후 노랑기 남을 수 있음 */
+        line3 = bleachTarget + '노랑기가 남아있다면\n애쉬 염모제에 보라를 소량 믹스해 시술하세요.';
       } else if (hasYellow && !isAshTar) {
         /* 탈색 후 노랑기 + 난색 목표 */
         line3 = bleachTarget + tarName + ' 염모제로 착색하세요.';
         if (resGuide) line3 += '\n' + resGuide;
       } else {
-        /* yellowLevel = none → 노랑기 없음, 바로 착색 */
+        /* yellowLevel = none → 바로 착색 */
         line3 = bleachTarget + tarName + ' 염모제로 바로 시술하세요.';
       }
     }
 
   } else if (toneDir === 'same') {
     /* ── 케이스 C: 톤인톤 ── */
-    if (hasYellow && isAshTar && compColor) {
-      /* 노랑기 있음 + 애쉬 목표 → 섞어서 1단계 */
-      line3 = tarName + ' 염모제에 보라를 소량 섞어 시술하세요.';
+    if (hasYellow && isAshTar) {
+      line3 = tarName + ' 염모제에 보라를 소량 믹스해 시술하세요.';
     } else if (neut && compColor) {
-      /* 보색중화 필요 (기타 케이스) */
       line3 = tarName + ' 염모제에 ' + compColor + josa(compColor) + ' 소량 섞어 시술하세요.';
     } else {
-      /* 직접 착색 */
       line3 = tarName + ' 염모제로 바로 착색 가능해요.';
     }
 
   } else {
     /* ── 케이스 D: 톤다운 ── */
-    if (hasYellow && isAshTar && compColor) {
-      /* 노랑기 있음 + 애쉬 목표 → 섞어서 1단계 */
-      line3 = tarName + ' 염모제에 보라를 소량 섞어 시술하세요.';
+    if (hasYellow && isAshTar) {
+      line3 = tarName + ' 염모제에 보라를 소량 믹스해 시술하세요.';
     } else if (neut && compColor) {
-      /* 보색중화 필요 (기타 케이스) */
       line3 = tarName + ' 낮은 명도 염모제에 ' + compColor + josa(compColor) + ' 소량 섞어 시술하세요.';
     } else {
       line3 = tarName + ' 낮은 명도 염모제로 착색하세요.';
@@ -3549,15 +3548,12 @@ function renderAnalysisResult(result) {
        두 조건 독립적으로 작동 ── */
     var showDetail = (toneDir === 'up') || (yellowLevel !== 'none');
 
-    /* ── detail 내용: 판단 기준 (needNeutralize)
+    /* ── detail 내용: 원리 설명만 (행동 지시 금지)
        API detailText 우선, 없으면 폴백 ── */
     if (!detailText || detailText.length < 3) {
-      if (needNeutralize) {
-        /* 보색중화 필요 케이스 — 중화 원리 설명 */
-        detailText = '현재 모발에 남아있는 노랑 언더톤의 영향으로\n애쉬 계열 색상은 매트하게 표현될 수 있어요.\n보라를 소량 사용하면 보다 선명한 애쉬 표현이 가능합니다.\n소량 사용이 핵심이에요.';
-      } else if (yellowLevel !== 'none') {
-        /* 노랑기 있지만 중화 불필요 케이스 — 영향만 안내 */
-        detailText = '현재 모발에 노랑 언더톤이 남아있어요.\n목표색에 따라 발색이 조금씩 달라질 수 있으니\n시술 전 테스트를 권장해요.';
+      if (needNeutralize || (yellowLevel !== 'none' && showDetail)) {
+        /* 원리 설명만 — 행동 문장 없음 */
+        detailText = '노랑 언더톤의 영향으로\n애쉬 계열 색상이 매트하게 표현될 수 있어요.\n\n보라는 노랑의 보색으로\n색감을 정리하는 역할을 합니다.';
       }
     }
 
