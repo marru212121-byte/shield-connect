@@ -3345,12 +3345,347 @@ function satToKo(s) {
    목표색: 채도우선 + hueToName         (원하는 색감 표현)
 ════════════════════════════════════════ */
 /* ════════════════════════════════════════
+   HAIR_RULES — Rule Matrix
+   key로 조회 → summary / detail / guide 반환
+   케이스 추가 = 이 배열에 한 블록 추가
+════════════════════════════════════════ */
+var HAIR_RULES = [
+  {
+    key: 'RED_SAME_STRONG',
+    summary: '레드 잔류가 강한 상태에서 탈색 없이 애쉬그레이를 올리면 색이 제대로 잡히지 않습니다. 레드를 충분히 빼지 않으면 애쉬 방향으로 가기 매우 어렵습니다.',
+    detail: '레드와 애쉬(블루 계열)가 충돌하면서 탁한 브라운 계열로 수렴됩니다. 원하는 쿨톤 그레이 발색이 거의 불가능합니다.',
+    guide: [
+      '이번 시술에서 탈색 없이 진행하는 것은 권장하지 않습니다.',
+      '탈색 방향으로 재상담 후 다음 단계를 진행하세요.',
+      '고객이 탈색을 거부하면 레드 계열이나 웜 브라운 방향으로 목표를 조율하세요.'
+    ]
+  },
+  {
+    key: 'RED_UP_MID',
+    summary: '18레벨 아이보리까지 탈색 후 잔류 색기를 확인하고 상태에 맞게 보정하며 착색합니다.',
+    detail: '레드 언더톤은 탈색 시 레드 → 주황 → 노랑 순으로 빠집니다. 잔류 단계에 따라 보정 방법이 달라집니다.',
+    guide: [
+      '노랑기가 남았다면 — 보라를 소량 믹스해 중화 후 착색',
+      '주황기가 남았다면 — 블루를 소량 추가해 주황기를 억제',
+      '레드·주황기가 강하게 남았다면 — 착색을 미루고 추가 탈색 또는 다음 내원 시 완성'
+    ]
+  },
+  {
+    key: 'RED_UP_LIGHT',
+    summary: '잔류가 약한 상태라면 탈색이 수월하게 올라옵니다. 18레벨 아이보리 도달 후 보라를 소량 믹스하면 당일 완성 가능합니다.',
+    detail: '잔류가 약하면 레드 구간을 빠르게 통과해 노랑~아이보리 단계에 도달하기 쉽습니다.',
+    guide: [
+      '노랑기가 남았다면 — 보라를 소량 믹스해 중화 후 착색',
+      '노랑기 없이 깨끗한 아이보리 도달 시 — 보정 없이 바로 착색 가능'
+    ]
+  },
+  {
+    key: 'RED_DAMAGED',
+    summary: '탈색 이력이 많아 추가 장시간 탈색은 모발 손상 위험이 높습니다. 단시간 탈색 후 토닝으로 마무리하고 완성은 분할 시술로 진행하세요.',
+    detail: '고손상모는 이미 내부 손상이 상당합니다. 무리한 탈색은 단절 위험을 크게 높입니다.',
+    guide: [
+      'PPT·케라틴 등 단백질 보강제 전처리 필수',
+      '단시간 탈색으로 도달 가능한 레벨까지만 진행',
+      '목표 레벨 미달 시 1개월 후 재시술로 분할 완성 권장'
+    ]
+  },
+  {
+    key: 'RED_VIRGIN',
+    summary: '버진모는 탈색 반응이 균일하고 예측이 가능합니다. 18레벨 아이보리 도달 후 잔류 색기에 맞춰 보정하면 당일 완성 가능합니다.',
+    detail: '한국인 자연 멜라닌은 레드 성분이 강해 주황 구간 통과에 시간이 다소 걸릴 수 있습니다.',
+    guide: [
+      '노랑기가 남았다면 — 보라를 소량 믹스해 중화',
+      '주황기가 남아있다면 — 블루를 소량 추가하거나 추가 탈색'
+    ]
+  },
+  {
+    key: 'ORANGE_RESIDUAL',
+    summary: '주황기가 남아있는 상태에서 애쉬그레이를 올리면 브라운 기운이 도는 애쉬브라운으로 발색될 가능성이 높습니다.',
+    detail: '주황 잔류가 있는 모발에 애쉬를 올리면 블루가 주황을 부분 억제하지만, 완전한 쿨 그레이가 나오기는 어렵습니다.',
+    guide: [
+      '선명한 애쉬그레이를 원한다면 추가 탈색으로 노랑기까지 올린 후 착색 추천',
+      '추가 탈색이 어려운 경우 블루를 소량 추가해 최대한 쿨한 방향으로 유도',
+      '타협안으로 스모키 브라운 또는 한색 계열 브라운으로 목표 조율 가능'
+    ]
+  },
+
+  /* ── 노랑 언더톤 (Yellow) ── */
+  {
+    key: 'YELLOW_SAME_STRONG',
+    summary: '노랑 언더톤이 강한 상태에서 애쉬그레이를 톤인톤으로 올리면 매트하고 탁한 발색이 나올 수 있습니다. 보색 중화 없이 진행하면 원하는 쿨톤이 나오기 어렵습니다.',
+    detail: '노랑과 애쉬(블루 계열)가 섞이면 보색 관계로 인해 채도가 죽고 매트한 방향으로 수렴됩니다. 보라를 소량 믹스해 노랑기를 중화한 후 착색해야 원하는 애쉬 발색이 가능합니다.',
+    guide: [
+      '애쉬 염모제에 보라를 소량 믹스해 노랑기를 중화 후 착색',
+      '보라 과량 시 채도가 죽고 칙칙한 그레이로 빠질 수 있으니 소량 기준을 지킬 것',
+      '노랑 잔류가 강한 경우 탈색 후 착색하는 것이 더 안정적'
+    ]
+  },
+  {
+    key: 'YELLOW_UP_MID',
+    summary: '18레벨 아이보리까지 탈색 후 잔류 색기를 확인하고 상태에 맞게 착색합니다.',
+    detail: '노랑 언더톤은 탈색 시 노랑 → 아이보리 순으로 빠집니다. 탈색 후 상태에 따라 보정 여부가 달라집니다.',
+    guide: [
+      '깨끗한 아이보리 도달 시 — 보정 없이 애쉬 염모제로 바로 착색 가능',
+      '노랑기가 아직 남아있다면 — 보라를 소량 믹스해 중화 후 착색',
+      '노랑기가 강하게 남은 경우 — 추가 탈색 후 착색 권장'
+    ]
+  },
+  {
+    key: 'YELLOW_UP_LIGHT',
+    summary: '잔류 노랑기가 약한 상태라 탈색이 수월하게 올라옵니다. 아이보리 도달 상태를 확인 후 착색 방향을 결정합니다.',
+    detail: '잔류가 약하면 아이보리까지 깨끗하게 도달하는 경우가 많습니다. 이 경우 별도 보정 없이 바로 착색 가능합니다.',
+    guide: [
+      '깨끗한 아이보리 도달 시 — 보정 없이 바로 착색 가능',
+      '노랑기가 아직 남아있다면 — 보라를 소량 믹스해 중화 후 착색',
+      '보라는 노랑기가 확인될 때만 사용할 것'
+    ]
+  },
+  {
+    key: 'YELLOW_DAMAGED',
+    summary: '탈색 이력이 많아 추가 장시간 탈색은 모발 손상 위험이 높습니다. 단시간 탈색 후 토닝으로 마무리하고 완성은 분할 시술로 진행하세요.',
+    detail: '고손상모는 내부 손상이 이미 상당한 상태입니다. 노랑기 제거를 위해 무리하게 탈색하면 단절 위험이 높아집니다.',
+    guide: [
+      'PPT·케라틴 등 단백질 보강제 전처리 필수',
+      '단시간 탈색으로 도달 가능한 레벨까지만 진행',
+      '노랑기가 남은 상태에서 보라 소량 믹스로 토닝 마무리',
+      '목표 레벨 미달 시 1개월 후 재시술로 분할 완성 권장'
+    ]
+  },
+  {
+    key: 'YELLOW_VIRGIN',
+    summary: '버진모는 탈색 반응이 균일하고 예측이 가능합니다. 아이보리 도달 상태를 확인 후 착색 방향을 결정합니다.',
+    detail: '버진모는 인공 잔류색소가 없어 탈색 시 노랑 → 아이보리 순서로 고르게 진행됩니다. 깨끗하게 도달한 경우 보정 없이 바로 착색 가능합니다.',
+    guide: [
+      '아이보리 도달 확인 후 착색 진행',
+      '깨끗한 아이보리 도달 시 — 보정 없이 바로 착색 가능',
+      '노랑기가 아직 남아있다면 — 보라를 소량 믹스해 중화 후 착색'
+    ]
+  },
+  {
+    key: 'YELLOW_ORANGE_RESIDUAL',
+    summary: '탈색 후 주황기가 남아있는 상태에서 애쉬그레이를 올리면 브라운 기운이 도는 애쉬브라운으로 발색될 가능성이 높습니다.',
+    detail: '탈색 후 노랑 구간까지 도달하지 못하고 주황 구간에서 멈춘 경우, 애쉬를 바로 올리면 주황과 블루가 혼합되어 완전한 쿨 그레이가 나오기 어렵습니다.',
+    guide: [
+      '선명한 애쉬그레이를 원한다면 — 추가 탈색으로 노랑기까지 올린 후 착색 추천',
+      '추가 탈색이 어려운 경우 — 블루를 소량 추가해 주황기를 억제하며 착색',
+      '타협안 — 스모키 브라운 또는 한색 계열 브라운으로 목표 조율 가능'
+    ]
+  },
+
+  /* ── 주황 언더톤 (Orange) ── */
+  {
+    key: 'ORANGE_SAME_STRONG',
+    summary: '주황 잔류가 강한 상태에서 탈색 없이 애쉬그레이를 올리면 브라운에 가까운 탁한 애쉬가 나올 가능성이 높습니다. 주황의 보색인 블루로 억제하더라도 완전한 쿨 그레이는 어렵습니다.',
+    detail: '주황과 애쉬(블루 계열)가 섞이면 보색 중화가 일어나지만 완전히 상쇄되지 않아 브라운 기운이 남습니다. 잔류가 강할수록 원하는 쿨톤 발색과의 차이가 커집니다.',
+    guide: [
+      '블루를 소량 믹스해 주황기를 억제하며 착색 가능하지만 완전한 쿨 그레이는 기대하기 어려움',
+      '선명한 애쉬그레이를 원한다면 탈색 방향으로 재상담 권장',
+      '고객이 탈색을 거부하면 스모키 브라운 또는 한색 계열 브라운으로 목표 조율'
+    ]
+  },
+  {
+    key: 'ORANGE_UP_MID',
+    summary: '18레벨 아이보리까지 탈색 후 잔류 색기를 확인하고 상태에 맞게 보정하며 착색합니다.',
+    detail: '주황 언더톤은 탈색 시 주황 → 노랑 → 아이보리 순으로 빠집니다. 탈색 후 잔류 단계에 따라 보정 방법이 달라집니다.',
+    guide: [
+      '깨끗한 아이보리 도달 시 — 보정 없이 애쉬 염모제로 바로 착색 가능',
+      '노랑기가 남아있다면 — 보라를 소량 믹스해 중화 후 착색',
+      '주황기가 아직 남아있다면 — 블루를 소량 추가해 주황기 억제 후 착색',
+      '주황기가 강하게 남은 경우 — 추가 탈색 후 착색 권장'
+    ]
+  },
+  {
+    key: 'ORANGE_UP_LIGHT',
+    summary: '잔류 주황기가 약한 상태라 탈색이 비교적 수월하게 올라옵니다. 아이보리 도달 상태를 확인 후 착색 방향을 결정합니다.',
+    detail: '잔류가 약하면 탈색 시 주황 구간을 빠르게 통과해 아이보리에 도달하기 쉽습니다. 도달 상태에 따라 보정 여부가 달라집니다.',
+    guide: [
+      '깨끗한 아이보리 도달 시 — 보정 없이 바로 착색 가능',
+      '노랑기가 아직 남아있다면 — 보라를 소량 믹스해 중화 후 착색',
+      '주황기가 아직 남아있다면 — 블루를 소량 추가해 억제 후 착색'
+    ]
+  },
+  {
+    key: 'ORANGE_DAMAGED',
+    summary: '탈색 이력이 많아 추가 장시간 탈색은 모발 손상 위험이 높습니다. 단시간 탈색 후 토닝으로 마무리하고 완성은 분할 시술로 진행하세요.',
+    detail: '고손상모는 내부 손상이 이미 상당한 상태입니다. 주황기 제거를 위해 무리하게 탈색하면 단절 위험이 높아집니다.',
+    guide: [
+      'PPT·케라틴 등 단백질 보강제 전처리 필수',
+      '단시간 탈색으로 도달 가능한 레벨까지만 진행',
+      '주황기가 남은 상태에서 블루 소량 믹스로 토닝 마무리',
+      '목표 레벨 미달 시 1개월 후 재시술로 분할 완성 권장'
+    ]
+  },
+  {
+    key: 'ORANGE_VIRGIN',
+    summary: '버진모는 탈색 반응이 균일하고 예측이 가능합니다. 아이보리 도달 상태를 확인 후 착색 방향을 결정합니다.',
+    detail: '버진모는 인공 잔류색소가 없어 탈색 시 주황 → 노랑 → 아이보리 순서로 고르게 진행됩니다. 단, 주황 구간 통과에 시간이 걸릴 수 있습니다.',
+    guide: [
+      '아이보리 도달 확인 후 착색 진행',
+      '깨끗한 아이보리 도달 시 — 보정 없이 바로 착색 가능',
+      '노랑기가 남아있다면 — 보라를 소량 믹스해 중화 후 착색',
+      '주황기가 남아있다면 — 블루를 소량 추가하거나 추가 탈색'
+    ]
+  },
+  {
+    key: 'ORANGE_YELLOW_RESIDUAL',
+    summary: '탈색 후 노랑기가 남아있는 상태에서 애쉬그레이를 올리면 매트하거나 약간 탁한 발색이 나올 수 있습니다.',
+    detail: '탈색이 아이보리까지 완전히 도달하지 못하고 노랑 구간에서 멈춘 경우, 보라 소량으로 중화하면 더 선명한 쿨톤 애쉬를 얻을 수 있습니다.',
+    guide: [
+      '노랑기가 남아있다면 — 보라를 소량 믹스해 중화 후 착색',
+      '노랑기가 강하게 남은 경우 — 추가 탈색 후 착색 권장',
+      '보라 과량 시 채도 저하로 칙칙한 그레이가 나올 수 있으니 소량 기준 유지'
+    ]
+  },
+
+  /* ── 쿨 언더톤 (Cool / Ash base) ── */
+  {
+    key: 'COOL_SAME_STRONG',
+    summary: '쿨톤(블루·바이올렛·애쉬) 잔류가 강한 상태에서 애쉬그레이 톤인톤 진행 시 잔류 색기의 종류에 따라 결과가 달라질 수 있습니다.',
+    detail: '블루 잔류가 강하면 차갑고 어두운 그레이 계열로 치우칠 수 있고, 바이올렛 잔류가 강하면 보라빛이 돌 수 있습니다. 잔류 색기를 먼저 확인하고 목표색 방향을 조율해야 합니다.',
+    guide: [
+      '잔류 색기 종류 먼저 확인 — 블루·바이올렛·그레이 중 무엇이 남아있는지 파악',
+      '잔류가 목표 방향과 일치하면 — 보정 없이 바로 착색 가능',
+      '블루가 과하면 — 차갑고 어두운 그레이로 치우칠 수 있으니 따뜻한 계열 소량 보정 또는 목표 조율',
+      '바이올렛이 강하게 남으면 — 애쉬바이올렛 느낌이 강하게 나올 수 있음. 순수 애쉬그레이를 원한다면 추가 탈색 권장'
+    ]
+  },
+  {
+    key: 'COOL_UP_MID',
+    summary: '쿨 잔류가 중간 수준인 상태에서 탈색 후 애쉬그레이로 착색합니다. 탈색 후 잔류 색기 종류를 확인하고 보정 여부를 결정합니다.',
+    detail: '쿨 베이스는 탈색 시 비교적 고르게 올라오지만 블루·바이올렛 인공 색소가 남아있으면 예상과 다른 발색이 나올 수 있습니다.',
+    guide: [
+      '깨끗한 아이보리 도달 시 — 보정 없이 바로 착색 가능',
+      '노랑기가 남아있다면 — 보라를 소량 믹스해 중화 후 착색',
+      '블루·바이올렛 잔류가 남아있다면 — 목표색과 방향이 맞는지 확인 후 착색',
+      '잔류가 과하게 남은 경우 — 추가 탈색으로 정리 후 착색 권장'
+    ]
+  },
+  {
+    key: 'COOL_UP_LIGHT',
+    summary: '잔류 쿨 기운이 약한 상태라 탈색이 수월하게 올라옵니다. 아이보리 도달 상태를 확인 후 착색 방향을 결정합니다.',
+    detail: '잔류가 약하면 탈색 후 아이보리에 깨끗하게 도달하는 경우가 많습니다. 블루·바이올렛 인공 색소는 탈색만으로 완전히 제거되지 않을 수 있습니다.',
+    guide: [
+      '깨끗한 아이보리 도달 시 — 보정 없이 바로 착색 가능',
+      '노랑기가 남아있다면 — 보라를 소량 믹스해 중화 후 착색',
+      '블루·바이올렛 잔류가 확인되면 — 목표색 방향과 일치하는지 먼저 확인'
+    ]
+  },
+  {
+    key: 'COOL_DAMAGED',
+    summary: '탈색 이력이 많아 추가 장시간 탈색은 모발 손상 위험이 높습니다. 단시간 탈색 후 토닝으로 마무리하고 완성은 분할 시술로 진행하세요.',
+    detail: '고손상모는 내부 손상이 이미 상당한 상태입니다. 쿨 계열 인공 색소는 손상모에 깊이 침착되어 탈색으로 완전히 제거되지 않는 경우가 있습니다.',
+    guide: [
+      'PPT·케라틴 등 단백질 보강제 전처리 필수',
+      '단시간 탈색으로 도달 가능한 레벨까지만 진행',
+      '블루·바이올렛 잔류가 남은 상태라면 목표색과 방향 조율 후 토닝 마무리',
+      '목표 레벨 미달 시 1개월 후 재시술로 분할 완성 권장'
+    ]
+  },
+  {
+    key: 'COOL_VIRGIN',
+    summary: '버진모에 자연 쿨 베이스가 깔려있어 애쉬그레이 방향에 유리한 조건입니다. 탈색 후 잔류 상태를 확인하고 착색 방향을 결정합니다.',
+    detail: '쿨 베이스 버진모는 탈색 시 자연 멜라닌이 고르게 빠지는 편입니다. 인공 색소 잔류가 없어 탈색 후 결과 예측이 비교적 수월합니다.',
+    guide: [
+      '아이보리 도달 확인 후 착색 진행',
+      '깨끗한 아이보리 도달 시 — 보정 없이 바로 착색 가능',
+      '노랑기가 남아있다면 — 보라를 소량 믹스해 중화 후 착색',
+      '자연 쿨 베이스가 남아있는 경우 — 목표색과 방향이 맞으면 바로 착색 진행'
+    ]
+  },
+  {
+    key: 'COOL_YELLOW_RESIDUAL',
+    summary: '쿨 베이스임에도 탈색 후 예상보다 노랑기가 남아있는 상태입니다. 보라 소량으로 중화한 후 착색하면 더 선명한 쿨톤을 얻을 수 있습니다.',
+    detail: '쿨 베이스라도 탈색이 충분하지 않으면 자연 멜라닌의 노랑기가 남을 수 있습니다. 이 상태에서 바로 착색하면 매트하거나 약간 탁한 발색이 나올 수 있습니다.',
+    guide: [
+      '노랑기가 남아있다면 — 보라를 소량 믹스해 중화 후 착색',
+      '노랑기가 강하게 남은 경우 — 추가 탈색 후 착색 권장',
+      '보라 과량 시 채도 저하로 칙칙한 그레이가 나올 수 있으니 소량 기준 유지'
+    ]
+  },
+
+  /* ── 톤다운 (Down) ── */
+  {
+    key: 'RED_DOWN_STRONG',
+    summary: '레드 잔류가 강한 상태에서 애쉬그레이 톤다운은 원하는 쿨톤 발색이 나오기 매우 어렵습니다. 탈색 없이 진행하면 탁한 브라운 계열로 수렴될 가능성이 높습니다.',
+    detail: '레드와 애쉬(블루 계열)가 충돌하면 보색 중화가 아닌 탁한 브라운 방향으로 수렴됩니다. 톤다운 방향에서는 어두워질수록 레드 잔류의 영향이 더 강하게 나타납니다.',
+    guide: [
+      '레드 잔류가 강한 상태에서 애쉬그레이 톤다운은 발색 예측이 매우 어렵습니다.',
+      '탈색 후 재착색을 강력 권장 — 원하는 발색을 얻는 가장 확실한 방법',
+      '탈색 없이 진행한다면 — 레드 계열이나 웜 다크 브라운으로 목표 조율이 가장 안정적',
+      '무리한 시술 시 탁하고 불균일한 발색 위험이 높습니다.'
+    ]
+  },
+  {
+    key: 'YELLOW_DOWN',
+    summary: '노랑 언더톤에서 애쉬그레이 톤다운 진행 시 보색 중화 없이는 매트하거나 탁한 발색이 나올 수 있습니다.',
+    detail: '노랑과 애쉬(블루 계열)가 섞이면 채도가 죽고 매트한 방향으로 수렴됩니다. 보라를 소량 믹스해 노랑기를 억제하면 더 선명한 쿨톤 다크 애쉬가 나옵니다.',
+    guide: [
+      '낮은 명도 애쉬 염모제에 보라를 소량 믹스해 노랑기를 중화 후 착색',
+      '보라 과량 시 채도가 죽고 칙칙한 그레이로 빠질 수 있으니 소량 기준 유지',
+      '다크 애쉬브라운 방향으로 목표를 조율하면 보정 없이 진행 가능'
+    ]
+  },
+  {
+    key: 'ORANGE_DOWN',
+    summary: '주황 언더톤에서 애쉬그레이 톤다운 진행 시 브라운 기운이 도는 다크 애쉬브라운으로 발색될 가능성이 높습니다.',
+    detail: '주황 잔류가 있는 상태에서 애쉬를 올리면 블루가 주황을 부분 억제하지만 완전한 쿨 그레이는 나오기 어렵습니다. 주황이 강할수록 브라운 방향으로 수렴됩니다.',
+    guide: [
+      '낮은 명도 애쉬 염모제에 블루를 소량 추가해 주황기를 억제하며 착색',
+      '주황기가 강한 경우 다크 브라운 또는 한색 계열 브라운으로 목표 조율 가능',
+      '선명한 쿨 그레이 톤다운을 원한다면 탈색 선행 후 재착색 권장'
+    ]
+  },
+  {
+    key: 'COOL_DOWN',
+    summary: '쿨 베이스에서 애쉬그레이 톤다운은 방향이 일치해 비교적 안정적인 발색이 가능합니다. 잔류 색기 종류에 따라 결과가 달라질 수 있으니 확인 후 진행합니다.',
+    detail: '쿨 베이스와 애쉬그레이는 방향이 같아 색 충돌이 없습니다. 다만 블루·바이올렛 인공 색소가 남아있으면 다크 그레이 또는 보라빛이 강하게 나올 수 있습니다.',
+    guide: [
+      '잔류 색기 종류 확인 — 블루·바이올렛·그레이 중 무엇이 남아있는지 파악',
+      '잔류가 목표 방향과 일치하면 보정 없이 바로 착색 가능',
+      '블루 잔류가 과하면 차갑고 어두운 그레이 계열로 치우칠 수 있으니 목표색과 방향 조율 필요'
+    ]
+  }
+];
+
+/* ── getRuleByKey: key → HAIR_RULES 조회 ── */
+function getRuleByKey(key) {
+  return HAIR_RULES.find(function(rule) { return rule.key === key; }) || null;
+}
+
+/* ── getRecommendation: key → summary/detail/guide 반환 ──
+   없는 key면 null 반환
+*/
+function getRecommendation(key) {
+  var rule = getRuleByKey(key);
+  if (!rule) return null;
+  return {
+    summary: rule.summary,
+    detail:  rule.detail,
+    guide:   rule.guide
+  };
+}
+
+/* ════════════════════════════════════════
    CASE_TABLE — 완성 문장 데이터베이스
    caseKey = toneDir_curTone_targetType
    조건문 없음 / 선택만 / 같은 입력 → 같은 출력
 ════════════════════════════════════════ */
 
 var MATTE_DETAIL  = '현재 노랑 언더톤이 애쉬 색상과 섞이면 매트하고 탁한 발색이 나올 수 있어요.\n보라는 노랑의 보색으로, 소량 믹스하면 노랑기를 눌러 더 선명한 쿨톤 애쉬가 표현됩니다.\n보라가 과하면 오히려 채도가 죽으니 소량이 핵심이에요.';
+
+/* ── 실전 케이스 DETAIL 상수 (디자이너 실무용) ── */
+
+var RED_SAME_STRONG = '레드와 애쉬(블루 계열)가 충돌하면서 탁한 브라운 계열로 수렴됩니다. 원하는 쿨톤 그레이 발색이 거의 불가능한 상황입니다.\n\n실무 가이드:\n· 탈색 없이 진행하는 것은 권장하지 않습니다.\n· 탈색 방향으로 재상담 후 다음 단계를 진행하세요.\n· 고객이 탈색을 거부하면 레드 계열이나 웜 브라운으로 목표 조율이 필요합니다.';
+
+var RED_UP_MID = '레드 언더톤은 탈색 시 레드 → 주황 → 노랑 순으로 빠집니다. 잔류 단계에 따라 보정 방법이 달라집니다.\n\n실무 가이드:\n· 노랑기가 남았다면 — 보라를 소량 믹스해 중화 후 착색\n· 주황기가 남았다면 — 블루를 소량 추가해 주황기 억제\n· 레드·주황기가 강하게 남았다면 — 착색 보류하고 추가 탈색 또는 다음 내원 시 완성';
+
+var RED_UP_LIGHT = '잔류가 약하면 레드 구간을 빠르게 통과해 노랑~아이보리 단계에 도달하기 쉽습니다.\n\n실무 가이드:\n· 노랑기가 남았다면 — 보라를 소량 믹스해 중화 후 착색\n· 노랑기 없이 깨끗한 아이보리 도달 시 — 보정 없이 바로 착색 가능\n· 보라 과량 시 채도가 죽을 수 있으니 소량으로 조절';
+
+var RED_DAMAGED = '고손상모는 이미 내부 손상이 진행된 상태입니다. 무리한 탈색은 단절 위험을 높입니다.\n\n실무 가이드:\n· PPT·케라틴 등 단백질 보강제 전처리 필수\n· 단시간 탈색으로 도달 가능한 레벨까지만 진행\n· 토닝으로 마무리하고, 목표 미달 시 1개월 후 재시술 권장';
+
+var RED_VIRGIN = '한국인 자연 멜라닌은 레드 성분이 강해 주황 구간 통과에 시간이 다소 걸릴 수 있습니다.\n\n실무 가이드:\n· 노랑기가 남았다면 — 보라를 소량 믹스해 중화\n· 주황기가 남아있다면 — 블루를 소량 추가하거나 추가 탈색\n· 아이보리 도달 확인 후 착색 진행';
+
+var ORANGE_RESIDUAL = '주황 잔류가 있는 모발에 애쉬를 올리면 블루 성분이 주황을 부분 억제하지만, 완전한 쿨 그레이가 나오기는 어렵습니다.\n\n실무 가이드:\n· 선명한 애쉬그레이를 원한다면 → 추가 탈색으로 노랑기까지 올린 후 착색 추천\n· 추가 탈색이 어려운 경우 → 블루를 소량 추가해 최대한 쿨한 방향으로 유도\n· 타협안 → 스모키 브라운 또는 한색 계열 브라운으로 목표 조율';
 var ORANGE_DETAIL = '주황·브라운 언더톤과 애쉬가 섞이면 순수한 애쉬그레이보다 브라운에 가까운 애쉬가 표현돼요.\n주황의 보색인 블루를 소량 믹스하면 브라운기를 억제할 수 있어요.\n블루도 과하면 칙칙해지니 소량이 핵심이에요.';
 var RED_DETAIL    = '레드 베이스는 색의 파워가 강해 애쉬와 충돌이 심해요.\n탈색 없이 무리하게 시술하면 탁한 브라운·녹색 계열로 발색될 수 있어요.\n18lv까지 탈색해 레드기를 완전히 제거한 후 시술하는 것이 안전해요.';
 
@@ -3366,8 +3701,8 @@ var CASE_TABLE = {
     detail:  ORANGE_DETAIL
   },
   'same_red_ash': {
-    summary: '△ 현재 레드 베이스에서는 애쉬 발색이 어려워요.\n탈색 후 시술을 강력히 권장해요.',
-    detail:  RED_DETAIL
+    summary: '레드 잔류가 강한 상태에서 탈색 없이 애쉬그레이를 올리면 색이 제대로 잡히지 않습니다.\n레드를 충분히 빼지 않으면 애쉬 방향으로 가기 매우 어렵습니다.',
+    detail:  RED_SAME_STRONG
   },
   'same_green_ash': {
     summary: '그린 베이스에서 애쉬는 카키 느낌으로 발색될 수 있어요.\n목표색을 다시 확인하세요.',
@@ -3424,8 +3759,8 @@ var CASE_TABLE = {
     detail:  ORANGE_DETAIL
   },
   'up_red_ash': {
-    summary: '현재 레드 베이스에서는 탈색이 필수예요.\n18lv 아이보리까지 탈색 후 시술하세요.\n노랑기가 남으면 보라 소량, 주황기가 남으면 블루를 소량 믹스하세요.',
-    detail:  RED_DETAIL
+    summary: '18레벨 아이보리까지 탈색 후 잔류 색기를 확인하고 상태에 맞게 보정하며 착색합니다.',
+    detail:  RED_UP_MID
   },
   'up_green_ash': {
     summary: '그린 베이스 제거를 위해 충분한 탈색이 필요해요.\n15lv까지 탈색 후 애쉬 염모제로 시술하세요.',
@@ -3536,31 +3871,57 @@ var CASE_TABLE = {
     detail:  ''
   },
 
+  /* ── 실전 세분화 케이스 ── */
+
+  /* 레드 + 잔류 약함 + 톤업 */
+  'up_red_ash_light': {
+    summary: '잔류가 약한 상태라 탈색이 수월하게 올라옵니다.\n18레벨 아이보리 도달 후 보라 소량 믹스로 당일 완성 가능합니다.',
+    detail:  RED_UP_LIGHT
+  },
+
+  /* 고손상모 + 레드 → 애쉬 */
+  'up_red_ash_damaged': {
+    summary: '탈색 이력이 많아 추가 장시간 탈색 시 모발 손상 위험이 높습니다.\n단시간 탈색 후 토닝으로 마무리하고 완성은 분할 시술로 진행합니다.',
+    detail:  RED_DAMAGED
+  },
+
+  /* 버진모 + 레드 → 애쉬 */
+  'up_red_ash_virgin': {
+    summary: '버진모는 탈색 반응이 균일하고 예측이 가능합니다.\n18레벨 아이보리 도달 후 잔류 색기에 맞춰 보정하면 당일 완성 가능합니다.',
+    detail:  RED_VIRGIN
+  },
+
+  /* 탈색 후 주황기 잔류 + 애쉬그레이 */
+  'same_orange_ash_residual': {
+    summary: '주황기가 남아있는 상태에서 애쉬그레이를 올리면\n순수 쿨 그레이가 아닌 브라운 기운이 도는 애쉬브라운으로 발색될 가능성이 높습니다.',
+    detail:  ORANGE_RESIDUAL
+  },
+
   /* ── 염모제 톤업 (dye) — 탈색 없음 ── */
   'up_dye_yellow_ash':     { summary: '산화염모제로 바로 시술 가능해요.\n탈색 없이 명도 상승이 가능한 케이스예요.', detail: '' },
-  'up_dye_yellow_non-ash': { summary: '산화염모제로 바로 시술 가능해요.\n탈색 없이 명도 상승이 가능한 케이스예요.', detail: '' },
-  'up_dye_orange_ash':     { summary: '산화염모제로 바로 시술 가능해요.\n탈색 없이 명도 상승이 가능한 케이스예요.', detail: '' },
-  'up_dye_orange_non-ash': { summary: '산화염모제로 바로 시술 가능해요.\n탈색 없이 명도 상승이 가능한 케이스예요.', detail: '' },
-  'up_dye_neutral_ash':    { summary: '산화염모제로 바로 시술 가능해요.\n탈색 없이 명도 상승이 가능한 케이스예요.', detail: '' },
-  'up_dye_neutral_non-ash':{ summary: '산화염모제로 바로 시술 가능해요.\n탈색 없이 명도 상승이 가능한 케이스예요.', detail: '' },
+'up_dye_yellow_non-ash': { summary: '산화염모제로 바로 시술 가능해요.\n탈색 없이 명도 상승이 가능한 케이스예요.', detail: '' },
+'up_dye_orange_ash':     { summary: '산화염모제로 바로 시술 가능해요.\n탈색 없이 명도 상승이 가능한 케이스예요.', detail: '' },
+'up_dye_orange_non-ash': { summary: '산화염모제로 바로 시술 가능해요.\n탈색 없이 명도 상승이 가능한 케이스예요.', detail: '' },
+'up_dye_neutral_ash':    { summary: '산화염모제로 바로 시술 가능해요.\n탈색 없이 명도 상승이 가능한 케이스예요.', detail: '' },
+'up_dye_neutral_non-ash':{ summary: '산화염모제로 바로 시술 가능해요.\n탈색 없이 명도 상승이 가능한 케이스예요.', detail: '' },
 
-  /* ── 하이리프트 톤업 (highlift) ── */
-  'up_highlift_yellow_ash':     { summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.', detail: '' },
-  'up_highlift_yellow_non-ash': { summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.', detail: '' },
-  'up_highlift_orange_ash':     { summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.', detail: '' },
-  'up_highlift_orange_non-ash': { summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.', detail: '' },
-  'up_highlift_neutral_ash':    { summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.', detail: '' },
-  'up_highlift_neutral_non-ash':{ summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.', detail: '' }
+/* ── 하이리프트 톤업 (highlift) ── */
+'up_highlift_yellow_ash':     { summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.', detail: '' },
+'up_highlift_yellow_non-ash': { summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.', detail: '' },
+'up_highlift_orange_ash':     { summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.', detail: '' },
+'up_highlift_orange_non-ash': { summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.', detail: '' },
+'up_highlift_neutral_ash':    { summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.', detail: '' },
+'up_highlift_neutral_non-ash':{ summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.', detail: '' }
 };
 
 /* ════════════════════════════════════════
-   UNDERTONE_RULE — 언더톤별 보색·결과 규칙
-   generateHairMessage의 데이터 소스
-   CASE_TABLE과 병행 운용 (비교용)
+UNDERTONE_RULE — 언더톤별 보색·결과 규칙
+generateHairMessage의 데이터 소스
+CASE_TABLE과 병행 운용 (비교용)
 ════════════════════════════════════════ */
 var UNDERTONE_RULE = {
-  'yellow': {
-    mix:          '보라',
+'yellow': {
+mix:          '보라',
     mixReason:    '노랑의 보색',
     result:       '매트하게 표현될 수 있어요',
     detail:       MATTE_DETAIL,
@@ -3716,21 +4077,80 @@ function buildHairMessage(result, curHSL, tarHSL) {
   var targetType    = window._targetType    || 'non-ash';
   var targetSubType = window._targetSubType || 'ash';
   var toneUpType    = window._toneUpType    || 'bleach';
+  var damageLevel   = window._currentDamageLevel || 'natural';
+  var hairState     = window._hairState     || 'normal';
 
-  /* 탈색 도달 레벨 계산 — 잔류 언더톤 판단 기준 */
+  /* 탈색 도달 레벨 계산 */
   var bleachLv = Math.round(tarHSL.l / 5);
 
-  /* toneUpType이 dye/highlift면 caseKey에 반영 */
+  /* toneUpType이 dye/highlift면 effectiveToneDir에 반영 */
   var effectiveToneDir = (toneDir === 'up' && (toneUpType === 'dye' || toneUpType === 'highlift'))
     ? 'up_' + toneUpType
     : toneDir;
 
   var caseKey = effectiveToneDir + '_' + curTone + '_' + targetType;
 
-  /* ── buildSentence: 규칙 기반 문장 자동 생성 ── */
-  var summary = buildSentence(toneDir, curTone, targetType, targetSubType, bleachLv, tarHSL);
+  /* ════════════════════════════════════════
+     HAIR_RULES 매핑
+     이제 모든 ash 목표는 HAIR_RULES를 사용합니다.
+     매핑 안 되는 경우(down / non-ash)만 buildSentence 폴백
+  ════════════════════════════════════════ */
 
-  /* detail — 판단 1회, relation 기반 */
+  /* curTone → prefix */
+  var TONE_PREFIX = {
+    'yellow':  'YELLOW',
+    'orange':  'ORANGE',
+    'red':     'RED',
+    'blue':    'COOL',
+    'violet':  'COOL',
+    'neutral': 'COOL',
+    'green':   'COOL'
+  };
+  var prefix = TONE_PREFIX[curTone] || 'RED';
+
+  /* 잔류 강도 — bleachLv 기반 */
+  var residual = bleachLv >= 17 ? 'light' : 'medium';
+
+  /* rulesKey 결정 */
+  var rulesKey = null;
+
+  if (targetType === 'ash') {
+    /* 손상도 / 모발이력 우선 */
+    if (damageLevel === 'ultra_damaged') {
+      rulesKey = prefix + '_DAMAGED';
+    } else if (hairState === 'virgin') {
+      rulesKey = prefix + '_VIRGIN';
+    } else if (toneDir === 'same') {
+      rulesKey = prefix + '_SAME_STRONG';
+    } else if (toneDir === 'up') {
+      rulesKey = prefix + (residual === 'light' ? '_UP_LIGHT' : '_UP_MID');
+    } else if (toneDir === 'down') {
+      /* down 케이스 — prefix별 key */
+      rulesKey = prefix === 'RED' ? 'RED_DOWN_STRONG' : prefix + '_DOWN';
+    }
+  }
+
+  var summary, detailText;
+
+  if (rulesKey) {
+    /* ── HAIR_RULES 사용 ── */
+    var hairRule = getRuleByKey(rulesKey);
+    if (hairRule) {
+      summary    = hairRule.summary;
+      detailText = hairRule.detail
+        + (hairRule.guide && hairRule.guide.length
+            ? '\n\n' + hairRule.guide.map(function(g) { return '· ' + g; }).join('\n')
+            : '');
+      window._caseKey    = caseKey;
+      window._caseDetail = detailText;
+      console.log('[HAIR_RULES]', rulesKey, '→', summary.slice(0, 40));
+      return summary;
+    }
+  }
+
+  /* ── buildSentence 폴백 (down / non-ash / 매핑 없음) ── */
+  summary = buildSentence(toneDir, curTone, targetType, targetSubType, bleachLv, tarHSL);
+
   var rule = UNDERTONE_RULE[curTone] || UNDERTONE_RULE['neutral'];
   var colorRelation  = window._colorRelation  || '';
   var effectiveUnder = window._effectiveUnder || curTone;
@@ -3750,28 +4170,17 @@ function buildHairMessage(result, curHSL, tarHSL) {
   };
 
   var detailMsg = '';
-  var key = effectiveUnder + '+' + targetBaseHue;
-  if (colorRelation === 'suppress') {
-    detailMsg = SUPPRESS_MSG[key] || '현재 언더톤과 목표색이 보색 관계로 억제가 일어날 수 있어요.';
-  } else if (colorRelation === 'mix') {
-    detailMsg = MIX_MSG[key] || '현재 언더톤이 목표색과 혼합되어 예상과 다른 색감이 나올 수 있어요.';
-  } else if (colorRelation === 'pure') {
-    detailMsg = '언더톤과 목표색이 일치해 가장 선명한 발색이 기대돼요.';
-  }
+  var relKey = effectiveUnder + '+' + targetBaseHue;
+  if      (colorRelation === 'suppress') detailMsg = SUPPRESS_MSG[relKey] || '현재 언더톤과 목표색이 보색 관계로 억제가 일어날 수 있어요.';
+  else if (colorRelation === 'mix')      detailMsg = MIX_MSG[relKey]      || '현재 언더톤이 목표색과 혼합되어 예상과 다른 색감이 나올 수 있어요.';
+  else if (colorRelation === 'pure')     detailMsg = '언더톤과 목표색이 일치해 가장 선명한 발색이 기대돼요.';
 
   var baseDetail = (targetType === 'ash') ? (rule.detail || '') : '';
-  var detailParts = [detailMsg, baseDetail].filter(Boolean);
-  var detailText = detailParts.join('\n\n');
+  detailText = [detailMsg, baseDetail].filter(Boolean).join('\n\n');
 
   window._caseKey    = caseKey;
   window._caseDetail = detailText;
-
-  /* CASE_TABLE 비교 (개발용 콘솔) */
-  var msg = CASE_TABLE[caseKey] || CASE_TABLE['fallback'];
-  console.log('[buildSentence]', { caseKey: caseKey, summary: summary });
-  console.log('[CASE_TABLE]',   { caseKey: caseKey, summary: msg.summary });
-  console.log({ toneDir: toneDir, curTone: curTone, targetType: targetType, bleachLv: bleachLv, caseKey: caseKey });
-
+  console.log('[buildSentence fallback]', caseKey, '→', summary.slice(0, 40));
   return summary;
 }
 
