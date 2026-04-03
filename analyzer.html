@@ -2129,15 +2129,15 @@ var RULE_TABLE = (function() {
     };
   }
 
-  var W_BLEACH     = '탈색이 불가피해요. 현재 잔류색소로는 원하는 발색이 나오지 않아요.';
-  var W_ORANGE_ASH = '주황기로 브라운 베이스의 애쉬가 살짝 표현돼요. 파랑을 소량 섞어 시술하세요.';
-  var W_YELLOW_BLU = '보라 보색이 과하면 채도가 감소하며 딥해질 수 있어요. 선명한 블루애쉬를 원하면 탈색 추천해요.';
-  var W_YELLOW_PPV = '보라가 메인으로 발색돼요. 탈색 후에 정확한 발색이 가능해요.';
-  var W_YELLOW_PNK = '살구·코랄 톤으로 발색돼요. 탈색 후에 정확한 발색이 가능해요.';
-  var W_ASH_VIO    = '현재 베이스 명도에 따라 발색이 조금씩 달라요.';
-  var W_STRONG     = '보색 충돌로 탁한 브라운빛으로 발색될 수 있어요.';
-  var W_GREEN_ASH  = '카키·매트 느낌으로 발색될 수 있어요.';
-  var W_DARK_NEEDED = '명도 차이가 커 현재 명도에서 색감 전환이 어려워요.';
+  var W_BLEACH     = '현재 베이스에서는 탈색 없이 원하는 발색이 나오지 않아요.\n탈색으로 베이스를 정리한 후 시술하세요.';
+  var W_ORANGE_ASH = '주황 언더톤이 애쉬와 섞여 브라운에 가까운 애쉬가 표현될 수 있어요.\n주황의 보색인 블루를 소량 믹스하면 브라운기를 억제할 수 있어요.';
+  var W_YELLOW_BLU = '노랑 언더톤에서 블루애쉬는 보라 보색이 과하면 채도가 죽고 딥해질 수 있어요.\n선명한 블루애쉬는 18lv까지 탈색 후 시술해야 정확하게 표현돼요.';
+  var W_YELLOW_PPV = '노랑 베이스에서 바이올렛은 보라가 메인으로 강하게 발색돼요.\n정확한 바이올렛 표현은 18lv 탈색 후에 가능해요.';
+  var W_YELLOW_PNK = '노랑 언더톤이 핑크와 섞이면 살구·코랄 톤으로 표현될 수 있어요.\n선명한 핑크는 18lv 탈색 후에 정확하게 발색돼요.';
+  var W_ASH_VIO    = '현재 베이스 명도에 따라 애쉬바이올렛 발색이 달라질 수 있어요.\n밝을수록 바이올렛, 어두울수록 스모키 애쉬에 가깝게 표현돼요.';
+  var W_STRONG     = '현재 베이스와 목표색의 보색 충돌로 탁한 브라운빛이 나올 수 있어요.\n원하는 색감을 정확히 내려면 탈색 후 시술을 권장해요.';
+  var W_GREEN_ASH  = '그린 언더톤과 애쉬가 섞이면 카키·매트한 느낌으로 발색될 수 있어요.\n원하는 애쉬 표현을 위해서는 탈색이 필요해요.';
+  var W_DARK_NEEDED = '목표색이 현재 모발보다 훨씬 어두워 이 방향으로는 시술이 어려워요.\n톤다운이나 톤인톤 방향으로 재검토해 주세요.';
 
   return {
 
@@ -3083,15 +3083,15 @@ function satToKo(s) {
    조건문 없음 / 선택만 / 같은 입력 → 같은 출력
 ════════════════════════════════════════ */
 
-var MATTE_DETAIL  = '노랑 언더톤이 남아있으면 애쉬 계열 색상이 매트하게 표현될 수 있어요.\n보라는 노랑의 보색으로, 소량 믹스하면 더 선명한 애쉬 발색이 가능합니다.';
-var ORANGE_DETAIL = '현재 주황·브라운 기가 남아있는 상태에서는\n순수한 애쉬그레이보다 브라운에 가까운 애쉬가 표현될 수 있어요.\n주황의 보색인 블루를 애쉬 염모제에 소량 믹스하면 브라운기를 억제할 수 있습니다.';
-var RED_DETAIL    = '현재 레드 베이스는 색의 파워가 강해 애쉬 계열 색상과 충돌해요.\n탈색 없이는 원하는 애쉬 발색이 어렵고,\n무리하게 시술하면 탁한 브라운 계열로 표현될 수 있습니다.';
+var MATTE_DETAIL  = '현재 노랑 언더톤이 애쉬 색상과 섞이면 매트하고 탁한 발색이 나올 수 있어요.\n보라는 노랑의 보색으로, 소량 믹스하면 노랑기를 눌러 더 선명한 쿨톤 애쉬가 표현됩니다.\n보라가 과하면 오히려 채도가 죽으니 소량이 핵심이에요.';
+var ORANGE_DETAIL = '주황·브라운 언더톤과 애쉬가 섞이면 순수한 애쉬그레이보다 브라운에 가까운 애쉬가 표현돼요.\n주황의 보색인 블루를 소량 믹스하면 브라운기를 억제할 수 있어요.\n블루도 과하면 칙칙해지니 소량이 핵심이에요.';
+var RED_DETAIL    = '레드 베이스는 색의 파워가 강해 애쉬와 충돌이 심해요.\n탈색 없이 무리하게 시술하면 탁한 브라운·녹색 계열로 발색될 수 있어요.\n18lv까지 탈색해 레드기를 완전히 제거한 후 시술하는 것이 안전해요.';
 
 var CASE_TABLE = {
 
   /* ── 톤인톤 (same) ── */
   'same_yellow_ash': {
-    summary: '현재 노랑 언더톤이 있어 보색 중화가 필요해요.\n애쉬 염모제에 보라를 소량 믹스해 시술하세요.',
+    summary: '노랑 언더톤에서 애쉬로 가시는군요.\n애쉬 염모제에 보라를 소량 믹스해 시술하세요.',
     detail:  MATTE_DETAIL
   },
   'same_orange_ash': {
@@ -3107,15 +3107,15 @@ var CASE_TABLE = {
     detail:  ''
   },
   'same_blue_ash': {
-    summary: '현재 베이스가 쿨톤이라 애쉬 표현에 유리해요.\n애쉬 염모제로 바로 시술하세요.',
+    summary: '쿨톤 블루 베이스라 별도 보정 없이 애쉬 표현이 가능해요.\n애쉬 염모제로 바로 시술하세요.',
     detail:  ''
   },
   'same_violet_ash': {
-    summary: '현재 베이스가 쿨톤이라 애쉬 표현에 유리해요.\n애쉬 염모제로 바로 시술하세요.',
+    summary: '쿨톤 바이올렛 베이스라 애쉬 표현이 수월해요.\n애쉬 염모제로 바로 시술하세요.',
     detail:  ''
   },
   'same_neutral_ash': {
-    summary: '현재 중성 베이스로 애쉬 표현이 수월해요.\n애쉬 염모제로 바로 시술하세요.',
+    summary: '중성 베이스라 언더톤 영향 없이 애쉬가 깔끔하게 표현돼요.\n애쉬 염모제로 바로 시술하세요.',
     detail:  ''
   },
   'same_yellow_non-ash': {
@@ -3207,7 +3207,7 @@ var CASE_TABLE = {
 
   /* ── 톤다운 (down) ── */
   'down_yellow_ash': {
-    summary: '현재 노랑 언더톤이 있어 보색 중화가 필요해요.\n애쉬 염모제에 보라를 소량 믹스해 시술하세요.',
+    summary: '노랑 언더톤에서 다크애쉬로 가시는군요.\n낮은 명도 애쉬 염모제에 보라를 소량 믹스해 시술하세요.',
     detail:  MATTE_DETAIL
   },
   'down_orange_ash': {
@@ -3359,66 +3359,63 @@ function generateHairMessage(caseKey, curTone, targetType, toneDir, targetSubTyp
   var rule = UNDERTONE_RULE[curTone] || UNDERTONE_RULE['neutral'];
   var subLabel = { 'ash':'애쉬', 'ash_blue':'애쉬블루', 'ash_violet':'애쉬바이올렛', 'ash_pink':'애쉬핑크' };
   var tLabel = subLabel[targetSubType] || '애쉬';
-  var isAsh = (targetType === 'ash');
+  var toneKo = { 'yellow':'노랑', 'orange':'주황', 'red':'레드', 'green':'그린', 'blue':'블루', 'violet':'바이올렛', 'neutral':'중성' };
+  var curKo  = toneKo[curTone] || curTone;
+  var isAsh  = (targetType === 'ash');
   var isWarn = isAsh && (curTone === 'orange' || curTone === 'red') && (toneDir === 'same' || toneDir === 'down');
   var summary = '';
   var detail  = rule.detail || '';
 
   if (!isAsh) {
-    /* non-ash 공통 */
-    if (toneDir === 'up')   summary = '목표색 발색을 위해 탈색이 필요해요.\n18lv 아이보리까지 탈색 후 목표색 염모제로 시술하세요.';
-    if (toneDir === 'same') summary = '현재 명도에서 바로 착색 가능한 케이스예요.\n목표색 염모제로 시술하세요.';
-    if (toneDir === 'down') summary = '현재 명도보다 어두운 방향으로 착색해요.\n낮은 명도 목표색 염모제로 시술하세요.';
+    /* ── non-ash 공통 ── */
+    var curKoNon = curKo + ' 언더톤';
+    if (toneDir === 'up')   summary = curKoNon + '에서 밝게 올리시는군요.\n목표색 발색을 위해 18lv까지 탈색 후 염모제로 시술하세요.';
+    if (toneDir === 'same') summary = curKoNon + '에서 현재 명도로 색감 전환이에요.\n목표색 염모제로 바로 시술 가능해요.';
+    if (toneDir === 'down') summary = curKoNon + '에서 어둡게 가시는군요.\n낮은 명도 염모제로 착색하세요.';
     detail = '';
 
   } else if (toneDir === 'up') {
-    /* 톤업 + ash */
-    if (rule.mix) {
-      summary = '현재 ' + (curTone === 'yellow' ? '노랑' : '주황') + ' 베이스에서는 탈색이 필수예요.\n'
-              + '18lv 아이보리까지 탈색 후 시술하세요.\n'
-              + '노랑기가 남으면 보라 소량, 주황기가 남으면 블루를 소량 믹스하세요.';
+    /* ── 톤업 + ash ── */
+    if (curTone === 'yellow') {
+      summary = '노랑 언더톤에서 ' + tLabel + '로 밝게 올리시는군요.\n18lv 아이보리까지 탈색 후 시술하세요.\n탈색 후 노랑기가 남으면 보라를 소량 믹스해 중화하세요.';
+    } else if (curTone === 'orange') {
+      summary = '주황 언더톤에서 ' + tLabel + '로 밝게 올리시는군요.\n18lv 아이보리까지 탈색 후 시술하세요.\n탈색 후 노랑기가 남으면 보라, 주황기가 남으면 블루를 소량 믹스하세요.';
     } else if (curTone === 'red') {
-      summary = '현재 레드 베이스에서는 탈색이 필수예요.\n18lv 아이보리까지 탈색 후 시술하세요.\n노랑기가 남으면 보라 소량, 주황기가 남으면 블루를 소량 믹스하세요.';
+      summary = '레드 베이스에서 ' + tLabel + '로 가시는군요.\n18lv 아이보리까지 탈색이 필수예요.\n탈색 후 노랑기가 남으면 보라, 주황기가 남으면 블루를 소량 믹스하세요.';
+    } else if (curTone === 'green') {
+      summary = '그린 베이스에서 ' + tLabel + '로 가시는군요.\n그린기 제거를 위해 15lv까지 탈색 후 시술하세요.';
+      detail = '';
     } else {
-      summary = '현재 ' + rule.result + '\n18lv 아이보리까지 탈색 후 ' + tLabel + ' 염모제로 시술하세요.';
+      summary = curKo + ' 베이스에서 ' + tLabel + '로 밝게 올리시는군요.\n18lv 아이보리까지 탈색 후 ' + tLabel + ' 염모제로 시술하세요.';
       detail = '';
     }
 
   } else if (toneDir === 'same') {
-    /* 톤인톤 + ash */
-    if (isWarn) {
-      var warnPrefix = (curTone === 'orange')
-        ? '△ 브라운에 가까운 애쉬가 나올 수 있어요.\n'
-        : '△ 현재 레드 베이스에서는 애쉬 발색이 어려워요.\n';
-      if (curTone === 'red') {
-        summary = warnPrefix + '탈색 후 시술을 강력히 권장해요.';
-      } else {
-        summary = warnPrefix + tLabel + ' 염모제에 ' + (rule.mix || '블루') + '를 소량 믹스해 시술하세요.';
-      }
-    } else if (rule.mix) {
-      summary = '현재 ' + (curTone === 'yellow' ? '노랑' : '') + ' 언더톤이 있어 보색 중화가 필요해요.\n'
-              + tLabel + ' 염모제에 ' + rule.mix + '를 소량 믹스해 시술하세요.';
+    /* ── 톤인톤 + ash ── */
+    if (curTone === 'yellow') {
+      summary = '노랑 언더톤에서 ' + tLabel + '로 가시는군요.\n' + tLabel + ' 염모제에 보라를 소량 믹스해 시술하세요.';
+    } else if (curTone === 'orange') {
+      summary = '△ 주황 언더톤에서 ' + tLabel + '는 브라운에 가까운 애쉬가 나올 수 있어요.\n' + tLabel + ' 염모제에 블루를 소량 믹스해 시술하세요.';
+    } else if (curTone === 'red') {
+      summary = '△ 레드 베이스에서는 탈색 없이 ' + tLabel + ' 발색이 어려워요.\n탈색 후 시술을 강력히 권장해요.';
+    } else if (curTone === 'green') {
+      summary = '△ 그린 베이스에서 애쉬는 카키·매트 느낌으로 발색될 수 있어요.\n목표색을 다시 확인해 주세요.';
+      detail = '';
     } else {
-      summary = rule.result + '\n' + tLabel + ' 염모제로 바로 시술하세요.';
+      summary = curKo + ' 베이스라 ' + tLabel + ' 표현이 수월해요.\n' + tLabel + ' 염모제로 바로 시술하세요.';
       detail = '';
     }
 
   } else if (toneDir === 'down') {
-    /* 톤다운 + ash */
-    if (isWarn) {
-      var warnPrefixD = (curTone === 'orange')
-        ? '△ 브라운에 가까운 애쉬가 나올 수 있어요.\n'
-        : '△ 현재 레드 베이스에서는 애쉬 발색이 어려워요.\n';
-      if (curTone === 'red') {
-        summary = warnPrefixD + '탈색 후 시술을 강력히 권장해요.';
-      } else {
-        summary = warnPrefixD + '낮은 명도 ' + tLabel + ' 염모제에 블루를 소량 믹스해 시술하세요.';
-      }
-    } else if (rule.mix) {
-      summary = '현재 노랑 언더톤이 있어 보색 중화가 필요해요.\n'
-              + tLabel + ' 염모제에 ' + rule.mix + '를 소량 믹스해 시술하세요.';
+    /* ── 톤다운 + ash ── */
+    if (curTone === 'yellow') {
+      summary = '노랑 언더톤에서 어두운 ' + tLabel + '로 가시는군요.\n낮은 명도 ' + tLabel + ' 염모제에 보라를 소량 믹스해 시술하세요.';
+    } else if (curTone === 'orange') {
+      summary = '△ 주황 언더톤에서 다크 ' + tLabel + '는 브라운에 가까운 애쉬가 나올 수 있어요.\n낮은 명도 ' + tLabel + ' 염모제에 블루를 소량 믹스해 시술하세요.';
+    } else if (curTone === 'red') {
+      summary = '△ 레드 베이스에서는 탈색 없이 ' + tLabel + ' 발색이 어려워요.\n탈색 후 시술을 강력히 권장해요.';
     } else {
-      summary = rule.result + '\n낮은 명도 ' + tLabel + ' 염모제로 시술하세요.';
+      summary = curKo + ' 베이스에서 어두운 ' + tLabel + '로 가시는군요.\n낮은 명도 ' + tLabel + ' 염모제로 시술하세요.';
       detail = '';
     }
   }
