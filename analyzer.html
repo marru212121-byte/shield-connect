@@ -670,6 +670,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
   <div class="bottom-btns">
     <button class="btn-retake" onclick="retake()">다시 촬영</button>
+    <button onclick="runAutoTest()" style="margin-top:6px;width:100%;padding:10px;border-radius:10px;background:#1a2a1a;border:1px solid #2a4a2a;color:#4a8a4a;font-size:12px;cursor:pointer;">🧪 자동 케이스 테스트 (콘솔)</button>
   </div>
 
 </div>
@@ -2111,144 +2112,88 @@ function getResidualTone(bleachLv) {
 */
 function buildSentence(toneDir, curTone, targetType, targetSubType, bleachLv, tarHSL) {
 
-  /* ── 목표색 프로파일 자동 결정 (이름 기반 분기 없음) ── */
-  var profile = getTargetProfile(tarHSL || { h: 210, s: 15, l: 55 });
-  var tLabel  = profile.displayName;
-  var toneKo  = { 'yellow':'노랑', 'orange':'주황', 'red':'레드', 'green':'그린', 'blue':'블루', 'violet':'바이올렛', 'neutral':'중성' };
-  var isAsh   = (targetType === 'ash');
-
-  /* ── 현재 언더톤 규칙 ── */
+  /* ── 목표색 프로파일 ── */
+  var subLabelFixed = {
+    'ash':        { displayName:'애쉬그레이',   baseHue:'blue',   needLv:18, stageLabel:'아이보리' },
+    'ash_blue':   { displayName:'애쉬블루',     baseHue:'blue',   needLv:18, stageLabel:'아이보리' },
+    'ash_violet': { displayName:'애쉬바이올렛', baseHue:'violet', needLv:18, stageLabel:'아이보리' },
+    'ash_pink':   { displayName:'애쉬핑크',     baseHue:'pink',   needLv:18, stageLabel:'아이보리' }
+  };
+  var profile  = subLabelFixed[targetSubType] || getTargetProfile(tarHSL || { h:210, s:15, l:55 });
+  var tLabel   = profile.displayName;
+  var isAsh    = (targetType === 'ash');
   var curRule  = UNDERTONE_RULE[curTone] || UNDERTONE_RULE['neutral'];
-
-  /* ── 잔류 언더톤 규칙 (탈색 레벨 기반) ── */
   var residual = getResidualTone(bleachLv || 18);
 
-  /* ── 잔류 × 목표 hue → 보정 결정 ── */
-  var correction = getCorrection(residual.residual, profile.baseHue, profile.satClass);
+  /* ════════════════
+     판단 1회
+     relation = pure / suppress / mix
+  ════════════════ */
+  var COMP = { yellow:'violet', violet:'yellow', orange:'blue', blue:'orange', red:'green', green:'red' };
 
-  /* ════════════════════════════════════════
-     색 혼합 이론 주입
-     완성색 = 언더톤 + 도포색
-     관계: 순색 / 억제(보색) / 혼합
-  ════════════════════════════════════════ */
-
-  /* 보색 관계 맵 */
-  var COMP_MAP = {
-    'yellow': 'violet',
-    'violet': 'yellow',
-    'orange': 'blue',
-    'blue':   'orange',
-    'red':    'green',
-    'green':  'red'
-  };
-
-  /* 언더톤 × 목표 hue → 관계 판단 */
-  function getColorRelation(under, targetHue) {
-    if (under === targetHue)           return 'pure';      /* 순색 */
-    if (COMP_MAP[under] === targetHue) return 'suppress';  /* 억제(보색) */
-    return 'mix';                                          /* 혼합 */
-  }
-
-  /* 관계 → 예상 완성색 문장 */
-  function predictResult(under, targetHue, relation, label) {
-    var underKo = toneKo[under] || under;
-    if (relation === 'pure') {
-      return '현재 언더톤과 목표색이 일치해 ' + label + '이 선명하게 발현돼요.';
-    }
-    if (relation === 'suppress') {
-      /* 억제 = 브라운계열로 수렴 */
-      var suppressMap = {
-        'yellow+violet': '매트·무채색에 가까운 발색',
-        'violet+yellow': '매트·무채색에 가까운 발색',
-        'orange+blue':   '오렌지가 억제된 브라운(오.억.브)',
-        'blue+orange':   '오렌지가 억제된 브라운(오.억.브)',
-        'red+green':     '레드가 억제된 브라운(레.억.브)',
-        'green+red':     '레드가 억제된 브라운(레.억.브)'
-      };
-      var key = under + '+' + targetHue;
-      var result = suppressMap[key] || '억제된 브라운 계열';
-      return '언더톤과 목표색이 보색 관계 → ' + result + '이 나올 수 있어요.';
-    }
-    if (relation === 'mix') {
-      /* 혼합색 예측 */
-      var mixMap = {
-        'yellow+red':    '옐로우오렌지',
-        'yellow+orange': '옐로우오렌지브라운',
-        'yellow+green':  '옐로우그린(카키)',
-        'yellow+blue':   '그린 계열',
-        'orange+red':    '레드오렌지브라운(레.오.브)',
-        'orange+violet': '오렌지억제바이올렛(오.억.바)',
-        'orange+yellow': '옐로우오렌지브라운(옐.오.브)',
-        'red+violet':    '레드바이올렛브라운(레.바.브)',
-        'red+orange':    '레드오렌지브라운(레.오.브)',
-        'red+blue':      '레드억제브라운(레.억.브)',
-      };
-      var mk = under + '+' + targetHue;
-      var mres = mixMap[mk] || underKo + '빛이 섞인 혼합색';
-      return '언더톤 영향으로 ' + mres + '이 나올 수 있어요.';
-    }
-    return '';
-  }
-
-  /* 탈색 후 잔류 언더톤 기준으로 완성색 예측
-     톤업: 탈색 후 잔류 언더톤 × 목표색
-     톤인톤/다운: 현재 언더톤 × 목표색 */
+  /* 톤업: 탈색 후 잔류 언더톤 기준 / 톤인톤·다운: 현재 언더톤 기준 */
   var effectiveUnder = (toneDir === 'up') ? residual.residual : curTone;
-  var relation       = getColorRelation(effectiveUnder, profile.baseHue);
-  var resultPreview  = predictResult(effectiveUnder, profile.baseHue, relation, tLabel);
+  var relation;
+  if (effectiveUnder === profile.baseHue)          relation = 'pure';
+  else if (COMP[effectiveUnder] === profile.baseHue) relation = 'suppress';
+  else                                               relation = 'mix';
 
-  /* ── 이하 기존 문장 생성 로직 유지 ── */
-  var line1 = '', line2 = '', warn = '', riskMsg = '';
+  /* window 저장 — detail에서 사용 */
+  window._colorRelation  = relation;
+  window._effectiveUnder = effectiveUnder;
+  window._targetBaseHue  = profile.baseHue;
 
-  if (!isAsh) {
-    if (toneDir === 'up')   line1 = profile.needLv + 'lv까지 탈색 후 ' + tLabel + ' 염모제로 시술하세요.';
-    if (toneDir === 'same') line1 = tLabel + ' 염모제로 바로 시술 가능해요.';
-    if (toneDir === 'down') line1 = '낮은 명도 ' + tLabel + ' 염모제로 착색하세요.';
+  /* ════════════════
+     출력
+     warn / line1 / line2
+  ════════════════ */
+  var warn = '', line1 = '', line2 = '';
 
-  } else if (toneDir === 'up') {
-    line1 = profile.needLv + 'lv ' + profile.stageLabel + '까지 탈색 후 ' + tLabel + ' 염모제로 시술하세요.';
-    if (correction.mix) {
-      line2 = residual.residualLabel + '가 남아있다면 ' + correction.mix + '를 소량 믹스해 시술하세요.';
-      if (correction.riskMsg) riskMsg = correction.riskMsg;
+  /* ── 톤업 ── */
+  if (toneDir === 'up') {
+    line1 = (curRule.bleachTarget || '18lv 아이보리') + '까지 탈색 후 ' + tLabel + ' 염모제로 시술하세요.';
+    /* 조건부 리스크: 잔류 언더톤 기준 */
+    if (relation === 'suppress') {
+      line2 = residual.residualLabel + '가 남아있다면 ' + tLabel + '의 발색이 약해질 수 있어요.';
+    } else if (relation === 'mix' && residual.mix) {
+      line2 = residual.residualLabel + '가 남아있다면 ' + residual.mix + '를 소량 믹스해 시술하세요.';
     }
 
+  /* ── 톤인톤 ── */
   } else if (toneDir === 'same') {
-    if (curRule.mix && isAsh) {
-      if (curTone === 'orange' || curTone === 'red') {
-        warn  = '△ ' + (curTone === 'orange' ? '브라운에 가까운 애쉬가 나올 수 있어요.' : '탈색 없이 애쉬 발색이 어려워요.');
-      }
-      if (curTone === 'red') {
-        line1 = '탈색 후 시술을 강력히 권장해요.';
-      } else {
+    if (relation === 'suppress') {
+      warn  = '△ 현재 언더톤과 목표색이 보색 관계예요.';
+      line1 = curRule.mix
+        ? tLabel + ' 염모제에 ' + curRule.mix + '를 소량 믹스해 시술하세요.'
+        : '탈색 후 시술을 권장해요.';
+    } else if (relation === 'mix') {
+      if (curRule.mix) {
         line1 = tLabel + ' 염모제에 ' + curRule.mix + '를 소량 믹스해 시술하세요.';
+      } else {
+        line1 = tLabel + ' 염모제로 시술하세요.';
       }
-    } else if (curTone === 'green') {
-      warn  = '△ 카키·매트 느낌으로 발색될 수 있어요.';
-      line1 = '목표색을 다시 확인해 주세요.';
     } else {
+      /* pure — 언더=목표 → 순색 발현 */
       line1 = tLabel + ' 염모제로 바로 시술하세요.';
     }
 
-  } else if (toneDir === 'down') {
-    if (curTone === 'orange' || curTone === 'red') {
-      warn = '△ ' + (curTone === 'orange' ? '브라운에 가까운 애쉬가 나올 수 있어요.' : '탈색 없이 애쉬 발색이 어려워요.');
-    }
-    if (curTone === 'red') {
-      line1 = '탈색 후 시술을 강력히 권장해요.';
+  /* ── 톤다운 ── */
+  } else {
+    if (relation === 'suppress') {
+      warn  = '△ 현재 언더톤과 목표색이 보색 관계예요.';
+      line1 = curRule.mix
+        ? '낮은 명도 ' + tLabel + ' 염모제에 ' + curRule.mix + '를 소량 믹스해 시술하세요.'
+        : '탈색 후 시술을 권장해요.';
     } else if (curRule.mix && isAsh) {
       line1 = '낮은 명도 ' + tLabel + ' 염모제에 ' + curRule.mix + '를 소량 믹스해 시술하세요.';
     } else {
-      line1 = '낮은 명도 ' + tLabel + ' 염모제로 시술하세요.';
+      line1 = '낮은 명도 ' + tLabel + ' 염모제로 착색하세요.';
     }
   }
 
-  /* window에 완성색 예측 저장 — detail에서 사용 */
-  window._resultPreview = resultPreview;
-  window._colorRelation = relation;
-
-  var parts = [warn, line1, line2, riskMsg].filter(Boolean);
-  return parts.join('\n');
+  return [warn, line1, line2].filter(Boolean).join('\n');
 }
+
 
 /* ════════════════════════════════════════
    TARGET_RULE — 목표색 특성 규칙
@@ -2934,12 +2879,16 @@ function confirmTargetColor() {
     curHSL: currentHSL, tarHSL: targetHSL
   });
 
-  /* targetType: 판단 기준 — ash / non-ash 만 사용 */
+  /* targetType: 판단 기준 — ash / non-ash 만 사용
+     저채도(s<25) = 애쉬 계열로 처리
+     tarKey가 ash 계열이거나 tone이 ash이거나 채도가 낮으면 ash */
   var ashTargets = ['ash_gray', 'dark_ash', 'blue_ash', 'ash_violet', 'ash_pink'];
-  var isAshTarget = ashTargets.indexOf(tarKey) > -1 || tarNorm.tone === 'ash';
+  var tarSatLow  = targetHSL.s < 25; /* 저채도 = 애쉬 계열 */
+  var isAshTarget = ashTargets.indexOf(tarKey) > -1 || tarNorm.tone === 'ash' || tarSatLow;
   window._targetType = isAshTarget ? 'ash' : 'non-ash';
 
-  /* targetSubType: 표현용 — 로직 분기 금지 */
+  /* targetSubType: 표현용 — 로직 분기 금지
+     tarKey 기반 + 저채도 hue 기반 보완 */
   var subTypeMap = {
     'ash_gray':   'ash',
     'dark_ash':   'ash',
@@ -2947,8 +2896,19 @@ function confirmTargetColor() {
     'ash_violet': 'ash_violet',
     'ash_pink':   'ash_pink'
   };
+
+  /* tarKey가 subTypeMap에 없지만 isAshTarget인 경우
+     hue 기반으로 세부 subType 결정 */
+  function getSubTypeFromHSL(h, s) {
+    if (s >= 25) return 'non-ash'; /* 고채도 → non-ash */
+    if ((h >= 270 && h < 345) || (h >= 215 && h < 270)) return 'ash_violet'; /* 바이올렛/블루바이올렛 구간 */
+    if (h >= 300 && h < 345) return 'ash_pink';
+    if (h >= 155 && h < 215) return 'ash_blue';
+    return 'ash'; /* 기본 애쉬그레이 */
+  }
+
   window._targetSubType = isAshTarget
-    ? (subTypeMap[tarKey] || 'ash')
+    ? (subTypeMap[tarKey] || getSubTypeFromHSL(targetHSL.h, targetHSL.s))
     : 'non-ash';
 
   /* 명도 기반 기본 불가 판단 */
@@ -3770,26 +3730,37 @@ function buildHairMessage(result, curHSL, tarHSL) {
   /* ── buildSentence: 규칙 기반 문장 자동 생성 ── */
   var summary = buildSentence(toneDir, curTone, targetType, targetSubType, bleachLv, tarHSL);
 
-  /* detail — UNDERTONE_RULE 기반 + 완성색 예측 추가 */
+  /* detail — 판단 1회, relation 기반 */
   var rule = UNDERTONE_RULE[curTone] || UNDERTONE_RULE['neutral'];
-  var detailBase = (targetType === 'ash') ? (rule.detail || '') : '';
+  var colorRelation  = window._colorRelation  || '';
+  var effectiveUnder = window._effectiveUnder || curTone;
+  var targetBaseHue  = window._targetBaseHue  || 'blue';
 
-  /* 완성색 예측 — buildSentence에서 저장된 값 */
-  var resultPreview = window._resultPreview || '';
-  var colorRelation = window._colorRelation || '';
+  var SUPPRESS_MSG = {
+    'yellow+violet': '노랑기가 남아있다면 애쉬는 탁해지고 바이올렛 발색은 약해질 수 있어요.',
+    'yellow+blue':   '노랑기가 남아있다면 블루애쉬가 매트하게 빠질 수 있어요.',
+    'yellow+pink':   '노랑기가 남아있다면 핑크보다 살구·코랄에 가깝게 나올 수 있어요.',
+    'orange+blue':   '주황기가 남아있다면 브라운에 가까운 애쉬가 나올 수 있어요.',
+    'red+green':     '레드기가 강해 탈색 없이 원하는 발색이 어려워요.'
+  };
+  var MIX_MSG = {
+    'yellow+red':    '노랑 언더톤이 레드와 섞여 옐로우오렌지 빛이 날 수 있어요.',
+    'orange+red':    '주황 언더톤이 레드와 섞여 레드오렌지 브라운이 나올 수 있어요.',
+    'red+violet':    '레드 언더톤이 바이올렛과 섞여 레드바이올렛 브라운이 나올 수 있어요.'
+  };
 
-  /* 언더톤 영향 설명 — 관계별 */
-  var underInfluence = '';
+  var detailMsg = '';
+  var key = effectiveUnder + '+' + targetBaseHue;
   if (colorRelation === 'suppress') {
-    underInfluence = '현재 언더톤과 목표색이 보색 관계입니다.\n보색 중화가 일어나 억제된 브라운 계열로 수렴할 수 있어요.\n억제 = 보색중화 (Tip: 언더와 희망색이 동일할 때 색상이 잘 표현됩니다)';
-  } else if (colorRelation === 'pure') {
-    underInfluence = '현재 언더톤과 목표색이 일치합니다.\n언더와 도포색이 같을 때 색상이 가장 선명하게 표현되고 유지력도 높아요.';
+    detailMsg = SUPPRESS_MSG[key] || '현재 언더톤과 목표색이 보색 관계로 억제가 일어날 수 있어요.';
   } else if (colorRelation === 'mix') {
-    underInfluence = '현재 언더톤이 목표색과 혼합되어 예상과 다른 색감이 나올 수 있어요.\n언더톤을 정확히 제거하거나 보색으로 억제한 후 시술하면 원하는 색에 가까워져요.';
+    detailMsg = MIX_MSG[key] || '현재 언더톤이 목표색과 혼합되어 예상과 다른 색감이 나올 수 있어요.';
+  } else if (colorRelation === 'pure') {
+    detailMsg = '언더톤과 목표색이 일치해 가장 선명한 발색이 기대돼요.';
   }
 
-  /* detail 최종 조합 */
-  var detailParts = [resultPreview, underInfluence, detailBase].filter(Boolean);
+  var baseDetail = (targetType === 'ash') ? (rule.detail || '') : '';
+  var detailParts = [detailMsg, baseDetail].filter(Boolean);
   var detailText = detailParts.join('\n\n');
 
   window._caseKey    = caseKey;
@@ -5482,7 +5453,66 @@ function showRecipe(main, detail, ratio) {
   if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-/* ── 다시 촬영 / 처음으로 ── */
+/* ── runAutoTest: 핵심 케이스 자동 검증 ── */
+function runAutoTest() {
+  /* 테스트 케이스 정의 */
+  var TEST_CASES = [
+    /* curTone,    tarHSL,                  toneDir, expect */
+    { label:'노랑→애쉬그레이 톤인톤',   cur:'yellow', tar:{h:210,s:12,l:55}, dir:'same', expectWarn:false,  expectKw:'보라' },
+    { label:'노랑→애쉬바이올렛 톤인톤', cur:'yellow', tar:{h:260,s:22,l:52}, dir:'same', expectWarn:true,   expectKw:'탈색' },
+    { label:'노랑→애쉬바이올렛 톤업',   cur:'yellow', tar:{h:260,s:22,l:52}, dir:'up',   expectWarn:false,  expectKw:'탈색' },
+    { label:'노랑→애쉬핑크 톤업',       cur:'yellow', tar:{h:320,s:18,l:60}, dir:'up',   expectWarn:false,  expectKw:'바이올렛' },
+    { label:'주황→애쉬그레이 톤인톤',   cur:'orange', tar:{h:210,s:12,l:55}, dir:'same', expectWarn:true,   expectKw:'블루' },
+    { label:'주황→애쉬그레이 톤업',     cur:'orange', tar:{h:210,s:12,l:55}, dir:'up',   expectWarn:false,  expectKw:'탈색' },
+    { label:'레드→애쉬그레이 톤인톤',   cur:'red',    tar:{h:210,s:12,l:55}, dir:'same', expectWarn:true,   expectKw:'탈색' },
+    { label:'노랑→비비드레드 톤업',     cur:'yellow', tar:{h:5,s:80,l:45},   dir:'up',   expectWarn:false,  expectKw:'탈색' },
+    { label:'노랑→비비드레드 톤인톤',   cur:'yellow', tar:{h:5,s:80,l:45},   dir:'same', expectWarn:false,  expectKw:'' },
+    { label:'레드→레드 톤인톤(순색)',    cur:'red',    tar:{h:5,s:80,l:45},   dir:'same', expectWarn:false,  expectKw:'순색' },
+  ];
+
+  var pass = 0, fail = 0;
+  console.group('🧪 자동 케이스 테스트');
+
+  TEST_CASES.forEach(function(tc) {
+    /* window 값 임시 설정 */
+    window._toneDir       = tc.dir;
+    window._curTone       = tc.cur;
+    window._yellowLevel   = 'mid';
+    window._toneUpType    = 'bleach';
+
+    var bleachLv = Math.round(tc.tar.l / 5);
+
+    /* targetType/SubType 계산 */
+    var tarSatLow = tc.tar.s < 25;
+    var isAshT    = tarSatLow;
+    window._targetType    = isAshT ? 'ash' : 'non-ash';
+
+    var st = (function(h, s) {
+      if (s >= 25) return 'non-ash';
+      if (215 <= h && h < 270 || 270 <= h && h < 345) return 'ash_violet';
+      if (300 <= h && h < 345) return 'ash_pink';
+      if (155 <= h && h < 215) return 'ash_blue';
+      return 'ash';
+    })(tc.tar.h, tc.tar.s);
+    window._targetSubType = isAshT ? st : 'non-ash';
+
+    var result = buildSentence(tc.dir, tc.cur, window._targetType, window._targetSubType, bleachLv, tc.tar);
+    var hasWarn   = result.indexOf('△') > -1;
+    var hasExpKw  = tc.expectKw ? result.indexOf(tc.expectKw) > -1 : true;
+    var warnOk    = hasWarn === tc.expectWarn;
+    var ok        = warnOk && hasExpKw;
+
+    if (ok) { pass++; console.log('✅', tc.label, '→', result.split('\n')[0]); }
+    else     { fail++; console.warn('❌', tc.label, '\n  결과:', result, '\n  기대경고:', tc.expectWarn, '기대키워드:', tc.expectKw); }
+  });
+
+  console.log('─'.repeat(40));
+  console.log('결과: ' + pass + '/' + TEST_CASES.length + ' 통과', fail > 0 ? '(' + fail + '개 실패)' : '');
+  console.groupEnd();
+  alert('테스트 완료: ' + pass + '/' + TEST_CASES.length + ' 통과\n콘솔(F12)에서 상세 확인');
+}
+
+
 function retake() {
   stopStream();
   window._toneDir = null;
