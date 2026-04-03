@@ -757,45 +757,6 @@ var SYSTEM_PROMPT = `너는 미용실 시술 가이드 문장 생성기야.
 
 
 /* ── API 호출 ── */
-async function callHairAPI(analysisResult) {
-  /* 2안: _rawMsg가 있으면 그대로 전송 (말투 다듬기 모드) */
-  var userMsg;
-  if (analysisResult._rawMsg) {
-    userMsg = analysisResult._rawMsg;
-  } else {
-    userMsg = [
-      '현재 넘버링: ' + analysisResult.curNumbering,
-      '목표 넘버링: ' + analysisResult.tarNumbering,
-      '현재 언더톤: ' + analysisResult.curUndertone,
-      '목표 언더톤: ' + analysisResult.tarUndertone,
-      '탈색 단계:   ' + analysisResult.bleachStage,
-      '명도 변화:   ' + analysisResult.levelChange + ' (차이: ' + analysisResult.levelGap + ')',
-      '색감 방향:   ' + analysisResult.toneDirection,
-      '보색 중화:   ' + analysisResult.neutralization,
-      '시술 공정:   ' + analysisResult.processType,
-      '파스텔 목표: ' + (analysisResult.pastelTarget ? 'YES' : 'NO'),
-      '모발 이력:   ' + (analysisResult.hairState || 'unknown'),
-      '리스크:      ' + (analysisResult.risk && analysisResult.risk.length > 0 ? analysisResult.risk.join(', ') : '없음'),
-      '',
-      '위 데이터를 바탕으로 1~3 구조로 실무 가이드를 작성해줘.'
-    ].join('\n');
-  }
-
-  var response = await fetch('/api/analyze', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message: userMsg })
-  });
-
-  var data = await response.json();
-
-  if (data.result) {
-    return data.result;
-  }
-  console.log('API ERROR:', data);
-  return '분석 실패: ' + (data.error || '응답 없음');
-}
-
 var stream = null;
 var analysisResult = { level: 7, tones: [], isUneven: false, isMatte: false, isArtificial: false, artificialType: '' };
 var userLevel = null;
@@ -1961,6 +1922,8 @@ function getTone(s, l) {
    which: 'cur' | 'tar' — 히스테리시스 각각 관리
 */
 function normalizeColor(h, s, l, which) {
+  /* h 범위 정규화: 0~360 보장 */
+  h = ((h % 360) + 360) % 360;
   /* 블랙 예외 처리 */
   if (l <= 12 || (l <= 22 && s < 25)) {
     if (which === 'cur') _prevCurBase = 'red';
@@ -2440,8 +2403,8 @@ function getBleachStage(l) {
   if (l <= 42) return 'ORANGE';
   if (l <= 50) return 'ORANGE_YELLOW';
   if (l <= 58) return 'YELLOW';
-  if (l <= 66) return 'BANANA_PEEL';       /* 바나나 껍질 */
-  if (l <= 74) return 'BANANA_INNER';      /* 바나나 안쪽 */
+  if (l <= 66) return 'LIGHT_YELLOW';      /* 연노랑 */
+  if (l <= 74) return 'PALE_YELLOW';       /* 연한 노랑 */
   return 'IVORY_CREAM';
 }
 
@@ -2614,6 +2577,9 @@ function analyzeColorFlow(current, target, damageLevel, toneDir) {
 
 /* ── confirmTargetColor → 스와치 표시 + 딜레이 + 3방향 선택 ── */
 function confirmTargetColor() {
+  /* 새 분석 시작 — 히스테리시스 초기화 */
+  _prevCurBase = null;
+  _prevTarBase = null;
   var s2 = document.getElementById('step2-card');
   if (s2) s2.style.display = 'none';
 
@@ -2638,6 +2604,38 @@ function confirmTargetColor() {
   var tarNorm = normalizeColor(targetHSL.h, targetHSL.s, targetHSL.l, 'tar');
   var curKey = curNorm.base;
   var tarKey = tarNorm.base;
+
+  /* ── curTone / targetType 확정 → window 저장 ── */
+  /* curTone: 현재 언더톤 그룹 (7개) */
+  var curToneMap = {
+    'yellow': 'yellow', 'yellow_orange': 'yellow',
+    'orange': 'orange', 'orange_red': 'orange',
+    'red': 'red', 'red_violet': 'red',
+    'green': 'green', 'teal': 'green',
+    'blue': 'blue', 'blue_ash': 'blue',
+    'violet': 'violet', 'ash_violet': 'violet',
+    'pink': 'violet', 'ash_pink': 'violet',
+    'ash_gray': 'neutral', 'dark_ash': 'neutral',
+    'dark_neutral': 'neutral', 'black': 'neutral'
+  };
+  window._curTone = curToneMap[curKey] || 'neutral';
+
+  /* targetType: 판단 기준 — ash / non-ash 만 사용 */
+  var ashTargets = ['ash_gray', 'dark_ash', 'blue_ash', 'ash_violet', 'ash_pink'];
+  var isAshTarget = ashTargets.indexOf(tarKey) > -1 || tarNorm.tone === 'ash';
+  window._targetType = isAshTarget ? 'ash' : 'non-ash';
+
+  /* targetSubType: 표현용 — 로직 분기 금지 */
+  var subTypeMap = {
+    'ash_gray':   'ash',
+    'dark_ash':   'ash',
+    'blue_ash':   'ash_blue',
+    'ash_violet': 'ash_violet',
+    'ash_pink':   'ash_pink'
+  };
+  window._targetSubType = isAshTarget
+    ? (subTypeMap[tarKey] || 'ash')
+    : 'non-ash';
 
   /* 명도 기반 기본 불가 판단 */
   var cL = currentHSL.l, tL = targetHSL.l;
@@ -3056,7 +3054,7 @@ function bleachStageToKo(stage) {
   if (stage === 'RED' || stage === 'RED_ORANGE') return '어두운';
   if (stage === 'ORANGE')                        return '어두운';
   if (stage === 'ORANGE_YELLOW')                 return '중간';
-  if (stage === 'YELLOW' || stage === 'BANANA_PEEL' || stage === 'BANANA_INNER') return '밝은';
+  if (stage === 'YELLOW' || stage === 'LIGHT_YELLOW' || stage === 'PALE_YELLOW') return '밝은';
   return '밝은';
 }
 
@@ -3073,143 +3071,245 @@ function satToKo(s) {
    목표색: 채도우선 + hueToName         (원하는 색감 표현)
 ════════════════════════════════════════ */
 /* ════════════════════════════════════════
-   CASE_TABLE — 케이스별 완성 문장 데이터베이스
-   조건 → 케이스키 → 문장 선택
-   문장 조합 없음 / 생성 없음 / 흔들림 없음
+   CASE_TABLE — 완성 문장 데이터베이스
+   caseKey = toneDir_curTone_targetType
+   조건문 없음 / 선택만 / 같은 입력 → 같은 출력
 ════════════════════════════════════════ */
+
+var MATTE_DETAIL = '노랑 상태에서 애쉬를 바로 넣으면 매트하게 탁해질 수 있어 보라를 소량 믹스해 보색 중화가 필요합니다.';
+
 var CASE_TABLE = {
 
-  /* ── 톤업 ── */
-  'TONEUP_ASH_YELLOW': {
-    summary: '18lv 아이보리까지 탈색 후 애쉬 염모제로 시술하세요.\n노랑기가 남아있다면 애쉬 염모제에 보라를 소량 믹스해 시술하세요.',
-    detail:  '언더톤의 노랑기와 애쉬가 만나 매트하게 연출될 수 있습니다.\n보색 중화가 필요하여 노랑의 보색인 보라를 소량 믹스해야 합니다.'
+  /* ── 톤인톤 (same) ── */
+  'same_yellow_ash': {
+    summary: '애쉬 염모제에 보라를 소량 믹스해 염색하세요.',
+    detail:  MATTE_DETAIL
   },
-  'TONEUP_ASH_NONE': {
-    summary: '18lv 아이보리까지 탈색 후 애쉬 염모제로 바로 시술하세요.',
-    detail:  '탈색 후 목표색 염모제로 착색하는 시술이에요.\n탈색 반응을 확인하며 단계적으로 진행하세요.'
-  },
-  'TONEUP_GENERAL_YELLOW': {
-    summary: '18lv 아이보리까지 탈색 후 시술하세요.\n노랑기가 남아있다면 보라를 소량 섞어 시술하세요.',
-    detail:  '탈색 후 노랑기 잔류에 따라 보색 보정이 필요할 수 있어요.'
-  },
-  'TONEUP_GENERAL_NONE': {
-    summary: '18lv 아이보리까지 탈색 후 바로 시술하세요.',
+  'same_orange_ash': {
+    summary: '현재 주황기로 애쉬가 매트하게 빠질 수 있어요.\n탈색 후 시술을 권장해요.',
     detail:  ''
   },
-  'TONEUP_DYE': {
-    summary: '산화염모제로 바로 시술 가능해요.\n탈색 없이 명도 상승이 가능한 케이스예요.',
+  'same_red_ash': {
+    summary: '현재 붉은기가 강해 애쉬 표현이 어려워요.\n탈색 후 시술을 권장해요.',
     detail:  ''
   },
-  'TONEUP_HIGHLIFT': {
-    summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.',
+  'same_green_ash': {
+    summary: '그린 베이스에서 애쉬는 카키 느낌으로 발색될 수 있어요.\n목표색을 다시 확인하세요.',
     detail:  ''
   },
-
-  /* ── 톤인톤 ── */
-  'SAME_ASH_YELLOW': {
-    summary: '애쉬 염모제에 보라를 소량 믹스해 시술하세요.\n보색이 과하면 색감이 탁해질 수 있어요.',
-    detail:  '언더톤의 노랑기와 애쉬가 만나 매트하게 연출될 수 있습니다.\n보색 중화가 필요하여 노랑의 보색인 보라를 소량 믹스해야 합니다.'
-  },
-  'SAME_ASH_NONE': {
+  'same_blue_ash': {
     summary: '애쉬 염모제로 바로 시술하세요.',
     detail:  ''
   },
-  'SAME_GENERAL': {
+  'same_violet_ash': {
+    summary: '애쉬 염모제로 바로 시술하세요.',
+    detail:  ''
+  },
+  'same_neutral_ash': {
+    summary: '애쉬 염모제로 바로 시술하세요.',
+    detail:  ''
+  },
+  'same_yellow_non-ash': {
+    summary: '목표색 염모제로 바로 착색 가능해요.',
+    detail:  ''
+  },
+  'same_orange_non-ash': {
+    summary: '목표색 염모제로 바로 착색 가능해요.',
+    detail:  ''
+  },
+  'same_red_non-ash': {
+    summary: '목표색 염모제로 바로 착색 가능해요.',
+    detail:  ''
+  },
+  'same_green_non-ash': {
+    summary: '목표색 염모제로 바로 착색 가능해요.',
+    detail:  ''
+  },
+  'same_blue_non-ash': {
+    summary: '목표색 염모제로 바로 착색 가능해요.',
+    detail:  ''
+  },
+  'same_violet_non-ash': {
+    summary: '목표색 염모제로 바로 착색 가능해요.',
+    detail:  ''
+  },
+  'same_neutral_non-ash': {
     summary: '목표색 염모제로 바로 착색 가능해요.',
     detail:  ''
   },
 
-  /* ── 톤다운 ── */
-  'DOWN_ASH_YELLOW': {
-    summary: '애쉬 염모제에 보라를 소량 믹스해 시술하세요.',
-    detail:  '언더톤의 노랑기와 애쉬가 만나 매트하게 연출될 수 있습니다.\n보색 중화가 필요하여 노랑의 보색인 보라를 소량 믹스해야 합니다.'
+  /* ── 톤업 (up) ── */
+  'up_yellow_ash': {
+    summary: '18lv 아이보리까지 탈색 후 시술하세요.\n노랑기가 남았다면 보라를 소량 믹스해 염색하세요.',
+    detail:  MATTE_DETAIL
   },
-  'DOWN_ASH_NONE': {
+  'up_orange_ash': {
+    summary: '18lv 아이보리까지 탈색 후 애쉬 염모제로 시술하세요.',
+    detail:  ''
+  },
+  'up_red_ash': {
+    summary: '18lv 아이보리까지 탈색 후 애쉬 염모제로 시술하세요.',
+    detail:  ''
+  },
+  'up_green_ash': {
+    summary: '15lv까지 탈색 후 애쉬 염모제로 시술하세요.',
+    detail:  ''
+  },
+  'up_blue_ash': {
+    summary: '18lv 아이보리까지 탈색 후 애쉬 염모제로 바로 시술하세요.',
+    detail:  ''
+  },
+  'up_violet_ash': {
+    summary: '18lv 아이보리까지 탈색 후 애쉬 염모제로 바로 시술하세요.',
+    detail:  ''
+  },
+  'up_neutral_ash': {
+    summary: '18lv 아이보리까지 탈색 후 애쉬 염모제로 바로 시술하세요.',
+    detail:  ''
+  },
+  'up_yellow_non-ash': {
+    summary: '18lv 아이보리까지 탈색 후 목표색 염모제로 시술하세요.',
+    detail:  ''
+  },
+  'up_orange_non-ash': {
+    summary: '18lv 아이보리까지 탈색 후 목표색 염모제로 시술하세요.',
+    detail:  ''
+  },
+  'up_red_non-ash': {
+    summary: '18lv 아이보리까지 탈색 후 목표색 염모제로 시술하세요.',
+    detail:  ''
+  },
+  'up_green_non-ash': {
+    summary: '15lv까지 탈색 후 목표색 염모제로 시술하세요.',
+    detail:  ''
+  },
+  'up_blue_non-ash': {
+    summary: '18lv 아이보리까지 탈색 후 목표색 염모제로 시술하세요.',
+    detail:  ''
+  },
+  'up_violet_non-ash': {
+    summary: '18lv 아이보리까지 탈색 후 목표색 염모제로 시술하세요.',
+    detail:  ''
+  },
+  'up_neutral_non-ash': {
+    summary: '18lv 아이보리까지 탈색 후 목표색 염모제로 시술하세요.',
+    detail:  ''
+  },
+
+  /* ── 톤다운 (down) ── */
+  'down_yellow_ash': {
+    summary: '애쉬 염모제에 보라를 소량 믹스해 염색하세요.',
+    detail:  MATTE_DETAIL
+  },
+  'down_orange_ash': {
+    summary: '현재 주황기로 애쉬가 매트하게 빠질 수 있어요.\n탈색 후 시술을 권장해요.',
+    detail:  ''
+  },
+  'down_red_ash': {
+    summary: '현재 붉은기가 강해 애쉬 표현이 어려워요.\n탈색 후 시술을 권장해요.',
+    detail:  ''
+  },
+  'down_green_ash': {
     summary: '낮은 명도 애쉬 염모제로 착색하세요.',
     detail:  ''
   },
-  'DOWN_GENERAL': {
+  'down_blue_ash': {
+    summary: '낮은 명도 애쉬 염모제로 착색하세요.',
+    detail:  ''
+  },
+  'down_violet_ash': {
+    summary: '낮은 명도 애쉬 염모제로 착색하세요.',
+    detail:  ''
+  },
+  'down_neutral_ash': {
+    summary: '낮은 명도 애쉬 염모제로 착색하세요.',
+    detail:  ''
+  },
+  'down_yellow_non-ash': {
+    summary: '낮은 명도 염모제로 착색하세요.',
+    detail:  ''
+  },
+  'down_orange_non-ash': {
+    summary: '낮은 명도 염모제로 착색하세요.',
+    detail:  ''
+  },
+  'down_red_non-ash': {
+    summary: '낮은 명도 염모제로 착색하세요.',
+    detail:  ''
+  },
+  'down_green_non-ash': {
+    summary: '낮은 명도 염모제로 착색하세요.',
+    detail:  ''
+  },
+  'down_blue_non-ash': {
+    summary: '낮은 명도 염모제로 착색하세요.',
+    detail:  ''
+  },
+  'down_violet_non-ash': {
+    summary: '낮은 명도 염모제로 착색하세요.',
+    detail:  ''
+  },
+  'down_neutral_non-ash': {
     summary: '낮은 명도 염모제로 착색하세요.',
     detail:  ''
   },
 
   /* ── 폴백 ── */
-  'FALLBACK': {
+  'fallback': {
     summary: '시술 방향을 확인 후 진행하세요.',
     detail:  ''
-  }
+  },
+
+  /* ── 염모제 톤업 (dye) — 탈색 없음 ── */
+  'up_dye_yellow_ash':     { summary: '산화염모제로 바로 시술 가능해요.\n탈색 없이 명도 상승이 가능한 케이스예요.', detail: '' },
+  'up_dye_yellow_non-ash': { summary: '산화염모제로 바로 시술 가능해요.\n탈색 없이 명도 상승이 가능한 케이스예요.', detail: '' },
+  'up_dye_orange_ash':     { summary: '산화염모제로 바로 시술 가능해요.\n탈색 없이 명도 상승이 가능한 케이스예요.', detail: '' },
+  'up_dye_orange_non-ash': { summary: '산화염모제로 바로 시술 가능해요.\n탈색 없이 명도 상승이 가능한 케이스예요.', detail: '' },
+  'up_dye_neutral_ash':    { summary: '산화염모제로 바로 시술 가능해요.\n탈색 없이 명도 상승이 가능한 케이스예요.', detail: '' },
+  'up_dye_neutral_non-ash':{ summary: '산화염모제로 바로 시술 가능해요.\n탈색 없이 명도 상승이 가능한 케이스예요.', detail: '' },
+
+  /* ── 하이리프트 톤업 (highlift) ── */
+  'up_highlift_yellow_ash':     { summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.', detail: '' },
+  'up_highlift_yellow_non-ash': { summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.', detail: '' },
+  'up_highlift_orange_ash':     { summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.', detail: '' },
+  'up_highlift_orange_non-ash': { summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.', detail: '' },
+  'up_highlift_neutral_ash':    { summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.', detail: '' },
+  'up_highlift_neutral_non-ash':{ summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.', detail: '' }
 };
 
-/* ── makeCaseKey: 조건 → 케이스키 결정 ── */
-function makeCaseKey(toneDir, toneUpType, isAshTar, hasYellow) {
-
-  if (toneDir === 'up') {
-    if (toneUpType === 'dye')      return 'TONEUP_DYE';
-    if (toneUpType === 'highlift') return 'TONEUP_HIGHLIFT';
-    if (isAshTar && hasYellow)     return 'TONEUP_ASH_YELLOW';
-    if (isAshTar && !hasYellow)    return 'TONEUP_ASH_NONE';
-    if (!isAshTar && hasYellow)    return 'TONEUP_GENERAL_YELLOW';
-    return 'TONEUP_GENERAL_NONE';
-  }
-
-  if (toneDir === 'same') {
-    if (isAshTar && hasYellow)  return 'SAME_ASH_YELLOW';
-    if (isAshTar && !hasYellow) return 'SAME_ASH_NONE';
-    return 'SAME_GENERAL';
-  }
-
-  if (toneDir === 'down') {
-    if (isAshTar && hasYellow)  return 'DOWN_ASH_YELLOW';
-    if (isAshTar && !hasYellow) return 'DOWN_ASH_NONE';
-    return 'DOWN_GENERAL';
-  }
-
-  return 'FALLBACK';
-}
-
-/* ── buildHairMessage: 케이스키로 완성 문장 선택 ── */
+/* ── buildHairMessage: caseKey → CASE_TABLE 선택 — 조건문 없음 ── */
 function buildHairMessage(result, curHSL, tarHSL) {
-  var toneDir   = window._toneDir    || 'same';
-  var toneUpType = window._toneUpType || 'bleach';
-  var yLevel    = window._yellowLevel || 'mid';
-  var warnR     = window._warnReason  || '';
-  var risk      = getRiskLevel(curHSL);
-  var isBleach  = (result.processType === 'BLEACH_FIRST' || result.processType === 'BLEACH_SHORT_TONING');
+  var toneDir       = window._toneDir       || 'same';
+  var curTone       = window._curTone       || 'neutral';
+  var targetType    = window._targetType    || 'non-ash';
+  var targetSubType = window._targetSubType || 'ash';
+  var toneUpType    = window._toneUpType    || 'bleach';
 
-  /* 조건 확정 */
-  var hasYellow = (yLevel !== 'none');
-  var tarNorm   = normalizeColor(tarHSL.h, tarHSL.s, tarHSL.l, 'tar');
-  var isAshTar  = (tarNorm.base === 'ash_gray' || tarNorm.base === 'dark_ash') || tarNorm.tone === 'ash';
+  /* toneUpType이 dye/highlift면 caseKey에 반영 */
+  var effectiveToneDir = (toneDir === 'up' && (toneUpType === 'dye' || toneUpType === 'highlift'))
+    ? 'up_' + toneUpType
+    : toneDir;
 
-  /* 케이스키 → 문장 선택 */
-  var caseKey = makeCaseKey(toneDir, toneUpType, isAshTar, hasYellow);
-  var msg     = CASE_TABLE[caseKey] || CASE_TABLE['FALLBACK'];
+  var caseKey = effectiveToneDir + '_' + curTone + '_' + targetType;
+  var msg     = CASE_TABLE[caseKey] || CASE_TABLE['fallback'];
 
-  /* window에 저장 — renderAnalysisResult에서 detail 사용 */
   window._caseKey    = caseKey;
   window._caseDetail = msg.detail;
 
-  /* 경고 문구 추가 (warnR 있을 때만) */
-  var warnLine = '';
-  if (warnR) {
-    if (warnR.indexOf('채도가 감소') > -1 || warnR.indexOf('딥해질') > -1) {
-      warnLine = '⚠ 보색이 과하면 채도 감소하며 딥해질 수 있어요.';
-    } else if (warnR.indexOf('브라운빛') > -1 || warnR.indexOf('탁한') > -1) {
-      warnLine = '⚠ 보색 충돌로 탁한 브라운빛으로 발색될 수 있어요.';
-    } else if (warnR.indexOf('매트') > -1 || warnR.indexOf('카키') > -1) {
-      warnLine = '⚠ 카키·매트 느낌으로 발색될 수 있어요.';
-    } else if (warnR) {
-      warnLine = '⚠ ' + warnR;
-    }
-  }
+  /* targetSubType으로 표현 치환 — 로직 변경 없음 */
+  var subLabel = {
+    'ash':        '애쉬',
+    'ash_blue':   '애쉬블루',
+    'ash_violet': '애쉬바이올렛',
+    'ash_pink':   '애쉬핑크'
+  };
+  var label = subLabel[targetSubType] || '애쉬';
+  /* 치환 대상: "애쉬 염모제"만 — 설명 문장의 "애쉬가/애쉬는" 보호 */
+  var summary = msg.summary.replace(/애쉬 염모제/g, label + ' 염모제');
 
-  /* 고위험 안내 */
-  var riskLine = '';
-  if (risk === 'HIGH' && isBleach) {
-    riskLine = '색소 축적 가능성이 있어요. 단계적으로 진행하고 충분히 상담 후 시작하세요.';
-  }
+  console.log({ toneDir: toneDir, curTone: curTone, targetType: targetType, targetSubType: targetSubType, caseKey: caseKey });
 
-  return [warnLine, msg.summary, riskLine].filter(Boolean).join('\n');
+  return summary;
 }
 
 
@@ -3336,21 +3436,7 @@ function renderAnalysisResult(result) {
     dirKo = '톤다운';
   }
 
-  var neutYN = neut ? '필요 (보색: ' + compColor + ')' : '불필요';
-  var isAshGrayTar  = (tarUt === 'GRAY' || tarUt === 'DARK_NEUTRAL');
-  var isGreenTar    = (tarUt === 'GREEN' || tarUt === 'YELLOW_GREEN');
-  var bleachCondition;
-  if (toneDir === 'up' && toneUpType === 'dye') {
-    bleachCondition = '탈색 불필요 — 7~9lv 산화염모제로 직접 시술';
-  } else if (toneDir === 'up' && toneUpType === 'highlift') {
-    bleachCondition = '탈색 불필요 — 13~15lv 고명도 + 7~9lv 혼용';
-  } else if (isAshGrayTar) {
-    bleachCondition = '노랑기 없으면 바로 착색, 노랑기 있으면 보라 소량 섞어 보색중화 후 착색';
-  } else if (isBleach) {
-    bleachCondition = isGreenTar ? '15lv까지 탈색 필요' : '18lv 아이보리색까지 탈색 필요';
-  } else {
-    bleachCondition = '탈색 불필요';
-  }
+  /* bleachCondition 제거 — API 없음, CASE_TABLE로 처리 */
 
   var isWarmCur    = ['YELLOW','YELLOW_GREEN','ORANGE','RED','RED_VIOLET'].indexOf(curUt) > -1;
   var isYellowCur  = (curUt === 'YELLOW' || curUt === 'YELLOW_GREEN');
@@ -3380,39 +3466,6 @@ function renderAnalysisResult(result) {
   var residual = '';
   if (isYellowCur && isCoolTar) residual = '노랑기 → 보라 소량 보색중화';
   else if (isRedOrangeCur && (isCoolTar || isPPV)) residual = '노랑기 단계 기준 → 보라 소량 보색중화';
-
-  /* ── summaryCase 확정 (프론트 판단 완료) ── */
-  var yLevel2    = window._yellowLevel || 'mid';
-  var hasYellow2 = (yLevel2 !== 'none');
-  var tarNorm2   = normalizeColor(targetHSL.h, targetHSL.s, targetHSL.l, 'tar');
-  var isAshTar2  = (tarNorm2.base === 'ash_gray' || tarNorm2.base === 'dark_ash') || tarNorm2.tone === 'ash';
-
-  var summaryCase;
-  if (toneDir === 'up' && !hasYellow2 && isAshTar2)       summaryCase = 1; /* 톤업 + 노랑없음 */
-  else if (toneDir === 'up' && hasYellow2 && isAshTar2)   summaryCase = 2; /* 톤업 + 노랑있음 */
-  else if (toneDir !== 'up' && hasYellow2 && isAshTar2)   summaryCase = 3; /* 톤인톤·다운 + 노랑있음 */
-  else if (toneDir !== 'up' && !hasYellow2 && isAshTar2)  summaryCase = 4; /* 톤인톤·다운 + 노랑없음 */
-  else summaryCase = 0; /* 애쉬 목표 아닌 일반 케이스 */
-
-  /* ── API 전달 데이터 — 결과만, 재료 없음 ── */
-  var caseLabels = {
-    0: '일반',
-    1: '톤업_노랑없음',
-    2: '톤업_노랑있음',
-    3: '톤인톤다운_노랑있음',
-    4: '톤인톤다운_노랑없음'
-  };
-
-  var apiData = [
-    '시술케이스: ' + caseLabels[summaryCase],
-    '시술방향: ' + dirKo,
-    '보라사용: ' + (hasYellow2 && isAshTar2 ? '필요' : '불필요'),
-    '탈색언급: ' + (allowBleachMention ? '허용' : '절대금지'),
-    '모발상태: ' + (hairState === 'virgin' ? '자연모' : hairState === 'blackDyed' ? '블랙염색모' : hairState === 'darkDyed' ? '어두운염색모' : '일반'),
-    '잔류위험: ' + (residualRisk ? '있음' : '없음'),
-    '경고: ' + (warnR || '없음'),
-    '고위험: ' + (risk === 'HIGH' && isBleach ? '색소축적 가능성' : '없음')
-  ].join('\n');
 
   /* 체크리스트 빌드 */
   buildChecklist(result);
