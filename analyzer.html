@@ -749,7 +749,7 @@ var SYSTEM_PROMPT = `너는 미용실 염색 시술 전문가야.
 노랑 → 보라 / 주황 → 파랑·애쉬 / 붉은색 → 그린·애쉬 / 초록·카키 → 핑크·레드
 
 [탈색 목표 기준]
-- 애쉬그레이: 탈색 필수 아님. 노랑기 없으면 바로 착색. 노랑기 있으면 애쉬 염모제에 보라 소량 섞어 보색중화하면서 착색
+- 애쉬그레이: 탈색 필수 아님. 노랑기 없으면 바로 착색. 노랑기 있으면 애쉬 염모제에 보라 소량 섞어 시술
 - 블루·바이올렛·파스텔: 18lv 아이보리색까지 탈색 필요
 - 그린: 15lv까지 탈색 필요
 
@@ -784,9 +784,9 @@ toneUpType = "탈색" 인 경우:
 
 [문구 틀 - 반드시 이 틀 사용]
 톤업(염모제): "[목표색] 염모제로 바로 시술 가능해요. 탈색 없이 산화염모제로 명도 상승이 가능한 케이스예요."
-톤업(애쉬그레이): "노랑기 없으면 [목표색] 염모제 바로 착색. 노랑기 남았다면 애쉬 염모제에 보라를 소량 섞어 보색중화하면서 착색하세요."
-톤업(블루·파스텔): "18lv 아이보리색까지 탈색 후 [목표색] 염모제로 착색하세요. 노랑기 남았다면 애쉬 염모제에 보라를 소량 섞어 보색중화하면서 착색."
-톤인톤(보색필요): "[목표색] 염모제에 [보색]을 소량 섞어 [현재언더톤]기를 보색중화하면서 착색하세요."
+톤업(애쉬그레이): "노랑기 없으면 [목표색] 염모제로 바로 착색하세요. 노랑기 남았다면 애쉬 염모제에 보라를 소량 섞어 시술하세요."
+톤업(블루·파스텔): "18lv 아이보리색까지 탈색 후 시술합니다. 노랑기가 남아있다면 애쉬 염모제에 보라를 소량 섞어 시술하세요."
+톤인톤(보색필요): "[목표색] 염모제에 [보색]을 소량 섞어 시술하세요."
 톤인톤(직접): "[목표색] 염모제로 바로 착색 가능해요."
 톤다운: "[목표색] 낮은 명도 염모제로 착색하세요."
 
@@ -2225,7 +2225,7 @@ var RULE_TABLE = (function() {
   }
 
   var W_BLEACH     = '탈색이 불가피해요. 현재 잔류색소로는 원하는 발색이 나오지 않아요.';
-  var W_ORANGE_ASH = '주황기로 브라운 베이스의 애쉬가 살짝 표현돼요. 파랑을 소량 섞어 보색중화하면서 착색하세요.';
+  var W_ORANGE_ASH = '주황기로 브라운 베이스의 애쉬가 살짝 표현돼요. 파랑을 소량 섞어 시술하세요.';
   var W_YELLOW_BLU = '보라 보색이 과하면 채도가 감소하며 딥해질 수 있어요. 선명한 블루애쉬를 원하면 탈색 추천해요.';
   var W_YELLOW_PPV = '보라가 메인으로 발색돼요. 탈색 후에 정확한 발색이 가능해요.';
   var W_YELLOW_PNK = '살구·코랄 톤으로 발색돼요. 탈색 후에 정확한 발색이 가능해요.';
@@ -3214,7 +3214,7 @@ function buildHairMessage(result, curHSL, tarHSL) {
      노랑 베이스는 이미 노랑기 단계이므로 resGuide 불필요 — 별도 처리 */
   var resGuide = '';
   if (isRedOrangeCur && (isCoolTar || isPPV)) {
-    resGuide = '노랑기 남았다면 보라를 소량 섞어 보색중화하면서 착색하세요.';
+    resGuide = '노랑기 남았다면 보라를 소량 섞어 시술하세요.';
   }
 
   /* ──────────────────────────────
@@ -3240,49 +3240,62 @@ function buildHairMessage(result, curHSL, tarHSL) {
   }
 
   /* ──────────────────────────────
-     ③ line3: 확정 4개 틀
+     ③ line3: 4케이스 통합 (단일 흐름 문장)
+     toneDir + yellowLevel 조합으로 완성된 문장 1개 생성
+     "중화 후 착색" 2단계 표현 금지 → "섞어서 착색" 1단계로 통합
   ────────────────────────────── */
 
+  /* yellowLevel — window에서 읽음 (renderAnalysisResult에서 저장) */
+  var yLevel = window._yellowLevel || 'mid';
+  var hasYellow = (yLevel !== 'none');
+
+  /* 애쉬 목표 여부 */
+  var isAshTar = (tarUt === 'GRAY' || tarUt === 'DARK_NEUTRAL')
+              || (tarHSL.s < 20);
+
   if (toneDir === 'up') {
-    /* ── toneUpType 분기 ── */
     var toneUpType = window._toneUpType || 'bleach';
 
     if (toneUpType === 'dye') {
-      /* 염모제 톤업 — 탈색 없이 산화염모제로 명도 상승 */
+      /* ── 케이스 A: 염모제 톤업 (탈색 없음) ── */
       line3 = tarName + ' 염모제로 바로 시술 가능해요.\n탈색 없이 산화염모제로 명도 상승이 가능한 케이스예요.';
 
     } else {
-      /* 탈색 톤업 */
-
-      /* 애쉬그레이 목표: 노랑기 조건 분기 */
-      if (tarUt === 'GRAY' || tarUt === 'DARK_NEUTRAL') {
-        line3 = tarName + ' 염모제로 착색하세요.\n노랑기 남았다면 애쉬 염모제에 보라를 소량 섞어 보색중화하면서 착색하세요.';
-      } else {
+      /* ── 케이스 B: 탈색 톤업 ── */
+      if (hasYellow && isAshTar) {
+        /* 탈색 후 노랑기 남을 수 있음 → 섞어서 착색 */
+        line3 = bleachTarget + '노랑기가 남아있다면\n애쉬 염모제에 보라를 소량 섞어 시술하세요.';
+      } else if (hasYellow && !isAshTar) {
+        /* 탈색 후 노랑기 + 난색 목표 */
         line3 = bleachTarget + tarName + ' 염모제로 착색하세요.';
-        if (isYellowCur && isCoolTar) {
-          line3 += '\n노랑기 남았다면 애쉬 염모제에 보라를 소량 섞어 보색중화하면서 착색하세요.';
-        } else if (resGuide) {
-          line3 += '\n' + resGuide;
-        }
+        if (resGuide) line3 += '\n' + resGuide;
+      } else {
+        /* yellowLevel = none → 노랑기 없음, 바로 착색 */
+        line3 = bleachTarget + tarName + ' 염모제로 바로 시술하세요.';
       }
     }
 
   } else if (toneDir === 'same') {
-    /* 톤인톤 틀 */
-    if (neut && compColor) {
-      /* 보색중화 필요 틀 */
-      line3 = tarName + ' 염모제에 ' + compColor + josa(compColor) + ' 소량 섞어 '
-            + utKo + '기를 보색중화하면서 착색하세요.';
+    /* ── 케이스 C: 톤인톤 ── */
+    if (hasYellow && isAshTar && compColor) {
+      /* 노랑기 있음 + 애쉬 목표 → 섞어서 1단계 */
+      line3 = tarName + ' 염모제에 보라를 소량 섞어 시술하세요.';
+    } else if (neut && compColor) {
+      /* 보색중화 필요 (기타 케이스) */
+      line3 = tarName + ' 염모제에 ' + compColor + josa(compColor) + ' 소량 섞어 시술하세요.';
     } else {
-      /* 직접 착색 틀 */
+      /* 직접 착색 */
       line3 = tarName + ' 염모제로 바로 착색 가능해요.';
     }
 
   } else {
-    /* 톤다운 틀 */
-    if (neut && compColor) {
-      line3 = tarName + ' 낮은 명도 염모제에 ' + compColor + josa(compColor) + ' 소량 섞어 '
-            + utKo + '기를 보색중화하면서 착색하세요.';
+    /* ── 케이스 D: 톤다운 ── */
+    if (hasYellow && isAshTar && compColor) {
+      /* 노랑기 있음 + 애쉬 목표 → 섞어서 1단계 */
+      line3 = tarName + ' 염모제에 보라를 소량 섞어 시술하세요.';
+    } else if (neut && compColor) {
+      /* 보색중화 필요 (기타 케이스) */
+      line3 = tarName + ' 낮은 명도 염모제에 ' + compColor + josa(compColor) + ' 소량 섞어 시술하세요.';
     } else {
       line3 = tarName + ' 낮은 명도 염모제로 착색하세요.';
     }
@@ -3445,6 +3458,7 @@ function renderAnalysisResult(result) {
   var currentLevel = Math.round(currentHSL.l / 5);
   var bleachLevel  = Math.round(targetHSL.l / 5);
   var yellowLevel  = getYellowLevel(currentLevel, bleachLevel, toneDir);
+  window._yellowLevel = yellowLevel; /* buildHairMessage에서 접근 */
 
   /* ── allowBleachMention: 탈색 언급 허용 여부 ── */
   var allowBleachMention = (toneDir === 'up');
@@ -4556,7 +4570,7 @@ function updateRecipe() {
     } else if (T0 === 'bleach') {
       ivoryDetail = '이미 아이보리·백금에 가까운 밝은 베이스예요.\n추가 탈색이 필요하다면 소량으로 조절하세요.\n\n화이트블론드·백금발을 원하신다면\n연핑크와 베이지 계열 소량 토닝을 추천해요.';
     } else if (T0 === 'pastel') {
-      ivoryDetail = '아이보리·백금 베이스에서 파스텔은 가장 선명하게 표현되는 구간이에요.\n\n추천:\n1. 바로 파스텔 토닝 가능해요\n2. 노랑기가 살짝 남아있다면 보라를 소량 섞어 보색중화하면서 착색';
+      ivoryDetail = '아이보리·백금 베이스에서 파스텔은 가장 선명하게 표현되는 구간이에요.\n\n추천:\n1. 바로 파스텔 토닝 가능해요\n2. 노랑기가 살짝 남아있다면 보라를 소량 섞어 시술';
     } else if (T0 === 'blonde') {
       ivoryDetail = '탈색을 충분히 한 깨끗한 베이스네요.\n어느 색감으로 가든 수월한 상태예요.\n\n완전한 화이트블론드·백금발을 원하신다면\n연핑크와 베이지 계열을 소량 토닝하는 걸 추천해요.';
     } else if (['blue-black','ash-gray','ash-brown','cool-beige'].indexOf(T0) > -1) {
