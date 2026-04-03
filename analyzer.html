@@ -3072,186 +3072,147 @@ function satToKo(s) {
    현재색: 명도 + 언더톤명 + "언더톤"  (모발 상태 표현)
    목표색: 채도우선 + hueToName         (원하는 색감 표현)
 ════════════════════════════════════════ */
-function buildHairMessage(result, curHSL, tarHSL) {
-  var curUt   = result.curUndertone;
-  var tarUt   = result.tarUndertone;
-  var toneDir = window._toneDir || 'same';
-  var proc    = result.processType;
-  var pastel  = result.pastelTarget;
-  var neut    = result.needNeutralization;
-  var risk    = getRiskLevel(curHSL);
-  var tarName = hueToName(tarHSL.h, tarHSL.s, tarHSL.l);
-  var warnR   = window._warnReason || '';
+/* ════════════════════════════════════════
+   CASE_TABLE — 케이스별 완성 문장 데이터베이스
+   조건 → 케이스키 → 문장 선택
+   문장 조합 없음 / 생성 없음 / 흔들림 없음
+════════════════════════════════════════ */
+var CASE_TABLE = {
 
-  /* ── 현재색 표현 ── */
-  var utKo     = UNDERTONE_KO[curUt] || '뉴트럴';
-  var compColor = getCompColor(curUt, tarUt);
-  var curSatKo = satToKo(curHSL.s);
-  var curLvKo  = bleachStageToKo(result.bleachStage);
-  var curExpr;
-  if (curUt === 'BLACK' || curUt === 'DARK_NEUTRAL') {
-    curExpr = '블랙 계열';
-  } else if (curSatKo === '선명한') {
-    curExpr = '선명한 ' + utKo + ' 언더톤';
-  } else if (curSatKo === '파스텔') {
-    curExpr = '파스텔 ' + utKo + ' 언더톤';
-  } else {
-    curExpr = curLvKo + ' ' + utKo + ' 언더톤';
+  /* ── 톤업 ── */
+  'TONEUP_ASH_YELLOW': {
+    summary: '18lv 아이보리까지 탈색 후 애쉬 염모제로 시술하세요.\n노랑기가 남아있다면 애쉬 염모제에 보라를 소량 믹스해 시술하세요.',
+    detail:  '언더톤의 노랑기와 애쉬가 만나 매트하게 연출될 수 있습니다.\n보색 중화가 필요하여 노랑의 보색인 보라를 소량 믹스해야 합니다.'
+  },
+  'TONEUP_ASH_NONE': {
+    summary: '18lv 아이보리까지 탈색 후 애쉬 염모제로 바로 시술하세요.',
+    detail:  '탈색 후 목표색 염모제로 착색하는 시술이에요.\n탈색 반응을 확인하며 단계적으로 진행하세요.'
+  },
+  'TONEUP_GENERAL_YELLOW': {
+    summary: '18lv 아이보리까지 탈색 후 시술하세요.\n노랑기가 남아있다면 보라를 소량 섞어 시술하세요.',
+    detail:  '탈색 후 노랑기 잔류에 따라 보색 보정이 필요할 수 있어요.'
+  },
+  'TONEUP_GENERAL_NONE': {
+    summary: '18lv 아이보리까지 탈색 후 바로 시술하세요.',
+    detail:  ''
+  },
+  'TONEUP_DYE': {
+    summary: '산화염모제로 바로 시술 가능해요.\n탈색 없이 명도 상승이 가능한 케이스예요.',
+    detail:  ''
+  },
+  'TONEUP_HIGHLIFT': {
+    summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.',
+    detail:  ''
+  },
+
+  /* ── 톤인톤 ── */
+  'SAME_ASH_YELLOW': {
+    summary: '애쉬 염모제에 보라를 소량 믹스해 시술하세요.\n보색이 과하면 색감이 탁해질 수 있어요.',
+    detail:  '언더톤의 노랑기와 애쉬가 만나 매트하게 연출될 수 있습니다.\n보색 중화가 필요하여 노랑의 보색인 보라를 소량 믹스해야 합니다.'
+  },
+  'SAME_ASH_NONE': {
+    summary: '애쉬 염모제로 바로 시술하세요.',
+    detail:  ''
+  },
+  'SAME_GENERAL': {
+    summary: '목표색 염모제로 바로 착색 가능해요.',
+    detail:  ''
+  },
+
+  /* ── 톤다운 ── */
+  'DOWN_ASH_YELLOW': {
+    summary: '애쉬 염모제에 보라를 소량 믹스해 시술하세요.',
+    detail:  '언더톤의 노랑기와 애쉬가 만나 매트하게 연출될 수 있습니다.\n보색 중화가 필요하여 노랑의 보색인 보라를 소량 믹스해야 합니다.'
+  },
+  'DOWN_ASH_NONE': {
+    summary: '낮은 명도 애쉬 염모제로 착색하세요.',
+    detail:  ''
+  },
+  'DOWN_GENERAL': {
+    summary: '낮은 명도 염모제로 착색하세요.',
+    detail:  ''
+  },
+
+  /* ── 폴백 ── */
+  'FALLBACK': {
+    summary: '시술 방향을 확인 후 진행하세요.',
+    detail:  ''
   }
+};
 
-  /* ── 목표색 표현 ── */
-  var tarSatKo = satToKo(tarHSL.s);
-  var isDarkTarget = (tarHSL.l <= 35 || (tarHSL.s < 15 && tarHSL.l <= 45));
-  var tarExpr;
-  if (isDarkTarget) {
-    tarExpr = bleachStageToKo(getBleachStage(tarHSL.l)) + ' ' + tarName;
-  } else if (pastel) {
-    tarExpr = '파스텔 ' + tarName;
-  } else if (tarSatKo === '선명한') {
-    tarExpr = '선명한 ' + tarName;
-  } else {
-    tarExpr = tarName;
-  }
-
-  /* ══ LINE1: 항상 출력 ══ */
-  var line1 = curExpr + '에서 ' + tarExpr + '으로 가시는군요.';
-
-  /* ══ LINE2: 경고 (warnR 기반, 핵심만 1줄로 요약) ══ */
-  var line2 = '';
-
-  /* ══ LINE3: 시술 방법 ══ */
-  var line3 = '';
-
-  /* ──────────────────────────────
-     ① 공통 변수 결정
-  ────────────────────────────── */
-
-  /* 조사 처리 — 받침 있으면 "을", 없으면 "를" */
-  function josa(str) {
-    var last = str[str.length - 1];
-    var code = last.charCodeAt(0);
-    if (code >= 0xAC00 && code <= 0xD7A3) {
-      return ((code - 0xAC00) % 28 > 0) ? '을' : '를';
-    }
-    return '를';
-  }
-
-  /* 베이스 분류 */
-  var isWarmCur    = ['YELLOW','YELLOW_GREEN','ORANGE','RED','RED_VIOLET'].indexOf(curUt) > -1;
-  var isYellowCur  = (curUt === 'YELLOW' || curUt === 'YELLOW_GREEN');
-  var isRedOrangeCur = (curUt === 'ORANGE' || curUt === 'RED' || curUt === 'RED_VIOLET');
-  var isCoolTar    = ['BLUE','TEAL','VIOLET','GRAY','DARK_NEUTRAL'].indexOf(tarUt) > -1;
-  var isPPV        = (pastel || tarHSL.s < 30) && (tarUt === 'PINK' || tarUt === 'VIOLET' || tarUt === 'RED_VIOLET');
-  var isBleach     = (proc === 'BLEACH_FIRST' || proc === 'BLEACH_SHORT_TONING');
-
-  /* 탈색 목표 — 그린 계열만 15lv, 나머지 18lv */
-  var bleachTarget = (tarUt === 'GREEN' || tarUt === 'YELLOW_GREEN')
-    ? '15lv까지 탈색 후 '
-    : '18lv 아이보리색까지 탈색 후 ';
-
-  /* 잔류색소 안내 — 노랑기 기준 통일
-     난색 베이스(노랑·주황·레드) + 한색 or 파스텔 목표일 때만 출력
-     노랑 베이스는 이미 노랑기 단계이므로 resGuide 불필요 — 별도 처리 */
-  var resGuide = '';
-  if (isRedOrangeCur && (isCoolTar || isPPV)) {
-    resGuide = '노랑기 남았다면 보라를 소량 섞어 시술하세요.';
-  }
-
-  /* ──────────────────────────────
-     ② line2: warnR → 핵심 1줄 요약
-     (warnR은 버튼 경고용 긴 문구 — line2는 짧게)
-  ────────────────────────────── */
-  if (warnR) {
-    if (warnR.indexOf('바이올렛에 애쉬 한 방울') > -1 || warnR.indexOf('보라가 메인') > -1) {
-      line2 = '⚠ 보라 메인으로 발색돼요. 정확한 ' + tarName + '은 탈색 후 가능해요.';
-    } else if (warnR.indexOf('살구') > -1 || warnR.indexOf('코랄') > -1) {
-      line2 = '⚠ 살구·코랄 톤으로 발색돼요. 정확한 ' + tarName + '은 탈색 후 가능해요.';
-    } else if (warnR.indexOf('채도가 감소') > -1 || warnR.indexOf('딥해질') > -1) {
-      line2 = '⚠ 보색이 과하면 채도 감소하며 딥해질 수 있어요. 선명한 발색은 탈색 후 가능해요.';
-    } else if (warnR.indexOf('브라운빛') > -1 || warnR.indexOf('탁한') > -1) {
-      line2 = '⚠ 보색 충돌로 탁한 브라운빛으로 발색될 수 있어요.';
-    } else if (warnR.indexOf('애쉬') > -1 && warnR.indexOf('발색 오차') > -1) {
-      line2 = '⚠ 현재 베이스 명도에 따라 발색이 조금씩 달라요.';
-    } else if (warnR.indexOf('브라운 베이스의 애쉬') > -1 || warnR.indexOf('브라운빛 애쉬') > -1) {
-      line2 = '⚠ 주황기로 브라운 베이스의 애쉬가 살짝 표현돼요.';
-    } else {
-      line2 = '⚠ ' + warnR;
-    }
-  }
-
-  /* ──────────────────────────────
-     ③ line3: 완성 문장 선택 구조
-     순서 1: toneDir 고정 문장
-     순서 2: yellowLevel 있으면 보정 문장 추가
-     절대 합치지 않음 / 순서 바꾸지 않음
-  ────────────────────────────── */
-
-  var yLevel   = window._yellowLevel || 'mid';
-  var hasYellow = (yLevel !== 'none');
-  var isAshTar  = (tarUt === 'GRAY' || tarUt === 'DARK_NEUTRAL') || (tarHSL.s < 20);
+/* ── makeCaseKey: 조건 → 케이스키 결정 ── */
+function makeCaseKey(toneDir, toneUpType, isAshTar, hasYellow) {
 
   if (toneDir === 'up') {
-    var toneUpType = window._toneUpType || 'bleach';
-
-    if (toneUpType === 'dye') {
-      /* ── 염모제 톤업 (탈색 없음) ── */
-      line3 = tarName + ' 염모제로 바로 시술 가능해요.\n탈색 없이 산화염모제로 명도 상승이 가능한 케이스예요.';
-
-    } else if (isAshTar) {
-      /* ── 탈색 톤업 + 애쉬 목표 ── */
-      /* 순서 1: toneDir 고정 */
-      line3 = bleachTarget + '애쉬 염모제로 시술하세요.';
-      /* 순서 2: yellowLevel 보정 */
-      if (hasYellow) {
-        line3 += '\n노랑기가 남아있다면 애쉬 염모제에 보라를 소량 믹스해 시술하세요.';
-      }
-
-    } else {
-      /* ── 탈색 톤업 + 비애쉬 목표 ── */
-      line3 = bleachTarget + tarName + ' 염모제로 시술하세요.';
-      if (hasYellow && resGuide) line3 += '\n' + resGuide;
-    }
-
-  } else if (toneDir === 'same') {
-    /* ── 톤인톤 ── */
-    if (isAshTar) {
-      if (hasYellow) {
-        /* 순서 1: toneDir 고정 */
-        line3 = '애쉬 염모제에 보라를 소량 믹스해 시술하세요.';
-        /* 순서 2: 보색 과할 때 주의 안내 */
-        line3 += '\n보색이 과하면 색감이 탁해질 수 있어요.';
-      } else {
-        line3 = '애쉬 염모제로 바로 시술하세요.';
-      }
-    } else if (neut && compColor) {
-      line3 = tarName + ' 염모제에 ' + compColor + josa(compColor) + ' 소량 섞어 시술하세요.';
-    } else {
-      line3 = tarName + ' 염모제로 바로 착색 가능해요.';
-    }
-
-  } else {
-    /* ── 톤다운 ── */
-    if (isAshTar) {
-      if (hasYellow) {
-        line3 = '애쉬 염모제에 보라를 소량 믹스해 시술하세요.';
-      } else {
-        line3 = tarName + ' 낮은 명도 염모제로 착색하세요.';
-      }
-    } else if (neut && compColor) {
-      line3 = tarName + ' 낮은 명도 염모제에 ' + compColor + josa(compColor) + ' 소량 섞어 시술하세요.';
-    } else {
-      line3 = tarName + ' 낮은 명도 염모제로 착색하세요.';
-    }
+    if (toneUpType === 'dye')      return 'TONEUP_DYE';
+    if (toneUpType === 'highlift') return 'TONEUP_HIGHLIFT';
+    if (isAshTar && hasYellow)     return 'TONEUP_ASH_YELLOW';
+    if (isAshTar && !hasYellow)    return 'TONEUP_ASH_NONE';
+    if (!isAshTar && hasYellow)    return 'TONEUP_GENERAL_YELLOW';
+    return 'TONEUP_GENERAL_NONE';
   }
 
-  /* ══ HIGH 리스크 — 상담 문구 ══ */
-  var line4 = '';
-  if (risk === 'HIGH' && isBleach) {
-    line4 = '색소 축적 가능성이 있어요. 탈색 반응을 확인하며 단계적으로 진행하고 고객과 충분히 상담 후 시작하세요.';
+  if (toneDir === 'same') {
+    if (isAshTar && hasYellow)  return 'SAME_ASH_YELLOW';
+    if (isAshTar && !hasYellow) return 'SAME_ASH_NONE';
+    return 'SAME_GENERAL';
   }
 
-  return [line1, line2, line3, line4].filter(Boolean).join('\n');
+  if (toneDir === 'down') {
+    if (isAshTar && hasYellow)  return 'DOWN_ASH_YELLOW';
+    if (isAshTar && !hasYellow) return 'DOWN_ASH_NONE';
+    return 'DOWN_GENERAL';
+  }
+
+  return 'FALLBACK';
 }
+
+/* ── buildHairMessage: 케이스키로 완성 문장 선택 ── */
+function buildHairMessage(result, curHSL, tarHSL) {
+  var toneDir   = window._toneDir    || 'same';
+  var toneUpType = window._toneUpType || 'bleach';
+  var yLevel    = window._yellowLevel || 'mid';
+  var warnR     = window._warnReason  || '';
+  var risk      = getRiskLevel(curHSL);
+  var isBleach  = (result.processType === 'BLEACH_FIRST' || result.processType === 'BLEACH_SHORT_TONING');
+
+  /* 조건 확정 */
+  var hasYellow = (yLevel !== 'none');
+  var tarNorm   = normalizeColor(tarHSL.h, tarHSL.s, tarHSL.l, 'tar');
+  var isAshTar  = (tarNorm.base === 'ash_gray' || tarNorm.base === 'dark_ash') || tarNorm.tone === 'ash';
+
+  /* 케이스키 → 문장 선택 */
+  var caseKey = makeCaseKey(toneDir, toneUpType, isAshTar, hasYellow);
+  var msg     = CASE_TABLE[caseKey] || CASE_TABLE['FALLBACK'];
+
+  /* window에 저장 — renderAnalysisResult에서 detail 사용 */
+  window._caseKey    = caseKey;
+  window._caseDetail = msg.detail;
+
+  /* 경고 문구 추가 (warnR 있을 때만) */
+  var warnLine = '';
+  if (warnR) {
+    if (warnR.indexOf('채도가 감소') > -1 || warnR.indexOf('딥해질') > -1) {
+      warnLine = '⚠ 보색이 과하면 채도 감소하며 딥해질 수 있어요.';
+    } else if (warnR.indexOf('브라운빛') > -1 || warnR.indexOf('탁한') > -1) {
+      warnLine = '⚠ 보색 충돌로 탁한 브라운빛으로 발색될 수 있어요.';
+    } else if (warnR.indexOf('매트') > -1 || warnR.indexOf('카키') > -1) {
+      warnLine = '⚠ 카키·매트 느낌으로 발색될 수 있어요.';
+    } else if (warnR) {
+      warnLine = '⚠ ' + warnR;
+    }
+  }
+
+  /* 고위험 안내 */
+  var riskLine = '';
+  if (risk === 'HIGH' && isBleach) {
+    riskLine = '색소 축적 가능성이 있어요. 단계적으로 진행하고 충분히 상담 후 시작하세요.';
+  }
+
+  return [warnLine, msg.summary, riskLine].filter(Boolean).join('\n');
+}
+
+
 
 /* ── 분석 결과 렌더링 (2안: 프론트 문장 → API 다듬기) ── */
 function renderAnalysisResult(result) {
@@ -3453,14 +3414,6 @@ function renderAnalysisResult(result) {
     '고위험: ' + (risk === 'HIGH' && isBleach ? '색소축적 가능성' : '없음')
   ].join('\n');
 
-  /* 🔵 로딩 표시 */
-  var summaryElLoad = document.getElementById('rec-summary');
-  var reasonBtnLoad = document.getElementById('rec-reason-btn');
-  var detailElLoad  = document.getElementById('rec-detail');
-  if (summaryElLoad) summaryElLoad.innerHTML = '<span style="color:#888;font-size:12px;">✦ 분석 중...</span>';
-  if (reasonBtnLoad) reasonBtnLoad.style.display = 'none';
-  if (detailElLoad)  { detailElLoad.style.display = 'none'; detailElLoad.textContent = ''; }
-
   /* 체크리스트 빌드 */
   buildChecklist(result);
 
@@ -3471,71 +3424,34 @@ function renderAnalysisResult(result) {
     return;
   }
 
-  incrementUsage();
-
+  /* ── 프론트 완성 문장 직접 출력 ── */
   var summaryEl = document.getElementById('rec-summary');
   var detailEl2 = document.getElementById('rec-detail');
   var reasonBtn = document.getElementById('rec-reason-btn');
 
-  callHairAPI({ _rawMsg: apiData }).then(function(text) {
-    if (!text) { text = '분석 결과를 불러오지 못했어요.'; }
+  /* summary 문장 — buildHairMessage 완성 문장 사용 */
+  var frontMsg = buildHairMessage(result, currentHSL, targetHSL);
 
-    /* summary / detail 파싱 */
-    var summaryText = text;
-    var detailText  = '';
-
-    if (text.indexOf('[SUMMARY]') > -1 && text.indexOf('[DETAIL]') > -1) {
-      var sMatch = text.match(/\[SUMMARY\]([\s\S]*?)---/);
-      var dMatch = text.match(/\[DETAIL\]([\s\S]*?)$/);
-      summaryText = sMatch ? sMatch[1].trim() : text;
-      detailText  = dMatch ? dMatch[1].trim() : '';
-    } else if (text.indexOf('---') > -1) {
-      /* 구분자만 있는 경우 */
-      var parts = text.split('---');
-      summaryText = parts[0].trim();
-      detailText  = parts[1] ? parts[1].trim() : '';
-    }
-
-    /* summary 표시 */
-    if (summaryEl) {
-      summaryEl.style.whiteSpace = 'pre-line';
-      summaryEl.textContent = summaryText;
-    }
-
-    /* ── 버튼: 복수 조건 기준
-       1. 탈색 케이스 (toneDir = 'up') → 항상 표시
-       2. 잔류색소 안내 필요 (yellowLevel ≠ 'none') → 표시
-       두 조건 독립적으로 작동 ── */
-    var showDetail = (toneDir === 'up') || (yellowLevel !== 'none');
-
-    /* ── detail 내용: 원리 설명만 (행동 지시 금지) ── */
-    if (!detailText || detailText.length < 3) {
-      if (showDetail) {
-        detailText = '언더톤의 노랑기와 애쉬가 만나 매트하게 연출될 수 있습니다.\n보색 중화가 필요하여 노랑의 보색인 보라를 소량 믹스해야 합니다.';
-      }
-    }
-
-    if (reasonBtn) reasonBtn.style.display = showDetail ? 'block' : 'none';
-    if (detailEl2) {
-      detailEl2.style.display = 'none';
-      detailEl2.style.whiteSpace = 'pre-line';
-      detailEl2.textContent = detailText || '';
-    }
-
-    /* 남은 횟수 */
+  if (summaryEl) {
+    summaryEl.style.whiteSpace = 'pre-line';
+    summaryEl.textContent = frontMsg;
     var remaining = DAILY_LIMIT - getUsageCount();
     var hint = document.createElement('div');
     hint.style.cssText = 'margin-top:6px;font-size:11px;color:#444;text-align:right;';
     hint.textContent = '남은 횟수: ' + remaining + '회';
-    if (summaryEl) summaryEl.appendChild(hint);
+    summaryEl.appendChild(hint);
+  }
 
-  }).catch(function() {
-    if (summaryEl) {
-      summaryEl.style.whiteSpace = 'pre-line';
-      summaryEl.textContent = '분석 결과를 불러오지 못했어요. 다시 시도해주세요.';
-    }
-    if (reasonBtn) reasonBtn.style.display = 'none';
-  });
+  /* detail 문장 — CASE_TABLE에서 선택된 문장 */
+  var detailText = window._caseDetail || '';
+  var showDetail = (toneDir === 'up') || (yellowLevel !== 'none');
+
+  if (reasonBtn) reasonBtn.style.display = (showDetail && detailText) ? 'block' : 'none';
+  if (detailEl2) {
+    detailEl2.style.display = 'none';
+    detailEl2.style.whiteSpace = 'pre-line';
+    detailEl2.textContent = detailText;
+  }
 }
 
 /* ════════════════════════════════════════
