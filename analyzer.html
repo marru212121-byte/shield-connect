@@ -2028,12 +2028,22 @@ function normalizeColor(h, s, l, which) {
     return { base: 'black', tone: 'dark', display: '블랙' };
   }
 
-  /* 저채도 → ash tone */
+  /* tone 결정 */
   var tone = getTone(s, l);
 
-  /* base 결정 (히스테리시스 적용) */
-  var prevBase = (which === 'cur') ? _prevCurBase : _prevTarBase;
-  var base = getBase(h, prevBase);
+  /* ── base 결정 ──
+     저채도(s<15)는 hue 무관하게 애쉬 계열로 고정
+     → RULE_TABLE 기준과 통일 (dark_neutral 반환 금지)
+     저명도 애쉬: dark_ash / 고명도 애쉬: ash_gray
+  */
+  var base;
+  if (s < 15) {
+    base = (l <= 45) ? 'dark_ash' : 'ash_gray';
+  } else {
+    /* hue 기반 결정 (히스테리시스 적용) */
+    var prevBase = (which === 'cur') ? _prevCurBase : _prevTarBase;
+    base = getBase(h, prevBase);
+  }
 
   /* 이전값 업데이트 */
   if (which === 'cur') _prevCurBase = base;
@@ -2050,7 +2060,9 @@ function normalizeColor(h, s, l, which) {
     'blue':          '블루',
     'violet':        '바이올렛',
     'pink':          '핑크',
-    'black':         '블랙'
+    'black':         '블랙',
+    'ash_gray':      '애쉬그레이',
+    'dark_ash':      '다크애쉬'
   };
   var toneDisplay = {
     'ash': '애쉬', 'pastel': '파스텔', 'vivid': '선명한',
@@ -2071,6 +2083,7 @@ function getRuleBase(base) {
   if (base === 'yellow_orange') return 'yellow';
   if (base === 'orange_red')    return 'orange';
   if (base === 'black')         return 'red';
+  if (base === 'dark_neutral')  return 'dark_ash';  /* dark_neutral → dark_ash로 매핑 */
   return base;
 }
 
@@ -2225,8 +2238,9 @@ var RULE_TABLE = (function() {
 
     /* ── 노랑 베이스 ── */
     'yellow': {
-      'ash_gray':   o('open','open', 'open'),
-      'dark_ash':   o('open','open', 'open'),
+      'ash_gray':     o('open','open', 'open'),
+      'dark_ash':     o('open','open', 'open'),
+      'dark_neutral': o('open','open', 'open'),
       'blue_ash':   o('open','warn', 'lock', '', W_YELLOW_BLU),
       'ash_violet': o('open','warn', 'lock', '', W_YELLOW_PPV),
       'ash_pink':   o('open','warn', 'lock', '', W_YELLOW_PNK),
@@ -2241,8 +2255,9 @@ var RULE_TABLE = (function() {
 
     /* ── 주황 베이스 ── */
     'orange': {
-      'ash_gray':   o('open','warn', 'open', '', W_ORANGE_ASH),
-      'dark_ash':   o('open','warn', 'open', '', W_ORANGE_ASH),
+      'ash_gray':     o('open','warn', 'open', '', W_ORANGE_ASH),
+      'dark_ash':     o('open','warn', 'open', '', W_ORANGE_ASH),
+      'dark_neutral': o('open','warn', 'open', '', W_ORANGE_ASH),
       'blue_ash':   o('open','lock', 'lock', '', W_BLEACH),
       'ash_violet': o('open','lock', 'lock', '', W_BLEACH),
       'ash_pink':   o('open','lock', 'lock', '', W_BLEACH),
@@ -3513,13 +3528,28 @@ function renderAnalysisResult(result) {
       summaryEl.textContent = summaryText;
     }
 
-    /* detail 표시 — yellowLevel = 'none' 이면 버튼 숨김 */
-    var showDetail = (yellowLevel !== 'none') && detailText.length > 0;
+    /* ── 버튼: 상태 기준 (yellowLevel)
+       노랑기 있으면 무조건 버튼 표시
+       needNeutralize와 무관 ── */
+    var showDetail = (yellowLevel !== 'none');
+
+    /* ── detail 내용: 판단 기준 (needNeutralize)
+       API detailText 우선, 없으면 폴백 ── */
+    if (!detailText || detailText.length < 3) {
+      if (needNeutralize) {
+        /* 보색중화 필요 케이스 — 중화 원리 설명 */
+        detailText = '현재 모발에 남아있는 노랑 언더톤의 영향으로\n애쉬 계열 색상은 매트하게 표현될 수 있어요.\n보라를 소량 사용하면 보다 선명한 애쉬 표현이 가능합니다.\n소량 사용이 핵심이에요.';
+      } else if (yellowLevel !== 'none') {
+        /* 노랑기 있지만 중화 불필요 케이스 — 영향만 안내 */
+        detailText = '현재 모발에 노랑 언더톤이 남아있어요.\n목표색에 따라 발색이 조금씩 달라질 수 있으니\n시술 전 테스트를 권장해요.';
+      }
+    }
+
     if (reasonBtn) reasonBtn.style.display = showDetail ? 'block' : 'none';
     if (detailEl2) {
-      detailEl2.style.display = 'none'; /* 항상 숨김 상태로 시작 */
+      detailEl2.style.display = 'none';
       detailEl2.style.whiteSpace = 'pre-line';
-      detailEl2.textContent = detailText;
+      detailEl2.textContent = detailText || '';
     }
 
     /* 남은 횟수 */
