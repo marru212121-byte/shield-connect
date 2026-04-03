@@ -599,6 +599,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
     <!-- 시술 문구 영역 -->
     <div id="compare-wrap" style="margin-top:12px;">
+      <!-- 분석 기준 표시 -->
+      <div id="rec-undertone-label" style="display:none;font-size:11px;color:#7a9fbf;margin-bottom:6px;padding:0 2px;letter-spacing:0.3px;"></div>
       <!-- summary: 항상 표시 -->
       <div id="rec-summary" style="white-space:pre-line;font-size:13px;color:#ccc;line-height:1.9;padding:10px 12px;background:rgba(122,159,191,0.05);border-radius:8px;border:1px solid rgba(122,159,191,0.15);margin-bottom:8px;"></div>
       <!-- 이유보기 버튼 -->
@@ -2619,6 +2621,11 @@ function confirmTargetColor() {
     'dark_neutral': 'neutral', 'black': 'neutral'
   };
   window._curTone = curToneMap[curKey] || 'neutral';
+  console.log('[confirmTargetColor]', {
+    curKey: curKey, curTone: window._curTone,
+    tarKey: tarKey, targetType: window._targetType,
+    curHSL: currentHSL, tarHSL: targetHSL
+  });
 
   /* targetType: 판단 기준 — ash / non-ash 만 사용 */
   var ashTargets = ['ash_gray', 'dark_ash', 'blue_ash', 'ash_violet', 'ash_pink'];
@@ -3076,21 +3083,21 @@ function satToKo(s) {
    조건문 없음 / 선택만 / 같은 입력 → 같은 출력
 ════════════════════════════════════════ */
 
-var MATTE_DETAIL = '노랑 상태에서 애쉬를 바로 넣으면 매트하게 탁해질 수 있어 보라를 소량 믹스해 보색 중화가 필요합니다.';
+var MATTE_DETAIL = '노랑 언더톤이 남아있으면 애쉬 계열 색상이 매트하게 표현될 수 있어요.\n보라는 노랑의 보색으로, 소량 믹스하면 더 선명한 애쉬 발색이 가능합니다.';
 
 var CASE_TABLE = {
 
   /* ── 톤인톤 (same) ── */
   'same_yellow_ash': {
-    summary: '애쉬 염모제에 보라를 소량 믹스해 염색하세요.',
+    summary: '현재 노랑 언더톤이 있어 보색 중화가 필요해요.\n애쉬 염모제에 보라를 소량 믹스해 시술하세요.',
     detail:  MATTE_DETAIL
   },
   'same_orange_ash': {
-    summary: '현재 주황기로 애쉬가 매트하게 빠질 수 있어요.\n탈색 후 시술을 권장해요.',
+    summary: '현재 주황기로는 탈색 없이 애쉬 표현이 어려워요.\n탈색 후 시술을 권장해요.',
     detail:  ''
   },
   'same_red_ash': {
-    summary: '현재 붉은기가 강해 애쉬 표현이 어려워요.\n탈색 후 시술을 권장해요.',
+    summary: '현재 붉은기가 강해 탈색 없이 애쉬 표현이 어려워요.\n탈색 후 시술을 권장해요.',
     detail:  ''
   },
   'same_green_ash': {
@@ -3098,159 +3105,159 @@ var CASE_TABLE = {
     detail:  ''
   },
   'same_blue_ash': {
-    summary: '애쉬 염모제로 바로 시술하세요.',
+    summary: '현재 베이스가 쿨톤이라 애쉬 표현에 유리해요.\n애쉬 염모제로 바로 시술하세요.',
     detail:  ''
   },
   'same_violet_ash': {
-    summary: '애쉬 염모제로 바로 시술하세요.',
+    summary: '현재 베이스가 쿨톤이라 애쉬 표현에 유리해요.\n애쉬 염모제로 바로 시술하세요.',
     detail:  ''
   },
   'same_neutral_ash': {
-    summary: '애쉬 염모제로 바로 시술하세요.',
+    summary: '현재 중성 베이스로 애쉬 표현이 수월해요.\n애쉬 염모제로 바로 시술하세요.',
     detail:  ''
   },
   'same_yellow_non-ash': {
-    summary: '목표색 염모제로 바로 착색 가능해요.',
+    summary: '현재 명도에서 바로 착색 가능한 케이스예요.\n목표색 염모제로 시술하세요.',
     detail:  ''
   },
   'same_orange_non-ash': {
-    summary: '목표색 염모제로 바로 착색 가능해요.',
+    summary: '현재 명도에서 바로 착색 가능한 케이스예요.\n목표색 염모제로 시술하세요.',
     detail:  ''
   },
   'same_red_non-ash': {
-    summary: '목표색 염모제로 바로 착색 가능해요.',
+    summary: '현재 명도에서 바로 착색 가능한 케이스예요.\n목표색 염모제로 시술하세요.',
     detail:  ''
   },
   'same_green_non-ash': {
-    summary: '목표색 염모제로 바로 착색 가능해요.',
+    summary: '현재 명도에서 바로 착색 가능한 케이스예요.\n목표색 염모제로 시술하세요.',
     detail:  ''
   },
   'same_blue_non-ash': {
-    summary: '목표색 염모제로 바로 착색 가능해요.',
+    summary: '현재 명도에서 바로 착색 가능한 케이스예요.\n목표색 염모제로 시술하세요.',
     detail:  ''
   },
   'same_violet_non-ash': {
-    summary: '목표색 염모제로 바로 착색 가능해요.',
+    summary: '현재 명도에서 바로 착색 가능한 케이스예요.\n목표색 염모제로 시술하세요.',
     detail:  ''
   },
   'same_neutral_non-ash': {
-    summary: '목표색 염모제로 바로 착색 가능해요.',
+    summary: '현재 명도에서 바로 착색 가능한 케이스예요.\n목표색 염모제로 시술하세요.',
     detail:  ''
   },
 
   /* ── 톤업 (up) ── */
   'up_yellow_ash': {
-    summary: '18lv 아이보리까지 탈색 후 시술하세요.\n노랑기가 남았다면 보라를 소량 믹스해 염색하세요.',
+    summary: '현재 노랑 언더톤 상태에서 탈색 후 애쉬 시술을 권장해요.\n18lv 아이보리까지 탈색 후 노랑기가 남으면 보라를 소량 믹스해 시술하세요.',
     detail:  MATTE_DETAIL
   },
   'up_orange_ash': {
-    summary: '18lv 아이보리까지 탈색 후 애쉬 염모제로 시술하세요.',
+    summary: '현재 주황 베이스에서는 탈색이 필수예요.\n18lv 아이보리까지 탈색 후 애쉬 염모제로 시술하세요.',
     detail:  ''
   },
   'up_red_ash': {
-    summary: '18lv 아이보리까지 탈색 후 애쉬 염모제로 시술하세요.',
+    summary: '현재 레드 베이스에서는 탈색이 필수예요.\n18lv 아이보리까지 탈색 후 애쉬 염모제로 시술하세요.',
     detail:  ''
   },
   'up_green_ash': {
-    summary: '15lv까지 탈색 후 애쉬 염모제로 시술하세요.',
+    summary: '그린 베이스 제거를 위해 충분한 탈색이 필요해요.\n15lv까지 탈색 후 애쉬 염모제로 시술하세요.',
     detail:  ''
   },
   'up_blue_ash': {
-    summary: '18lv 아이보리까지 탈색 후 애쉬 염모제로 바로 시술하세요.',
+    summary: '현재 쿨톤 베이스는 애쉬 표현에 유리해요.\n18lv 아이보리까지 탈색 후 애쉬 염모제로 시술하세요.',
     detail:  ''
   },
   'up_violet_ash': {
-    summary: '18lv 아이보리까지 탈색 후 애쉬 염모제로 바로 시술하세요.',
+    summary: '현재 쿨톤 베이스는 애쉬 표현에 유리해요.\n18lv 아이보리까지 탈색 후 애쉬 염모제로 시술하세요.',
     detail:  ''
   },
   'up_neutral_ash': {
-    summary: '18lv 아이보리까지 탈색 후 애쉬 염모제로 바로 시술하세요.',
+    summary: '현재 중성 베이스로 탈색 후 애쉬 표현이 수월해요.\n18lv 아이보리까지 탈색 후 애쉬 염모제로 시술하세요.',
     detail:  ''
   },
   'up_yellow_non-ash': {
-    summary: '18lv 아이보리까지 탈색 후 목표색 염모제로 시술하세요.',
+    summary: '목표색 발색을 위해 탈색이 필요해요.\n18lv 아이보리까지 탈색 후 목표색 염모제로 시술하세요.',
     detail:  ''
   },
   'up_orange_non-ash': {
-    summary: '18lv 아이보리까지 탈색 후 목표색 염모제로 시술하세요.',
+    summary: '목표색 발색을 위해 탈색이 필요해요.\n18lv 아이보리까지 탈색 후 목표색 염모제로 시술하세요.',
     detail:  ''
   },
   'up_red_non-ash': {
-    summary: '18lv 아이보리까지 탈색 후 목표색 염모제로 시술하세요.',
+    summary: '목표색 발색을 위해 탈색이 필요해요.\n18lv 아이보리까지 탈색 후 목표색 염모제로 시술하세요.',
     detail:  ''
   },
   'up_green_non-ash': {
-    summary: '15lv까지 탈색 후 목표색 염모제로 시술하세요.',
+    summary: '그린 베이스 제거를 위해 충분한 탈색이 필요해요.\n15lv까지 탈색 후 목표색 염모제로 시술하세요.',
     detail:  ''
   },
   'up_blue_non-ash': {
-    summary: '18lv 아이보리까지 탈색 후 목표색 염모제로 시술하세요.',
+    summary: '목표색 발색을 위해 탈색이 필요해요.\n18lv 아이보리까지 탈색 후 목표색 염모제로 시술하세요.',
     detail:  ''
   },
   'up_violet_non-ash': {
-    summary: '18lv 아이보리까지 탈색 후 목표색 염모제로 시술하세요.',
+    summary: '목표색 발색을 위해 탈색이 필요해요.\n18lv 아이보리까지 탈색 후 목표색 염모제로 시술하세요.',
     detail:  ''
   },
   'up_neutral_non-ash': {
-    summary: '18lv 아이보리까지 탈색 후 목표색 염모제로 시술하세요.',
+    summary: '목표색 발색을 위해 탈색이 필요해요.\n18lv 아이보리까지 탈색 후 목표색 염모제로 시술하세요.',
     detail:  ''
   },
 
   /* ── 톤다운 (down) ── */
   'down_yellow_ash': {
-    summary: '애쉬 염모제에 보라를 소량 믹스해 염색하세요.',
+    summary: '현재 노랑 언더톤이 있어 보색 중화가 필요해요.\n애쉬 염모제에 보라를 소량 믹스해 시술하세요.',
     detail:  MATTE_DETAIL
   },
   'down_orange_ash': {
-    summary: '현재 주황기로 애쉬가 매트하게 빠질 수 있어요.\n탈색 후 시술을 권장해요.',
+    summary: '현재 주황기로는 탈색 없이 애쉬 표현이 어려워요.\n탈색 후 시술을 권장해요.',
     detail:  ''
   },
   'down_red_ash': {
-    summary: '현재 붉은기가 강해 애쉬 표현이 어려워요.\n탈색 후 시술을 권장해요.',
+    summary: '현재 붉은기가 강해 탈색 없이 애쉬 표현이 어려워요.\n탈색 후 시술을 권장해요.',
     detail:  ''
   },
   'down_green_ash': {
-    summary: '낮은 명도 애쉬 염모제로 착색하세요.',
+    summary: '낮은 명도 애쉬 방향으로 착색 가능해요.\n낮은 명도 애쉬 염모제로 시술하세요.',
     detail:  ''
   },
   'down_blue_ash': {
-    summary: '낮은 명도 애쉬 염모제로 착색하세요.',
+    summary: '쿨톤 베이스라 애쉬 표현에 유리해요.\n낮은 명도 애쉬 염모제로 시술하세요.',
     detail:  ''
   },
   'down_violet_ash': {
-    summary: '낮은 명도 애쉬 염모제로 착색하세요.',
+    summary: '쿨톤 베이스라 애쉬 표현에 유리해요.\n낮은 명도 애쉬 염모제로 시술하세요.',
     detail:  ''
   },
   'down_neutral_ash': {
-    summary: '낮은 명도 애쉬 염모제로 착색하세요.',
+    summary: '중성 베이스라 애쉬 표현이 수월해요.\n낮은 명도 애쉬 염모제로 시술하세요.',
     detail:  ''
   },
   'down_yellow_non-ash': {
-    summary: '낮은 명도 염모제로 착색하세요.',
+    summary: '현재 명도보다 어두운 방향으로 착색해요.\n낮은 명도 목표색 염모제로 시술하세요.',
     detail:  ''
   },
   'down_orange_non-ash': {
-    summary: '낮은 명도 염모제로 착색하세요.',
+    summary: '현재 명도보다 어두운 방향으로 착색해요.\n낮은 명도 목표색 염모제로 시술하세요.',
     detail:  ''
   },
   'down_red_non-ash': {
-    summary: '낮은 명도 염모제로 착색하세요.',
+    summary: '현재 명도보다 어두운 방향으로 착색해요.\n낮은 명도 목표색 염모제로 시술하세요.',
     detail:  ''
   },
   'down_green_non-ash': {
-    summary: '낮은 명도 염모제로 착색하세요.',
+    summary: '현재 명도보다 어두운 방향으로 착색해요.\n낮은 명도 목표색 염모제로 시술하세요.',
     detail:  ''
   },
   'down_blue_non-ash': {
-    summary: '낮은 명도 염모제로 착색하세요.',
+    summary: '현재 명도보다 어두운 방향으로 착색해요.\n낮은 명도 목표색 염모제로 시술하세요.',
     detail:  ''
   },
   'down_violet_non-ash': {
-    summary: '낮은 명도 염모제로 착색하세요.',
+    summary: '현재 명도보다 어두운 방향으로 착색해요.\n낮은 명도 목표색 염모제로 시술하세요.',
     detail:  ''
   },
   'down_neutral_non-ash': {
-    summary: '낮은 명도 염모제로 착색하세요.',
+    summary: '현재 명도보다 어두운 방향으로 착색해요.\n낮은 명도 목표색 염모제로 시술하세요.',
     detail:  ''
   },
 
@@ -3478,11 +3485,26 @@ function renderAnalysisResult(result) {
   }
 
   /* ── 프론트 완성 문장 직접 출력 ── */
-  var summaryEl = document.getElementById('rec-summary');
-  var detailEl2 = document.getElementById('rec-detail');
-  var reasonBtn = document.getElementById('rec-reason-btn');
+  var summaryEl    = document.getElementById('rec-summary');
+  var detailEl2    = document.getElementById('rec-detail');
+  var reasonBtn    = document.getElementById('rec-reason-btn');
+  var undertoneEl  = document.getElementById('rec-undertone-label');
 
-  /* summary 문장 — buildHairMessage 완성 문장 사용 */
+  /* 분석 기준 라벨 */
+  var curToneForLabel = window._curTone || 'neutral';
+  var toneKoMap = {
+    'yellow': '노랑', 'orange': '주황', 'red': '레드',
+    'green': '그린', 'blue': '블루', 'violet': '바이올렛', 'neutral': '중성'
+  };
+  var targetTypeForLabel = window._targetType || 'non-ash';
+  var subTypeForLabel    = window._targetSubType || 'ash';
+  var subTypeKo = { 'ash':'애쉬', 'ash_blue':'애쉬블루', 'ash_violet':'애쉬바이올렛', 'ash_pink':'애쉬핑크' };
+  if (undertoneEl) {
+    undertoneEl.style.display = 'block';
+    undertoneEl.textContent = '📊 분석 기준 — 현재: ' + (toneKoMap[curToneForLabel] || curToneForLabel) + ' 언더톤 → 목표: ' + (subTypeKo[subTypeForLabel] || '기타');
+  }
+
+  /* summary 문장 */
   var frontMsg = buildHairMessage(result, currentHSL, targetHSL);
 
   if (summaryEl) {
