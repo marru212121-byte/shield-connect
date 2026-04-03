@@ -693,13 +693,36 @@ var SYSTEM_PROMPT = `너는 미용실 염색 시술 전문가야.
 
 [입력 데이터]
 아래 변수값을 바탕으로 문구를 생성해.
-- 현재 언더톤 / 목표색 / 시술 방향 / 보색중화 / 탈색조건 / 잔류색소 / 경고 / 고위험
+- 현재 언더톤 / 목표색 / 시술 방향 / 보색중화 / 탈색조건 / 노랑기수준 / 탈색언급허용 / 보색중화필요
 
-[절대 금지]
-- "중화제" 절대 사용 금지 → 반드시 "염모제에 ~를 소량 섞어" 로 표현
-- 비율 수치(1:1 등) 금지
-- ** 기호 금지
-- 번호·항목 형식 금지
+[절대 규칙 — 1회 판단 원칙]
+⚠ 판단은 이미 완료됐다. 문구는 전달된 값만 설명해. 절대 다시 판단하지 마.
+
+1. 탈색 언급 허용 = "절대금지" 이면
+   → 탈색 관련 문구 절대 금지
+   → "탈색 추천", "탈색 후", "아이보리까지" 등 모두 금지
+
+2. 시술 방향 = "톤인톤" 이면
+   → 탈색 언급 절대 금지 (허용값 무관하게)
+   → 현재 명도에서 착색 설명만
+
+3. 보색중화 필요 = "불필요" 이면
+   → "보라 섞어", "중화" 등 문구 금지
+   → 바로 착색 가능으로 설명
+
+4. 노랑기 수준 = "none" 이면
+   → 중화 언급 금지 ("중화 없이도 표현 가능" 수준)
+
+5. "노랑기로 탁해진다", "네이비로 빠진다" 표현 절대 금지
+   → 대신: "보색이 과하면 채도가 감소하며 딥해질 수 있어요"
+
+[절대 금지 표현]
+- "중화제" → "염모제에 ~를 소량 섞어"
+- "노랑기로 블루가 탁해진다"
+- "네이비로 빠질 수 있다"
+- 비율 수치(1:1 등)
+- ** 기호
+- 번호·항목 형식
 
 [자연 탈색 순서]
 블랙 → 짙은레드 → 레드 → 레드주황 → 주황 → 주황노랑 → 노랑 → 바나나색 → 아이보리크림
@@ -2078,6 +2101,29 @@ function getBlackToneUpType(curL, tarL, hairState, tarBase, tarTone) {
   return 'bleach';
 }
 
+/* ── getYellowLevel: 노랑기 잔류 수준 판단 ──
+   currentLevel: 현재 모발 명도
+   bleachLevel:  탈색 후 도달 명도
+   toneDir:      시술 방향
+
+   none: 중화 없이 시술 가능 수준
+   low:  보라 소량 믹스 권장
+   mid:  보라 믹스 필요
+   high: 보라 믹스 필수
+*/
+function getYellowLevel(currentLevel, bleachLevel, toneDir) {
+  if (toneDir === 'up') {
+    /* 탈색 케이스 — 탈색 후 도달 명도 기반 */
+    if (bleachLevel >= 17) return 'none';
+    if (bleachLevel >= 13) return 'low';
+    return 'mid';
+  }
+  /* 비탈색 케이스 — 현재 상태만 본다 */
+  if (currentLevel >= 14) return 'low';
+  if (currentLevel >= 10) return 'mid';
+  return 'high';
+}
+
 function getToneUpType(tarBase, tarTone, tarL) {
   /* 탈색 필수 조건 — 명도·채도 기준 */
   if (tarTone === 'pastel' || tarTone === 'vivid') return 'bleach';
@@ -2130,7 +2176,7 @@ var RULE_TABLE = (function() {
 
   var W_BLEACH     = '탈색이 불가피해요. 현재 잔류색소로는 원하는 발색이 나오지 않아요.';
   var W_ORANGE_ASH = '주황기로 브라운 베이스의 애쉬가 살짝 표현돼요. 파랑을 소량 섞어 보색중화하면서 착색하세요.';
-  var W_YELLOW_BLU = '노랑기로 블루가 탁해져 네이비블루 쪽으로 빠질 수 있어요. 파스텔한 블루애쉬를 원하면 탈색 추천해요.';
+  var W_YELLOW_BLU = '보라 보색이 과하면 채도가 감소하며 딥해질 수 있어요. 선명한 블루애쉬를 원하면 탈색 추천해요.';
   var W_YELLOW_PPV = '보라가 메인으로 발색돼요. 탈색 후에 정확한 발색이 가능해요.';
   var W_YELLOW_PNK = '살구·코랄 톤으로 발색돼요. 탈색 후에 정확한 발색이 가능해요.';
   var W_ASH_VIO    = '현재 베이스 명도에 따라 발색이 조금씩 달라요.';
@@ -3124,8 +3170,8 @@ function buildHairMessage(result, curHSL, tarHSL) {
       line2 = '⚠ 보라 메인으로 발색돼요. 정확한 ' + tarName + '은 탈색 후 가능해요.';
     } else if (warnR.indexOf('살구') > -1 || warnR.indexOf('코랄') > -1) {
       line2 = '⚠ 살구·코랄 톤으로 발색돼요. 정확한 ' + tarName + '은 탈색 후 가능해요.';
-    } else if (warnR.indexOf('네이비블루') > -1) {
-      line2 = '⚠ 노랑기로 네이비블루 쪽으로 빠질 수 있어요. 선명한 블루는 탈색 후 가능해요.';
+    } else if (warnR.indexOf('채도가 감소') > -1 || warnR.indexOf('딥해질') > -1) {
+      line2 = '⚠ 보색이 과하면 채도 감소하며 딥해질 수 있어요. 선명한 발색은 탈색 후 가능해요.';
     } else if (warnR.indexOf('브라운빛') > -1 || warnR.indexOf('탁한') > -1) {
       line2 = '⚠ 보색 충돌로 탁한 브라운빛으로 발색될 수 있어요.';
     } else if (warnR.indexOf('애쉬') > -1 && warnR.indexOf('발색 오차') > -1) {
@@ -3339,6 +3385,23 @@ function renderAnalysisResult(result) {
   var isCoolTar    = ['BLUE','TEAL','VIOLET','GRAY','DARK_NEUTRAL'].indexOf(tarUt) > -1;
   var isPPV        = (pastel || targetHSL.s < 30) && (tarUt === 'PINK' || tarUt === 'VIOLET' || tarUt === 'RED_VIOLET');
 
+  /* ── yellowLevel 계산 ── */
+  var currentLevel = Math.round(currentHSL.l / 5);
+  var bleachLevel  = Math.round(targetHSL.l / 5);
+  var yellowLevel  = getYellowLevel(currentLevel, bleachLevel, toneDir);
+
+  /* ── allowBleachMention: 탈색 언급 허용 여부 ── */
+  var allowBleachMention = (toneDir === 'up');
+
+  /* ── needNeutralize: 보색중화 필요 여부
+     황색 잔류 + 한색 목표일 때만 필요
+     브라운·난색 목표는 중화 불필요 ── */
+  var tarNormForNeut = normalizeColor(targetHSL.h, targetHSL.s, targetHSL.l, 'tar');
+  var coolTargetBases = ['blue', 'violet', 'ash_gray', 'dark_neutral', 'blue_ash', 'ash_violet', 'ash_pink'];
+  var isCoolTarget = coolTargetBases.indexOf(tarNormForNeut.base) > -1
+                  || tarNormForNeut.tone === 'ash';
+  var needNeutralize = (yellowLevel !== 'none') && isCoolTarget;
+
   /* 잔류색소 여부 */
   var residual = '';
   if (isYellowCur && isCoolTar) residual = '노랑기 → 보라 소량 보색중화';
@@ -3351,7 +3414,9 @@ function renderAnalysisResult(result) {
     '시술 방향: ' + dirKo,
     '보색중화: ' + neutYN,
     '탈색 조건: ' + bleachCondition,
-    '잔류색소 처리: ' + (residual || '없음'),
+    '노랑기 수준: ' + yellowLevel + ' (none=중화불필요 / low=소량 / mid=필요 / high=필수)',
+    '탈색 언급 허용: ' + (allowBleachMention ? '허용' : '절대금지'),
+    '보색중화 필요: ' + (needNeutralize ? '필요' : '불필요'),
     '모발 상태: ' + (hairState === 'virgin' ? '자연모 (버진모)' : hairState === 'blackDyed' ? '블랙 염색모' : hairState === 'darkDyed' ? '어두운 염색모' : '일반'),
     '톤업 유형: ' + (toneUpType === 'dye' ? '산화염모제 직접' : toneUpType === 'highlift' ? '고명도 혼합' : '탈색'),
     '잔류 위험: ' + (residualRisk ? '있음 — 잔류색소 영향으로 결과가 달라질 수 있음' : '없음'),
