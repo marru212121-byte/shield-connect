@@ -3083,7 +3083,9 @@ function satToKo(s) {
    조건문 없음 / 선택만 / 같은 입력 → 같은 출력
 ════════════════════════════════════════ */
 
-var MATTE_DETAIL = '노랑 언더톤이 남아있으면 애쉬 계열 색상이 매트하게 표현될 수 있어요.\n보라는 노랑의 보색으로, 소량 믹스하면 더 선명한 애쉬 발색이 가능합니다.';
+var MATTE_DETAIL  = '노랑 언더톤이 남아있으면 애쉬 계열 색상이 매트하게 표현될 수 있어요.\n보라는 노랑의 보색으로, 소량 믹스하면 더 선명한 애쉬 발색이 가능합니다.';
+var ORANGE_DETAIL = '현재 주황·브라운 기가 남아있는 상태에서는\n순수한 애쉬그레이보다 브라운에 가까운 애쉬가 표현될 수 있어요.\n주황의 보색인 블루를 애쉬 염모제에 소량 믹스하면 브라운기를 억제할 수 있습니다.';
+var RED_DETAIL    = '현재 레드 베이스는 색의 파워가 강해 애쉬 계열 색상과 충돌해요.\n탈색 없이는 원하는 애쉬 발색이 어렵고,\n무리하게 시술하면 탁한 브라운 계열로 표현될 수 있습니다.';
 
 var CASE_TABLE = {
 
@@ -3093,12 +3095,12 @@ var CASE_TABLE = {
     detail:  MATTE_DETAIL
   },
   'same_orange_ash': {
-    summary: '현재 주황기로는 탈색 없이 애쉬 표현이 어려워요.\n탈색 후 시술을 권장해요.',
-    detail:  ''
+    summary: '△ 브라운에 가까운 애쉬가 나올 수 있어요.\n애쉬 염모제에 블루를 소량 믹스해 시술하세요.',
+    detail:  ORANGE_DETAIL
   },
   'same_red_ash': {
-    summary: '현재 붉은기가 강해 탈색 없이 애쉬 표현이 어려워요.\n탈색 후 시술을 권장해요.',
-    detail:  ''
+    summary: '△ 현재 레드 베이스에서는 애쉬 발색이 어려워요.\n탈색 후 시술을 강력히 권장해요.',
+    detail:  RED_DETAIL
   },
   'same_green_ash': {
     summary: '그린 베이스에서 애쉬는 카키 느낌으로 발색될 수 있어요.\n목표색을 다시 확인하세요.',
@@ -3151,12 +3153,12 @@ var CASE_TABLE = {
     detail:  MATTE_DETAIL
   },
   'up_orange_ash': {
-    summary: '현재 주황 베이스에서는 탈색이 필수예요.\n18lv 아이보리까지 탈색 후 애쉬 염모제로 시술하세요.',
-    detail:  ''
+    summary: '현재 주황 베이스에서는 탈색이 필수예요.\n18lv 아이보리까지 탈색 후 시술하세요.\n노랑기가 남으면 보라 소량, 주황기가 남으면 블루를 소량 믹스하세요.',
+    detail:  ORANGE_DETAIL
   },
   'up_red_ash': {
-    summary: '현재 레드 베이스에서는 탈색이 필수예요.\n18lv 아이보리까지 탈색 후 애쉬 염모제로 시술하세요.',
-    detail:  ''
+    summary: '현재 레드 베이스에서는 탈색이 필수예요.\n18lv 아이보리까지 탈색 후 시술하세요.\n노랑기가 남으면 보라 소량, 주황기가 남으면 블루를 소량 믹스하세요.',
+    detail:  RED_DETAIL
   },
   'up_green_ash': {
     summary: '그린 베이스 제거를 위해 충분한 탈색이 필요해요.\n15lv까지 탈색 후 애쉬 염모제로 시술하세요.',
@@ -3209,12 +3211,12 @@ var CASE_TABLE = {
     detail:  MATTE_DETAIL
   },
   'down_orange_ash': {
-    summary: '현재 주황기로는 탈색 없이 애쉬 표현이 어려워요.\n탈색 후 시술을 권장해요.',
-    detail:  ''
+    summary: '△ 브라운에 가까운 애쉬가 나올 수 있어요.\n낮은 명도 애쉬 염모제에 블루를 소량 믹스해 시술하세요.',
+    detail:  ORANGE_DETAIL
   },
   'down_red_ash': {
-    summary: '현재 붉은기가 강해 탈색 없이 애쉬 표현이 어려워요.\n탈색 후 시술을 권장해요.',
-    detail:  ''
+    summary: '△ 현재 레드 베이스에서는 애쉬 발색이 어려워요.\n탈색 후 시술을 강력히 권장해요.',
+    detail:  RED_DETAIL
   },
   'down_green_ash': {
     summary: '낮은 명도 애쉬 방향으로 착색 가능해요.\n낮은 명도 애쉬 염모제로 시술하세요.',
@@ -3284,7 +3286,147 @@ var CASE_TABLE = {
   'up_highlift_neutral_non-ash':{ summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.', detail: '' }
 };
 
-/* ── buildHairMessage: caseKey → CASE_TABLE 선택 — 조건문 없음 ── */
+/* ════════════════════════════════════════
+   UNDERTONE_RULE — 언더톤별 보색·결과 규칙
+   generateHairMessage의 데이터 소스
+   CASE_TABLE과 병행 운용 (비교용)
+════════════════════════════════════════ */
+var UNDERTONE_RULE = {
+  'yellow': {
+    mix:       '보라',
+    mixReason: '노랑의 보색',
+    result:    '매트하게 표현될 수 있어요',
+    detail:    MATTE_DETAIL,
+    canSame:   true,
+    canDown:   true
+  },
+  'orange': {
+    mix:       '블루',
+    mixReason: '주황의 보색',
+    result:    '브라운에 가까운 애쉬가 나올 수 있어요',
+    detail:    ORANGE_DETAIL,
+    canSame:   true,   /* 경고 포함 */
+    canDown:   true    /* 경고 포함 */
+  },
+  'red': {
+    mix:       null,   /* 보색으로 해결 불가 */
+    mixReason: null,
+    result:    '탈색 없이 애쉬 발색이 어려워요',
+    detail:    RED_DETAIL,
+    canSame:   false,  /* 탈색 필요 */
+    canDown:   false
+  },
+  'green': {
+    mix:       null,
+    mixReason: null,
+    result:    '카키 느낌으로 발색될 수 있어요',
+    detail:    '',
+    canSame:   false,
+    canDown:   false
+  },
+  'blue': {
+    mix:       null,
+    mixReason: null,
+    result:    '쿨톤 베이스라 애쉬 표현에 유리해요',
+    detail:    '',
+    canSame:   true,
+    canDown:   true
+  },
+  'violet': {
+    mix:       null,
+    mixReason: null,
+    result:    '쿨톤 베이스라 애쉬 표현에 유리해요',
+    detail:    '',
+    canSame:   true,
+    canDown:   true
+  },
+  'neutral': {
+    mix:       null,
+    mixReason: null,
+    result:    '중성 베이스라 애쉬 표현이 수월해요',
+    detail:    '',
+    canSame:   true,
+    canDown:   true
+  }
+};
+
+/* ── generateHairMessage: 규칙 기반 문장 자동 생성 ──
+   CASE_TABLE과 병행 운용
+   동일 입력 → 동일 출력 목표
+   이후 CASE_TABLE 대체 가능 상태 준비
+*/
+function generateHairMessage(caseKey, curTone, targetType, toneDir, targetSubType) {
+  var rule = UNDERTONE_RULE[curTone] || UNDERTONE_RULE['neutral'];
+  var subLabel = { 'ash':'애쉬', 'ash_blue':'애쉬블루', 'ash_violet':'애쉬바이올렛', 'ash_pink':'애쉬핑크' };
+  var tLabel = subLabel[targetSubType] || '애쉬';
+  var isAsh = (targetType === 'ash');
+  var isWarn = isAsh && (curTone === 'orange' || curTone === 'red') && (toneDir === 'same' || toneDir === 'down');
+  var summary = '';
+  var detail  = rule.detail || '';
+
+  if (!isAsh) {
+    /* non-ash 공통 */
+    if (toneDir === 'up')   summary = '목표색 발색을 위해 탈색이 필요해요.\n18lv 아이보리까지 탈색 후 목표색 염모제로 시술하세요.';
+    if (toneDir === 'same') summary = '현재 명도에서 바로 착색 가능한 케이스예요.\n목표색 염모제로 시술하세요.';
+    if (toneDir === 'down') summary = '현재 명도보다 어두운 방향으로 착색해요.\n낮은 명도 목표색 염모제로 시술하세요.';
+    detail = '';
+
+  } else if (toneDir === 'up') {
+    /* 톤업 + ash */
+    if (rule.mix) {
+      summary = '현재 ' + (curTone === 'yellow' ? '노랑' : '주황') + ' 베이스에서는 탈색이 필수예요.\n'
+              + '18lv 아이보리까지 탈색 후 시술하세요.\n'
+              + '노랑기가 남으면 보라 소량, 주황기가 남으면 블루를 소량 믹스하세요.';
+    } else if (curTone === 'red') {
+      summary = '현재 레드 베이스에서는 탈색이 필수예요.\n18lv 아이보리까지 탈색 후 시술하세요.\n노랑기가 남으면 보라 소량, 주황기가 남으면 블루를 소량 믹스하세요.';
+    } else {
+      summary = '현재 ' + rule.result + '\n18lv 아이보리까지 탈색 후 ' + tLabel + ' 염모제로 시술하세요.';
+      detail = '';
+    }
+
+  } else if (toneDir === 'same') {
+    /* 톤인톤 + ash */
+    if (isWarn) {
+      var warnPrefix = (curTone === 'orange')
+        ? '△ 브라운에 가까운 애쉬가 나올 수 있어요.\n'
+        : '△ 현재 레드 베이스에서는 애쉬 발색이 어려워요.\n';
+      if (curTone === 'red') {
+        summary = warnPrefix + '탈색 후 시술을 강력히 권장해요.';
+      } else {
+        summary = warnPrefix + tLabel + ' 염모제에 ' + (rule.mix || '블루') + '를 소량 믹스해 시술하세요.';
+      }
+    } else if (rule.mix) {
+      summary = '현재 ' + (curTone === 'yellow' ? '노랑' : '') + ' 언더톤이 있어 보색 중화가 필요해요.\n'
+              + tLabel + ' 염모제에 ' + rule.mix + '를 소량 믹스해 시술하세요.';
+    } else {
+      summary = rule.result + '\n' + tLabel + ' 염모제로 바로 시술하세요.';
+      detail = '';
+    }
+
+  } else if (toneDir === 'down') {
+    /* 톤다운 + ash */
+    if (isWarn) {
+      var warnPrefixD = (curTone === 'orange')
+        ? '△ 브라운에 가까운 애쉬가 나올 수 있어요.\n'
+        : '△ 현재 레드 베이스에서는 애쉬 발색이 어려워요.\n';
+      if (curTone === 'red') {
+        summary = warnPrefixD + '탈색 후 시술을 강력히 권장해요.';
+      } else {
+        summary = warnPrefixD + '낮은 명도 ' + tLabel + ' 염모제에 블루를 소량 믹스해 시술하세요.';
+      }
+    } else if (rule.mix) {
+      summary = '현재 노랑 언더톤이 있어 보색 중화가 필요해요.\n'
+              + tLabel + ' 염모제에 ' + rule.mix + '를 소량 믹스해 시술하세요.';
+    } else {
+      summary = rule.result + '\n낮은 명도 ' + tLabel + ' 염모제로 시술하세요.';
+      detail = '';
+    }
+  }
+
+  return { summary: summary, detail: detail };
+}
+
+
 function buildHairMessage(result, curHSL, tarHSL) {
   var toneDir       = window._toneDir       || 'same';
   var curTone       = window._curTone       || 'neutral';
@@ -3313,6 +3455,12 @@ function buildHairMessage(result, curHSL, tarHSL) {
   var label = subLabel[targetSubType] || '애쉬';
   /* 치환 대상: "애쉬 염모제"만 — 설명 문장의 "애쉬가/애쉬는" 보호 */
   var summary = msg.summary.replace(/애쉬 염모제/g, label + ' 염모제');
+
+  /* ── 자동 생성 결과 비교 (개발용) ── */
+  var generated = generateHairMessage(caseKey, curTone, targetType, toneDir, targetSubType);
+  console.log('[CASE_TABLE]', { caseKey: caseKey, summary: msg.summary });
+  console.log('[GENERATED]',  { caseKey: caseKey, summary: generated.summary });
+  console.log('[MATCH]', msg.summary.trim() === generated.summary.trim() ? '✅ 일치' : '⚠ 불일치');
 
   console.log({ toneDir: toneDir, curTone: curTone, targetType: targetType, targetSubType: targetSubType, caseKey: caseKey });
 
@@ -3519,9 +3667,11 @@ function renderAnalysisResult(result) {
 
   /* detail 문장 — CASE_TABLE에서 선택된 문장 */
   var detailText = window._caseDetail || '';
-  var showDetail = (toneDir === 'up') || (yellowLevel !== 'none');
+  /* 버튼: detailText가 있으면 무조건 표시
+     (orange/red ash 경고, 노랑기 중화 이유 포함) */
+  var showDetail = detailText.length > 0;
 
-  if (reasonBtn) reasonBtn.style.display = (showDetail && detailText) ? 'block' : 'none';
+  if (reasonBtn) reasonBtn.style.display = showDetail ? 'block' : 'none';
   if (detailEl2) {
     detailEl2.style.display = 'none';
     detailEl2.style.whiteSpace = 'pre-line';
