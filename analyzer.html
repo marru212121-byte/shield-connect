@@ -343,59 +343,30 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <!-- 현재색 스와치 크게 -->
     <div id="current-swatch-box" style="width:100%;height:80px;border-radius:12px;border:2px solid #333;margin-bottom:16px;"></div>
 
-    <!-- 현재색 색상 슬라이더 -->
-    <div style="margin-bottom:20px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <div style="font-size:11px;color:#666;font-weight:600;letter-spacing:0.5px;">색상</div>
-        <div id="hue-label-c" style="font-size:11px;color:#aaa;"></div>
-      </div>
-      <div id="hue-bar-c" style="width:100%;height:36px;border-radius:18px;background:linear-gradient(to right,hsl(0,100%,50%),hsl(30,100%,50%),hsl(60,100%,50%),hsl(90,100%,50%),hsl(120,100%,50%),hsl(150,100%,50%),hsl(180,100%,50%),hsl(210,100%,50%),hsl(240,100%,50%),hsl(270,100%,50%),hsl(300,100%,50%),hsl(330,100%,50%),hsl(360,100%,50%));position:relative;cursor:pointer;touch-action:none;user-select:none;box-shadow:0 2px 12px rgba(0,0,0,0.4);"
-        onpointerdown="startDrag(event,'hue','c')" onpointermove="onDrag(event,'hue','c')" onpointerup="endDrag()">
-        <div id="hue-thumb-c" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:32px;height:32px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,0.7);pointer-events:none;left:0%;transition:left 0.05s;"></div>
-      </div>
+    <!-- 언더톤 원형 스워치 버튼 -->
+    <div id="hue-label-c" style="display:none;"></div>
+    <div id="hue-bar-c" style="display:none;">
+      <div id="hue-thumb-c" style="display:none;"></div>
+    </div>
+    <div id="xy-label-c" style="display:none;"></div>
+    <div id="xy-grid-c" style="display:none;">
+      <div id="xy-origin-c" style="display:none;"></div>
+      <div id="xy-dot-c" style="display:none;"></div>
     </div>
 
-    <!-- 현재색 XY 그리드 -->
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-      <div style="font-size:10px;color:#777;font-weight:600;">밝기(위↑) × 색의 파워(우→)</div>
-      <div style="font-size:11px;color:#fff;font-weight:700;" id="xy-label-c">—</div>
-    </div>
-    <div style="display:flex;gap:6px;margin-bottom:4px;">
-      <div style="width:32px;"></div>
-      <div style="flex:1;display:flex;justify-content:space-between;padding:0 2px;">
-        <span style="font-size:11px;color:#aaa;font-weight:600;">파스텔</span>
-        <span style="font-size:11px;color:#aaa;font-weight:600;">연함</span>
-        <span style="font-size:11px;color:#aaa;font-weight:600;">보통</span>
-        <span style="font-size:11px;color:#aaa;font-weight:600;">선명</span>
+    <div style="font-size:12px;color:#888;margin-bottom:14px;">언더톤(잔류색소)을 선택하세요.</div>
+    <div id="undertone-swatch-row" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
+
+    <div style="font-size:12px;color:#888;font-weight:500;margin-bottom:10px;">명도 · 채도</div>
+    <div style="position:relative;margin-bottom:6px;">
+      <div id="ut-cur-tag" style="position:absolute;top:-26px;transform:translateX(-50%);font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;white-space:nowrap;pointer-events:none;z-index:4;color:#fff;background:#555;left:35%;"></div>
+      <div id="ut-cam-pip" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:12px;height:12px;border-radius:50%;border:2px dashed rgba(0,0,0,0.3);z-index:2;pointer-events:none;left:35%;"></div>
+      <div id="ut-track-wrap" style="position:relative;height:44px;cursor:pointer;touch-action:none;">
+        <div id="ut-track-bg" style="position:absolute;top:50%;transform:translateY(-50%);left:0;right:0;height:7px;border-radius:4px;background:#333;"></div>
+        <div id="ut-thumb" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.3);z-index:3;left:35%;"></div>
       </div>
     </div>
-    <div style="display:flex;gap:6px;margin-bottom:18px;">
-      <div style="width:36px;display:flex;flex-direction:column;justify-content:space-between;padding:6px 0;">
-        <span style="font-size:11px;color:#aaa;text-align:right;display:block;font-weight:600;">밝음</span>
-        <span style="font-size:11px;color:#aaa;text-align:right;display:block;font-weight:600;">중고</span>
-        <span style="font-size:11px;color:#aaa;text-align:right;display:block;font-weight:600;">중저</span>
-        <span style="font-size:11px;color:#aaa;text-align:right;display:block;font-weight:600;">어두운</span>
-        <span style="font-size:11px;color:#aaa;text-align:right;display:block;font-weight:600;">블랙</span>
-      </div>
-      <div id="xy-grid-c" style="flex:1;height:190px;border-radius:12px;position:relative;cursor:crosshair;border:1.5px solid #2a2a2a;touch-action:none;user-select:none;"
-        onpointerdown="startXYDrag(event,'c')" onpointermove="moveXYDrag(event,'c')" onpointerup="endXYDrag(event,'c')" onpointercancel="endXYDrag(event,'c')">
-        <!-- 모서리 라벨 -->
-        <div style="position:absolute;top:6px;left:8px;font-size:11px;color:rgba(255,255,255,0.6);pointer-events:none;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,0.8);">아이보리</div>
-        <div style="position:absolute;top:6px;right:8px;font-size:11px;color:rgba(255,255,255,0.9);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.6);">파스텔</div>
-        <div style="position:absolute;top:27%;right:8px;font-size:11px;color:rgba(255,255,255,0.5);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.8);">· · ·</div>
-        <div style="position:absolute;top:44%;right:8px;font-size:11px;color:rgba(255,255,255,0.8);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.8);">비비드</div>
-        <div style="position:absolute;top:63%;right:8px;font-size:11px;color:rgba(255,255,255,0.65);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.9);">어두움</div>
-        <div style="position:absolute;bottom:6px;left:8px;font-size:11px;color:rgba(255,255,255,0.5);pointer-events:none;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,0.9);">블랙</div>
-        <div style="position:absolute;bottom:6px;right:8px;font-size:11px;color:rgba(255,255,255,0.7);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.8);">다크톤</div>
-        <!-- 최초 관측 마커 (카메라용) -->
-        <div id="xy-origin-c" style="position:absolute;width:14px;height:14px;border-radius:50%;border:2.5px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.5),0 2px 6px rgba(0,0,0,0.7);transform:translate(-50%,-50%);pointer-events:none;display:none;"></div>
-        <!-- 현재 위치 닷 -->
-        <div id="xy-dot-c" style="position:absolute;width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,0.9);transform:translate(-50%,-50%);pointer-events:none;left:62%;top:70%;"></div>
-      </div>
-    </div>
-    <button onclick="openExpandSheet('c')" style="width:100%;margin-bottom:12px;padding:10px;border-radius:10px;border:1.5px solid #333;background:#111;color:#aaa;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
-      <span style="font-size:15px;">⤢</span> 확대해서 미세 조정
-    </button>
+    <div id="ut-seg-row" style="position:relative;height:28px;margin-bottom:16px;"></div>
 
     <button onclick="confirmCurrentColor()" style="width:100%;padding:13px;border-radius:11px;background:#fff;border:none;color:#000;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.3px;">
       이 색으로 확정 →
@@ -806,6 +777,151 @@ var REFLECT_MAP = {
   'ash': 1, 'gry': 1, 'ivo': 3
 };
 /* 프리셋별 HSL */
+/* ══════════════════════════════════════════
+   언더톤 원형 스워치 UI (1단계)
+   currentHSL과 window._curTone을 정확히 매핑
+══════════════════════════════════════════ */
+var UT_ZONES = [
+  { key:'red',    label:'레드',      color:'#CC4A4A', h:5,   lMin:28, lMax:78, sMin:65, sMax:28, tone:'red' },
+  { key:'pink',   label:'핑크',      color:'#D4789C', h:340, lMin:45, lMax:70, sMin:50, sMax:32, tone:'violet' },
+  { key:'orange', label:'주황',      color:'#D96820', h:22,  lMin:32, lMax:64, sMin:80, sMax:60, tone:'orange' },
+  { key:'brown',  label:'브라운',    color:'#8C6040', h:28,  lMin:24, lMax:52, sMin:45, sMax:28, tone:'orange' },
+  { key:'yellow', label:'노랑',      color:'#C0A830', h:50,  lMin:42, lMax:82, sMin:75, sMax:42, tone:'yellow' },
+  { key:'faded',  label:'퇴색 연두', color:'#A8A830', h:54,  lMin:42, lMax:75, sMin:62, sMax:38, tone:'yellow' },
+  { key:'matte',  label:'매트·카키', color:'#787848', h:72,  lMin:28, lMax:50, sMin:28, sMax:14, tone:'yellow' },
+  { key:'cool',   label:'쿨·애쉬',  color:'#6888A0', h:205, lMin:36, lMax:68, sMin:32, sMax:12, tone:'blue' },
+];
+
+var UT_SEGS = [
+  {p:0,    t:'다크'},
+  {p:0.25, t:'어두움'},
+  {p:0.5,  t:'비비드'},
+  {p:0.75, t:'밝음'},
+  {p:1.0,  t:'라이트'},
+];
+
+var utCurZone = null;
+var utBp = 0.35; /* 기본 비비드 구간 */
+
+function utInterp(z, p) {
+  var l = z.lMin + p * (z.lMax - z.lMin);
+  var s = z.sMin + p * (z.sMax - z.sMin);
+  return 'hsl(' + z.h + ',' + Math.round(s) + '%,' + Math.round(l) + '%)';
+}
+
+function utSegLabel(p) {
+  if (p < 0.15) return '다크';
+  if (p < 0.35) return '어두움';
+  if (p < 0.58) return '비비드';
+  if (p < 0.80) return '밝음';
+  return '라이트';
+}
+
+function utApply(z, p) {
+  /* currentHSL 업데이트 — 기존 로직과 완전 호환 */
+  currentHSL.h = z.h;
+  currentHSL.s = Math.round(z.sMin + p * (z.sMax - z.sMin));
+  currentHSL.l = Math.round(z.lMin + p * (z.lMax - z.lMin));
+  /* hue-thumb-c hidden이지만 left 값 유지 (confirmCurrentColor 참조) */
+  var hThumb = document.getElementById('hue-thumb-c');
+  if (hThumb) hThumb.style.left = ((z.h / 360) * 100) + '%';
+  /* current-swatch-box 업데이트 */
+  var swBox = document.getElementById('current-swatch-box');
+  var col = utInterp(z, p);
+  if (swBox) swBox.style.background = col;
+  var mini = document.getElementById('current-swatch-mini');
+  if (mini) mini.style.background = col;
+  /* ut-thumb 색상 */
+  var thumb = document.getElementById('ut-thumb');
+  if (thumb) thumb.style.background = col;
+  /* cur-tag */
+  var tag = document.getElementById('ut-cur-tag');
+  if (tag) {
+    tag.textContent = utSegLabel(p);
+    tag.style.background = col;
+    tag.style.color = currentHSL.l > 58 ? 'rgba(0,0,0,0.75)' : '#fff';
+    tag.style.left = (p * 100) + '%';
+  }
+  /* track-bg 그라데이션 */
+  var tb = document.getElementById('ut-track-bg');
+  if (tb) tb.style.background = 'linear-gradient(to right,' + utInterp(z,0) + ',' + utInterp(z,0.5) + ',' + utInterp(z,1) + ')';
+}
+
+function utSelect(z) {
+  utCurZone = z;
+  /* window._curTone 직접 세팅 (confirmCurrentColor 전에도 반영) */
+  window._curTone = z.tone;
+  /* 스워치 active */
+  var items = document.querySelectorAll('.ut-sw-item');
+  for (var i = 0; i < items.length; i++) {
+    items[i].classList.toggle('ut-active', items[i].dataset.key === z.key);
+  }
+  utApply(z, utBp);
+}
+
+function utInitUI() {
+  var row = document.getElementById('undertone-swatch-row');
+  if (!row) return;
+  row.innerHTML = '';
+  /* 스타일 주입 */
+  if (!document.getElementById('ut-style')) {
+    var st = document.createElement('style');
+    st.id = 'ut-style';
+    st.textContent = '.ut-sw-item{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;min-width:52px}' +
+      '.ut-sw-circle{width:50px;height:50px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.15);transition:transform .15s,box-shadow .15s}' +
+      '.ut-sw-item.ut-active .ut-sw-circle{transform:scale(1.12);box-shadow:0 0 0 3.5px rgba(0,0,0,0.25)}' +
+      '.ut-sw-name{font-size:12px;color:#888;text-align:center;line-height:1.35;max-width:56px;word-break:keep-all}' +
+      '.ut-sw-item.ut-active .ut-sw-name{color:#fff;font-weight:600}';
+    document.head.appendChild(st);
+  }
+  UT_ZONES.forEach(function(z) {
+    var item = document.createElement('div');
+    item.className = 'ut-sw-item';
+    item.dataset.key = z.key;
+    var c = document.createElement('div');
+    c.className = 'ut-sw-circle';
+    c.style.background = z.color;
+    var n = document.createElement('div');
+    n.className = 'ut-sw-name';
+    n.textContent = z.label;
+    item.appendChild(c);
+    item.appendChild(n);
+    item.addEventListener('click', function() { utSelect(z); });
+    row.appendChild(item);
+  });
+  /* 구간 레이블 */
+  var segRow = document.getElementById('ut-seg-row');
+  if (segRow) {
+    segRow.innerHTML = '';
+    UT_SEGS.forEach(function(s) {
+      var el = document.createElement('div');
+      el.style.cssText = 'position:absolute;display:flex;flex-direction:column;align-items:center;gap:3px;transform:translateX(-50%);left:' + (s.p*100) + '%;';
+      el.innerHTML = '<div style="width:1px;height:6px;background:rgba(255,255,255,0.25);"></div><div style="font-size:11px;color:#888;white-space:nowrap;">' + s.t + '</div>';
+      segRow.appendChild(el);
+    });
+  }
+  /* 슬라이더 이벤트 */
+  var tw = document.getElementById('ut-track-wrap');
+  if (tw) {
+    var dragging = false;
+    function moveBp(cx) {
+      var r = tw.getBoundingClientRect();
+      utBp = Math.max(0, Math.min(1, (cx - r.left) / r.width));
+      var thumb = document.getElementById('ut-thumb');
+      if (thumb) thumb.style.left = (utBp*100)+'%';
+      if (utCurZone) utApply(utCurZone, utBp);
+    }
+    tw.addEventListener('pointerdown', function(e) { dragging=true; tw.setPointerCapture(e.pointerId); moveBp(e.clientX); });
+    tw.addEventListener('pointermove', function(e) { if(dragging) moveBp(e.clientX); });
+    tw.addEventListener('pointerup',   function()  { dragging=false; });
+  }
+  /* 카메라 pip 위치 (기본 비비드 구간) */
+  var cam = document.getElementById('ut-cam-pip');
+  if (cam) cam.style.left = (utBp*100)+'%';
+  /* 기본 선택 — 주황 */
+  utSelect(UT_ZONES[2]);
+}
+
 var PRESET_HSL = {
   'red': { h: 0,   s: 70, l: 38 },
   'org': { h: 25,  s: 70, l: 45 },
@@ -1774,6 +1890,9 @@ function showResult(r) {
   var s1 = document.getElementById('step1-card'); if (s1) s1.style.display = 'block';
   var s2 = document.getElementById('step2-card'); if (s2) s2.style.display = 'none';
   var rcard = document.getElementById('recipe-card'); if (rcard) rcard.style.display = 'none';
+
+  /* 언더톤 스워치 UI 초기화 */
+  utInitUI();
 
   userLevel = null;
   userTarget = null;
@@ -3390,12 +3509,12 @@ var HAIR_RULES = [
   },
   {
     key: 'ORANGE_STRONG',
-    summary: '주황 잔류색소가 강해요. 애쉬염모제에 블루를 소량 믹스하여 염색하세요.',
-    detail: '주황과 애쉬가 섞이면 브라운 기운이 남기 쉽습니다. 밝기를 올리는 방향이라면 탈색을 먼저, 색감만 바꾸는 방향이라면 블루를 소량 믹스하여 주황기를 억제하세요.',
+    summary: '주황 잔류색소가 강해요. 탈색 후 잔류색소에 맞게 보색을 믹스하여 애쉬를 착색하세요.',
+    detail: '주황 잔류색소가 강한 상태에서 애쉬를 올리면 브라운에 가까운 애쉬로 표현됩니다. 밝기를 올리는 방향이라면 18레벨 아이보리까지 탈색하는 것이 가장 안전하고, 색감만 바꾸는 방향이라면 탈색 없이 블루를 소량 믹스해도 어느 정도 억제는 가능합니다.',
     guide: [
-      '애쉬염모제에 블루를 소량 믹스하여 주황기를 억제하며 착색',
-      '주황기가 강하다면 탈색을 한 단계 더 진행 후 착색 권장',
-      '탈색 없이 진행 시 한색 브라운 방향으로 목표 조율 가능'
+      '18레벨 아이보리까지 탈색 후 착색 추천',
+      '색감만 바꾸는 방향이라면 — 애쉬염모제에 블루를 소량 믹스하여 주황기를 억제하며 착색',
+      '주황기가 강하게 남았다면 — 추가 탈색 또는 다음 내원 시 완성 권장'
     ]
   },
   {
@@ -3426,25 +3545,244 @@ var HAIR_RULES = [
       '노랑기가 살짝 남았다면 — 보라를 소량만 믹스하여 염색'
     ]
   }
+,
+
+  /* ── 바이올렛 목표색 ── */
+  {
+    key: 'RED_VIOLET_STRONG',
+    summary: '레드 잔류색소가 강해요. 탈색 후 잔류색소에 맞게 바이올렛 염모제에 보색을 믹스하여 착색하세요.',
+    detail: '레드 잔류색소는 바이올렛과 충돌해 따뜻한 와인 계열이나 어두운 방향으로 수렴되기 쉽습니다. 밝기를 올리는 방향이라면 충분한 탈색이 중요하고, 색감만 바꾸는 방향이라면 탈색 없이 진행하기 어렵습니다.',
+    guide: [
+      '연노랑까지 탈색 후 바이올렛 염모제로 착색 추천',
+      '노랑 잔류색소가 남았다면 — 낮은 명도 바이올렛 염모제로 착색 (밝은 바이올렛을 입힐 경우 연베이지로 보색 중화만 될 가능성 있음)',
+      '주황 잔류색소가 남았다면 — 바이올렛 염모제에 블루나 그린을 소량 믹스하여 착색',
+      '레드·주황이 강하게 남았다면 — 추가 탈색 후 착색 권장'
+    ]
+  },
+  {
+    key: 'RED_VIOLET_LIGHT',
+    summary: '파스텔 레드예요. 바로 착색하거나 잔류색소를 살짝 정리한 후 바이올렛을 착색하세요.',
+    detail: '파스텔 레드 잔류는 색소 파워가 약해 바이올렛 계열이 비교적 잘 올라갑니다. 미세한 레드기가 남아있다면 그린을 소량 믹스하면 더 선명하고 깨끗한 바이올렛 발색이 가능합니다.',
+    guide: [
+      '바로 착색하거나 잔류색소를 살짝 정리한 후 착색',
+      '레드기가 살짝 남았다면 — 바이올렛 염모제에 그린을 소량 믹스'
+    ]
+  },
+  {
+    key: 'YELLOW_VIOLET_STRONG',
+    summary: '노랑 잔류색소가 강해요. 연노랑까지 탈색 후 바이올렛 염모제로 착색하세요.',
+    detail: '노랑 잔류가 강한 상태에서는 바이올렛을 올려도 순수한 바이올렛보다는 베이지브라운이나 연한 브라운 계열로 수렴되기 쉽습니다. 정말 선명하고 깨끗한 바이올렛을 원한다면 최소 연노랑 수준까지 탈색하는 것이 중요합니다.',
+    guide: [
+      '연노랑(아이보리) 수준까지 탈색 후 착색 추천',
+      '색감만 바꾸는 방향이라면 — 낮은 명도의 바이올렛 사용 (적보라 느낌 가능)',
+      '노랑기가 강하게 남았다면 — 추가 탈색 후 착색 권장'
+    ]
+  },
+  {
+    key: 'YELLOW_VIOLET_LIGHT',
+    summary: '파스텔 노랑이에요. 바이올렛 염모제로 바로 착색하세요.',
+    detail: '파스텔 노랑 위에 바이올렛 계열은 보색 효과로 상당히 선명하고 예쁘게 올라갑니다. 탈색 없이도 착색이 잘 됩니다.',
+    guide: [
+      '바로 착색하거나 잔류색소를 살짝 정리한 후 착색',
+      '노랑기가 살짝 남았다면 — 바이올렛을 소량 추가 믹스'
+    ]
+  },
+  {
+    key: 'ORANGE_VIOLET_STRONG',
+    summary: '주황 잔류색소가 강해요. 연노랑까지 탈색 후 바이올렛 염모제로 착색하세요.',
+    detail: '주황 잔류가 강한 상태에서는 바이올렛 염모제의 명도에 따라 결과가 크게 달라집니다. 낮은 명도의 바이올렛을 사용하면 적보라나 와인 느낌으로, 높은 명도의 바이올렛을 사용하면 브라운 기운이 쉽게 남습니다. 선명한 바이올렛을 원한다면 밝기를 충분히 올린 후 착색하는 것이 중요합니다.',
+    guide: [
+      '색감만 바꾸는 방향이라면 — 낮은 명도의 바이올렛 사용하거나 블루·그린을 소량 믹스 (적보라 느낌 기대)',
+      '선명하고 깨끗한 바이올렛을 원한다면 — 추가 탈색 후 착색 추천'
+    ]
+  },
+  {
+    key: 'ORANGE_VIOLET_LIGHT',
+    summary: '파스텔 주황이에요. 바로 착색하거나 잔류색소를 살짝 정리한 후 바이올렛을 착색하세요.',
+    detail: '파스텔 주황 위에 바이올렛 계열은 비교적 자연스럽게 올라가며, 보색 효과로 주황기를 잡아줍니다.',
+    guide: [
+      '바로 착색하거나 잔류색소를 살짝 정리한 후 착색',
+      '주황기가 살짝 남았다면 — 바이올렛 염모제에 블루를 소량 믹스'
+    ]
+  },
+  {
+    key: 'COOL_VIOLET_STRONG',
+    summary: '쿨 잔류색소가 강한 상태예요. 잔류색소 종류를 확인하고 바이올렛을 착색하세요.',
+    detail: '이미 쿨 베이스에 바이올렛을 올리는 경우가 많아 방향이 잘 맞으면 선명하게 올라갑니다. 블루가 강하면 차가운 바이올렛, 기존 바이올렛이 강하면 더 진하고 깊은 바이올렛이 됩니다.',
+    guide: [
+      '잔류색소 종류 먼저 확인',
+      '방향이 맞으면 바로 착색 가능',
+      '블루가 과하면 따뜻한 계열 소량으로 보정 고려'
+    ]
+  },
+  {
+    key: 'COOL_VIOLET_LIGHT',
+    summary: '파스텔 쿨 계열이에요. 바로 착색하거나 잔류색소를 살짝 정리한 후 바이올렛을 착색하세요.',
+    detail: '파스텔 쿨 계열 위에 바이올렛은 잘 어울리는 경우가 많으며, 자연스럽고 은은한 발색이 기대됩니다.',
+    guide: [
+      '바로 착색하거나 잔류색소를 살짝 정리한 후 착색',
+      '블루·바이올렛 잔류가 보인다면 목표 방향과 일치하는지 확인'
+    ]
+  }
+
+,
+
+  /* ── 블루 목표색 ── */
+  {
+    key: 'RED_BLUE_STRONG',
+    summary: '레드 잔류색소가 강해요. 탈색 후 잔류색소에 맞게 블루 염모제에 보색을 믹스하여 착색하세요.',
+    detail: '레드 잔류색소는 블루와 충돌해 퍼플이나 탁한 브라운 방향으로 수렴되기 쉽습니다. 밝기를 올리는 방향이라면 충분한 탈색이 중요하고, 색감만 바꾸는 방향이라면 탈색 없이 진행하기 어렵습니다.',
+    guide: [
+      '연노랑까지 탈색 추천하지만, 노랑 잔류색소가 남았다면 — 블루 염모제에 바이올렛을 소량 믹스'
+    ]
+  },
+  {
+    key: 'RED_BLUE_LIGHT',
+    summary: '파스텔 레드예요. 바로 착색하거나 잔류색소를 살짝 정리한 후 블루를 착색하세요.',
+    detail: '파스텔 레드 잔류는 색소 파워가 약해 블루 계열이 비교적 잘 올라갑니다. 미세한 레드기가 남아있다면 그린을 소량 믹스하면 더 선명하고 깨끗한 블루 발색이 가능합니다.',
+    guide: [
+      '바로 착색하거나 잔류색소를 살짝 정리한 후 착색',
+      '레드기가 살짝 남았다면 — 블루 염모제에 그린을 소량 믹스'
+    ]
+  },
+  {
+    key: 'YELLOW_BLUE_STRONG',
+    summary: '노랑 잔류색소가 강해요. 연노랑까지 탈색 후 블루 염모제로 착색하세요.',
+    detail: '노랑 잔류가 강하면 노랑과 블루가 충돌해 그린이나 카키 계열로 수렴되기 쉽습니다. 정말 선명하고 깨끗한 블루를 원한다면 최소 연노랑 수준까지 탈색하는 것이 중요합니다.',
+    guide: [
+      '연노랑(아이보리) 수준까지 탈색 후 착색 추천',
+      '색감만 바꾸는 방향이라면 — 낮은 명도의 블루 염모제에 바이올렛을 소량 믹스 (딥네이비 연출 가능)',
+      '노랑기가 강하게 남았다면 추가 탈색 후 착색 권장'
+    ]
+  },
+  {
+    key: 'YELLOW_BLUE_LIGHT',
+    summary: '파스텔 노랑이에요. 블루 염모제로 바로 착색하세요.',
+    detail: '파스텔 노랑은 이미 연베이지 수준까지 밝아진 상태이므로, 블루 염모제로 바로 착색해도 선명한 발색이 기대됩니다.',
+    guide: [
+      '바로 착색 추천',
+      '더 순수한 블루를 원한다면 잔류색소를 아주 살짝만 정리 후 착색'
+    ]
+  },
+  {
+    key: 'ORANGE_BLUE_STRONG',
+    summary: '주황 잔류색소가 강해요. 연노랑까지 탈색 후 블루 염모제로 착색하세요.',
+    detail: '주황 잔류가 강하면 회기 도는 브라운이나 어두운 방향으로 수렴되기 쉽습니다. 선명한 블루를 원한다면 밝기를 충분히 올린 후 착색하는 것이 중요합니다.',
+    guide: [
+      '색감만 바꾸는 방향이라면 — 블루 염모제로 착색 (탁한 회기도는 브라운 기운 가능성 있음)',
+      '선명하고 깨끗한 블루를 원한다면 — 추가 탈색 후 착색 추천'
+    ]
+  },
+  {
+    key: 'ORANGE_BLUE_LIGHT',
+    summary: '파스텔 주황이에요. 바로 착색하거나 잔류색소를 살짝 정리한 후 블루를 착색하세요.',
+    detail: '파스텔 주황 위에 블루는 주황기를 어느 정도 잡아주지만, 완전한 블루 발색을 위해 잔류색소를 먼저 확인하는 것이 좋습니다.',
+    guide: [
+      '바로 착색하거나 잔류색소를 살짝 정리한 후 착색',
+      '주황기가 살짝 남았다면 — 블루 염모제에 그린을 소량 믹스'
+    ]
+  },
+  {
+    key: 'COOL_BLUE_STRONG',
+    summary: '쿨 잔류색소가 강한 상태예요. 잔류색소 종류를 확인하고 블루를 착색하세요.',
+    detail: '이미 쿨 베이스에 블루를 올리는 경우 방향이 잘 맞으면 선명하게 올라갑니다. 블루 잔류가 강하면 더 진하고 차가운 블루, 바이올렛 잔류가 남아있으면 블루바이올렛 방향으로 치우칠 수 있습니다.',
+    guide: [
+      '잔류색소 종류 먼저 확인',
+      '방향이 맞으면 바로 착색 가능',
+      '바이올렛 잔류가 과하면 — 블루 염모제에 그린을 소량 믹스하여 보정'
+    ]
+  },
+  {
+    key: 'COOL_BLUE_LIGHT',
+    summary: '파스텔 쿨 계열이에요. 바로 착색하거나 잔류색소를 살짝 정리한 후 블루를 착색하세요.',
+    detail: '파스텔 쿨 계열 위에 블루는 잘 어울리는 경우가 많으며, 자연스럽고 선명한 발색이 기대됩니다.',
+    guide: [
+      '바로 착색하거나 잔류색소를 살짝 정리한 후 착색',
+      '바이올렛 잔류가 살짝 남았다면 — 목표 방향과 일치하는지 확인'
+    ]
+  }
+
+,
+
+  /* ── 그린 목표색 ── */
+  {
+    key: 'RED_GREEN_STRONG',
+    summary: '레드 잔류색소가 강해요. 탈색 후 잔류색소에 맞게 그린 염모제로 착색하세요.',
+    detail: '레드와 그린은 보색 관계라 그대로 섞이면 탁한 브라운이나 카키 계열로 수렴되기 쉽습니다. 연노랑까지 탈색한 후에도 노랑기가 약간 남아있으면 매트한 올리브그린이나 차분한 그린으로 발색되는 경우가 많습니다. 선명하고 밝은 그린을 원한다면 레드기를 더 철저히 제거하는 것이 좋습니다.',
+    guide: [
+      '연노랑까지 탈색 후 그린 염모제로 착색 추천',
+      '노랑기가 적당히 남아있다면 — 매트한 올리브그린이나 자연스러운 그린으로 발색될 수 있음',
+      '매우 선명하고 밝은 그린을 원한다면 — 추가 탈색 후 착색 추천'
+    ]
+  },
+  {
+    key: 'RED_GREEN_LIGHT',
+    summary: '파스텔 레드예요. 바로 착색하거나 잔류색소를 살짝 정리한 후 그린을 착색하세요.',
+    detail: '파스텔 레드 잔류는 색소 파워가 매우 약하지만, 그린과 보색 관계라 미세한 레드기가 남아있으면 올리브나 매트한 기운이 은은하게 돌 수 있습니다. 이때 그린 염모제에 바이올렛을 소량 믹스하면 레드기를 부드럽게 잡아주면서 탁하거나 무거운 올리브 기운을 줄이고, 보다 선명하고 투명한 그린 발색을 도울 수 있습니다.',
+    guide: [
+      '바로 착색하거나 잔류색소를 살짝 정리한 후 착색',
+      '레드기가 살짝 남았다면 — 그린 염모제에 바이올렛을 소량 믹스'
+    ]
+  },
+  {
+    key: 'YELLOW_GREEN_STRONG',
+    summary: '노랑 잔류색소가 강해요. 그린 염모제로 착색하세요.',
+    detail: '노랑과 그린은 유사색 관계라 섞여도 비교적 자연스러운 그린 계열이 나옵니다. 노랑 잔류가 강하면 따뜻한 카키·올리브(매트) 방향으로, 탈색 후 착색하면 더 선명하고 차가운 그린이 됩니다.',
+    guide: [
+      '그린 염모제로 바로 착색 가능',
+      '더 선명하고 차가운 그린을 원한다면 — 연노랑까지 탈색 후 착색',
+      '노랑기가 강하게 남았다면 추가 탈색 후 착색 추천'
+    ]
+  },
+  {
+    key: 'YELLOW_GREEN_LIGHT',
+    summary: '파스텔 노랑이에요. 그린 염모제로 바로 착색하세요.',
+    detail: '파스텔 노랑 위에 그린은 유사색 관계로 자연스럽고 예쁘게 올라갑니다. 탈색 없이도 착색이 잘 됩니다.',
+    guide: [
+      '바로 착색 추천',
+      '차가운 민트·그린을 원한다면 — 그린 염모제에 블루를 소량 믹스',
+      '따뜻한 카키 방향을 원한다면 — 그대로 착색'
+    ]
+  },
+  {
+    key: 'ORANGE_GREEN_STRONG',
+    summary: '주황 잔류색소가 강해요. 연노랑까지 탈색 후 그린 염모제로 착색하세요.',
+    detail: '주황과 그린은 보색 관계라 주황 잔류가 강하면 매트한 올리브 브라운이나 회끼 도는 올리브 계열로 수렴되기 쉽습니다. 주황기가 살짝 억제되면서도 매트한 브라운 느낌이 남는 경우가 많아, 선명하고 깨끗한 그린을 원한다면 밝기를 충분히 올린 후 착색하는 것이 중요합니다.',
+    guide: [
+      '카키·올리브 방향을 원한다면 — 그린 염모제에 블루를 소량 믹스하여 착색',
+      '선명하고 깨끗한 그린을 원한다면 — 추가 탈색 후 착색 추천'
+    ]
+  },
+  {
+    key: 'ORANGE_GREEN_LIGHT',
+    summary: '파스텔 주황이에요. 바로 착색하거나 잔류색소를 살짝 정리한 후 그린을 착색하세요.',
+    detail: '파스텔 주황 위에 그린은 카키·올리브 방향으로 자연스럽게 발색됩니다. 차가운 그린을 원한다면 잔류색소를 살짝 정리하는 것이 좋습니다.',
+    guide: [
+      '바로 착색하거나 잔류색소를 살짝 정리한 후 착색',
+      '차가운 그린을 원한다면 — 그린 염모제에 블루를 소량 믹스'
+    ]
+  },
+  {
+    key: 'COOL_GREEN_STRONG',
+    summary: '쿨 잔류색소가 강한 상태예요. 잔류색소 종류를 확인하고 그린을 착색하세요.',
+    detail: '쿨 베이스에 그린을 올리면 차가운 그린이나 블루그린(청록) 방향으로 발색됩니다. 블루 잔류가 강하면 청록 계열로 치우치니 목표 방향을 먼저 확인하세요.',
+    guide: [
+      '잔류색소 종류 먼저 확인',
+      '방향이 맞으면 바로 착색 가능',
+      '블루 기운이 과하다면 — 그린 염모제에 옐로우를 아주 소량 믹스하여 보정'
+    ]
+  },
+  {
+    key: 'COOL_GREEN_LIGHT',
+    summary: '파스텔 쿨 계열이에요. 바로 착색하거나 잔류색소를 살짝 정리한 후 그린을 착색하세요.',
+    detail: '파스텔 쿨 계열 위에 그린은 차갑고 투명한 민트·청록 방향으로 자연스럽게 발색됩니다.',
+    guide: [
+      '바로 착색하거나 잔류색소를 살짝 정리한 후 착색',
+      '블루 잔류가 살짝 남았다면 — 민트·청록 방향으로 발색 가능'
+    ]
+  }
+
 ];
-
-/* ── getRuleByKey: key → HAIR_RULES 조회 ── */
-function getRuleByKey(key) {
-  return HAIR_RULES.find(function(rule) { return rule.key === key; }) || null;
-}
-
-/* ── getRecommendation: key → summary/detail/guide 반환 ──
-   없는 key면 null 반환
-*/
-function getRecommendation(key) {
-  var rule = getRuleByKey(key);
-  if (!rule) return null;
-  return {
-    summary: rule.summary,
-    detail:  rule.detail,
-    guide:   rule.guide
-  };
-}
 
 /* ════════════════════════════════════════
    CASE_TABLE — 완성 문장 데이터베이스
@@ -3453,22 +3791,14 @@ function getRecommendation(key) {
 ════════════════════════════════════════ */
 
 var MATTE_DETAIL  = '현재 노랑 언더톤이 애쉬 색상과 섞이면 매트하고 탁한 발색이 나올 수 있어요.\n보라는 노랑의 보색으로, 소량 믹스하면 노랑기를 눌러 더 선명한 쿨톤 애쉬가 표현됩니다.\n보라가 과하면 오히려 채도가 죽으니 소량이 핵심이에요.';
-
-/* ── 실전 케이스 DETAIL 상수 (디자이너 실무용) ── */
-
-var RED_SAME_STRONG = '레드와 애쉬(블루 계열)가 충돌하면서 탁한 브라운 계열로 수렴됩니다. 원하는 쿨톤 그레이 발색이 거의 불가능한 상황입니다.\n\n실무 가이드:\n· 탈색 없이 진행하는 것은 권장하지 않습니다.\n· 탈색 방향으로 재상담 후 다음 단계를 진행하세요.\n· 고객이 탈색을 거부하면 레드 계열이나 웜 브라운으로 목표 조율이 필요합니다.';
-
-var RED_UP_MID = '레드 언더톤은 탈색 시 레드 → 주황 → 노랑 순으로 빠집니다. 잔류 단계에 따라 보정 방법이 달라집니다.\n\n실무 가이드:\n· 노랑기가 남았다면 — 보라를 소량 믹스해 중화 후 착색\n· 주황기가 남았다면 — 블루를 소량 추가해 주황기 억제\n· 레드·주황기가 강하게 남았다면 — 착색 보류하고 추가 탈색 또는 다음 내원 시 완성';
-
-var RED_UP_LIGHT = '잔류가 약하면 레드 구간을 빠르게 통과해 노랑~아이보리 단계에 도달하기 쉽습니다.\n\n실무 가이드:\n· 노랑기가 남았다면 — 보라를 소량 믹스해 중화 후 착색\n· 노랑기 없이 깨끗한 아이보리 도달 시 — 보정 없이 바로 착색 가능\n· 보라 과량 시 채도가 죽을 수 있으니 소량으로 조절';
-
-var RED_DAMAGED = '고손상모는 이미 내부 손상이 진행된 상태입니다. 무리한 탈색은 단절 위험을 높입니다.\n\n실무 가이드:\n· PPT·케라틴 등 단백질 보강제 전처리 필수\n· 단시간 탈색으로 도달 가능한 레벨까지만 진행\n· 토닝으로 마무리하고, 목표 미달 시 1개월 후 재시술 권장';
-
-var RED_VIRGIN = '한국인 자연 멜라닌은 레드 성분이 강해 주황 구간 통과에 시간이 다소 걸릴 수 있습니다.\n\n실무 가이드:\n· 노랑기가 남았다면 — 보라를 소량 믹스해 중화\n· 주황기가 남아있다면 — 블루를 소량 추가하거나 추가 탈색\n· 아이보리 도달 확인 후 착색 진행';
-
-var ORANGE_RESIDUAL = '주황 잔류가 있는 모발에 애쉬를 올리면 블루 성분이 주황을 부분 억제하지만, 완전한 쿨 그레이가 나오기는 어렵습니다.\n\n실무 가이드:\n· 선명한 애쉬그레이를 원한다면 → 추가 탈색으로 노랑기까지 올린 후 착색 추천\n· 추가 탈색이 어려운 경우 → 블루를 소량 추가해 최대한 쿨한 방향으로 유도\n· 타협안 → 스모키 브라운 또는 한색 계열 브라운으로 목표 조율';
 var ORANGE_DETAIL = '주황·브라운 언더톤과 애쉬가 섞이면 순수한 애쉬그레이보다 브라운에 가까운 애쉬가 표현돼요.\n주황의 보색인 블루를 소량 믹스하면 브라운기를 억제할 수 있어요.\n블루도 과하면 칙칙해지니 소량이 핵심이에요.';
 var RED_DETAIL    = '레드 베이스는 색의 파워가 강해 애쉬와 충돌이 심해요.\n탈색 없이 무리하게 시술하면 탁한 브라운·녹색 계열로 발색될 수 있어요.\n18lv까지 탈색해 레드기를 완전히 제거한 후 시술하는 것이 안전해요.';
+var RED_SAME_STRONG = '레드와 애쉬(블루 계열)가 충돌하면서 탁한 브라운 계열로 수렴됩니다. 원하는 쿨톤 그레이 발색이 거의 불가능합니다.';
+var RED_UP_MID    = '레드 언더톤은 탈색 시 레드 → 주황 → 노랑 순으로 빠집니다. 잔류 단계에 따라 보정 방법이 달라집니다.';
+var RED_UP_LIGHT  = '잔류가 약하면 레드 구간을 빠르게 통과해 노랑~아이보리 단계에 도달하기 쉽습니다.';
+var RED_VIRGIN    = '한국인 자연 멜라닌은 레드 성분이 강해 주황 구간 통과에 시간이 다소 걸릴 수 있습니다.';
+var RED_DAMAGED   = '고손상모는 이미 내부 손상이 상당합니다. 무리한 탈색은 단절 위험을 크게 높입니다.';
+var ORANGE_RESIDUAL = '주황 잔류가 있는 모발에 애쉬를 올리면 블루가 주황을 부분 억제하지만, 완전한 쿨 그레이가 나오기는 어렵습니다.';
 
 var CASE_TABLE = {
 
