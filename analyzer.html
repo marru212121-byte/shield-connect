@@ -243,11 +243,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div style="font-size:12px;color:#888;font-weight:500;margin-bottom:12px;">언더톤 선택</div>
 
     <!-- 가로 색감 그래프 -->
-    <div style="position:relative;margin-bottom:16px;">
-      <div id="ut-color-bar-m" style="width:100%;height:44px;border-radius:10px;cursor:pointer;touch-action:none;user-select:none;background:linear-gradient(to right,hsl(0,68%,50%),hsl(22,82%,52%),hsl(28,46%,42%),hsl(50,75%,52%),hsl(54,60%,56%),hsl(72,26%,42%),hsl(205,30%,52%),hsl(225,65%,52%),hsl(270,55%,52%),hsl(340,52%,62%),hsl(360,68%,50%));"></div>
-      <div id="ut-bar-thumb-m" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.25);pointer-events:none;transition:left .22s cubic-bezier(.4,0,.2,1);"></div>
+    <div id="m-bar-wrap" style="position:relative;height:44px;border-radius:10px;margin-bottom:16px;background:linear-gradient(to right,hsl(0,68%,50%),hsl(22,82%,52%),hsl(28,46%,42%),hsl(50,75%,52%),hsl(54,60%,56%),hsl(72,26%,42%),hsl(205,30%,52%),hsl(225,65%,52%),hsl(270,55%,52%),hsl(340,52%,62%),hsl(360,68%,50%));touch-action:none;user-select:none;cursor:pointer;">
+      <div id="m-bar-thumb" style="position:absolute;top:50%;left:6%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.3);background:#CC4A4A;pointer-events:none;"></div>
     </div>
-
     <div id="manual-swatch-row" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
 
     <div style="font-size:12px;color:#888;font-weight:500;margin-bottom:10px;">명도 · 채도</div>
@@ -297,10 +295,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div style="font-size:12px;color:#888;margin-bottom:14px;">언더톤(잔류색소)을 선택하세요.</div>
 
     <!-- 가로 색감 그래프 -->
-    <div style="position:relative;margin-bottom:16px;">
-      <div id="ut-color-bar-c" style="width:100%;height:44px;border-radius:10px;cursor:pointer;touch-action:none;user-select:none;background:linear-gradient(to right,hsl(0,68%,50%),hsl(22,82%,52%),hsl(28,46%,42%),hsl(50,75%,52%),hsl(54,60%,56%),hsl(72,26%,42%),hsl(205,30%,52%),hsl(225,65%,52%),hsl(270,55%,52%),hsl(340,52%,62%),hsl(360,68%,50%));"></div>
-      <div id="ut-cam-mark-c" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;border:2px dashed rgba(255,255,255,0.8);pointer-events:none;"></div>
-      <div id="ut-bar-thumb-c" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.25);pointer-events:none;transition:left .22s cubic-bezier(.4,0,.2,1);"></div>
+    <div id="c-bar-wrap" style="position:relative;height:44px;border-radius:10px;margin-bottom:16px;background:linear-gradient(to right,hsl(0,68%,50%),hsl(22,82%,52%),hsl(28,46%,42%),hsl(50,75%,52%),hsl(54,60%,56%),hsl(72,26%,42%),hsl(205,30%,52%),hsl(225,65%,52%),hsl(270,55%,52%),hsl(340,52%,62%),hsl(360,68%,50%));touch-action:none;user-select:none;cursor:pointer;">
+      <div id="c-bar-cam" style="position:absolute;top:50%;left:14%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;border:2px dashed rgba(255,255,255,0.85);pointer-events:none;"></div>
+      <div id="c-bar-thumb" style="position:absolute;top:50%;left:14%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.3);background:#CC4A4A;pointer-events:none;"></div>
     </div>
 
     <div id="undertone-swatch-row" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
@@ -730,7 +727,7 @@ var REFLECT_MAP = {
    currentHSL과 window._curTone을 정확히 매핑
 ══════════════════════════════════════════ */
 var UT_ZONES = [
-  { key:'red',    label:'레드',      color:'#CC4A4A', h:5,   lMin:28, lMax:68, sMin:65, sMax:38, tone:'red' },
+  { key:'red',    label:'레드',      color:'#CC4A4A', h:5,   lMin:30, lMax:68, sMin:75, sMax:45, tone:'red' },
   { key:'orange', label:'주황',      color:'#D96820', h:22,  lMin:32, lMax:64, sMin:80, sMax:60, tone:'orange' },
   { key:'brown',  label:'브라운',    color:'#8C6040', h:28,  lMin:24, lMax:52, sMin:45, sMax:28, tone:'orange' },
   { key:'yellow', label:'노랑',      color:'#C0A830', h:50,  lMin:42, lMax:82, sMin:75, sMax:42, tone:'yellow' },
@@ -741,6 +738,137 @@ var UT_ZONES = [
   { key:'violet', label:'바이올렛',  color:'#7A52C4', h:270, lMin:35, lMax:65, sMin:55, sMax:32, tone:'violet' },
   { key:'pink',   label:'핑크',      color:'#D4789C', h:340, lMin:45, lMax:70, sMin:50, sMax:32, tone:'violet' },
 ];
+
+/* ══════════════════════════════════════
+   가로 색감 그래프 — 공통 핸들러
+   touch + mouse 모두 처리
+   div 기반 직접 좌표 계산
+══════════════════════════════════════ */
+var _barState = { active: null }; /* 'manual' | 'camera' | null */
+
+function _barGetPct(clientX, wrapId) {
+  var el = document.getElementById(wrapId);
+  if (!el) return 0;
+  var r = el.getBoundingClientRect();
+  if (!r.width) return 0;
+  return Math.max(0, Math.min(1, (clientX - r.left) / r.width));
+}
+
+function _barApply(pct, thumbId, selectFn) {
+  var th = document.getElementById(thumbId);
+  if (th) { th.style.left = (pct * 100) + '%'; th.style.background = _barNearestZone(pct).color; }
+  selectFn(_barNearestZone(pct));
+}
+
+/* ── 수동 경로 ── */
+function _mBarStart(clientX) {
+  _barState.active = 'manual';
+  var pct = _barGetPct(clientX, 'm-bar-wrap');
+  _barApply(pct, 'm-bar-thumb', function(z) { if (window._mSelect) window._mSelect(z); });
+}
+function _mBarDo(clientX) {
+  if (_barState.active !== 'manual') return;
+  var pct = _barGetPct(clientX, 'm-bar-wrap');
+  _barApply(pct, 'm-bar-thumb', function(z) { if (window._mSelect) window._mSelect(z); });
+}
+
+/* ── 카메라 경로 ── */
+function _cBarStart(clientX) {
+  _barState.active = 'camera';
+  var pct = _barGetPct(clientX, 'c-bar-wrap');
+  _barApply(pct, 'c-bar-thumb', function(z) { utSelect(z); });
+}
+function _cBarDo(clientX) {
+  if (_barState.active !== 'camera') return;
+  var pct = _barGetPct(clientX, 'c-bar-wrap');
+  _barApply(pct, 'c-bar-thumb', function(z) { utSelect(z); });
+}
+
+/* ── document 레벨 이벤트 등록 (단 1회) ── */
+(function() {
+  function getClientX(e) { return e.touches ? e.touches[0].clientX : e.clientX; }
+
+  document.addEventListener('touchmove', function(e) {
+    if (_barState.active === 'manual') { e.preventDefault(); _mBarDo(getClientX(e)); }
+    else if (_barState.active === 'camera') { e.preventDefault(); _cBarDo(getClientX(e)); }
+  }, { passive: false });
+
+  document.addEventListener('mousemove', function(e) {
+    if (_barState.active === 'manual') _mBarDo(getClientX(e));
+    else if (_barState.active === 'camera') _cBarDo(getClientX(e));
+  });
+
+  document.addEventListener('touchend',  function() { _barState.active = null; });
+  document.addEventListener('mouseup',   function() { _barState.active = null; });
+})();
+
+/* ── 이전 mBarInput / mBarDown 호환 유지 ── */
+function mBarInput(val) {
+  var pct = Number(val) / 100;
+  _barApply(pct, 'm-bar-thumb', function(z) { if (window._mSelect) window._mSelect(z); });
+}
+function mBarDown(e) { _mBarStart(e.clientX || (e.touches && e.touches[0].clientX)); }
+
+var _mBarDragging = false;
+
+/* 수동/카메라 공용 — HUE_STOPS 내장 */
+var _BAR_HUE_STOPS = [
+  {h:0,p:0},{h:5,p:0.06},{h:22,p:0.13},{h:28,p:0.20},
+  {h:50,p:0.30},{h:54,p:0.37},{h:72,p:0.45},
+  {h:100,p:0.50},{h:205,p:0.56},{h:225,p:0.62},
+  {h:270,p:0.70},{h:340,p:0.84},{h:360,p:1.0}
+];
+function _barZonePct(z) {
+  var h = z.h;
+  for (var i = 0; i < _BAR_HUE_STOPS.length-1; i++) {
+    var a = _BAR_HUE_STOPS[i], b = _BAR_HUE_STOPS[i+1];
+    if (h >= a.h && h <= b.h) return a.p + (h-a.h)/(b.h-a.h)*(b.p-a.p);
+  }
+  return 0;
+}
+function _barNearestZone(pct) {
+  var best = UT_ZONES[0], bd = 999;
+  UT_ZONES.forEach(function(z) {
+    var d = Math.abs(_barZonePct(z) - pct);
+    if (d < bd) { bd = d; best = z; }
+  });
+  return best;
+}
+function _mBarGetPct(clientX) {
+  var el = document.getElementById('ut-color-bar-m');
+  if (!el) return 0;
+  var r = el.getBoundingClientRect();
+  if (!r.width) return 0;
+  return Math.max(0, Math.min(1, (clientX - r.left) / r.width));
+}
+function _mBarMove(clientX, snap) {
+  var pct = _mBarGetPct(clientX);
+  var best = _barNearestZone(pct);
+  var th = document.getElementById('ut-bar-thumb-m');
+  if (th) {
+    th.style.transition = snap ? 'left .2s cubic-bezier(.4,0,.2,1)' : 'none';
+    th.style.left = (snap ? _barZonePct(best) : pct) * 100 + '%';
+    th.style.background = best.color;
+  }
+  if (window._mSelect) window._mSelect(best);
+}
+
+/* document 레벨 이벤트 — setPointerCapture 불필요 */
+document.addEventListener('pointermove', function(e) {
+  if (!_mBarDragging) return;
+  _mBarMove(e.clientX, false);
+});
+document.addEventListener('pointerup', function(e) {
+  if (!_mBarDragging) return;
+  _mBarDragging = false;
+  _mBarMove(e.clientX, true);
+});
+
+/* mBarDown만 div에서 호출 (manualInitUI에서 addEventListener로 등록) */
+function mBarDown(e) {
+  _mBarDragging = true;
+  _mBarMove(e.clientX, false);
+}
 
 var UT_SEGS = [
   {p:0,    t:'다크'},
@@ -804,11 +932,12 @@ function utSelect(z) {
   for (var i = 0; i < items.length; i++) {
     items[i].classList.toggle('ut-active', items[i].dataset.key === z.key);
   }
-  /* 바 thumb 위치 업데이트 */
-  var th = document.getElementById('ut-bar-thumb-c');
+  /* c-bar-thumb 위치 갱신 */
+  var th = document.getElementById('c-bar-thumb');
   if (th && window._utZonePct) {
-    th.style.transition = 'left .22s cubic-bezier(.4,0,.2,1)';
-    th.style.left = (window._utZonePct(z)*100)+'%';
+    th.style.transition = 'left .2s cubic-bezier(.4,0,.2,1)';
+    th.style.left = (window._utZonePct(z)*100) + '%';
+    th.style.background = z.color;
   }
   utApply(z, utBp);
 }
@@ -927,10 +1056,26 @@ function utInitUI() {
       var pct = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
       var z = nearestZone(pct);
       var th = document.getElementById('ut-bar-thumb-c');
-      if (th) { th.style.transition='none'; th.style.left=(zonePct(z)*100)+'%'; th.style.background=utInterp(z,utBp); }
+      if (th) { th.style.transition='none'; th.style.left=(pct*100)+'%'; th.style.background=utInterp(z,utBp); }
       utSelect(z);
     });
-    cv.addEventListener('pointerup', function() { drag = false; });
+    cv.addEventListener('pointerup', function(e) {
+      drag = false;
+      /* 손 뗄 때 가장 가까운 존으로 스냅 */
+      var r = cv.getBoundingClientRect();
+      var pct = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      var z = nearestZone(pct);
+      var th = document.getElementById('ut-bar-thumb-c');
+      if (th) { th.style.transition='left .2s cubic-bezier(.4,0,.2,1)'; th.style.left=(zonePct(z)*100)+'%'; }
+      utSelect(z);
+    });
+  }
+
+  /* 가로 그래프 이벤트 */
+  var cWrap = document.getElementById('c-bar-wrap');
+  if (cWrap) {
+    cWrap.addEventListener('mousedown',  function(e) { _cBarStart(e.clientX); });
+    cWrap.addEventListener('touchstart', function(e) { e.preventDefault(); _cBarStart(e.touches[0].clientX); }, { passive: false });
   }
 
   /* 슬라이더 */
@@ -1148,7 +1293,7 @@ function selectMode(mode) {
   } else {
     document.getElementById('header-sub').textContent = '현재 모발색을 직접 선택해주세요';
     document.getElementById('manual-section').style.display = 'block';
-    initManualPicker();
+    requestAnimationFrame(function() { initManualPicker(); });
   }
 }
 
@@ -1169,7 +1314,6 @@ function initManualPicker() {
 function manualInitUI() {
   var row = document.getElementById('manual-swatch-row');
   if (!row) return;
-  var alreadyInit = row.dataset.init === '1';
 
   var mBp = 0.35;
   var mCurZone = null;
@@ -1196,45 +1340,36 @@ function manualInitUI() {
     var tb = document.getElementById('m-track-bg');
     if(tb) tb.style.background='linear-gradient(to right,'+mInterp(z,0)+','+mInterp(z,0.5)+','+mInterp(z,1)+')';
   }
-  function mZonePct(z) { return window._utZonePct ? window._utZonePct(z) : 0.14; }
-  function mNearestZone(pct) {
-    var best=UT_ZONES[0], bd=999;
-    UT_ZONES.forEach(function(z){ var d=Math.abs(mZonePct(z)-pct); if(d<bd){bd=d;best=z;} });
-    return best;
-  }
+  function mZonePct(z) { return _barZonePct(z); }
   function mSelect(z) {
     mCurZone = z;
     document.querySelectorAll('.m-sw-item').forEach(function(el){ el.classList.toggle('m-active', el.dataset.key===z.key); });
-    var th = document.getElementById('ut-bar-thumb-m');
-    if(th){ th.style.transition='left .22s cubic-bezier(.4,0,.2,1)'; th.style.left=(mZonePct(z)*100)+'%'; th.style.background=mInterp(z,mBp); }
+    var pct = mZonePct(z);
+    var th = document.getElementById('m-bar-thumb');
+    if(th){ th.style.transition='left .2s cubic-bezier(.4,0,.2,1)'; th.style.left=(pct*100)+'%'; th.style.background=z.color; }
     mApply(z, mBp);
   }
+  window._mSelect = mSelect;
 
-  /* 스타일 */
-  if(!document.getElementById('m-sw-style')){
-    var st=document.createElement('style'); st.id='m-sw-style';
-    st.textContent='.m-sw-item{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;min-width:52px}'+
-      '.m-sw-circle{width:50px;height:50px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.15);transition:transform .15s,box-shadow .15s}'+
-      '.m-sw-item.m-active .m-sw-circle{transform:scale(1.12);box-shadow:0 0 0 3.5px rgba(0,0,0,0.25)}'+
-      '.m-sw-name{font-size:12px;color:#888;text-align:center;line-height:1.35;max-width:56px;word-break:keep-all}'+
-      '.m-sw-item.m-active .m-sw-name{color:#fff;font-weight:600}';
-    document.head.appendChild(st);
-  }
-
-  /* 원형 스워치 */
-  if (!alreadyInit) {
+  /* 스와치 생성 — 최초 1회만 */
+  if (!row.dataset.init) {
     row.dataset.init = '1';
-    row.innerHTML = '';
-    UT_ZONES.forEach(function(z) {
+    if(!document.getElementById('m-sw-style')){
+      var st=document.createElement('style'); st.id='m-sw-style';
+      st.textContent='.m-sw-item{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;min-width:52px}'+
+        '.m-sw-circle{width:50px;height:50px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.15);transition:transform .15s,box-shadow .15s}'+
+        '.m-sw-item.m-active .m-sw-circle{transform:scale(1.12);box-shadow:0 0 0 3.5px rgba(0,0,0,0.25)}'+
+        '.m-sw-name{font-size:12px;color:#888;text-align:center;line-height:1.35;max-width:56px;word-break:keep-all}'+
+        '.m-sw-item.m-active .m-sw-name{color:#fff;font-weight:600}';
+      document.head.appendChild(st);
+    }
+    row.innerHTML='';
+    UT_ZONES.forEach(function(z){
       var item=document.createElement('div'); item.className='m-sw-item'; item.dataset.key=z.key;
       var circ=document.createElement('div'); circ.className='m-sw-circle'; circ.style.background=z.color;
       var name=document.createElement('div'); name.className='m-sw-name'; name.textContent=z.label;
       item.appendChild(circ); item.appendChild(name);
-      item.addEventListener('click', function() {
-        mSelect(z);
-        var th=document.getElementById('ut-bar-thumb-m');
-        if(th){ th.style.transition='left .22s cubic-bezier(.4,0,.2,1)'; th.style.left=(mZonePct(z)*100)+'%'; th.style.background=mInterp(z,mBp); }
-      });
+      item.addEventListener('click', function(){ mSelect(z); });
       row.appendChild(item);
     });
     var segRow=document.getElementById('m-seg-row');
@@ -1246,35 +1381,54 @@ function manualInitUI() {
     }); }
   }
 
-  /* 가로 그래프 */
-  var mCv=document.getElementById('ut-color-bar-m');
-  if(mCv){
-    var mDrag=false;
-    function getMPct(clientX) {
-      var r=mCv.getBoundingClientRect();
-      if(!r.width) return 0;
-      return Math.max(0,Math.min(1,(clientX-r.left)/r.width));
+  /* 가로 그래프 — 매번 재등록 (display:block 후 호출되므로 width 정상) */
+  var mWrap = document.getElementById('m-bar-wrap');
+  if (mWrap) {
+    /* 이전 이벤트 제거 후 재등록 */
+    var newWrap = mWrap.cloneNode(true);
+    mWrap.parentNode.replaceChild(newWrap, mWrap);
+    mWrap = newWrap;
+
+    function onStart(clientX) {
+      _barState.active = 'manual';
+      var r = mWrap.getBoundingClientRect();
+      if (!r.width) return;
+      var pct = Math.max(0, Math.min(1, (clientX - r.left) / r.width));
+      var th = document.getElementById('m-bar-thumb');
+      if(th){ th.style.transition='none'; th.style.left=(pct*100)+'%'; th.style.background=_barNearestZone(pct).color; }
+      mSelect(_barNearestZone(pct));
     }
-    function handleMBarMove(clientX) {
-      var pct=getMPct(clientX);
-      var z=mNearestZone(pct);
-      var th=document.getElementById('ut-bar-thumb-m');
-      if(th){th.style.transition='none';th.style.left=(mZonePct(z)*100)+'%';th.style.background=mInterp(z,mBp);}
-      mSelect(z);
-    }
-    mCv.addEventListener('pointerdown',function(e){
-      mDrag=true; mCv.setPointerCapture(e.pointerId);
-      handleMBarMove(e.clientX);
+    mWrap.addEventListener('mousedown', function(e){ onStart(e.clientX); });
+    mWrap.addEventListener('touchstart', function(e){
+      e.preventDefault(); e.stopPropagation();
+      onStart(e.touches[0].clientX);
+    }, { passive: false });
+
+    /* pointermove — wrap에 직접 등록 */
+    mWrap.addEventListener('pointermove', function(e){
+      if(_barState.active !== 'manual') return;
+      e.preventDefault();
+      var r = mWrap.getBoundingClientRect();
+      if(!r.width) return;
+      var pct = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      var th = document.getElementById('m-bar-thumb');
+      if(th){ th.style.transition='none'; th.style.left=(pct*100)+'%'; th.style.background=_barNearestZone(pct).color; }
+      mSelect(_barNearestZone(pct));
     });
-    mCv.addEventListener('pointermove',function(e){
-      if(!mDrag) return;
-      handleMBarMove(e.clientX);
+    mWrap.addEventListener('pointerdown', function(e){
+      mWrap.setPointerCapture(e.pointerId);
+      _barState.active = 'manual';
+      var r = mWrap.getBoundingClientRect();
+      var pct = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      var th = document.getElementById('m-bar-thumb');
+      if(th){ th.style.transition='none'; th.style.left=(pct*100)+'%'; th.style.background=_barNearestZone(pct).color; }
+      mSelect(_barNearestZone(pct));
     });
-    mCv.addEventListener('pointerup',function(){mDrag=false;});
-    mCv.addEventListener('pointercancel',function(){mDrag=false;});
+    mWrap.addEventListener('pointerup', function(){ _barState.active = null; });
+    mWrap.addEventListener('lostpointercapture', function(){ _barState.active = null; });
   }
 
-  /* 슬라이더 */
+  /* 명도·채도 슬라이더 */
   var tw=document.getElementById('m-track-wrap');
   if(tw){
     var slDrag=false;
@@ -1293,7 +1447,7 @@ function manualInitUI() {
     tw.addEventListener('pointerup',function(){slDrag=false;});
   }
 
-  /* 기본 선택 주황 */
+  /* 기본 선택 — 주황 */
   mSelect(UT_ZONES[1]);
 }
 
