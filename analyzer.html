@@ -243,7 +243,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div style="font-size:12px;color:#888;font-weight:500;margin-bottom:12px;">언더톤 선택</div>
 
     <!-- 가로 색감 그래프 -->
-    <div id="m-bar-wrap" style="position:relative;height:44px;border-radius:10px;margin-bottom:16px;background:linear-gradient(to right,hsl(0,68%,50%),hsl(22,82%,52%),hsl(28,46%,42%),hsl(50,75%,52%),hsl(54,60%,56%),hsl(72,26%,42%),hsl(205,30%,52%),hsl(225,65%,52%),hsl(270,55%,52%),hsl(340,52%,62%),hsl(360,68%,50%));touch-action:none;user-select:none;cursor:pointer;">
+    <div id="m-bar-wrap" style="position:relative;height:44px;border-radius:10px;margin-bottom:16px;background:linear-gradient(to right,hsl(0,68%,50%),hsl(22,82%,52%),hsl(28,46%,42%),hsl(50,75%,52%),hsl(51,55%,52%),hsl(72,26%,42%),hsl(205,30%,52%),hsl(225,65%,52%),hsl(270,55%,52%),hsl(340,52%,62%),hsl(360,68%,50%));touch-action:none;user-select:none;cursor:pointer;">
       <div id="m-bar-thumb" style="position:absolute;top:50%;left:6%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.3);background:#CC4A4A;pointer-events:none;"></div>
     </div>
     <div id="manual-swatch-row" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
@@ -295,7 +295,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div style="font-size:12px;color:#888;margin-bottom:14px;">언더톤(잔류색소)을 선택하세요.</div>
 
     <!-- 가로 색감 그래프 -->
-    <div id="c-bar-wrap" style="position:relative;height:44px;border-radius:10px;margin-bottom:16px;background:linear-gradient(to right,hsl(0,68%,50%),hsl(22,82%,52%),hsl(28,46%,42%),hsl(50,75%,52%),hsl(54,60%,56%),hsl(72,26%,42%),hsl(205,30%,52%),hsl(225,65%,52%),hsl(270,55%,52%),hsl(340,52%,62%),hsl(360,68%,50%));touch-action:none;user-select:none;cursor:pointer;">
+    <div id="c-bar-wrap" style="position:relative;height:44px;border-radius:10px;margin-bottom:16px;background:linear-gradient(to right,hsl(0,68%,50%),hsl(22,82%,52%),hsl(28,46%,42%),hsl(50,75%,52%),hsl(51,55%,52%),hsl(72,26%,42%),hsl(205,30%,52%),hsl(225,65%,52%),hsl(270,55%,52%),hsl(340,52%,62%),hsl(360,68%,50%));touch-action:none;user-select:none;cursor:pointer;">
       <div id="c-bar-cam" style="position:absolute;top:50%;left:14%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;border:2px dashed rgba(255,255,255,0.85);pointer-events:none;"></div>
       <div id="c-bar-thumb" style="position:absolute;top:50%;left:14%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.3);background:#CC4A4A;pointer-events:none;"></div>
     </div>
@@ -667,7 +667,7 @@ var UT_ZONES = [
   { key:'orange', label:'주황',      color:'#D96820', h:22,  lMin:32, lMax:64, sMin:80, sMax:60, tone:'orange' },
   { key:'brown',  label:'브라운',    color:'#8C6040', h:28,  lMin:24, lMax:52, sMin:45, sMax:28, tone:'orange' },
   { key:'yellow', label:'노랑',      color:'#C0A830', h:50,  lMin:42, lMax:82, sMin:75, sMax:42, tone:'yellow' },
-  { key:'faded',  label:'매트',      color:'#A8A830', h:54,  lMin:42, lMax:75, sMin:62, sMax:38, tone:'yellow' },
+  { key:'faded',  label:'매트',      color:'#B2A62C', h:51,  lMin:42, lMax:75, sMin:58, sMax:36, tone:'yellow' },
   { key:'matte',  label:'카키',      color:'#787848', h:72,  lMin:28, lMax:50, sMin:28, sMax:14, tone:'yellow' },
   { key:'cool',   label:'쿨·애쉬',  color:'#6888A0', h:205, lMin:36, lMax:68, sMin:32, sMax:12, tone:'blue' },
   { key:'blue',   label:'블루',      color:'#4A72C4', h:225, lMin:32, lMax:62, sMin:65, sMax:38, tone:'blue' },
@@ -750,7 +750,7 @@ var _mBarDragging = false;
 /* 수동/카메라 공용 — HUE_STOPS 내장 */
 var _BAR_HUE_STOPS = [
   {h:0,p:0},{h:5,p:0.06},{h:22,p:0.13},{h:28,p:0.20},
-  {h:50,p:0.30},{h:54,p:0.37},{h:72,p:0.45},
+  {h:50,p:0.30},{h:51,p:0.36},{h:72,p:0.45},
   {h:100,p:0.50},{h:205,p:0.56},{h:225,p:0.62},
   {h:270,p:0.70},{h:340,p:0.84},{h:360,p:1.0}
 ];
@@ -801,11 +801,6 @@ document.addEventListener('pointerup', function(e) {
 });
 
 /* mBarDown만 div에서 호출 (manualInitUI에서 addEventListener로 등록) */
-function mBarDown(e) {
-  _mBarDragging = true;
-  _mBarMove(e.clientX, false);
-}
-
 var UT_SEGS = [
   {p:0,    t:'다크'},
   {p:0.25, t:'어두움'},
@@ -885,7 +880,7 @@ function utInitUI() {
   /* HUE_STOPS — 전역 공유 */
   var HUE_STOPS = [
     {h:0,p:0},{h:5,p:0.06},{h:22,p:0.13},{h:28,p:0.20},
-    {h:50,p:0.30},{h:54,p:0.37},{h:72,p:0.45},
+    {h:50,p:0.30},{h:51,p:0.36},{h:72,p:0.45},
     {h:100,p:0.50},{h:205,p:0.56},{h:225,p:0.62},
     {h:270,p:0.70},{h:340,p:0.84},{h:360,p:1.0}
   ];
@@ -907,8 +902,8 @@ function utInitUI() {
   /* 그라데이션 */
   var GRAD_STOPS = [
     [0,    'hsl(0,68%,50%)'],[0.06,'hsl(5,68%,50%)'],[0.13,'hsl(22,82%,52%)'],
-    [0.20,'hsl(28,46%,42%)'],[0.30,'hsl(50,75%,52%)'],[0.36,'hsl(52,62%,72%)'],
-    [0.37,'hsl(54,60%,56%)'],[0.45,'hsl(72,26%,42%)'],[0.50,'hsl(95,22%,42%)'],
+    [0.20,'hsl(28,46%,42%)'],[0.30,'hsl(50,75%,52%)'],[0.36,'hsl(51,55%,70%)'],
+    [0.37,'hsl(51,55%,52%)'],[0.45,'hsl(72,26%,42%)'],[0.50,'hsl(95,22%,42%)'],
     [0.56,'hsl(205,30%,52%)'],[0.62,'hsl(225,65%,52%)'],[0.70,'hsl(270,55%,52%)'],
     [0.84,'hsl(340,52%,62%)'],[1.0,'hsl(360,68%,50%)']
   ];
@@ -1059,13 +1054,6 @@ var PRESET_HSL = {
 };
 
 /* 넘버링 생성 */
-function toNumbering(hsl, presetKey) {
-  var lv   = lToLevel(hsl.l);
-  var ref  = presetKey ? (REFLECT_MAP[presetKey] !== undefined ? REFLECT_MAP[presetKey] : 0) : 0;
-  return lv + '.' + ref;
-}
-
-/* ── XY 그리드 색감 힌트 유도선 ── */
 function updateXYHint(which, h) {
   var hintWrap  = document.getElementById('xy-hint-' + which);
   var hintBox   = document.getElementById('xy-hint-box-' + which);
@@ -1121,26 +1109,6 @@ function updateXYGrid(which) {
 /* ── XY 드래그 상태 ── */
 var _xyDragging = false;
 var _xyWhich = null;
-
-function startXYDrag(event, which) {
-  _xyDragging = true;
-  _xyWhich = which;
-  event.currentTarget.setPointerCapture(event.pointerId);
-  applyXYPosition(event, which, false); /* 실시간 - 스냅 없음 */
-}
-
-function moveXYDrag(event, which) {
-  if (!_xyDragging || _xyWhich !== which) return;
-  applyXYPosition(event, which, false); /* 실시간 */
-}
-
-function endXYDrag(event, which) {
-  if (!_xyDragging) return;
-  _xyDragging = false;
-  _xyWhich = null;
-  applyXYPosition(event, which, true); /* 손 떼면 스냅 확정 */
-}
-
 function applyXYPosition(event, which, snap) {
   var grid = document.getElementById('xy-grid-' + which);
   if (!grid) return;
@@ -1208,13 +1176,6 @@ function applyXYPosition(event, which, snap) {
 }
 
 /* ── XY 그리드 클릭 (탭) → 스냅 ── */
-function onXYGridClick(event, which) {
-  /* 드래그 끝에서 발생하는 click은 무시 */
-  if (event.type === 'click' && _xyDragging) return;
-  applyXYPosition(event, which, true);
-}
-
-/* ── 모드 선택 ── */
 function selectMode(mode) {
   document.getElementById('mode-section').style.display = 'none';
   if (mode === 'camera') {
@@ -1408,7 +1369,8 @@ var TARGET_ZONES = [
   { key:'red',       label:'레드',        color:'#CC4A4A', h:5,   s:65, l:50,  lMin:28, lMax:65, sMin:68, sMax:45, tone:'red',    defaultBp:0.40 },
   { key:'copper',    label:'코퍼',        color:'#C87840', h:28,  s:60, l:52,  lMin:32, lMax:65, sMin:68, sMax:42, tone:'orange', defaultBp:0.40 },
   { key:'yellow',    label:'골드',        color:'#C0A830', h:50,  s:68, l:52,  lMin:40, lMax:78, sMin:72, sMax:40, tone:'yellow', defaultBp:0.40 },
-  { key:'green',     label:'그린',        color:'#5BAE6E', h:135, s:42, l:48,  lMin:30, lMax:65, sMin:50, sMax:28, tone:'green',  defaultBp:0.40 },
+  { key:'matte',     label:'매트',        color:'#B2A62C', h:51,  s:55, l:52,  lMin:32, lMax:72, sMin:60, sMax:30, tone:'yellow', defaultBp:0.50 },
+  { key:'green',     label:'카키',        color:'#787848', h:72,  s:22, l:38,  lMin:22, lMax:55, sMin:28, sMax:12, tone:'yellow', defaultBp:0.45 },
 ];
 
 var TARGET_SEGS = [
@@ -1556,95 +1518,6 @@ var ASH_PRESET_HSL = {
   'ashviolet': { h: 260, s: 22, l: 52 },  /* 애쉬바이올렛 — 청보라 */
   'ashpink':   { h: 320, s: 18, l: 62 }   /* 애쉬핑크 */
 };
-
-function setAshPreset(key) {
-  var p = ASH_PRESET_HSL[key];
-  if (!p) return;
-  targetHSL.h = p.h;
-  targetHSL.s = p.s;
-  targetHSL.l = p.l;
-
-  /* hue thumb 업데이트 */
-  var hThumb = document.getElementById('hue-thumb-t');
-  if (hThumb) { hThumb.style.left = (p.h / 360 * 100) + '%'; hThumb.style.background = hslStr(p.h, 100, 50); }
-
-  /* 스와치 */
-  var tbox = document.getElementById('target-swatch-box');
-  if (tbox) tbox.style.background = hslStr(p.h, p.s, p.l);
-
-  /* XY 그리드 배경 */
-  var gridT = document.getElementById('xy-grid-t');
-  if (gridT) {
-    var ht = p.h;
-    gridT.style.background = [
-      'radial-gradient(ellipse 90% 90% at 0%   0%,   hsl('+ht+',12%,88%)  0%, transparent 100%)',
-      'radial-gradient(ellipse 90% 90% at 100% 0%,   hsl('+ht+',78%,72%)  0%, transparent 100%)',
-      'radial-gradient(ellipse 90% 90% at 100% 100%, hsl('+ht+',82%,28%)  0%, transparent 100%)',
-      'radial-gradient(ellipse 90% 90% at 0%   100%, hsl('+ht+',6%,8%)    0%, transparent 100%)'
-    ].join(',');
-  }
-
-  /* XY 닷 */
-  var bestSatT = XY_SAT[0], bestLitT = XY_LIT[2], minST = 999, minLT = 999;
-  XY_SAT.forEach(function(sv) { var d = Math.abs(p.s - sv.val); if (d < minST) { minST = d; bestSatT = sv; } });
-  XY_LIT.forEach(function(lv) { var d = Math.abs(p.l - lv.val); if (d < minLT) { minLT = d; bestLitT = lv; } });
-  var dotT = document.getElementById('xy-dot-t');
-  if (dotT) { dotT.style.left = bestSatT.pct + '%'; dotT.style.top = bestLitT.pct + '%'; }
-  var labelT = document.getElementById('xy-label-t');
-  if (labelT) labelT.textContent = bestLitT.label + ' · ' + bestSatT.label;
-}
-
-/* ── 프리셋 버튼 (새 버전) ── */
-var _activePresetM = null;
-
-function setPresetM(key) {
-  var p = PRESET_HSL[key];
-  if (!p) return;
-  manualHSL.h = p.h;
-  manualHSL.s = p.s;
-  manualHSL.l = p.l;
-  _baseHue = p.h; /* 보정 범위 기준점 설정 */
-
-  /* 스와치 버튼 강조 */
-  var ids = ['red','org','yel','brn','grn','blu','vio','pnk','blk','ash','gry','ivo'];
-  ids.forEach(function(id) {
-    var btn = document.getElementById('mpre-' + id);
-    if (!btn) return;
-    btn.style.borderColor = 'transparent';
-    btn.style.boxShadow   = 'none';
-    btn.style.outline     = 'none';
-  });
-  var active = document.getElementById('mpre-' + key);
-  if (active) {
-    active.style.borderColor = '#fff';
-    active.style.boxShadow   = '0 0 0 3px rgba(255,255,255,0.5), 0 0 14px rgba(255,255,255,0.15)';
-  }
-  _activePresetM = key;
-
-  updateManualSwatch();
-  updateXYGrid('m');
-
-  /* 닷 + origin 위치 동기화 */
-  var bestSat = XY_SAT[0], minDx = 999;
-  XY_SAT.forEach(function(s) { var d = Math.abs(p.s - s.val); if (d < minDx) { minDx = d; bestSat = s; } });
-  var bestLit = XY_LIT[2], minDy = 999;
-  XY_LIT.forEach(function(l) { var d = Math.abs(p.l - l.val); if (d < minDy) { minDy = d; bestLit = l; } });
-  var dot = document.getElementById('xy-dot-m');
-  if (dot) { dot.style.left = bestSat.pct + '%'; dot.style.top = bestLit.pct + '%'; }
-  var label = document.getElementById('xy-label-m');
-  if (label) label.textContent = bestLit.label + ' · ' + bestSat.label;
-
-  /* 색상 선택 기준점 마커 표시 */
-  var origin = document.getElementById('xy-origin-m');
-  if (origin) {
-    origin.style.left       = bestSat.pct + '%';
-    origin.style.top        = bestLit.pct + '%';
-    origin.style.background = hslStr(p.h, p.s, p.l);
-    origin.style.display    = 'block';
-  }
-}
-
-/* ── 수동 분석 확정 ── */
 function confirmManualColor() {
   try {
 
@@ -2081,17 +1954,6 @@ function pctToLit(pct) { return Math.round(pct * 100); }
 
 /* ── 값 → 슬라이더 위치(%) ── */
 function hueToPct(h) { return h / 360; }
-function satToPct(s) { return s / 100; }
-function litToPct(l) { return l / 100; }
-
-/* ── 채도 슬라이더 배경 업데이트 ── */
-function updateSatBar(which) {
-  var hsl = which === 'c' ? currentHSL : targetHSL;
-  var bar = document.getElementById('sat-bar-' + which);
-  if (bar) bar.style.background = 'linear-gradient(to right, hsl(' + hsl.h + ',0%,' + hsl.l + '%), hsl(' + hsl.h + ',100%,' + hsl.l + '%))';
-}
-
-/* ── Color Picker 슬라이더 드래그 ── */
 function getRatio(event, el) {
   var rect = el.getBoundingClientRect();
   var x = (event.clientX !== undefined ? event.clientX : event.touches[0].clientX) - rect.left;
@@ -2195,16 +2057,6 @@ function getNearestSnap(ratio, snaps) {
     if (d < bestDist) { bestDist = d; best = s; }
   });
   return best;
-}
-
-function startSnapDrag(event, axis, which) {
-  event.currentTarget.setPointerCapture(event.pointerId);
-  activeDrag = { axis: axis, which: which, snap: true };
-  applySnapDrag(event, axis, which);
-}
-function onSnapDrag(event, axis, which) {
-  if (!activeDrag || activeDrag.axis !== axis || activeDrag.which !== which) return;
-  applySnapDrag(event, axis, which);
 }
 function applySnapDrag(event, axis, which) {
   var barId = axis + '-bar-' + which;
@@ -2904,18 +2756,6 @@ var RESIDUAL_RULE = {
   }
 };
 
-/* ── getCorrection: 잔류 언더톤 × 목표 hue → 보정 결정 ── */
-function getCorrection(residualTone, targetBaseHue, satClass) {
-  var resRule = RESIDUAL_RULE[residualTone];
-  if (!resRule) return { mix: null, riskMsg: '' };
-  var correction = resRule[targetBaseHue] || { mix: null, riskMsg: '' };
-  return correction;
-}
-
-
-
-
-
 function getToneUpType(tarBase, tarTone, tarL) {
   /* 탈색 필수 조건 — 명도·채도 기준 */
   if (tarTone === 'pastel' || tarTone === 'vivid') return 'bleach';
@@ -2967,13 +2807,11 @@ var RULE_TABLE = (function() {
   }
 
   var W_BLEACH     = '현재 베이스에서는 탈색 없이 원하는 발색이 나오지 않아요.\n탈색으로 베이스를 정리한 후 시술하세요.';
-  var W_ORANGE_ASH = '주황 언더톤이 애쉬와 섞여 브라운에 가까운 애쉬가 표현될 수 있어요.\n주황의 보색인 블루를 소량 믹스하면 브라운기를 억제할 수 있어요.';
-  var W_YELLOW_BLU = '노랑 언더톤에서 블루애쉬는 보라 보색이 과하면 채도가 죽고 딥해질 수 있어요.\n선명한 블루애쉬는 18lv까지 탈색 후 시술해야 정확하게 표현돼요.';
-  var W_YELLOW_PPV = '노랑 베이스에서 바이올렛은 보라가 메인으로 강하게 발색돼요.\n정확한 바이올렛 표현은 18lv 탈색 후에 가능해요.';
-  var W_YELLOW_PNK = '노랑 언더톤이 핑크와 섞이면 살구·코랄 톤으로 표현될 수 있어요.\n선명한 핑크는 18lv 탈색 후에 정확하게 발색돼요.';
-  var W_ASH_VIO    = '현재 베이스 명도에 따라 애쉬바이올렛 발색이 달라질 수 있어요.\n밝을수록 바이올렛, 어두울수록 스모키 애쉬에 가깝게 표현돼요.';
-  var W_STRONG     = '현재 베이스와 목표색의 보색 충돌로 탁한 브라운빛이 나올 수 있어요.\n원하는 색감을 정확히 내려면 탈색 후 시술을 권장해요.';
+  
+  var W_STRONG     = '보색 중화 하면서 표현하지만 색감과 밝기가 탁해질 수 있어요. 선명한 발색은 톤업을 권장해요';
   var W_GREEN_ASH  = '그린 언더톤과 애쉬가 섞이면 카키·매트한 느낌으로 발색될 수 있어요.\n원하는 애쉬 표현을 위해서는 탈색이 필요해요.';
+  var W_YUSAKSAEK   = '유사색이라 자연스럽게 표현되나 매트하게 나올 수 있어요';
+  var W_ASH_VIO     = '보색 중화 하면서 표현하지만 색감과 밝기가 탁해질 수 있어요. 선명한 발색은 톤업을 권장해요';
   var W_DARK_NEEDED = '목표색이 현재 모발보다 훨씬 어두워 이 방향으로는 시술이 어려워요.\n톤다운이나 톤인톤 방향으로 재검토해 주세요.';
 
   return {
@@ -2983,23 +2821,24 @@ var RULE_TABLE = (function() {
       'ash_gray':     o('open','open', 'open'),
       'dark_ash':     o('open','open', 'open'),
       'dark_neutral': o('open','open', 'open'),
-      'blue_ash':   o('open','warn', 'lock', '', W_YELLOW_BLU),
-      'ash_violet': o('open','warn', 'lock', '', W_YELLOW_PPV),
-      'ash_pink':   o('open','warn', 'lock', '', W_YELLOW_PNK),
-      'blue':       o('open','warn', 'lock', '', W_YELLOW_BLU),
-      'violet':     o('open','warn', 'lock', '', W_YELLOW_PPV),
-      'pink':       o('open','warn', 'lock', '', W_YELLOW_PNK),
+      'blue_ash':   o('open','warn', 'lock', '', W_STRONG),
+      'ash_violet': o('open','warn', 'lock', '', W_STRONG),
+      'ash_pink':   o('open','warn', 'lock', '', W_STRONG),
+      'blue':       o('open','warn', 'lock', '', W_STRONG),
+      'violet':     o('open','warn', 'lock', '', W_STRONG),
+      'pink':       o('open','warn', 'lock', '', W_STRONG),
       'red':        o('open','open', 'open'),
       'orange':     o('lock','open', 'open', W_DARK_NEEDED),
       'brown':      o('lock','open', 'open', W_DARK_NEEDED),
-      'green':      o('open','warn', 'lock', '', W_GREEN_ASH),
+      'matte':      o('open','warn', 'open', '', W_YUSAKSAEK),
+      'green':      o('open','warn', 'lock', '', W_YUSAKSAEK),
     },
 
     /* ── 주황 베이스 ── */
     'orange': {
-      'ash_gray':     o('open','warn', 'open', '', W_ORANGE_ASH),
-      'dark_ash':     o('open','warn', 'open', '', W_ORANGE_ASH),
-      'dark_neutral': o('open','warn', 'open', '', W_ORANGE_ASH),
+      'ash_gray':     o('open','warn', 'open', '', W_STRONG),
+      'dark_ash':     o('open','warn', 'open', '', W_STRONG),
+      'dark_neutral': o('open','warn', 'open', '', W_STRONG),
       'blue_ash':   o('open','lock', 'lock', '', W_BLEACH),
       'ash_violet': o('open','lock', 'lock', '', W_BLEACH),
       'ash_pink':   o('open','lock', 'lock', '', W_BLEACH),
@@ -3009,6 +2848,7 @@ var RULE_TABLE = (function() {
       'red':        o('open','open', 'open'),
       'orange':     o('lock','open', 'open', W_DARK_NEEDED),
       'brown':      o('lock','open', 'open', W_DARK_NEEDED),
+      'matte':      o('open','warn', 'open', '', W_STRONG),
       'green':      o('open','lock', 'lock', '', W_BLEACH),
     },
 
@@ -3025,6 +2865,7 @@ var RULE_TABLE = (function() {
       'red':        o('lock','open', 'open', W_DARK_NEEDED),
       'orange':     o('open','lock', 'lock', '', W_BLEACH),
       'brown':      o('open','lock', 'lock', '', W_BLEACH),
+      'matte':      o('open','lock', 'lock', '', W_BLEACH),
       'green':      o('open','lock', 'lock', '', W_BLEACH),
     },
 
@@ -3041,13 +2882,14 @@ var RULE_TABLE = (function() {
       'red':        o('open','open', 'open'),
       'orange':     o('open','lock', 'lock', '', W_BLEACH),
       'brown':      o('open','lock', 'lock', '', W_BLEACH),
+      'matte':      o('open','lock', 'lock', '', W_BLEACH),
       'green':      o('open','lock', 'lock', '', W_BLEACH),
     },
 
     /* ── 그린 베이스 ── */
     'green': {
-      'ash_gray':   o('open','warn', 'warn', '', W_GREEN_ASH, W_GREEN_ASH),
-      'dark_ash':   o('open','warn', 'open', '', W_GREEN_ASH),
+      'ash_gray':   o('open','warn', 'warn', '', W_YUSAKSAEK, W_YUSAKSAEK),
+      'dark_ash':   o('open','warn', 'open', '', W_YUSAKSAEK),
       'blue_ash':   o('open','warn', 'lock', '', W_STRONG),
       'ash_violet': o('open','warn', 'lock', '', W_STRONG),
       'ash_pink':   o('open','open', 'open'),
@@ -3057,6 +2899,7 @@ var RULE_TABLE = (function() {
       'red':        o('open','lock', 'open', '', W_BLEACH),
       'orange':     o('open','open', 'open'),
       'brown':      o('open','open', 'open'),
+      'matte':      o('open','warn', 'open', '', W_YUSAKSAEK),
       'green':      o('lock','open', 'open', W_DARK_NEEDED),
     },
 
@@ -3073,6 +2916,7 @@ var RULE_TABLE = (function() {
       'red':        o('open','lock', 'open', '', W_BLEACH),
       'orange':     o('open','lock', 'open', '', W_BLEACH),
       'brown':      o('open','warn', 'open', '', '블루기로 브라운이 차갑게 발색될 수 있어요.'),
+      'matte':      o('open','warn', 'open', '', W_STRONG),
       'green':      o('open','warn', 'lock', '', W_STRONG),
     },
 
@@ -3089,6 +2933,7 @@ var RULE_TABLE = (function() {
       'red':        o('open','open', 'open'),
       'orange':     o('open','warn', 'open', '', '보라기로 주황이 따뜻하게 발색될 수 있어요.'),
       'brown':      o('open','open', 'open'),
+      'matte':      o('open','warn', 'open', '', W_STRONG),
       'green':      o('open','warn', 'lock', '', W_STRONG),
     },
 
@@ -3105,6 +2950,7 @@ var RULE_TABLE = (function() {
       'red':        o('open','open', 'open'),
       'orange':     o('open','open', 'open'),
       'brown':      o('open','open', 'open'),
+      'matte':      o('open','warn', 'open', '', W_STRONG),
       'green':      o('open','warn', 'lock', '', W_STRONG),
     },
 
@@ -3116,11 +2962,12 @@ var RULE_TABLE = (function() {
       'ash_violet': o('open','warn', 'open', '', W_ASH_VIO),
       'ash_pink':   o('open','warn', 'open', '', W_ASH_VIO),
       'blue':       o('open','lock', 'lock', '', W_BLEACH),
-      'violet':     o('open','warn', 'open', '', W_ASH_VIO),
-      'pink':       o('open','warn', 'open', '', W_ASH_VIO),
+      'violet':     o('open','lock', 'open', '', W_ASH_VIO),
+      'pink':       o('open','lock', 'open', '', W_ASH_VIO),
       'red':        o('open','lock', 'open', '', W_BLEACH),
       'orange':     o('open','lock', 'open', '', W_BLEACH),
       'brown':      o('open','open', 'open'),
+      'matte':      o('open','warn', 'open', '', W_STRONG),
       'green':      o('open','lock', 'lock', '', W_BLEACH),
     },
 
@@ -3137,13 +2984,14 @@ var RULE_TABLE = (function() {
       'red':        o('open','open', 'open'),
       'orange':     o('open','open', 'open'),
       'brown':      o('open','open', 'open'),
+      'matte':      o('open','lock', 'lock', '', W_BLEACH),
       'green':      o('open','lock', 'lock', '', W_BLEACH),
     },
 
     /* ── 브라운 베이스 ── */
     'brown': {
-      'ash_gray':   o('open','warn', 'open', '', W_ORANGE_ASH),
-      'dark_ash':   o('open','warn', 'open', '', W_ORANGE_ASH),
+      'ash_gray':   o('open','warn', 'open', '', W_STRONG),
+      'dark_ash':   o('open','warn', 'open', '', W_STRONG),
       'blue_ash':   o('open','lock', 'lock', '', W_BLEACH),
       'ash_violet': o('open','lock', 'lock', '', W_BLEACH),
       'ash_pink':   o('open','lock', 'lock', '', W_BLEACH),
@@ -3153,6 +3001,7 @@ var RULE_TABLE = (function() {
       'red':        o('open','open', 'open'),
       'orange':     o('open','open', 'open'),
       'brown':      o('lock','open', 'open', W_DARK_NEEDED),
+      'matte':      o('open','warn', 'open', '', W_STRONG),
       'green':      o('open','lock', 'lock', '', W_BLEACH),
     },
 
@@ -3169,6 +3018,7 @@ var RULE_TABLE = (function() {
       'red':        o('open','lock', 'open', '', W_BLEACH),
       'orange':     o('open','lock', 'open', '', W_BLEACH),
       'brown':      o('open','open', 'open'),
+      'matte':      o('open','warn', 'open', '', W_STRONG),
       'green':      o('open','warn', 'lock', '', W_STRONG),
     },
 
@@ -3185,6 +3035,7 @@ var RULE_TABLE = (function() {
       'red':        o('open','warn', 'open', '', '보라기로 레드가 따뜻하게 발색될 수 있어요.'),
       'orange':     o('open','warn', 'open', '', '보라기로 주황이 탁하게 발색될 수 있어요.'),
       'brown':      o('open','open', 'open'),
+      'matte':      o('open','warn', 'open', '', W_STRONG),
       'green':      o('open','warn', 'lock', '', W_STRONG),
     },
 
@@ -3201,6 +3052,7 @@ var RULE_TABLE = (function() {
       'red':        o('open','open', 'open'),
       'orange':     o('open','open', 'open'),
       'brown':      o('open','open', 'open'),
+      'matte':      o('open','warn', 'open', '', W_STRONG),
       'green':      o('open','warn', 'lock', '', W_STRONG),
     },
 
@@ -3392,7 +3244,7 @@ function analyzeColorFlow(current, target, damageLevel, toneDir) {
 
   var curLevel    = lToLevel(current.l);
   var tarLevel    = lToLevel(target.l);
-  var curNumbering = curLevel + '.' + (REFLECT_MAP[_activePresetM] !== undefined ? REFLECT_MAP[_activePresetM] : 0);
+  var curNumbering = curLevel + '.0';
   var tarNumbering = tarLevel + '.?';
 
   return {
@@ -3513,7 +3365,10 @@ function confirmTargetColor() {
      명도가 낮아도 톤업 가능 — upImpossible 예외 처리 */
   var isCoolTarKey = ['ash_gray','dark_ash','blue_ash','ash_violet','ash_pink','blue','violet','teal'].indexOf(tarKey) > -1;
   var upImpossible = (gap < -12) && !isCoolTarKey;
-  var sameImpossible = (gap > 22 || gap < -28);
+  /* 쿨톤 목표색(애쉬 계열)은 명도 차이와 무관하게 =버튼 열어둠
+     — 탈색 없이 블루·바이올렛 믹스로 색감 전환 가능 */
+  var isCoolTarget = ['ash_gray','dark_ash','silver','blue_ash','ash_violet','ash_pink','blue','violet','teal'].indexOf(tarKey) > -1;
+  var sameImpossible = !isCoolTarget && (gap > 22 || gap < -28);
 
   /* ── 버튼 기본 복원 ── */
   var recDiv = document.getElementById('tone-up-recommend');
@@ -3545,7 +3400,7 @@ function confirmTargetColor() {
     btn.style.borderColor = '#1a1a1a';
     btn.style.background = '#0a0a0a';
     var sub = btn.querySelector('div');
-    if (sub) sub.textContent = '🔒 ' + reason;
+    if (sub) sub.textContent = '🔒 ' + (reason || '탈색 후 착색을 권장해요');
   }
 
   function warnBtn(id, reason) {
@@ -3834,7 +3689,7 @@ function selectBlackType(type) {
 }
 
 /* ════════════════════════════════════════
-   2안: buildHairMessage — 규칙 기반 문장 생성 (프론트 80%)
+   2안: HAIR_RULE_MATRIX.getRule() 기반 문장 생성
    API는 말투 다듬기만 (20%)
 ════════════════════════════════════════ */
 
@@ -3934,6 +3789,185 @@ function satToKo(s) {
    key로 조회 → summary / detail / guide 반환
    케이스 추가 = 이 배열에 한 블록 추가
 ════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════════
+   HAIR_RULE_MATRIX  v2.1
+   Phase 2: HAIR_RULES 래핑, rulesKey 내부화
+   Phase 3: buildHairMessage 교체 완료
+   Phase 4: RULE_TABLE 흡수 (예정)
+════════════════════════════════════════════════════════════ */
+var HAIR_RULE_MATRIX = (function() {
+
+  /* ── 1. 언더톤 → HAIR_RULES prefix ── */
+  var UT_PREFIX = {
+    /* UT_ZONES.key */
+    'red':    'RED',    'orange': 'ORANGE', 'brown':  'ORANGE',
+    'yellow': 'YELLOW', 'faded':  'MATTE',
+    'matte':  'MATTE',              /* 카키·올리브 (h≈70~95) */
+    'cool':   'COOL',   'blue':   'COOL',
+    'violet': 'COOL',   'pink':   'COOL',
+    /* window._curTone */
+    'neutral':'COOL',
+    'green':  'MATTE',              /* curTone 'green' = 카키계열 */
+  };
+
+  /* ── 2. 목표색 → HAIR_RULES mid 키 ── */
+  var TAR_MID = {
+    'green':    'GREEN',  'blue':      'BLUE',  'blueash':   'BLUE',
+    'violet':   'VIOLET', 'ashviolet': 'VIOLET','ashpink':   'ASHPINK',
+    /* 애쉬 계열 — mid 없음 (prefix+residual만) */
+    'ash':null, 'silver':null, 'darkash':null,
+    /* 웜톤 — HAIR_RULES 미존재 → buildSentence 폴백 */
+    'matte':'MATTE',
+  };
+
+  /* ── 3. 보색 매핑 (캔버스용) ── */
+  var COMP = {
+    'RED':'GREEN', 'ORANGE':'BLUE', 'YELLOW':'VIOLET',
+    'MATTE':'VIOLET', 'COOL':null,
+  };
+
+  /* ── 4. bleachLv → STRONG / LIGHT ── */
+  function residual(bleachLv) {
+    /* bleachLv = Math.round(tarL/5)
+       LIGHT: bleachLv >= 14 (tarL≈70, 밝음~파스텔)
+       STRONG: bleachLv < 14 (tarL<70, 비비드 이하) */
+    return (bleachLv >= 14) ? 'LIGHT' : 'STRONG';
+  }
+
+  /* ── 5. toRulesKey ─ 핵심 매핑 로직 ──────────────────────
+     입력:  utKey (UT_ZONES.key 또는 _curTone)
+            tarKey (_targetSubType)
+            bleachLv (Math.round(targetHSL.l / 5))
+            targetType (_targetType: 'ash' | 'non-ash')
+     출력:  HAIR_RULES key 문자열 또는 null
+
+     규칙:
+       mid 있음  → PREFIX_MID_RESIDUAL  (예: YELLOW_BLUE_STRONG)
+       mid null  → PREFIX_RESIDUAL      (예: YELLOW_STRONG)
+       non-ash + mid null → null (buildSentence 폴백)
+  ──────────────────────────────────────────────────────── */
+  function toRulesKey(utKey, tarKey, bleachLv, targetType) {
+    var prefix = UT_PREFIX[utKey] || 'COOL';
+    var res    = residual(bleachLv);
+
+    /* tarKey가 TAR_MID에 있는지 명확히 구분 */
+    var inMap  = (tarKey in TAR_MID);
+    var mid    = inMap ? TAR_MID[tarKey] : undefined;
+
+    /* mid 값 있음 → PREFIX_MID_RES */
+    if (mid) return prefix + '_' + mid + '_' + res;
+
+    /* mid === null → TAR_MID에 있지만 mid 없음 = ash 계열 */
+    if (inMap && mid === null) {
+      if (prefix === 'MATTE') return prefix + '_ASH_' + res;
+      return prefix + '_' + res;
+    }
+
+    /* tarKey가 TAR_MID에 없음 = 웜톤(red/copper/yellow 등) → null → buildSentence 폴백 */
+    return null;
+  }
+
+  /* ── 6. _findByKey ── */
+  function _findByKey(key) {
+    if (!key || typeof HAIR_RULES === 'undefined') return null;
+    for (var i = 0; i < HAIR_RULES.length; i++) {
+      if (HAIR_RULES[i].key === key) return HAIR_RULES[i];
+    }
+    return null;
+  }
+
+  /* ── 7. getRule ─ 간소화된 public API ──────────────────────
+     파라미터:
+       utKey    — UT_ZONES.key 또는 window._curTone
+       tarKey   — window._targetSubType
+       bleachLv — Math.round(targetHSL.l / 5)
+       toneDir  — window._toneDir ('up'|'same'|'down')
+       curL     — currentHSL.l
+       tarL     — targetHSL.l
+
+     반환: HAIR_RULES 룰 객체 + 주입 필드:
+       { ...rule, rulesKey, undertoneCode, comp, levelDiffCategory }
+  ──────────────────────────────────────────────────────── */
+  function getRule(utKey, tarKey, bleachLv, toneDir, curL, tarL) {
+    /* 안전한 기본값 */
+    utKey   = utKey   || 'yellow';
+    tarKey  = tarKey  || 'ash';
+    bleachLv= bleachLv|| Math.round((tarL || 50) / 5);
+    toneDir = toneDir || window._toneDir || 'same';
+    curL    = curL    || 50;
+    tarL    = tarL    || 50;
+    var targetType = window._targetType || 'ash';
+
+    var key  = toRulesKey(utKey, tarKey, bleachLv, targetType);
+    var rule = _findByKey(key);
+
+    /* fallback 1: STRONG ↔ LIGHT 교체 */
+    if (!rule && key) {
+      var alt = key.indexOf('_STRONG') > -1
+        ? key.replace('_STRONG', '_LIGHT')
+        : key.replace('_LIGHT',  '_STRONG');
+      rule = _findByKey(alt);
+    }
+
+    /* fallback 2: 같은 언더톤 + ASH */
+    if (!rule) {
+      var prefix2 = UT_PREFIX[utKey] || 'COOL';
+      rule = _findByKey(prefix2 + '_' + residual(bleachLv));
+    }
+
+    /* fallback 3: default */
+    if (!rule) {
+      rule = {
+        key: 'DEFAULT',
+        summary: '디자이너가 직접 판단해주세요.',
+        detail: '', guide: [],
+        direction: {
+          tone_up:'warning', tone_in_tone:'warning', tone_down:'warning',
+          warning_msg:''
+        }
+      };
+    }
+
+    /* 주입 필드 */
+    var pfx  = UT_PREFIX[utKey] || 'COOL';
+    var gap  = tarL - curL;
+    var ldc  = toneDir === 'up'   ? (gap > 15 ? 'UP_STRONG' : 'UP_MILD')
+             : toneDir === 'down' ? 'DOWN' : 'SAME';
+
+    return Object.assign({}, rule, {
+      rulesKey:          key,
+      undertoneCode:     pfx,
+      comp:              COMP[pfx] || null,
+      levelDiffCategory: ldc,
+    });
+  }
+
+  /* ── 8. getButtonState ─ direction 기반 버튼 상태 ── */
+  function getButtonState(utKey, tarKey, bleachLv, dir) {
+    var rule = getRule(utKey, tarKey, bleachLv);
+    var d    = rule.direction || {};
+    var map  = { up:'tone_up', same:'tone_in_tone', down:'tone_down' };
+    var state = d[map[dir] || 'tone_in_tone'] || 'warning';
+    var msg   = state === 'warning'   ? (d.warning_msg || '')
+              : state === 'difficult' ? '탈색 후 착색을 권장해요'
+              : '';
+    return { state: state, msg: msg };
+  }
+
+  /* ── 공개 API ── */
+  return {
+    getRule:        getRule,
+    getButtonState: getButtonState,
+    toRulesKey:     toRulesKey,
+    residualOf:     residual,
+    prefixOf:       function(k){ return UT_PREFIX[k] || null; },
+    midOf:          function(k){ return TAR_MID[k]; },
+    compOf:         function(p){ return COMP[p]     || null; },
+  };
+
+})();
+
+
 var HAIR_RULES = [
   {
     key: 'RED_STRONG',
@@ -3943,7 +3977,13 @@ var HAIR_RULES = [
       '노랑 잔류색소가 남았다면 — 애쉬염모제에 보라를 믹스하여 염색',
       '주황 잔류색소가 남았다면 — 애쉬염모제에 블루를 믹스하여 염색',
       '레드·주황이 강하게 남았다면 — 추가 탈색 후 착색 권장'
-    ]
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'difficult',
+      tone_down:    'difficult',
+      warning_msg:  ''
+    }
   },
   {
     key: 'RED_LIGHT',
@@ -3952,17 +3992,29 @@ var HAIR_RULES = [
     guide: [
       '바로 착색하거나 잔류색소를 살짝 정리한 후 착색',
       '노랑이나 주황 잔류색소가 살짝 남았다면 — 보색을 소량만 믹스하여 조정'
-    ]
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
   },
   {
     key: 'YELLOW_STRONG',
     summary: '노랑 잔류색소가 강해요. 애쉬염모제에 보라를 소량 믹스하여 염색하세요.',
-    detail: '노랑과 애쉬가 섞이면 채도가 죽고 매트한 방향으로 수렴됩니다. 밝기를 올리는 방향이라면 탈색 후, 색감만 바꾸는 방향이라면 바로 보라를 소량 믹스하는 것이 좋습니다.',
+    detail: '노랑과 애쉬가 섞이면 채도가 죽고 매트·카키 방향으로 수렴됩니다. 밝기를 올리는 방향이라면 탈색 후, 색감만 바꾸는 방향이라면 바로 보라를 소량 믹스하는 것이 좋습니다.',
     guide: [
       '애쉬염모제에 보라를 소량 믹스하여 염색',
       '보라 과량 시 칙칙한 그레이로 빠질 수 있으니 소량 유지',
       '노랑 잔류가 매우 강하다면 탈색을 한 단계 더 진행 후 착색'
-    ]
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'warning',
+      tone_down:    'warning',
+      warning_msg:  '노랑기 강함 — 바이올렛 소량 믹스'
+    }
   },
   {
     key: 'YELLOW_LIGHT',
@@ -3971,7 +4023,13 @@ var HAIR_RULES = [
     guide: [
       '바로 착색하거나 잔류색소를 살짝 정리한 후 착색',
       '노랑기가 살짝 남았다면 — 보라를 소량만 믹스하여 염색'
-    ]
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'recommended',
+      warning_msg:  ''
+    }
   },
   {
     key: 'ORANGE_STRONG',
@@ -3981,7 +4039,13 @@ var HAIR_RULES = [
       '18레벨 아이보리까지 탈색 후 착색 추천',
       '색감만 바꾸는 방향이라면 — 애쉬염모제에 블루를 소량 믹스하여 주황기를 억제하며 착색',
       '주황기가 강하게 남았다면 — 추가 탈색 또는 다음 내원 시 완성 권장'
-    ]
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'warning',
+      tone_down:    'difficult',
+      warning_msg:  '주황 잔류 강함 — 블루 소량 믹스'
+    }
   },
   {
     key: 'ORANGE_LIGHT',
@@ -3990,7 +4054,13 @@ var HAIR_RULES = [
     guide: [
       '바로 착색하거나 잔류색소를 살짝 정리한 후 착색',
       '노랑기가 살짝 남았다면 — 보라를 소량만 믹스하여 염색'
-    ]
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
   },
   {
     key: 'COOL_STRONG',
@@ -4023,7 +4093,13 @@ var HAIR_RULES = [
       '노랑 잔류색소가 남았다면 — 낮은 명도 바이올렛 염모제로 착색 (밝은 바이올렛을 입힐 경우 연베이지로 보색 중화만 될 가능성 있음)',
       '주황 잔류색소가 남았다면 — 바이올렛 염모제에 블루나 그린을 소량 믹스하여 착색',
       '레드·주황이 강하게 남았다면 — 추가 탈색 후 착색 권장'
-    ]
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'warning',
+      tone_down:    'difficult',
+      warning_msg:  '레드+바이올렛 충돌 강함 — 탈색 권장'
+    }
   },
   {
     key: 'RED_VIOLET_LIGHT',
@@ -4032,7 +4108,13 @@ var HAIR_RULES = [
     guide: [
       '바로 착색하거나 잔류색소를 살짝 정리한 후 착색',
       '레드기가 살짝 남았다면 — 바이올렛 염모제에 그린을 소량 믹스'
-    ]
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
   },
   {
     key: 'YELLOW_VIOLET_STRONG',
@@ -4042,7 +4124,13 @@ var HAIR_RULES = [
       '연노랑(아이보리) 수준까지 탈색 후 착색 추천',
       '색감만 바꾸는 방향이라면 — 낮은 명도의 바이올렛 사용 (적보라 느낌 가능)',
       '노랑기가 강하게 남았다면 — 추가 탈색 후 착색 권장'
-    ]
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'warning',
+      tone_down:    'difficult',
+      warning_msg:  '노랑+바이올렛 충돌 — 탈색 후 착색'
+    }
   },
   {
     key: 'YELLOW_VIOLET_LIGHT',
@@ -4051,7 +4139,13 @@ var HAIR_RULES = [
     guide: [
       '바로 착색하거나 잔류색소를 살짝 정리한 후 착색',
       '노랑기가 살짝 남았다면 — 바이올렛을 소량 추가 믹스'
-    ]
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
   },
   {
     key: 'ORANGE_VIOLET_STRONG',
@@ -4060,7 +4154,13 @@ var HAIR_RULES = [
     guide: [
       '색감만 바꾸는 방향이라면 — 낮은 명도의 바이올렛 사용하거나 블루·그린을 소량 믹스 (적보라 느낌 기대)',
       '선명하고 깨끗한 바이올렛을 원한다면 — 추가 탈색 후 착색 추천'
-    ]
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'warning',
+      tone_down:    'difficult',
+      warning_msg:  '주황+바이올렛 충돌 — 탁할 수 있음'
+    }
   },
   {
     key: 'ORANGE_VIOLET_LIGHT',
@@ -4069,7 +4169,13 @@ var HAIR_RULES = [
     guide: [
       '바로 착색하거나 잔류색소를 살짝 정리한 후 착색',
       '주황기가 살짝 남았다면 — 바이올렛 염모제에 블루를 소량 믹스'
-    ]
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
   },
   {
     key: 'COOL_VIOLET_STRONG',
@@ -4100,7 +4206,13 @@ var HAIR_RULES = [
     detail: '레드 잔류색소는 블루와 충돌해 퍼플이나 탁한 브라운 방향으로 수렴되기 쉽습니다. 밝기를 올리는 방향이라면 충분한 탈색이 중요하고, 색감만 바꾸는 방향이라면 탈색 없이 진행하기 어렵습니다.',
     guide: [
       '연노랑까지 탈색 추천하지만, 노랑 잔류색소가 남았다면 — 블루 염모제에 바이올렛을 소량 믹스'
-    ]
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'difficult',
+      tone_down:    'difficult',
+      warning_msg:  ''
+    }
   },
   {
     key: 'RED_BLUE_LIGHT',
@@ -4109,7 +4221,13 @@ var HAIR_RULES = [
     guide: [
       '바로 착색하거나 잔류색소를 살짝 정리한 후 착색',
       '레드기가 살짝 남았다면 — 블루 염모제에 그린을 소량 믹스'
-    ]
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
   },
   {
     key: 'YELLOW_BLUE_STRONG',
@@ -4119,7 +4237,13 @@ var HAIR_RULES = [
       '연노랑(아이보리) 수준까지 탈색 후 착색 추천',
       '색감만 바꾸는 방향이라면 — 낮은 명도의 블루 염모제에 바이올렛을 소량 믹스 (딥네이비 연출 가능)',
       '노랑기가 강하게 남았다면 추가 탈색 후 착색 권장'
-    ]
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'warning',
+      tone_down:    'difficult',
+      warning_msg:  '노랑+블루 충돌 — 그린·카키 가능'
+    }
   },
   {
     key: 'YELLOW_BLUE_LIGHT',
@@ -4128,7 +4252,13 @@ var HAIR_RULES = [
     guide: [
       '바로 착색 추천',
       '더 순수한 블루를 원한다면 잔류색소를 아주 살짝만 정리 후 착색'
-    ]
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
   },
   {
     key: 'ORANGE_BLUE_STRONG',
@@ -4137,7 +4267,13 @@ var HAIR_RULES = [
     guide: [
       '색감만 바꾸는 방향이라면 — 블루 염모제로 착색 (탁한 회기도는 브라운 기운 가능성 있음)',
       '선명하고 깨끗한 블루를 원한다면 — 추가 탈색 후 착색 추천'
-    ]
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'warning',
+      tone_down:    'difficult',
+      warning_msg:  '주황+블루 충돌 강함 — 탈색 권장'
+    }
   },
   {
     key: 'ORANGE_BLUE_LIGHT',
@@ -4146,7 +4282,13 @@ var HAIR_RULES = [
     guide: [
       '바로 착색하거나 잔류색소를 살짝 정리한 후 착색',
       '주황기가 살짝 남았다면 — 블루 염모제에 그린을 소량 믹스'
-    ]
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
   },
   {
     key: 'COOL_BLUE_STRONG',
@@ -4179,7 +4321,13 @@ var HAIR_RULES = [
       '연노랑까지 탈색 후 그린 염모제로 착색 추천',
       '노랑기가 적당히 남아있다면 — 매트한 올리브그린이나 자연스러운 그린으로 발색될 수 있음',
       '매우 선명하고 밝은 그린을 원한다면 — 추가 탈색 후 착색 추천'
-    ]
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'warning',
+      tone_down:    'difficult',
+      warning_msg:  '레드+그린 보색 — 탁한 브라운 가능'
+    }
   },
   {
     key: 'RED_GREEN_LIGHT',
@@ -4188,7 +4336,13 @@ var HAIR_RULES = [
     guide: [
       '바로 착색하거나 잔류색소를 살짝 정리한 후 착색',
       '레드기가 살짝 남았다면 — 그린 염모제에 바이올렛을 소량 믹스'
-    ]
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
   },
   {
     key: 'YELLOW_GREEN_STRONG',
@@ -4198,7 +4352,13 @@ var HAIR_RULES = [
       '그린 염모제로 바로 착색 가능',
       '더 선명하고 차가운 그린을 원한다면 — 연노랑까지 탈색 후 착색',
       '노랑기가 강하게 남았다면 추가 탈색 후 착색 추천'
-    ]
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
   },
   {
     key: 'YELLOW_GREEN_LIGHT',
@@ -4208,7 +4368,13 @@ var HAIR_RULES = [
       '바로 착색 추천',
       '차가운 민트·그린을 원한다면 — 그린 염모제에 블루를 소량 믹스',
       '따뜻한 카키 방향을 원한다면 — 그대로 착색'
-    ]
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
   },
   {
     key: 'ORANGE_GREEN_STRONG',
@@ -4217,7 +4383,13 @@ var HAIR_RULES = [
     guide: [
       '카키·올리브 방향을 원한다면 — 그린 염모제에 블루를 소량 믹스하여 착색',
       '선명하고 깨끗한 그린을 원한다면 — 추가 탈색 후 착색 추천'
-    ]
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'warning',
+      tone_down:    'difficult',
+      warning_msg:  '주황+그린 충돌 — 올리브 브라운 가능'
+    }
   },
   {
     key: 'ORANGE_GREEN_LIGHT',
@@ -4226,7 +4398,13 @@ var HAIR_RULES = [
     guide: [
       '바로 착색하거나 잔류색소를 살짝 정리한 후 착색',
       '차가운 그린을 원한다면 — 그린 염모제에 블루를 소량 믹스'
-    ]
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
   },
   {
     key: 'COOL_GREEN_STRONG',
@@ -4247,529 +4425,227 @@ var HAIR_RULES = [
       '블루 잔류가 살짝 남았다면 — 민트·청록 방향으로 발색 가능'
     ]
   }
-
+  ,
+  /* ══════════════════════════════════════
+     MATTE 계열 8개 (Phase 4 추가)
+     matte = 카키·올리브·무광 (h≈70~95)
+     실무에서 매트·카키·초록을 동일시
+  ══════════════════════════════════════ */
+  {
+    key: 'YELLOW_MATTE_STRONG',
+    summary: '노랑 잔류가 강해요. 매트 염모제로 바로 착색하세요.',
+    detail: '노랑과 매트는 유사색 관계라 자연스러운 카키·올리브 계열이 나옵니다. 노랑 잔류가 강할수록 따뜻한 카키 방향으로 수렴됩니다.',
+    guide: [
+      '매트 염모제로 바로 착색 가능',
+      '더 선명한 매트를 원한다면 — 그린을 소량 믹스',
+      '차가운 카키를 원한다면 — 연노랑까지 탈색 후 착색'
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  '유사색이라 자연스럽게 표현되나 매트하게 나올 수 있어요'
+    }
+  },
+  {
+    key: 'YELLOW_MATTE_LIGHT',
+    summary: '파스텔 노랑이에요. 매트 염모제로 바로 착색하세요.',
+    detail: '파스텔 노랑 위에 매트 계열은 유사색 관계로 자연스럽고 선명하게 올라갑니다.',
+    guide: [
+      '바로 착색 추천',
+      '더 차가운 카키를 원한다면 — 그린을 소량 믹스'
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
+  },
+  {
+    key: 'ORANGE_MATTE_STRONG',
+    summary: '주황 잔류가 강해요. 블루를 소량 믹스해서 매트로 착색하세요.',
+    detail: '주황과 매트가 만나면 브라운 카키 계열로 발색됩니다. 블루를 소량 믹스하면 주황기를 억제해 더 선명한 올리브카키가 표현됩니다.',
+    guide: [
+      '매트 염모제에 블루를 소량 믹스하여 착색',
+      '더 선명한 카키를 원한다면 — 연노랑까지 탈색 후 착색 추천'
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'warning',
+      tone_down:    'warning',
+      warning_msg:  '보색 중화 하면서 표현하지만 색감과 밝기가 탁해질 수 있어요. 선명한 발색은 톤업을 권장해요'
+    }
+  },
+  {
+    key: 'ORANGE_MATTE_LIGHT',
+    summary: '파스텔 주황이에요. 바로 착색하거나 살짝 정리 후 매트를 올리세요.',
+    detail: '파스텔 주황 위에 매트 계열은 카키·올리브 방향으로 자연스럽게 발색됩니다.',
+    guide: [
+      '바로 착색하거나 잔류색소를 살짝 정리한 후 착색',
+      '차가운 카키를 원한다면 — 블루를 소량 믹스'
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
+  },
+  {
+    key: 'MATTE_ASH_STRONG',
+    summary: '카키·매트 잔류가 강해요. 탈색 후 애쉬에 바이올렛 소량 믹스하세요.',
+    detail: '매트 베이스에서 보색 중화를 하면 색감이 탁해질 수 있어요. 시나몬브라운(한색+난색 동시 존재 브라운) 소량 믹스가 더 부드럽고 안전해요. 보라는 극소량만 권장해요. 선명한 발색을 원한다면 탈색 후 착색을 권장해요.',
+    guide: [
+      '애쉬 염모제에 바이올렛 소량 믹스하여 착색',
+      '애쉬 염모제에 시나몬브라운 소량 믹스하여 착색',
+      '선명한 발색을 원한다면 — 탈색 후 착색 권장'
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'warning',
+      tone_down:    'difficult',
+      warning_msg:  '보색 중화 하면서 표현하지만 색감과 밝기가 탁해질 수 있어요. 선명한 발색은 톤업을 권장해요'
+    }
+  },
+  {
+    key: 'MATTE_ASH_LIGHT',
+    summary: '파스텔 카키·매트예요. 잔류 살짝 정리 후 애쉬를 착색하세요.',
+    detail: '파스텔 매트 위에 애쉬는 비교적 잘 올라와요. 미세한 매트기가 남으면 부드러운 매트 애쉬로 나올 수 있어요.',
+    guide: [
+      '바로 착색하거나 잔류색소를 살짝 정리한 후 착색',
+      '카키기가 살짝 남았다면 — 애쉬 염모제에 바이올렛을 소량 믹스'
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
+  },
+  {
+    key: 'MATTE_MATTE_STRONG',
+    summary: '카키·매트 잔류가 강해요. 매트 염모제로 착색하세요.',
+    detail: '같은 방향이라 원하는 매트 톤이 자연스럽게 나와요.',
+    guide: [
+      '매트 염모제 단독으로 바로 착색 가능',
+      '더 차가운 카키를 원한다면 — 그린을 소량 믹스'
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
+  },
+  {
+    key: 'MATTE_GREEN_STRONG',
+    summary: '카키·매트 잔류가 강해요. 그린 염모제로 착색하세요.',
+    detail: '유사색 관계라 매트 잔류 위에 그린이 올리브그린으로 자연스럽게 나와요.',
+    guide: [
+      '그린 염모제로 바로 착색 가능',
+      '더 선명하고 차가운 그린을 원한다면 — 연노랑까지 탈색 후 착색'
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
+  }  ,
+  {
+    key: 'MATTE_BLUE_STRONG',
+    summary: '매트 잔류가 강해요. 블루 염모제에 시나몬브라운 계열 또는 보라를 소량 믹스하여 염색하세요.',
+    detail: '매트 베이스에서 블루를 그대로 올리면 카키블루로 빠질 수 있어요. 시나몬브라운(한색+난색 동시 존재 브라운) 또는 보라를 소량 믹스하면 매트기를 눌러주지만 색감이 탁해질 수 있어요. 선명한 발색을 원한다면 탈색 후 착색을 권장해요.',
+    guide: [
+      '블루 염모제에 시나몬브라운 소량 믹스하여 착색',
+      '보라를 쓴다면 극소량만 — 과하면 탁해져요',
+      '선명한 블루를 원한다면 — 탈색 후 착색 권장'
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'warning',
+      tone_down:    'difficult',
+      warning_msg:  '보색 중화 하면서 표현하지만 색감과 밝기가 탁해질 수 있어요. 선명한 발색은 톤업을 권장해요'
+    }
+  },
+  {
+    key: 'MATTE_BLUE_LIGHT',
+    summary: '파스텔 매트예요. 바로 착색하거나 잔류색소를 살짝 정리한 후 블루를 착색하세요.',
+    detail: '잔류가 약해 블루가 비교적 잘 올라와요.',
+    guide: [
+      '바로 착색하거나 잔류색소를 살짝 정리한 후 착색'
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
+  },
+  {
+    key: 'MATTE_VIOLET_STRONG',
+    summary: '매트 잔류가 강해요. 연노랑까지 탈색 후 애쉬바이올렛 염모제로 착색하세요.',
+    detail: '매트 잔류가 강한 상태에서 바이올렛을 올리면 색감이 탁해지며 매트빛이 억제된 연베이지로 나올 수 있어요. 낮은 명도 바이올렛 염모제에 시나몬브라운 소량 믹스로 표현할 수 있어요. 밝고 선명한 바이올렛을 원한다면 탈색 후 착색을 권장해요.',
+    guide: [
+      '바이올렛 염모제에 시나몬브라운 소량 믹스하여 착색',
+      '보라를 쓴다면 극소량만 — 매트기 억제된 연베이지로 나올 수 있음',
+      '선명한 바이올렛을 원한다면 — 탈색 후 착색 권장'
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'warning',
+      tone_down:    'difficult',
+      warning_msg:  '낮은 명도 바이올렛 염모제에 시나몬브라운 소량 믹스로 표현할 수 있어요. 색감이 탁해질 수 있으며 밝고 선명한 바이올렛을 원한다면 탈색 후 착색을 권장해요'
+    }
+  },
+  {
+    key: 'MATTE_VIOLET_LIGHT',
+    summary: '파스텔 매트예요. 바로 착색하거나 잔류색소를 살짝 정리한 후 바이올렛을 착색하세요.',
+    detail: '잔류가 약해 바이올렛이 비교적 잘 올라와요.',
+    guide: [
+      '바로 착색하거나 잔류색소를 살짝 정리한 후 착색'
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
+  }  ,
+  {
+    key: 'MATTE_ASHPINK_STRONG',
+    summary: '매트 잔류가 강해요. 애쉬핑크 염모제에 시나몬브라운 또는 보라를 소량 믹스하여 염색하세요.',
+    detail: '매트 베이스에서 애쉬핑크를 올리면 색감이 탁해지고 애쉬 메인의 핑크로 잘 표현되지 않을 수 있어요. 시나몬브라운(한색+난색 동시 존재 브라운) 또는 보라 소량 믹스로 보색 중화하며 착색해요. 선명하고 밝은 애쉬핑크를 원한다면 탈색 후 착색을 권장해요.',
+    guide: [
+      '애쉬핑크 염모제에 시나몬브라운 소량 믹스하여 착색',
+      '보라를 쓴다면 극소량만 — 색감이 탁해질 수 있어요',
+      '선명하고 밝은 애쉬핑크를 원한다면 — 탈색 후 착색 권장'
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'warning',
+      tone_down:    'difficult',
+      warning_msg:  '보색 중화 하면서 표현하지만 색감과 밝기가 탁해질 수 있어요. 선명한 발색은 톤업을 권장해요'
+    }
+  },
+  {
+    key: 'MATTE_ASHPINK_LIGHT',
+    summary: '파스텔 매트예요. 바로 착색하거나 잔류색소를 살짝 정리한 후 애쉬핑크를 착색하세요.',
+    detail: '잔류가 약해 애쉬핑크가 비교적 잘 올라와요.',
+    guide: [
+      '바로 착색하거나 잔류색소를 살짝 정리한 후 착색'
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
+  }
 ];
 
-/* ── getRuleByKey: key → HAIR_RULES 조회 ── */
-function getRuleByKey(key) {
-  return HAIR_RULES.find(function(rule) { return rule.key === key; }) || null;
-}
 
-/* ════════════════════════════════════════
-   CASE_TABLE — 완성 문장 데이터베이스
-   caseKey = toneDir_curTone_targetType
-   조건문 없음 / 선택만 / 같은 입력 → 같은 출력
-════════════════════════════════════════ */
-
-var MATTE_DETAIL  = '현재 노랑 언더톤이 애쉬 색상과 섞이면 매트하고 탁한 발색이 나올 수 있어요.\n보라는 노랑의 보색으로, 소량 믹스하면 노랑기를 눌러 더 선명한 쿨톤 애쉬가 표현됩니다.\n보라가 과하면 오히려 채도가 죽으니 소량이 핵심이에요.';
-var ORANGE_DETAIL = '주황·브라운 언더톤과 애쉬가 섞이면 순수한 애쉬그레이보다 브라운에 가까운 애쉬가 표현돼요.\n주황의 보색인 블루를 소량 믹스하면 브라운기를 억제할 수 있어요.\n블루도 과하면 칙칙해지니 소량이 핵심이에요.';
-var RED_DETAIL    = '레드 베이스는 색의 파워가 강해 애쉬와 충돌이 심해요.\n탈색 없이 무리하게 시술하면 탁한 브라운·녹색 계열로 발색될 수 있어요.\n18lv까지 탈색해 레드기를 완전히 제거한 후 시술하는 것이 안전해요.';
-var RED_SAME_STRONG = '레드와 애쉬(블루 계열)가 충돌하면서 탁한 브라운 계열로 수렴됩니다. 원하는 쿨톤 그레이 발색이 거의 불가능합니다.';
-var RED_UP_MID    = '레드 언더톤은 탈색 시 레드 → 주황 → 노랑 순으로 빠집니다. 잔류 단계에 따라 보정 방법이 달라집니다.';
-var RED_UP_LIGHT  = '잔류가 약하면 레드 구간을 빠르게 통과해 노랑~아이보리 단계에 도달하기 쉽습니다.';
-var RED_VIRGIN    = '한국인 자연 멜라닌은 레드 성분이 강해 주황 구간 통과에 시간이 다소 걸릴 수 있습니다.';
-var RED_DAMAGED   = '고손상모는 이미 내부 손상이 상당합니다. 무리한 탈색은 단절 위험을 크게 높입니다.';
-var ORANGE_RESIDUAL = '주황 잔류가 있는 모발에 애쉬를 올리면 블루가 주황을 부분 억제하지만, 완전한 쿨 그레이가 나오기는 어렵습니다.';
-
-var CASE_TABLE = {
-
-  /* ── 톤인톤 (same) ── */
-  'same_yellow_ash': {
-    summary: '노랑 언더톤에서 애쉬로 가시는군요.\n애쉬 염모제에 보라를 소량 믹스해 시술하세요.',
-    detail:  MATTE_DETAIL
-  },
-  'same_orange_ash': {
-    summary: '△ 브라운에 가까운 애쉬가 나올 수 있어요.\n애쉬 염모제에 블루를 소량 믹스해 시술하세요.',
-    detail:  ORANGE_DETAIL
-  },
-  'same_red_ash': {
-    summary: '레드 잔류가 강한 상태에서 탈색 없이 애쉬그레이를 올리면 색이 제대로 잡히지 않습니다.\n레드를 충분히 빼지 않으면 애쉬 방향으로 가기 매우 어렵습니다.',
-    detail:  RED_SAME_STRONG
-  },
-  'same_green_ash': {
-    summary: '그린 베이스에서 애쉬는 카키 느낌으로 발색될 수 있어요.\n목표색을 다시 확인하세요.',
-    detail:  ''
-  },
-  'same_blue_ash': {
-    summary: '쿨톤 블루 베이스라 별도 보정 없이 애쉬 표현이 가능해요.\n애쉬 염모제로 바로 시술하세요.',
-    detail:  ''
-  },
-  'same_violet_ash': {
-    summary: '쿨톤 바이올렛 베이스라 애쉬 표현이 수월해요.\n애쉬 염모제로 바로 시술하세요.',
-    detail:  ''
-  },
-  'same_neutral_ash': {
-    summary: '중성 베이스라 언더톤 영향 없이 애쉬가 깔끔하게 표현돼요.\n애쉬 염모제로 바로 시술하세요.',
-    detail:  ''
-  },
-  'same_yellow_non-ash': {
-    summary: '현재 명도에서 바로 착색 가능한 케이스예요.\n목표색 염모제로 시술하세요.',
-    detail:  ''
-  },
-  'same_orange_non-ash': {
-    summary: '현재 명도에서 바로 착색 가능한 케이스예요.\n목표색 염모제로 시술하세요.',
-    detail:  ''
-  },
-  'same_red_non-ash': {
-    summary: '현재 명도에서 바로 착색 가능한 케이스예요.\n목표색 염모제로 시술하세요.',
-    detail:  ''
-  },
-  'same_green_non-ash': {
-    summary: '현재 명도에서 바로 착색 가능한 케이스예요.\n목표색 염모제로 시술하세요.',
-    detail:  ''
-  },
-  'same_blue_non-ash': {
-    summary: '현재 명도에서 바로 착색 가능한 케이스예요.\n목표색 염모제로 시술하세요.',
-    detail:  ''
-  },
-  'same_violet_non-ash': {
-    summary: '현재 명도에서 바로 착색 가능한 케이스예요.\n목표색 염모제로 시술하세요.',
-    detail:  ''
-  },
-  'same_neutral_non-ash': {
-    summary: '현재 명도에서 바로 착색 가능한 케이스예요.\n목표색 염모제로 시술하세요.',
-    detail:  ''
-  },
-
-  /* ── 톤업 (up) ── */
-  'up_yellow_ash': {
-    summary: '18lv 아이보리까지 탈색 후 애쉬 염모제로 시술하세요.\n노랑기가 남아있다면 보라를 소량 믹스해 염색하세요.',
-    detail:  MATTE_DETAIL
-  },
-  'up_orange_ash': {
-    summary: '현재 주황 베이스에서는 탈색이 필수예요.\n18lv 아이보리까지 탈색 후 시술하세요.\n노랑기가 남으면 보라 소량, 주황기가 남으면 블루를 소량 믹스하세요.',
-    detail:  ORANGE_DETAIL
-  },
-  'up_red_ash': {
-    summary: '18레벨 아이보리까지 탈색 후 잔류 색기를 확인하고 상태에 맞게 보정하며 착색합니다.',
-    detail:  RED_UP_MID
-  },
-  'up_green_ash': {
-    summary: '그린 베이스 제거를 위해 충분한 탈색이 필요해요.\n15lv까지 탈색 후 애쉬 염모제로 시술하세요.',
-    detail:  ''
-  },
-  'up_blue_ash': {
-    summary: '현재 쿨톤 베이스는 애쉬 표현에 유리해요.\n18lv 아이보리까지 탈색 후 애쉬 염모제로 시술하세요.',
-    detail:  ''
-  },
-  'up_violet_ash': {
-    summary: '현재 쿨톤 베이스는 애쉬 표현에 유리해요.\n18lv 아이보리까지 탈색 후 애쉬 염모제로 시술하세요.',
-    detail:  ''
-  },
-  'up_neutral_ash': {
-    summary: '현재 중성 베이스로 탈색 후 애쉬 표현이 수월해요.\n18lv 아이보리까지 탈색 후 애쉬 염모제로 시술하세요.',
-    detail:  ''
-  },
-  'up_yellow_non-ash': {
-    summary: '목표색 발색을 위해 탈색이 필요해요.\n18lv 아이보리까지 탈색 후 목표색 염모제로 시술하세요.',
-    detail:  ''
-  },
-  'up_orange_non-ash': {
-    summary: '목표색 발색을 위해 탈색이 필요해요.\n18lv 아이보리까지 탈색 후 목표색 염모제로 시술하세요.',
-    detail:  ''
-  },
-  'up_red_non-ash': {
-    summary: '목표색 발색을 위해 탈색이 필요해요.\n18lv 아이보리까지 탈색 후 목표색 염모제로 시술하세요.',
-    detail:  ''
-  },
-  'up_green_non-ash': {
-    summary: '그린 베이스 제거를 위해 충분한 탈색이 필요해요.\n15lv까지 탈색 후 목표색 염모제로 시술하세요.',
-    detail:  ''
-  },
-  'up_blue_non-ash': {
-    summary: '목표색 발색을 위해 탈색이 필요해요.\n18lv 아이보리까지 탈색 후 목표색 염모제로 시술하세요.',
-    detail:  ''
-  },
-  'up_violet_non-ash': {
-    summary: '목표색 발색을 위해 탈색이 필요해요.\n18lv 아이보리까지 탈색 후 목표색 염모제로 시술하세요.',
-    detail:  ''
-  },
-  'up_neutral_non-ash': {
-    summary: '목표색 발색을 위해 탈색이 필요해요.\n18lv 아이보리까지 탈색 후 목표색 염모제로 시술하세요.',
-    detail:  ''
-  },
-
-  /* ── 톤다운 (down) ── */
-  'down_yellow_ash': {
-    summary: '노랑 언더톤에서 다크애쉬로 가시는군요.\n낮은 명도 애쉬 염모제에 보라를 소량 믹스해 시술하세요.',
-    detail:  MATTE_DETAIL
-  },
-  'down_orange_ash': {
-    summary: '△ 브라운에 가까운 애쉬가 나올 수 있어요.\n낮은 명도 애쉬 염모제에 블루를 소량 믹스해 시술하세요.',
-    detail:  ORANGE_DETAIL
-  },
-  'down_red_ash': {
-    summary: '△ 현재 레드 베이스에서는 애쉬 발색이 어려워요.\n탈색 후 시술을 강력히 권장해요.',
-    detail:  RED_DETAIL
-  },
-  'down_green_ash': {
-    summary: '낮은 명도 애쉬 방향으로 착색 가능해요.\n낮은 명도 애쉬 염모제로 시술하세요.',
-    detail:  ''
-  },
-  'down_blue_ash': {
-    summary: '쿨톤 베이스라 애쉬 표현에 유리해요.\n낮은 명도 애쉬 염모제로 시술하세요.',
-    detail:  ''
-  },
-  'down_violet_ash': {
-    summary: '쿨톤 베이스라 애쉬 표현에 유리해요.\n낮은 명도 애쉬 염모제로 시술하세요.',
-    detail:  ''
-  },
-  'down_neutral_ash': {
-    summary: '중성 베이스라 애쉬 표현이 수월해요.\n낮은 명도 애쉬 염모제로 시술하세요.',
-    detail:  ''
-  },
-  'down_yellow_non-ash': {
-    summary: '현재 명도보다 어두운 방향으로 착색해요.\n낮은 명도 목표색 염모제로 시술하세요.',
-    detail:  ''
-  },
-  'down_orange_non-ash': {
-    summary: '현재 명도보다 어두운 방향으로 착색해요.\n낮은 명도 목표색 염모제로 시술하세요.',
-    detail:  ''
-  },
-  'down_red_non-ash': {
-    summary: '현재 명도보다 어두운 방향으로 착색해요.\n낮은 명도 목표색 염모제로 시술하세요.',
-    detail:  ''
-  },
-  'down_green_non-ash': {
-    summary: '현재 명도보다 어두운 방향으로 착색해요.\n낮은 명도 목표색 염모제로 시술하세요.',
-    detail:  ''
-  },
-  'down_blue_non-ash': {
-    summary: '현재 명도보다 어두운 방향으로 착색해요.\n낮은 명도 목표색 염모제로 시술하세요.',
-    detail:  ''
-  },
-  'down_violet_non-ash': {
-    summary: '현재 명도보다 어두운 방향으로 착색해요.\n낮은 명도 목표색 염모제로 시술하세요.',
-    detail:  ''
-  },
-  'down_neutral_non-ash': {
-    summary: '현재 명도보다 어두운 방향으로 착색해요.\n낮은 명도 목표색 염모제로 시술하세요.',
-    detail:  ''
-  },
-
-  /* ── 폴백 ── */
-  'fallback': {
-    summary: '시술 방향을 확인 후 진행하세요.',
-    detail:  ''
-  },
-
-  /* ── 실전 세분화 케이스 ── */
-
-  /* 레드 + 잔류 약함 + 톤업 */
-  'up_red_ash_light': {
-    summary: '잔류가 약한 상태라 탈색이 수월하게 올라옵니다.\n18레벨 아이보리 도달 후 보라 소량 믹스로 당일 완성 가능합니다.',
-    detail:  RED_UP_LIGHT
-  },
-
-  /* 고손상모 + 레드 → 애쉬 */
-  'up_red_ash_damaged': {
-    summary: '탈색 이력이 많아 추가 장시간 탈색 시 모발 손상 위험이 높습니다.\n단시간 탈색 후 토닝으로 마무리하고 완성은 분할 시술로 진행합니다.',
-    detail:  RED_DAMAGED
-  },
-
-  /* 버진모 + 레드 → 애쉬 */
-  'up_red_ash_virgin': {
-    summary: '버진모는 탈색 반응이 균일하고 예측이 가능합니다.\n18레벨 아이보리 도달 후 잔류 색기에 맞춰 보정하면 당일 완성 가능합니다.',
-    detail:  RED_VIRGIN
-  },
-
-  /* 탈색 후 주황기 잔류 + 애쉬그레이 */
-  'same_orange_ash_residual': {
-    summary: '주황기가 남아있는 상태에서 애쉬그레이를 올리면\n순수 쿨 그레이가 아닌 브라운 기운이 도는 애쉬브라운으로 발색될 가능성이 높습니다.',
-    detail:  ORANGE_RESIDUAL
-  },
-
-  /* ── 염모제 톤업 (dye) — 탈색 없음 ── */
-  'up_dye_yellow_ash':     { summary: '산화염모제로 바로 시술 가능해요.\n탈색 없이 명도 상승이 가능한 케이스예요.', detail: '' },
-'up_dye_yellow_non-ash': { summary: '산화염모제로 바로 시술 가능해요.\n탈색 없이 명도 상승이 가능한 케이스예요.', detail: '' },
-'up_dye_orange_ash':     { summary: '산화염모제로 바로 시술 가능해요.\n탈색 없이 명도 상승이 가능한 케이스예요.', detail: '' },
-'up_dye_orange_non-ash': { summary: '산화염모제로 바로 시술 가능해요.\n탈색 없이 명도 상승이 가능한 케이스예요.', detail: '' },
-'up_dye_neutral_ash':    { summary: '산화염모제로 바로 시술 가능해요.\n탈색 없이 명도 상승이 가능한 케이스예요.', detail: '' },
-'up_dye_neutral_non-ash':{ summary: '산화염모제로 바로 시술 가능해요.\n탈색 없이 명도 상승이 가능한 케이스예요.', detail: '' },
-
-/* ── 하이리프트 톤업 (highlift) ── */
-'up_highlift_yellow_ash':     { summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.', detail: '' },
-'up_highlift_yellow_non-ash': { summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.', detail: '' },
-'up_highlift_orange_ash':     { summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.', detail: '' },
-'up_highlift_orange_non-ash': { summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.', detail: '' },
-'up_highlift_neutral_ash':    { summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.', detail: '' },
-'up_highlift_neutral_non-ash':{ summary: '13~15lv 고명도 염모제와 7~9lv를 혼합해 시술하세요.\n탈색 없이 중명도 표현이 가능한 케이스예요.', detail: '' }
-};
-
-/* ════════════════════════════════════════
-UNDERTONE_RULE — 언더톤별 보색·결과 규칙
-generateHairMessage의 데이터 소스
-CASE_TABLE과 병행 운용 (비교용)
-════════════════════════════════════════ */
-var UNDERTONE_RULE = {
-'yellow': {
-mix:          '보라',
-    mixReason:    '노랑의 보색',
-    result:       '매트하게 표현될 수 있어요',
-    detail:       MATTE_DETAIL,
-    canSame:      true,
-    canDown:      true,
-    /* 탈색 후 잔류 언더톤 규칙 */
-    bleachTarget: '18lv 아이보리',
-    residual:     '노랑기가 남아있다면 보라를 소량 믹스해 염색하세요.',
-    residualColor:'보라'
-  },
-  'orange': {
-    mix:          '블루',
-    mixReason:    '주황의 보색',
-    result:       '브라운에 가까운 애쉬가 나올 수 있어요',
-    detail:       ORANGE_DETAIL,
-    canSame:      true,
-    canDown:      true,
-    bleachTarget: '18lv 아이보리',
-    residual:     '노랑기가 남으면 보라, 주황기가 남으면 블루를 소량 믹스해 염색하세요.',
-    residualColor:'블루'
-  },
-  'red': {
-    mix:          null,
-    mixReason:    null,
-    result:       '탈색 없이 애쉬 발색이 어려워요',
-    detail:       RED_DETAIL,
-    canSame:      false,
-    canDown:      false,
-    bleachTarget: '18lv 아이보리',
-    residual:     '노랑기가 남으면 보라, 주황기가 남으면 블루를 소량 믹스해 염색하세요.',
-    residualColor:'블루'
-  },
-  'green': {
-    mix:          null,
-    mixReason:    null,
-    result:       '카키 느낌으로 발색될 수 있어요',
-    detail:       '',
-    canSame:      false,
-    canDown:      false,
-    bleachTarget: '15lv',
-    residual:     '',
-    residualColor:null
-  },
-  'blue': {
-    mix:          null,
-    mixReason:    null,
-    result:       '쿨톤 베이스라 애쉬 표현에 유리해요',
-    detail:       '',
-    canSame:      true,
-    canDown:      true,
-    bleachTarget: '18lv 아이보리',
-    residual:     '',
-    residualColor:null
-  },
-  'violet': {
-    mix:          null,
-    mixReason:    null,
-    result:       '쿨톤 베이스라 애쉬 표현에 유리해요',
-    detail:       '',
-    canSame:      true,
-    canDown:      true,
-    bleachTarget: '18lv 아이보리',
-    residual:     '',
-    residualColor:null
-  },
-  'neutral': {
-    mix:          null,
-    mixReason:    null,
-    result:       '중성 베이스라 애쉬 표현이 수월해요',
-    detail:       '',
-    canSame:      true,
-    canDown:      true,
-    bleachTarget: '18lv 아이보리',
-    residual:     '',
-    residualColor:null
-  }
-};
-
-/* ── generateHairMessage: 규칙 기반 문장 자동 생성 ──
-   CASE_TABLE과 병행 운용
-   동일 입력 → 동일 출력 목표
-   이후 CASE_TABLE 대체 가능 상태 준비
-*/
-function generateHairMessage(caseKey, curTone, targetType, toneDir, targetSubType) {
-  var rule = UNDERTONE_RULE[curTone] || UNDERTONE_RULE['neutral'];
-  var subLabel = { 'ash':'애쉬', 'ash_blue':'애쉬블루', 'ash_violet':'애쉬바이올렛', 'ash_pink':'애쉬핑크' };
-  var tLabel = subLabel[targetSubType] || '애쉬';
-  var toneKo = { 'yellow':'노랑', 'orange':'주황', 'red':'레드', 'green':'그린', 'blue':'블루', 'violet':'바이올렛', 'neutral':'중성' };
-  var curKo  = toneKo[curTone] || curTone;
-  var isAsh  = (targetType === 'ash');
-  var isWarn = isAsh && (curTone === 'orange' || curTone === 'red') && (toneDir === 'same' || toneDir === 'down');
-  var summary = '';
-  var detail  = rule.detail || '';
-
-  if (!isAsh) {
-    /* ── non-ash 공통 ── */
-    var curKoNon = curKo + ' 언더톤';
-    if (toneDir === 'up')   summary = curKoNon + '에서 밝게 올리시는군요.\n목표색 발색을 위해 18lv까지 탈색 후 염모제로 시술하세요.';
-    if (toneDir === 'same') summary = curKoNon + '에서 현재 명도로 색감 전환이에요.\n목표색 염모제로 바로 시술 가능해요.';
-    if (toneDir === 'down') summary = curKoNon + '에서 어둡게 가시는군요.\n낮은 명도 염모제로 착색하세요.';
-    detail = '';
-
-  } else if (toneDir === 'up') {
-    /* ── 톤업 + ash ──
-       문장 구조:
-       1번: "{bleachTarget}까지 탈색 후 {tLabel} 염모제로 시술하세요."
-       2번: 잔류 언더톤 조건부 보정 (rule.residual)
-       규칙 데이터로 처리 — if 분기 최소화
-    */
-    var bTarget = rule.bleachTarget || '18lv 아이보리';
-    var line1   = bTarget + '까지 탈색 후 ' + tLabel + ' 염모제로 시술하세요.';
-    var line2   = rule.residual || '';
-    summary = line1 + (line2 ? '\n' + line2 : '');
-    if (!rule.residualColor) detail = ''; /* 잔류 보정 불필요 케이스 */
-
-  } else if (toneDir === 'same') {
-    /* ── 톤인톤 + ash ── */
-    if (curTone === 'yellow') {
-      summary = '노랑 언더톤에서 ' + tLabel + '로 가시는군요.\n' + tLabel + ' 염모제에 보라를 소량 믹스해 시술하세요.';
-    } else if (curTone === 'orange') {
-      summary = '△ 주황 언더톤에서 ' + tLabel + '는 브라운에 가까운 애쉬가 나올 수 있어요.\n' + tLabel + ' 염모제에 블루를 소량 믹스해 시술하세요.';
-    } else if (curTone === 'red') {
-      summary = '△ 레드 베이스에서는 탈색 없이 ' + tLabel + ' 발색이 어려워요.\n탈색 후 시술을 강력히 권장해요.';
-    } else if (curTone === 'green') {
-      summary = '△ 그린 베이스에서 애쉬는 카키·매트 느낌으로 발색될 수 있어요.\n목표색을 다시 확인해 주세요.';
-      detail = '';
-    } else {
-      summary = curKo + ' 베이스라 ' + tLabel + ' 표현이 수월해요.\n' + tLabel + ' 염모제로 바로 시술하세요.';
-      detail = '';
-    }
-
-  } else if (toneDir === 'down') {
-    /* ── 톤다운 + ash ── */
-    if (curTone === 'yellow') {
-      summary = '노랑 언더톤에서 어두운 ' + tLabel + '로 가시는군요.\n낮은 명도 ' + tLabel + ' 염모제에 보라를 소량 믹스해 시술하세요.';
-    } else if (curTone === 'orange') {
-      summary = '△ 주황 언더톤에서 다크 ' + tLabel + '는 브라운에 가까운 애쉬가 나올 수 있어요.\n낮은 명도 ' + tLabel + ' 염모제에 블루를 소량 믹스해 시술하세요.';
-    } else if (curTone === 'red') {
-      summary = '△ 레드 베이스에서는 탈색 없이 ' + tLabel + ' 발색이 어려워요.\n탈색 후 시술을 강력히 권장해요.';
-    } else {
-      summary = curKo + ' 베이스에서 어두운 ' + tLabel + '로 가시는군요.\n낮은 명도 ' + tLabel + ' 염모제로 시술하세요.';
-      detail = '';
-    }
-  }
-
-  return { summary: summary, detail: detail };
-}
-
-
-function buildHairMessage(result, curHSL, tarHSL) {
-  var toneDir       = window._toneDir       || 'same';
-  var curTone       = window._curTone       || 'neutral';
-  var targetType    = window._targetType    || 'non-ash';
-  var targetSubType = window._targetSubType || 'ash';
-  var toneUpType    = window._toneUpType    || 'bleach';
-  var damageLevel   = window._currentDamageLevel || 'natural';
-  var hairState     = window._hairState     || 'normal';
-
-  /* 탈색 도달 레벨 계산 */
-  var bleachLv = Math.round(tarHSL.l / 5);
-
-  /* toneUpType이 dye/highlift면 effectiveToneDir에 반영 */
-  var effectiveToneDir = (toneDir === 'up' && (toneUpType === 'dye' || toneUpType === 'highlift'))
-    ? 'up_' + toneUpType
-    : toneDir;
-
-  var caseKey = effectiveToneDir + '_' + curTone + '_' + targetType;
-
-  /* ════════════════════════════════════════
-     HAIR_RULES 매핑
-     이제 모든 ash 목표는 HAIR_RULES를 사용합니다.
-     매핑 안 되는 경우(down / non-ash)만 buildSentence 폴백
-  ════════════════════════════════════════ */
-
-  /* curTone → prefix */
-  var TONE_PREFIX = {
-    'yellow':  'YELLOW',
-    'orange':  'ORANGE',
-    'red':     'RED',
-    'blue':    'COOL',
-    'violet':  'COOL',
-    'neutral': 'COOL',
-    'green':   'COOL'
-  };
-  var prefix = TONE_PREFIX[curTone] || 'RED';
-
-  /* 잔류 강도 — bleachLv 기반 */
-  var residual = bleachLv >= 17 ? 'LIGHT' : 'STRONG';
-
-  console.log('[buildHairMessage]', {
-    curTone: curTone, prefix: prefix, residual: residual,
-    targetType: targetType, bleachLv: bleachLv
-  });
-
-  /* rulesKey 결정 — STRONG / LIGHT 두 단계
-     targetType 무관하게 항상 시도, hairRule 없으면 buildSentence 폴백 */
-  var rulesKey = null;
-
-  /* targetType 재판단 — 세팅 안 됐거나 non-ash인 경우 tarHSL로 보완 */
-  if (!window._targetType || window._targetType === 'non-ash') {
-    if (tarHSL && tarHSL.s < 30) window._targetType = 'ash';
-  }
-  targetType = window._targetType || 'non-ash';
-
-  /* prefix가 유효하면 항상 HAIR_RULES 시도 */
-  if (prefix && residual) {
-    rulesKey = prefix + '_' + residual;
-  }
-
-  var summary, detailText;
-
-  if (rulesKey) {
-    /* ── HAIR_RULES 사용 ── */
-    var hairRule = getRuleByKey(rulesKey);
-    if (hairRule) {
-      summary    = hairRule.summary;
-      detailText = hairRule.detail
-        + (hairRule.guide && hairRule.guide.length
-            ? '\n\n' + hairRule.guide.map(function(g) { return '· ' + g; }).join('\n')
-            : '');
-      window._caseKey    = caseKey;
-      window._caseDetail = detailText;
-      console.log('[HAIR_RULES]', rulesKey, '→', summary.slice(0, 40));
-      return summary;
-    }
-  }
-
-  /* ── buildSentence 폴백 (down / non-ash / 매핑 없음) ── */
-  summary = buildSentence(toneDir, curTone, targetType, targetSubType, bleachLv, tarHSL);
-
-  var rule = UNDERTONE_RULE[curTone] || UNDERTONE_RULE['neutral'];
-  var colorRelation  = window._colorRelation  || '';
-  var effectiveUnder = window._effectiveUnder || curTone;
-  var targetBaseHue  = window._targetBaseHue  || 'blue';
-
-  var SUPPRESS_MSG = {
-    'yellow+violet': '노랑기가 남아있다면 애쉬는 탁해지고 바이올렛 발색은 약해질 수 있어요.',
-    'yellow+blue':   '노랑기가 남아있다면 블루애쉬가 매트하게 빠질 수 있어요.',
-    'yellow+pink':   '노랑기가 남아있다면 핑크보다 살구·코랄에 가깝게 나올 수 있어요.',
-    'orange+blue':   '주황기가 남아있다면 브라운에 가까운 애쉬가 나올 수 있어요.',
-    'red+green':     '레드기가 강해 탈색 없이 원하는 발색이 어려워요.'
-  };
-  var MIX_MSG = {
-    'yellow+red':    '노랑 언더톤이 레드와 섞여 옐로우오렌지 빛이 날 수 있어요.',
-    'orange+red':    '주황 언더톤이 레드와 섞여 레드오렌지 브라운이 나올 수 있어요.',
-    'red+violet':    '레드 언더톤이 바이올렛과 섞여 레드바이올렛 브라운이 나올 수 있어요.'
-  };
-
-  var detailMsg = '';
-  var relKey = effectiveUnder + '+' + targetBaseHue;
-  if      (colorRelation === 'suppress') detailMsg = SUPPRESS_MSG[relKey] || '현재 언더톤과 목표색이 보색 관계로 억제가 일어날 수 있어요.';
-  else if (colorRelation === 'mix')      detailMsg = MIX_MSG[relKey]      || '현재 언더톤이 목표색과 혼합되어 예상과 다른 색감이 나올 수 있어요.';
-  else if (colorRelation === 'pure')     detailMsg = '언더톤과 목표색이 일치해 가장 선명한 발색이 기대돼요.';
-
-  var baseDetail = (targetType === 'ash') ? (rule.detail || '') : '';
-  detailText = [detailMsg, baseDetail].filter(Boolean).join('\n\n');
-
-  window._caseKey    = caseKey;
-  window._caseDetail = detailText;
-  console.log('[buildSentence fallback]', caseKey, '→', summary.slice(0, 40));
-  return summary;
-}
-
-
-
-/* ── 분석 결과 렌더링 (2안: 프론트 문장 → API 다듬기) ── */
 function renderAnalysisResult(result) {
   var curName = hueToName(currentHSL.h, currentHSL.s, currentHSL.l);
   var tarName = hueToName(targetHSL.h, targetHSL.s, targetHSL.l);
@@ -4903,7 +4779,7 @@ function renderAnalysisResult(result) {
   var currentLevel = Math.round(currentHSL.l / 5);
   var bleachLevel  = Math.round(targetHSL.l / 5);
   var yellowLevel  = getYellowLevel(currentLevel, bleachLevel, toneDir);
-  window._yellowLevel = yellowLevel; /* buildHairMessage에서 접근 */
+  window._yellowLevel = yellowLevel; /* renderAnalysisResult에서 접근 */
 
   /* ── allowBleachMention: 탈색 언급 허용 여부 ── */
   var allowBleachMention = (toneDir === 'up');
@@ -4952,8 +4828,35 @@ function renderAnalysisResult(result) {
     undertoneEl.textContent = '📊 분석 기준 — 현재: ' + (toneKoMap[curToneForLabel] || curToneForLabel) + ' 언더톤 → 목표: ' + (subTypeKo[subTypeForLabel] || '기타');
   }
 
-  /* summary 문장 */
-  var frontMsg = buildHairMessage(result, currentHSL, targetHSL);
+  /* summary 문장 — HAIR_RULE_MATRIX.getRule() */
+  var _utKey  = (window._utCurZone && window._utCurZone.key)
+                ? window._utCurZone.key
+                : (window._curTone || 'yellow');
+  var _tarKey  = window._targetSubType || 'ash';
+  var _toneDir = window._toneDir       || 'same';
+
+  var _rule    = HAIR_RULE_MATRIX.getRule(_utKey, _tarKey, _toneDir, currentHSL.l, targetHSL.l);
+  var frontMsg;
+
+  if (_rule && _rule.key !== 'DEFAULT') {
+    /* Matrix 케이스 매칭 */
+    frontMsg = _rule.summary;
+    var _guideText = (_rule.guide && _rule.guide.length)
+      ? '\n\n' + _rule.guide.map(function(g){ return '· ' + g; }).join('\n')
+      : '';
+    window._caseDetail = _rule.detail + _guideText;
+    window._caseKey    = _rule.rulesKey || _utKey + '_' + _tarKey;
+    console.log('[MATRIX]', _rule.rulesKey, '→', frontMsg.slice(0,40));
+  } else {
+    /* 폴백 — red/copper/yellow 목표색 등 Matrix 미커버 케이스 */
+    var _toneDir2    = window._toneDir       || 'same';
+    var _curTone2    = window._curTone        || 'neutral';
+    var _targetType2 = window._targetType     || 'non-ash';
+    var _subType2    = window._targetSubType  || '';
+    var _bleachLv2   = Math.round(targetHSL.l / 5);
+    frontMsg = buildSentence(_toneDir2, _curTone2, _targetType2, _subType2, _bleachLv2, targetHSL);
+    console.log('[buildSentence fallback]', _utKey, '→', _tarKey);
+  }
 
   if (summaryEl) {
     summaryEl.style.whiteSpace = 'pre-line';
@@ -4967,6 +4870,13 @@ function renderAnalysisResult(result) {
 
   /* detail 문장 — CASE_TABLE에서 선택된 문장 */
   var detailText = window._caseDetail || '';
+
+  /* 매트 언더톤 안내 문구 — detail 앞에 작게 표시 */
+  var _utKey2 = window._utCurZone ? window._utCurZone.key : '';
+  if (_utKey2 === 'faded') {
+    var _matteNote = '⚠ 매트 베이스(단무지빛 노랑+살짝 초록기)는 보라·붉은 계열 중화가 부담스러울 수 있어요.\n시나몬브라운(한색+난색 동시 존재 브라운) 소량 믹스가 더 부드럽고 안전한 선택이에요.\n선명한 발색은 탈색 후 착색 권장.\n\n';
+    detailText = _matteNote + detailText;
+  }
   /* 버튼: detailText가 있으면 무조건 표시
      (orange/red ash 경고, 노랑기 중화 이유 포함) */
   var showDetail = detailText.length > 0;
@@ -4975,7 +4885,18 @@ function renderAnalysisResult(result) {
   if (detailEl2) {
     detailEl2.style.display = 'none';
     detailEl2.style.whiteSpace = 'pre-line';
-    detailEl2.textContent = detailText;
+    /* 매트 안내문구(⚠ 시작)는 작은 글씨로 분리 표시 */
+    if (_utKey2 === 'faded' && detailText.indexOf('⚠') === 0) {
+      var _parts = detailText.split('\n\n');
+      var _note  = _parts[0];
+      var _body  = _parts.slice(1).join('\n\n');
+      detailEl2.innerHTML =
+        '<div style="font-size:10px;color:#777;line-height:1.7;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #222;">'
+        + _note.replace(/\n/g,'<br>') + '</div>'
+        + '<div style="white-space:pre-line;">' + _body + '</div>';
+    } else {
+      detailEl2.textContent = detailText;
+    }
   }
 }
 
@@ -5921,505 +5842,6 @@ function clearRecipe() {
    매트+노랑 → 애쉬+핑크 소량 가미 브라운 (시나몬·낙엽빛 복합 브라운)
    노랑+애쉬 단독 = 카키 변질 주의
 ════════════════════════════════════════ */
-function updateRecipe() {
-  if (!userLevel) {
-    showRecipe('명도를 선택해주세요', '슬라이더로 현재 명도를 선택한 뒤\n원하는 색감 방향을 골라주세요.', '');
-    return;
-  }
-  if (!userTarget) {
-    showRecipe('방향을 선택해주세요', '원하는 색감 방향 버튼을 눌러주세요.', '');
-    return;
-  }
-
-  var lv = userLevel;
-  var ut = analysisResult.undertone || 'none';
-  var base = analysisResult.base || 'brown';
-  var isPink = analysisResult.isPinkish  || false;
-  var isBlue = analysisResult.isBlueish  || false;
-  var isPurp = analysisResult.isPurplish || false;
-  var isRedW = analysisResult.isRedWine  || false;
-
-  var lvDark   = lv <= 7;
-  var lvMid    = lv >= 8 && lv <= 14;
-  var lvBright = lv >= 15;
-  var lvIvory  = lv >= 18; /* 아이보리·백금 구간 */
-
-  /* ── 아이보리·백금 베이스 전용 처리 (레벨 18 이상) ── */
-  if (lvIvory || base === 'ivory') {
-    var T0 = userTarget;
-    var tName0 = {
-      'blue-black':'블루블랙','ash-gray':'애쉬그레이','ash-brown':'애쉬',
-      'cool-beige':'쿨베이지','neutral-brown':'뉴트럴','khaki':'카키',
-      'violet-brown':'바이올렛','blue-violet':'청보라','warm-brown':'웜',
-      'red-brown':'레드','copper':'코퍼','wine':'와인레드','pink-beige':'핑크베이지',
-      'blonde':'블론드','pastel':'파스텔','bleach':'탈색'
-    }[T0] || T0;
-
-    var ivoryDetail = '';
-    var ivoryRisk = '';
-
-    if (isBlue || isPink || isPurp) {
-      ivoryDetail = '아이보리·백금 베이스에 인공 색소가 남아있는 상태예요.\n이 명도(' + lv + '레벨)에서 잔류 색소는 발색에 민감하게 영향을 줘요.\n\n' + tName0 + ' 방향으로 가려면:\n토닝 또는 탈색으로 한 번 제거한 후 원하는 색감을 올리는 게 깔끔해요.\n\n추천:\n1. 토닝으로 인공 색소 중화 후 시술\n2. 탈색 1회로 정리 후 원하는 방향 적용';
-      ivoryRisk = '잔류 인공 색소가 남으면 원하는 색감이 오염될 수 있어요.';
-    } else if (T0 === 'bleach') {
-      ivoryDetail = '이미 아이보리·백금에 가까운 밝은 베이스예요.\n추가 탈색이 필요하다면 소량으로 조절하세요.\n\n화이트블론드·백금발을 원하신다면\n연핑크와 베이지 계열 소량 토닝을 추천해요.';
-    } else if (T0 === 'pastel') {
-      ivoryDetail = '아이보리·백금 베이스에서 파스텔은 가장 선명하게 표현되는 구간이에요.\n\n추천:\n1. 바로 파스텔 토닝 가능해요\n2. 노랑기가 살짝 남아있다면 보라를 소량 섞어 시술';
-    } else if (T0 === 'blonde') {
-      ivoryDetail = '탈색을 충분히 한 깨끗한 베이스네요.\n어느 색감으로 가든 수월한 상태예요.\n\n완전한 화이트블론드·백금발을 원하신다면\n연핑크와 베이지 계열을 소량 토닝하는 걸 추천해요.';
-    } else if (['blue-black','ash-gray','ash-brown','cool-beige'].indexOf(T0) > -1) {
-      ivoryDetail = '아이보리·백금 베이스에서 한색 계열이에요.\n애쉬·쿨베이지 방향이 가장 깔끔하게 나와요.\n\n추천:\n1. 바로 시술 가능해요\n2. 블루블랙은 색 흡수가 빨라요 — 방치 시간 주의하세요';
-    } else if (['warm-brown','red-brown','copper','wine','pink-beige'].indexOf(T0) > -1) {
-      ivoryDetail = '아이보리·백금 베이스에서 난색·핑크 계열이에요.\n이 구간에서 발색이 선명하게 나와요.\n\n추천:\n1. 바로 시술 가능해요\n2. 코퍼·레드 방향은 이 명도에서 가장 선명하게 표현돼요';
-      if (T0 === 'copper') ivoryDetail += '\n3. 코퍼는 아이보리 베이스에서 최상의 발색이에요';
-    } else {
-      ivoryDetail = '아이보리·백금 베이스에서 ' + tName0 + ' 방향이에요.\n이 구간에서 어느 색감으로 가든 수월해요.\n\n추천:\n1. 바로 시술 가능해요';
-    }
-
-    if (ivoryRisk) ivoryDetail = ivoryDetail + '\n\n⚠️ ' + ivoryRisk;
-    showRecipe(tName0, ivoryDetail, '');
-    return;
-  }
-
-  /* ── 잔류색 파워 분류 ──
-     파랑·붉은기·핑크 = 강함 (3)
-     보라             = 중간 (2)
-     매트·노랑        = 약함 (1)
-     없음             = 없음 (0)
-  ── */
-  var residualPower = 0;
-  var residualType  = 'none';
-  if (isBlue)                       { residualPower = 3; residualType = 'blue'; }
-  else if (isPink)                  { residualPower = 3; residualType = 'pink'; }
-  else if (isRedW || ut === 'warm' && analysisResult.tones && analysisResult.tones[0] === 'red')
-                                    { residualPower = 3; residualType = 'red';  }
-  else if (ut === 'warm' && analysisResult.tones && analysisResult.tones[0] === 'orange')
-                                    { residualPower = 2; residualType = 'orange'; }
-  else if (ut === 'warm' && analysisResult.tones && analysisResult.tones[0] === 'yellow')
-                                    { residualPower = 1; residualType = 'yellow'; }
-  else if (ut === 'warm')           { residualPower = 2; residualType = 'red'; } /* fallback */
-  else if (isPurp)                  { residualPower = 2; residualType = 'purple'; }
-  else if (ut === 'matte')          { residualPower = 1; residualType = 'matte'; }
-  else                              { residualPower = 0; residualType = 'none'; }
-
-  var T = userTarget;
-  var isCold   = ['blue-black','ash-gray','ash-brown','cool-beige'].indexOf(T) > -1;
-  var isGreenV = ['neutral-brown','khaki','violet-brown','blue-violet'].indexOf(T) > -1;
-  var isWarm   = ['warm-brown','red-brown','copper','wine','pink-beige'].indexOf(T) > -1;
-  var isBright = ['blonde','pastel','bleach'].indexOf(T) > -1;
-
-  var tName = {
-    'blue-black':'블루블랙','ash-gray':'애쉬그레이','ash-brown':'애쉬',
-    'cool-beige':'쿨베이지','neutral-brown':'뉴트럴','khaki':'카키',
-    'violet-brown':'바이올렛','blue-violet':'청보라','warm-brown':'웜',
-    'red-brown':'레드','copper':'코퍼','wine':'와인레드','pink-beige':'핑크베이지',
-    'blonde':'블론드','pastel':'파스텔','bleach':'탈색'
-  }[T] || T;
-
-  /* ── 보색 충돌 계산 ──
-     파랑  ↔ 코퍼           = 강충돌(3)
-     파랑  ↔ 웜·레드        = 보통충돌(2)
-     파랑  ↔ 카키·바이올렛  = 약충돌(1) — 군청빛 섞임
-     파랑  ↔ 한색           = 무충돌(0)
-     붉은기↔ 한색·카키      = 보통충돌(2)
-     붉은기↔ 난색           = 무충돌(0)
-     주황  ↔ 한색           = 보통충돌(2) — 카키 변질 위험
-     노랑  ↔ 한색           = 약충돌(1) — 바이올렛으로 중화 필요
-     핑크  ↔ 한색           = 보통충돌(2)
-     핑크  ↔ 핑크베이지     = 무충돌(0)
-     보라  ↔ 청보라·바이올렛= 무충돌(0)
-  ── */
-  var conflict = 0;
-  if (residualType === 'blue') {
-    if (T === 'copper')                                        conflict = 3;
-    else if (isWarm && T !== 'wine' && T !== 'pink-beige')    conflict = 2;
-    else if (T === 'wine')                                     conflict = 1;
-    else if (T === 'pink-beige')                               conflict = 2;
-    else if (T === 'khaki' || T === 'violet-brown')            conflict = 1;
-    else if (T === 'blue-violet')                              conflict = 0;
-    else if (isCold)                                           conflict = 0;
-    else                                                       conflict = 0;
-  } else if (residualType === 'red') {
-    if (isCold)                                                conflict = 2;
-    else if (T === 'khaki')                                    conflict = 1;
-    else if (isWarm)                                           conflict = 0;
-    else                                                       conflict = 1;
-  } else if (residualType === 'orange') {
-    if (isCold)                                                conflict = 2; /* 주황+한색 = 카키 변질 */
-    else if (T === 'khaki')                                    conflict = 0; /* 주황+카키 = 자연스러움 */
-    else if (isWarm)                                           conflict = 0;
-    else                                                       conflict = 1;
-  } else if (residualType === 'yellow') {
-    if (isCold && T !== 'cool-beige')                          conflict = 1; /* 노랑+한색 = 바이올렛 중화 필요 */
-    else if (T === 'khaki')                                    conflict = 0; /* 노랑+카키 = 유리 */
-    else if (isWarm)                                           conflict = 0;
-    else                                                       conflict = 0;
-  } else if (residualType === 'pink') {
-    if (isCold)                                                conflict = 2;
-    else if (T === 'pink-beige')                               conflict = 0;
-    else if (isWarm)                                           conflict = 1;
-  } else if (residualType === 'purple') {
-    if (T === 'blue-violet' || T === 'violet-brown')           conflict = 0;
-    else if (isCold)                                           conflict = 1;
-    else                                                       conflict = 0;
-  }
-
-  var lines = [];
-  var risks = [];
-
-  /* ── 잔류색 설명 ── */
-  var rDesc = {
-    'blue':   '청회색·파랑 계열 잔류',
-    'pink':   '핑크·마젠타 잔류 (인공 색소)',
-    'red':    '붉은기·적색 잔류',
-    'orange': '주황 잔류',
-    'yellow': '노랑 잔류',
-    'purple': '보라 잔류 (인공 색소)',
-    'matte':  '매트한 노랑기 잔류',
-    'none':   '뚜렷한 잔류색 없음'
-  }[residualType] || '';
-
-  /* ══════════════════════════════════
-     충돌 수준별 문구 생성
-  ══════════════════════════════════ */
-
-  if (conflict === 3) {
-    lines.push(rDesc + '과 ' + tName + '은 강한 보색 충돌이에요.');
-    lines.push('잔류색을 제거하지 않으면 탁하게 섞여요.');
-    lines.push('');
-    lines.push('추천:');
-    lines.push('1. 탈색으로 잔류 제거 후 시술 — 가장 확실');
-    lines.push('2. 탈색 없이 진행 시 탁한 결과 가능성이 매우 높아요');
-    risks.push('코퍼와 파랑은 정반대 색이에요. 반드시 탈색 후 진행하세요.');
-
-  } else if (conflict === 2) {
-
-    if (residualType === 'blue' && isWarm) {
-      lines.push('파랑 잔류와 따뜻한 계열은 보색 관계라 섞이면 탁해져요.');
-      if (lvDark) {
-        lines.push('낮은 명도(' + lv + '레벨)에서 잔류 파랑의 영향이 강해요.');
-        lines.push('');
-        lines.push('추천:');
-        lines.push('1. 탈색으로 파랑 제거 후 난색 시술');
-        lines.push('2. 탈색 없이 진행 시 청빛이 섞인 탁한 결과');
-      } else if (lvMid) {
-        lines.push('이 명도(' + lv + '레벨)에서 파랑 잔류가 발색에 영향을 줘요.');
-        lines.push('');
-        lines.push('추천:');
-        lines.push('1. 탈색으로 정리 후 난색 시술 — 가장 확실');
-        lines.push('2. 탈색 없이 → 결과물에 청빛이 섞일 수 있어요');
-      } else {
-        lines.push('밝은 명도(' + lv + '레벨)라 잔류 영향이 다소 줄어들지만');
-        lines.push('선명한 난색을 원하면 잔류 제거가 필요해요.');
-        lines.push('');
-        lines.push('추천:');
-        lines.push('1. 탈색으로 정리 후 시술 — 깔끔');
-        lines.push('2. 탈색 없이 → 약한 청빛 섞임 가능');
-      }
-      risks.push('파랑 + 난색 = 탁한 혼색. 특히 코퍼는 절대 탈색 먼저.');
-
-    } else if (residualType === 'red' && isCold) {
-      lines.push('붉은기 잔류와 차가운 계열은 보색 관계예요.');
-      if (lvDark) {
-        lines.push('낮은 명도(' + lv + '레벨)에서 한색 전환은 난이도가 높아요.');
-        lines.push('');
-        lines.push('추천:');
-        lines.push('1. 그린 계열로 붉은기 중화 반복 후 차가운 계열 적용');
-        lines.push('2. 탈색 후 시술 — 가장 확실');
-        risks.push('차가운 계열 단독 적용 시 탁한 카키빛이 나와요');
-      } else if (lvMid) {
-        lines.push('');
-        lines.push('이 명도(' + lv + '레벨)에서는:');
-        lines.push('선명한 애쉬보다 붉은빛·주황빛이 억제된 정도로 표현돼요.');
-        lines.push('');
-        lines.push('추천:');
-        lines.push('1. 그린 계열로 붉은기를 먼저 중화 후 차가운 계열 시술');
-        lines.push('2. 탈색 후 시술');
-      } else {
-        lines.push('밝은 명도(' + lv + '레벨)라 중화 한 번으로도 효과적이에요.');
-        lines.push('');
-        lines.push('추천:');
-        lines.push('1. 그린 계열 소량으로 붉은기 중화 후 시술');
-        lines.push('2. 탈색 후 시술');
-      }
-
-    } else if (residualType === 'pink' && isCold) {
-      lines.push('핑크 잔류 위에 차가운 계열을 올리면 보라핑크빛이 섞여요.');
-      lines.push('');
-      lines.push('추천:');
-      lines.push('1. 탈색으로 핑크 제거 후 시술 — 가장 확실');
-      lines.push('2. 탈색 없이 → 억제 계열을 진하게 혼합해 탁한 애쉬로 표현 가능');
-      lines.push('   (단, 색이 죽을 수 있어요)');
-      risks.push('탈색 없이 바로 올리면 보라핑크·탁한 애쉬핑크가 나와요');
-
-    } else if (residualType === 'blue' && T === 'pink-beige') {
-      lines.push('파랑 잔류와 핑크베이지는 섞이면 보라핑크빛이 나올 수 있어요.');
-      lines.push('핑크베이지는 매우 파스텔한 영역이라 잔류에 민감해요.');
-      lines.push('');
-      lines.push('추천:');
-      lines.push('1. 탈색으로 파랑 제거 후 시술 — 필수');
-      lines.push('2. 탈색 없이 진행 시 선명한 핑크베이지 표현 불가');
-      risks.push('파랑 잔류 + 핑크베이지 = 보라핑크빛 오염');
-    }
-
-  } else if (conflict === 1) {
-
-    if (residualType === 'blue' && T === 'khaki') {
-      lines.push('파랑 잔류가 있으면 카키가 군청빛으로 치우칠 수 있어요.');
-      if (lvMid) {
-        lines.push('이 명도(' + lv + '레벨)에서는 노랑+그린 계열을 써서 중화 개념으로 접근해요.');
-      }
-      if (lvBright) {
-        lines.push('밝은 명도에서는 큰 문제 없이 카키 계열 표현 가능해요.');
-      }
-      lines.push('');
-      lines.push('추천:');
-      lines.push('1. 카키 시술 가능 — 군청빛 섞임 가능성 인지하고 진행');
-      lines.push('2. 깔끔한 카키 원하면 탈색 후 시술');
-
-    } else if (residualType === 'blue' && T === 'violet-brown') {
-      lines.push('파랑 잔류 위에 바이올렛은 청보라 느낌이 강해질 수 있어요.');
-      lines.push('');
-      lines.push('추천:');
-      lines.push('1. 바이올렛 시술 가능 — 청보라 방향으로 치우칠 수 있어요');
-      lines.push('2. 적색 소량을 섞으면 균형을 잡을 수 있어요');
-
-    } else if (residualType === 'blue' && T === 'wine') {
-      lines.push('파랑 잔류 + 와인은 청보라·적보라 느낌이 나와요.');
-      lines.push('톤다운 느낌의 와인레드라면 가능해요.');
-      lines.push('');
-      lines.push('추천:');
-      lines.push('1. 보라+레드 혼합으로 표현');
-      lines.push('2. 선명한 와인레드 원하면 탈색 후 시술');
-
-    } else if (residualType === 'yellow' && isCold) {
-      lines.push('노랑 잔류 위에 차가운 계열을 바로 올리면 카키빛으로 변질될 수 있어요.');
-      lines.push('보라를 소량 섞어 보색중화하면서 차가운 계열을 올리는 순서가 중요해요.');
-      if (lvBright) {
-        lines.push('밝은 명도(' + lv + '레벨)에서는 보라 소량으로도 효과적으로 보색중화돼요.');
-      }
-      lines.push('');
-      lines.push('추천:');
-      lines.push('1. 바이올렛 계열 소량 선혼합 → 노랑 중화 → 차가운 계열 시술');
-      lines.push('2. 탈색 1회로 노랑기를 정리한 후 시술 — 더 깔끔');
-      risks.push('노랑 + 차가운 계열 직접 = 카키빛 변질');
-
-    } else if (residualType === 'orange' && isCold) {
-      lines.push('주황 잔류 위에 차가운 계열이에요.');
-      lines.push('주황과 차가운 색은 보색에 가까워서 탁하게 섞일 수 있어요.');
-      if (lvMid) {
-        lines.push('이 명도(' + lv + '레벨)에서 주황기 영향이 꽤 강하게 나와요.');
-        lines.push('청회색 계열로 명도를 올리면서 동시에 색을 입히는 방식이 효과적이에요.');
-      }
-      lines.push('');
-      lines.push('추천:');
-      lines.push('1. 청회색 계열로 주황을 억제하면서 차가운 계열 적용');
-      lines.push('2. 탈색으로 주황기 제거 후 시술 — 가장 확실');
-      risks.push('주황 + 차가운 계열 직접 = 탁한 카키·그린빛 가능성');
-
-    } else if (residualType === 'red' && T === 'khaki') {
-      lines.push('붉은기 잔류 위에 카키 계열이에요.');
-      lines.push('그린이 붉은기를 자연스럽게 억제하면서 카키로 정착해요.');
-      lines.push('');
-      lines.push('추천:');
-      lines.push('1. 시술 가능해요 — 그린 계열이 붉은기를 정리해줘요');
-      lines.push('2. 붉은기가 강하면 그린 계열 비율을 높이세요');
-
-    } else if (residualType === 'purple' && isCold) {
-      lines.push('보라 잔류와 차가운 계열이에요.');
-      lines.push('약한 보라빛이 섞일 수 있지만 치명적이지 않아요.');
-      lines.push('');
-      lines.push('추천:');
-      lines.push('1. 시술 가능해요 — 약한 보라빛 애쉬 톤이 나와요');
-      lines.push('2. 더 맑은 결과 원하면 탈색 후 시술');
-
-    } else {
-      lines.push(rDesc + '이 ' + tName + '에 약하게 영향을 줘요.');
-      lines.push('');
-      lines.push('추천:');
-      lines.push('1. 시술 가능해요 — 약간의 혼색 가능성 인지');
-      lines.push('2. 더 깔끔한 결과 원하면 탈색 1회 후 시술');
-    }
-
-  } else {
-    /* 충돌 없음 */
-
-    if (T === 'bleach') {
-      lines.push('탈색 진행이에요.');
-      lines.push('흑 → 붉은기 → 주황 → 노랑 → 아이보리 → 백금 순서로 올라와요.');
-      if (lvDark)   lines.push('낮은 명도(' + lv + '레벨)라 탈색 횟수를 여유있게 잡으세요.');
-      if (lvBright) lines.push('이미 밝은 명도라 추가 탈색이 적게 필요해요.');
-      if (residualType === 'blue' || residualType === 'pink' || residualType === 'purple') {
-        lines.push('인공 색소는 탈색 시 함께 제거돼요.');
-      }
-
-    } else if (isBright) {
-      if (lvBright) {
-        lines.push('이미 밝은 명도(' + lv + '레벨)라 바로 가능해요.');
-        lines.push('');
-        lines.push('추천:');
-        lines.push('1. 보라를 소량 섞어 보색중화하면서 토닝');
-        lines.push('2. 파스텔은 레벨 17 이상 아이보리에서 가장 선명해요');
-        if (residualType !== 'none') risks.push('잔류색이 남아있어 결과가 예상과 다를 수 있어요. 탈색 후 시술이 확실해요.');
-      } else {
-        lines.push('밝은 계열로 가려면 탈색이 필요해요.');
-        lines.push('');
-        lines.push('추천:');
-        lines.push('1. 탈색 후 원하는 밝기에서 토닝');
-        if (T === 'pastel') risks.push('탈색 부족 시 노랑기가 남아 파스텔이 탁하게 나와요');
-      }
-
-    } else if (residualType === 'blue' && isCold) {
-      lines.push('파랑 잔류와 한색 방향은 같은 계열이에요.');
-      if (lvDark) {
-        lines.push('');
-        lines.push('이 명도(' + lv + '레벨)에서는 네이비에 가까운 짙은 한색이 나와요.');
-        lines.push('');
-        lines.push('추천:');
-        lines.push('1. 블루블랙·딥애쉬 방향 바로 가능해요');
-        lines.push('2. 밝은 애쉬그레이로 가려면 탈색으로 명도를 올려야 해요');
-      } else if (lvMid) {
-        lines.push('');
-        lines.push('이 명도(' + lv + '레벨)에서 파랑 잔류는 한색 발색에 도움이 돼요.');
-        lines.push('');
-        lines.push('추천:');
-        lines.push('1. 바로 시술 가능해요');
-        lines.push('2. 더 선명한 한색 원하면 탈색 1회 후 시술');
-      } else {
-        lines.push('밝은 명도(' + lv + '레벨)에서 한색 방향이에요.');
-        lines.push('파랑 잔류가 한색 발색에 유리하게 작용해요.');
-        lines.push('');
-        lines.push('추천:');
-        lines.push('1. 바로 시술 가능해요');
-        lines.push('2. 탈색으로 정리하면 더 깔끔해요');
-      }
-      risks.push('난색(코퍼·레드 등)으로 바꿀 경우 파랑과 충돌해 탁해져요');
-
-    } else if (residualType === 'red' && isWarm) {
-      lines.push('붉은기 잔류와 난색 방향은 방향이 맞아요.');
-      lines.push('언더톤을 활용하는 방식이라 발색이 좋고 유지력도 높아요.');
-      if (lvDark) lines.push('낮은 명도에서도 레드·웜 방향은 바로 구현 가능해요.');
-      lines.push('');
-      lines.push('추천:');
-      lines.push('1. 바로 시술 가능해요');
-      lines.push('2. 선명도를 높이려면 같은 계열 컨트롤 컬러 소량 추가');
-
-    } else if (residualType === 'orange' && isWarm) {
-      lines.push('주황 잔류와 따뜻한 방향은 잘 어울려요.');
-      if (T === 'copper') lines.push('코퍼 방향은 주황 언더톤과 찰떡이에요 — 가장 선명하게 나와요.');
-      lines.push('');
-      lines.push('추천:');
-      lines.push('1. 바로 시술 가능해요');
-
-    } else if (residualType === 'yellow' && isWarm) {
-      lines.push('노랑 잔류와 따뜻한 방향이에요.');
-      if (T === 'warm-brown') lines.push('자연스러운 골든 계열이 나와요.');
-      lines.push('');
-      lines.push('추천:');
-      lines.push('1. 바로 시술 가능해요');
-
-    } else if (residualType === 'yellow' && T === 'khaki') {
-      lines.push('노랑 잔류가 있으면 그린 계열이 노랑을 카키로 자연스럽게 바꿔줘요.');
-      lines.push('이 조합은 카키 방향에 오히려 유리해요.');
-      lines.push('');
-      lines.push('추천:');
-      lines.push('1. 바로 시술 가능해요 — 노랑 언더톤이 카키 발색에 도움이 돼요');
-
-    } else if (residualType === 'blue' && T === 'blue-violet') {
-      lines.push('파랑 잔류와 청보라는 자연스럽게 연결돼요.');
-      lines.push('');
-      lines.push('추천:');
-      lines.push('1. 바로 시술 가능해요');
-      if (lvBright) lines.push('2. 밝은 명도에서 발색이 더 선명해요');
-
-    } else if (residualType === 'purple' && (T === 'blue-violet' || T === 'violet-brown')) {
-      lines.push('보라 잔류와 바이올렛·청보라 방향은 같은 계열이에요.');
-      lines.push('');
-      lines.push('추천:');
-      lines.push('1. 바로 시술 가능해요');
-      if (lvBright) risks.push('매우 밝은 명도에서는 보라가 강하게 도드라질 수 있어요');
-
-    } else if (residualType === 'matte' && T === 'khaki') {
-      lines.push('매트한 노랑기가 깔려 있어요.');
-      lines.push('그린 계열이 이 노랑기를 카키로 자연스럽게 바꿔줘요.');
-      lines.push('');
-      lines.push('추천:');
-      lines.push('1. 카키 시술에 유리한 조건이에요');
-
-    } else if (residualType === 'matte' && isCold) {
-      lines.push('매트한 노랑기 위에 차가운 계열이에요.');
-      lines.push('');
-      lines.push('추천:');
-      lines.push('1. 시나몬 방향이 가장 안정적이에요');
-      lines.push('   (애쉬 기반 + 핑크 소량 — 따뜻하지도 차갑지도 않아요)');
-      lines.push('2. 탈색 후 차가운 계열 시술 — 가장 깔끔');
-      risks.push('보라 단독 사용 시 탁한 결과가 나올 수 있어요');
-
-    } else if (residualType === 'none') {
-      /* 잔류 없음 — 깨끗한 상태 */
-      if (lvDark) {
-        if (isCold) {
-          lines.push('어두운 명도(' + lv + '레벨)에서 한색 계열이에요.');
-          lines.push('');
-          lines.push('추천:');
-          lines.push('1. 블루블랙·짙은 애쉬 방향은 바로 가능해요');
-          lines.push('2. 밝은 애쉬그레이는 탈색으로 명도를 먼저 올려야 해요');
-          lines.push('');
-          lines.push('버진모라면 한색 계열 사용 시 붉은기가 억제된 차가운 계열이 나와요.');
-        } else if (isWarm) {
-          lines.push('어두운 명도(' + lv + '레벨)에서 난색 계열이에요.');
-          lines.push('');
-          lines.push('버진모라면 자연 멜라닌이 따뜻한 방향이라 난색은 바로 가능해요.');
-          lines.push('레드·코퍼·웜 방향 모두 구현 가능해요.');
-          lines.push('쨍하고 선명한 색은 탈색 후에야 가능해요.');
-        } else {
-          lines.push('어두운 명도(' + lv + '레벨)에서 시술이에요.');
-          lines.push('잔류색 없어서 안정적으로 가능해요.');
-          risks.push('선명하거나 밝은 발색은 이 명도에서 한계가 있어요');
-        }
-      } else if (lvMid) {
-        lines.push('잔류색 없는 상태에서 ' + tName + ' 방향이에요.');
-        lines.push('가장 안정적이고 예측 가능한 조건이에요.');
-        lines.push('');
-        lines.push('추천:');
-        lines.push('1. 바로 시술 가능해요');
-        if (isCold) lines.push('2. 더 맑게 원하면 탈색 1회 후 시술');
-        if (isWarm) lines.push('2. 같은 계열 컨트롤 컬러 소량으로 발색 강화 가능');
-      } else {
-        lines.push('밝은 명도(' + lv + '레벨)에서 잔류색 없는 상태예요.');
-        lines.push('가장 수월하게 표현되는 조건이에요.');
-        lines.push('');
-        lines.push('추천:');
-        lines.push('1. 바로 시술 가능해요');
-        if (T === 'ash-gray') lines.push('2. 더 맑은 애쉬그레이 원하면 토닝 권장');
-        if (T === 'copper')   lines.push('2. 이 명도에서 코퍼 발색이 잘 나와요');
-      }
-    } else {
-      lines.push(tName + ' 방향으로 가능해요.');
-      lines.push('');
-      lines.push('추천:');
-      lines.push('1. 시술 가능해요');
-    }
-  }
-
-  /* ── 특수 케이스 추가 경고 ── */
-  if (T === 'pink-beige' && lvDark) {
-    risks.push('핑크베이지는 레벨 14 이상에서 표현돼요. 이 명도에서는 핑크빛이 거의 보이지 않아요.');
-  }
-  if (T === 'pastel' && !lvBright) {
-    risks.push('파스텔은 레벨 17 이상 아이보리 상태에서만 선명하게 나와요. 탈색이 필요해요.');
-  }
-  if (T === 'blue-violet' && lvDark) {
-    risks.push('청보라는 레벨 13 이상에서 제대로 표현돼요. 이 명도에서는 어두운 보라로만 보일 수 있어요.');
-  }
-
-  var detail = lines.join('\n');
-  var riskText = risks.join('\n');
-  if (riskText) detail = detail + '\n\n⚠️ ' + riskText;
-  if (!detail) detail = '선택한 방향으로 시술 가능해요.\n디자이너 판단을 참고해주세요.';
-
-  showRecipe(tName, detail, '');
-}
 function showRecipe(main, detail, ratio) {
   var card = document.getElementById('recipe-card');
   if (card) card.style.display = 'block';
