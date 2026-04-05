@@ -1396,16 +1396,19 @@ function updateManualSwatch() {
    2단계 목표색 버튼식 UI
 ══════════════════════════════════════ */
 var TARGET_ZONES = [
-  { key:'ash',       label:'애쉬그레이',  color:'#7A9BB5', h:210, s:18, l:55,  lMin:30, lMax:68, sMin:18, sMax:10, tone:'ash' },
-  { key:'silver',    label:'실버애쉬',    color:'#A8B8C4', h:210, s:10, l:68,  lMin:52, lMax:78, sMin:12, sMax:6,  tone:'ash' },
-  { key:'darkash',   label:'다크애쉬',    color:'#4A5E6A', h:210, s:14, l:32,  lMin:20, lMax:45, sMin:18, sMax:10, tone:'ash' },
-  { key:'blueash',   label:'블루애쉬',    color:'#4A72C4', h:220, s:40, l:50,  lMin:32, lMax:65, sMin:50, sMax:28, tone:'blue' },
-  { key:'ashviolet', label:'애쉬바이올렛',color:'#7A52C4', h:265, s:28, l:52,  lMin:35, lMax:68, sMin:35, sMax:18, tone:'violet' },
-  { key:'ashpink',   label:'애쉬핑크',    color:'#D4789C', h:320, s:22, l:62,  lMin:45, lMax:75, sMin:28, sMax:14, tone:'pink' },
-  { key:'red',       label:'레드',        color:'#CC4A4A', h:5,   s:65, l:50,  lMin:28, lMax:62, sMin:65, sMax:45, tone:'red' },
-  { key:'copper',    label:'코퍼',        color:'#C87840', h:28,  s:60, l:52,  lMin:32, lMax:65, sMin:65, sMax:42, tone:'orange' },
-  { key:'yellow',    label:'골드',        color:'#C0A830', h:50,  s:68, l:52,  lMin:40, lMax:75, sMin:70, sMax:40, tone:'yellow' },
-  { key:'green',     label:'그린',        color:'#5BAE6E', h:135, s:42, l:48,  lMin:30, lMax:65, sMin:48, sMax:28, tone:'green' },
+  /* defaultBp: 카드 선택 시 명도·채도 슬라이더 기본 위치 (0=다크, 1=파스텔) */
+  { key:'ash',       label:'애쉬그레이',  color:'#8FAFC0', h:210, s:16, l:62,  lMin:30, lMax:70, sMin:20, sMax:8,  tone:'ash',    defaultBp:0.55 },
+  { key:'silver',    label:'실버애쉬',    color:'#BDC9D4', h:210, s:10, l:72,  lMin:58, lMax:82, sMin:12, sMax:5,  tone:'ash',    defaultBp:0.80 },
+  { key:'darkash',   label:'다크애쉬',    color:'#4A5E6A', h:210, s:14, l:32,  lMin:20, lMax:48, sMin:18, sMax:10, tone:'ash',    defaultBp:0.20 },
+  { key:'blueash',   label:'블루애쉬',    color:'#8FADD4', h:220, s:35, l:68,  lMin:45, lMax:78, sMin:42, sMax:20, tone:'blue',   defaultBp:0.72 },
+  { key:'blue',      label:'블루',        color:'#4A72C4', h:225, s:65, l:52,  lMin:32, lMax:68, sMin:70, sMax:38, tone:'blue',   defaultBp:0.40 },
+  { key:'ashviolet', label:'애쉬바이올렛',color:'#AA98D8', h:265, s:32, l:70,  lMin:48, lMax:78, sMin:38, sMax:18, tone:'violet', defaultBp:0.72 },
+  { key:'violet',    label:'바이올렛',    color:'#7A52C4', h:270, s:58, l:52,  lMin:32, lMax:68, sMin:65, sMax:35, tone:'violet', defaultBp:0.40 },
+  { key:'ashpink',   label:'애쉬핑크',    color:'#DFA8BE', h:335, s:38, l:74,  lMin:55, lMax:82, sMin:42, sMax:18, tone:'pink',   defaultBp:0.78 },
+  { key:'red',       label:'레드',        color:'#CC4A4A', h:5,   s:65, l:50,  lMin:28, lMax:65, sMin:68, sMax:45, tone:'red',    defaultBp:0.40 },
+  { key:'copper',    label:'코퍼',        color:'#C87840', h:28,  s:60, l:52,  lMin:32, lMax:65, sMin:68, sMax:42, tone:'orange', defaultBp:0.40 },
+  { key:'yellow',    label:'골드',        color:'#C0A830', h:50,  s:68, l:52,  lMin:40, lMax:78, sMin:72, sMax:40, tone:'yellow', defaultBp:0.40 },
+  { key:'green',     label:'그린',        color:'#5BAE6E', h:135, s:42, l:48,  lMin:30, lMax:65, sMin:50, sMax:28, tone:'green',  defaultBp:0.40 },
 ];
 
 var TARGET_SEGS = [
@@ -1433,7 +1436,7 @@ function tApply(z, p) {
   var tb = document.getElementById('target-swatch-box'); if(tb) tb.style.background = col;
   var th = document.getElementById('t-thumb'); if(th) th.style.background = col;
   var tag = document.getElementById('t-cur-tag');
-  if(tag){ tag.textContent=tSegLabel(p); tag.style.background=col; tag.style.color=z.l>58?'rgba(0,0,0,0.75)':'#fff'; tag.style.left=(p*100)+'%'; }
+  if(tag){ tag.textContent=tSegLabel(p); tag.style.background=col; tag.style.color=targetHSL.l>58?'rgba(0,0,0,0.75)':'#fff'; tag.style.left=(p*100)+'%'; }
   var tbg = document.getElementById('t-track-bg');
   if(tbg) tbg.style.background='linear-gradient(to right,'+tInterp(z,0)+','+tInterp(z,0.5)+','+tInterp(z,1)+')';
   /* _targetType 자동 결정 */
@@ -1444,15 +1447,28 @@ function tApply(z, p) {
 function tSelect(z) {
   tCurZone = z;
   document.querySelectorAll('.t-sw-item').forEach(function(el){ el.classList.toggle('t-active', el.dataset.key===z.key); });
+
+  /* defaultBp로 슬라이더 자동 이동 */
+  if (z.defaultBp !== undefined) {
+    tBp = z.defaultBp;
+    var th = document.getElementById('t-thumb');
+    if (th) { th.style.transition='left .2s cubic-bezier(.4,0,.2,1)'; th.style.left=(tBp*100)+'%'; }
+  }
+
   var pct = _tBarZonePct(z);
-  var th = document.getElementById('t-bar-thumb');
-  if(th){ th.style.left=(pct*100)+'%'; th.style.background=z.color; }
+  var barTh = document.getElementById('t-bar-thumb');
+  if(barTh){ barTh.style.left=(pct*100)+'%'; barTh.style.background=z.color; }
   tApply(z, tBp);
 }
 
 function _tBarZonePct(z) {
-  /* 목표색 그래프 위치 매핑 */
-  var map = {ash:0.08, silver:0.18, darkash:0.28, blueash:0.38, ashviolet:0.48, ashpink:0.56, red:0.65, copper:0.73, yellow:0.82, green:0.92};
+  var map = {
+    ash:0.08, silver:0.16, darkash:0.24,
+    blueash:0.32, blue:0.40,
+    ashviolet:0.50, violet:0.58,
+    ashpink:0.66,
+    red:0.74, copper:0.80, yellow:0.87, green:0.94
+  };
   return map[z.key] !== undefined ? map[z.key] : 0.08;
 }
 
