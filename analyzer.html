@@ -321,9 +321,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <!-- 2단계: 원하는 색 Color Picker -->
   <div class="result-card" id="step2-card" style="display:none;">
     <div class="result-card-title">2단계 · 원하는 색상 선택</div>
-    <div style="font-size:12px;color:#666;margin-bottom:14px;">원하는 결과 색상을 선택해주세요.</div>
 
-    <!-- 두 스와치 나란히 -->
+    <!-- 현재→목표 스와치 -->
     <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:16px;">
       <div style="flex:1;">
         <div style="font-size:10px;color:#666;margin-bottom:5px;text-align:center;">현재 모발색</div>
@@ -332,104 +331,41 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div style="font-size:22px;color:#444;padding-bottom:8px;">→</div>
       <div style="flex:1;">
         <div style="font-size:10px;color:#fff;margin-bottom:5px;text-align:center;">목표 색상</div>
-        <div id="target-swatch-box" style="width:100%;height:60px;border-radius:10px;border:3px solid #fff;"></div>
+        <div id="target-swatch-box" style="width:100%;height:60px;border-radius:10px;border:3px solid #fff;transition:background .2s;"></div>
       </div>
     </div>
 
-    <!-- 목표색 색상 슬라이더 -->
-    <div style="margin-bottom:16px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <div style="font-size:11px;color:#666;font-weight:600;letter-spacing:0.5px;">색상</div>
-        <div id="hue-label-t" style="font-size:11px;color:#aaa;"></div>
-      </div>
-      <div id="hue-bar-t" style="width:100%;height:36px;border-radius:18px;background:linear-gradient(to right,hsl(0,100%,50%),hsl(30,100%,50%),hsl(60,100%,50%),hsl(90,100%,50%),hsl(120,100%,50%),hsl(150,100%,50%),hsl(180,100%,50%),hsl(210,100%,50%),hsl(240,100%,50%),hsl(270,100%,50%),hsl(300,100%,50%),hsl(330,100%,50%),hsl(360,100%,50%));position:relative;cursor:pointer;touch-action:none;user-select:none;box-shadow:0 2px 12px rgba(0,0,0,0.4);"
-        onpointerdown="startDrag(event,'hue','t')" onpointermove="onDrag(event,'hue','t')" onpointerup="endDrag()">
-        <div id="hue-thumb-t" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:32px;height:32px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,0.8);pointer-events:none;left:60%;transition:left 0.05s;"></div>
-      </div>
-      <!-- 애쉬 계열 확장 선택 (파랑·바이올렛·핑크 계열 근처에서 표시) -->
-      <div id="ash-hint-t" style="display:none;margin-top:10px;">
-        <div style="font-size:10px;color:#557799;margin-bottom:8px;line-height:1.5;">
-          💡 채도를 낮추면 애쉬 계열이 표현돼요. 원하는 뉘앙스를 선택하세요.
-        </div>
-        <!-- 1행: 그레이 계열 -->
-        <div style="display:flex;gap:6px;margin-bottom:6px;">
-          <button onclick="setAshPreset('ash')"
-            style="flex:1;padding:8px 0;border-radius:10px;border:1.5px solid rgba(144,160,176,0.5);background:hsl(210,18%,48%);color:#fff;font-size:11px;font-weight:700;cursor:pointer;">
-            애쉬그레이
-          </button>
-          <button onclick="setAshPreset('darkash')"
-            style="flex:1;padding:8px 0;border-radius:10px;border:1.5px solid #333;background:hsl(210,12%,30%);color:#aaa;font-size:11px;font-weight:700;cursor:pointer;">
-            다크애쉬
-          </button>
-          <button onclick="setAshPreset('silver')"
-            style="flex:1;padding:8px 0;border-radius:10px;border:1.5px solid #444;background:hsl(210,10%,65%);color:#fff;font-size:11px;font-weight:700;cursor:pointer;">
-            실버그레이
-          </button>
-        </div>
-        <!-- 2행: 컬러 애쉬 -->
-        <div style="display:flex;gap:6px;">
-          <button onclick="setAshPreset('blueash')"
-            style="flex:1;padding:8px 0;border-radius:10px;border:1.5px solid rgba(80,120,200,0.4);background:hsl(220,35%,48%);color:#fff;font-size:11px;font-weight:700;cursor:pointer;">
-            블루애쉬
-          </button>
-          <button onclick="setAshPreset('ashviolet')"
-            style="flex:1;padding:8px 0;border-radius:10px;border:1.5px solid rgba(140,100,200,0.4);background:hsl(260,22%,52%);color:#fff;font-size:11px;font-weight:700;cursor:pointer;">
-            애쉬바이올렛
-          </button>
-          <button onclick="setAshPreset('ashpink')"
-            style="flex:1;padding:8px 0;border-radius:10px;border:1.5px solid rgba(200,130,160,0.4);background:hsl(320,18%,62%);color:#fff;font-size:11px;font-weight:700;cursor:pointer;">
-            애쉬핑크
-          </button>
-        </div>
-      </div>
+    <!-- 기존 요소 hidden 유지 (JS 호환) -->
+    <div id="hue-label-t" style="display:none;"></div>
+    <div id="hue-bar-t" style="display:none;"><div id="hue-thumb-t"></div></div>
+    <div id="ash-hint-t" style="display:none;"></div>
+    <div id="xy-label-t" style="display:none;"></div>
+    <div id="xy-grid-t" style="display:none;">
+      <div id="xy-dot-t"></div>
+    </div>
+    <div id="rec-undertone-label" style="display:none;"></div>
+
+    <!-- 2단계 목표색 버튼식 UI -->
+    <div style="font-size:12px;color:#888;font-weight:500;margin-bottom:12px;">목표 색상 계열</div>
+
+    <!-- 가로 색감 그래프 (목표색) -->
+    <div id="t-bar-wrap" style="position:relative;height:44px;border-radius:10px;margin-bottom:16px;background:linear-gradient(to right,hsl(210,18%,48%),hsl(210,10%,68%),hsl(220,40%,52%),hsl(265,45%,52%),hsl(320,18%,62%),hsl(340,50%,60%),hsl(0,65%,50%),hsl(28,70%,52%),hsl(50,70%,52%),hsl(130,45%,45%));touch-action:none;user-select:none;cursor:pointer;">
+      <div id="t-bar-thumb" style="position:absolute;top:50%;left:8%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.3);background:hsl(210,18%,48%);pointer-events:none;transition:left .2s cubic-bezier(.4,0,.2,1);"></div>
     </div>
 
-    <!-- 목표색 XY 그리드 -->
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-      <div style="font-size:10px;color:#777;font-weight:600;">밝기(위↑) × 색의 파워(우→)</div>
-      <div style="font-size:11px;color:#fff;font-weight:700;" id="xy-label-t">—</div>
-    </div>
-    <div style="display:flex;gap:6px;margin-bottom:4px;">
-      <div style="width:32px;"></div>
-      <div style="flex:1;display:flex;justify-content:space-between;padding:0 2px;">
-        <span style="font-size:11px;color:#aaa;font-weight:600;">파스텔</span>
-        <span style="font-size:11px;color:#aaa;font-weight:600;">연함</span>
-        <span style="font-size:11px;color:#aaa;font-weight:600;">보통</span>
-        <span style="font-size:11px;color:#aaa;font-weight:600;">선명</span>
+    <!-- 목표색 원형 카드 -->
+    <div id="target-swatch-row" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;"></div>
+
+    <!-- 명도 슬라이더 (STRONG↔LIGHT) -->
+    <div style="font-size:12px;color:#888;font-weight:500;margin-bottom:10px;">밝기</div>
+    <div style="position:relative;margin-bottom:6px;">
+      <div id="t-cur-tag" style="position:absolute;top:-26px;transform:translateX(-50%);font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;white-space:nowrap;pointer-events:none;z-index:4;color:#fff;background:#555;left:35%;"></div>
+      <div id="t-track-wrap" style="position:relative;height:44px;cursor:pointer;touch-action:none;">
+        <div id="t-track-bg" style="position:absolute;top:50%;transform:translateY(-50%);left:0;right:0;height:7px;border-radius:4px;background:#333;"></div>
+        <div id="t-thumb" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.3);z-index:3;left:35%;"></div>
       </div>
     </div>
-    <div style="display:flex;gap:6px;margin-bottom:18px;">
-      <div style="width:36px;display:flex;flex-direction:column;justify-content:space-between;padding:6px 0;">
-        <span style="font-size:11px;color:#aaa;text-align:right;display:block;font-weight:600;">밝음</span>
-        <span style="font-size:11px;color:#aaa;text-align:right;display:block;font-weight:600;">중고</span>
-        <span style="font-size:11px;color:#aaa;text-align:right;display:block;font-weight:600;">중저</span>
-        <span style="font-size:11px;color:#aaa;text-align:right;display:block;font-weight:600;">어두운</span>
-        <span style="font-size:11px;color:#aaa;text-align:right;display:block;font-weight:600;">블랙</span>
-      </div>
-      <div id="xy-grid-t" style="flex:1;height:190px;border-radius:12px;position:relative;cursor:crosshair;border:1.5px solid #2a2a2a;touch-action:none;user-select:none;"
-        onpointerdown="startXYDrag(event,'t')" onpointermove="moveXYDrag(event,'t')" onpointerup="endXYDrag(event,'t')" onpointercancel="endXYDrag(event,'t')">
-        <!-- 모서리 라벨 -->
-        <div style="position:absolute;top:6px;left:8px;font-size:11px;color:rgba(255,255,255,0.6);pointer-events:none;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,0.8);">아이보리</div>
-        <div style="position:absolute;top:6px;right:8px;font-size:11px;color:rgba(255,255,255,0.9);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.6);">파스텔</div>
-        <div style="position:absolute;top:27%;right:8px;font-size:11px;color:rgba(255,255,255,0.5);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.8);">· · ·</div>
-        <div style="position:absolute;top:44%;right:8px;font-size:11px;color:rgba(255,255,255,0.8);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.8);">비비드</div>
-        <div style="position:absolute;top:63%;right:8px;font-size:11px;color:rgba(255,255,255,0.65);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.9);">어두움</div>
-        <div style="position:absolute;bottom:6px;left:8px;font-size:11px;color:rgba(255,255,255,0.5);pointer-events:none;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,0.9);">블랙</div>
-        <div style="position:absolute;bottom:6px;right:8px;font-size:11px;color:rgba(255,255,255,0.7);pointer-events:none;font-weight:700;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,0.8);">다크톤</div>
-        <!-- 색감 힌트 유도선 (hue 기반 동적 표시) -->
-        <div id="xy-hint-t" style="position:absolute;pointer-events:none;display:none;">
-          <div id="xy-hint-box-t" style="position:absolute;border-radius:8px;border:1.5px dashed rgba(255,255,255,0.35);background:rgba(255,255,255,0.04);"></div>
-          <div id="xy-hint-label-t" style="position:absolute;font-size:10px;font-weight:700;color:rgba(255,255,255,0.7);text-shadow:0 1px 3px rgba(0,0,0,0.9);white-space:nowrap;"></div>
-        </div>
-        <!-- 최초 관측 마커 (카메라용) -->
-        <div id="xy-origin-t" style="position:absolute;width:14px;height:14px;border-radius:50%;border:2.5px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.5),0 2px 6px rgba(0,0,0,0.7);transform:translate(-50%,-50%);pointer-events:none;display:none;"></div>
-        <!-- 현재 위치 닷 -->
-        <div id="xy-dot-t" style="position:absolute;width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,0.9);transform:translate(-50%,-50%);pointer-events:none;left:62%;top:47%;"></div>
-      </div>
-    </div>
-    <button onclick="openExpandSheet('t')" style="width:100%;margin-bottom:12px;padding:10px;border-radius:10px;border:1.5px solid #333;background:#111;color:#aaa;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
-      <span style="font-size:15px;">⤢</span> 확대해서 미세 조정
-    </button>
+    <div id="t-seg-row" style="position:relative;height:28px;margin-bottom:20px;"></div>
 
     <button onclick="confirmTargetColor()" style="width:100%;padding:13px;border-radius:11px;background:#fff;border:none;color:#000;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.3px;">
       시술 방향 확인 →
@@ -1461,6 +1397,146 @@ function updateManualSwatch() {
 }
 
 /* ── 애쉬 빠른선택 (목표색 step2) ── */
+/* ══════════════════════════════════════
+   2단계 목표색 버튼식 UI
+══════════════════════════════════════ */
+var TARGET_ZONES = [
+  { key:'ash',       label:'애쉬그레이',  color:'#7A9BB5', h:210, s:18, l:55,  lMin:30, lMax:68, sMin:18, sMax:10, tone:'ash' },
+  { key:'silver',    label:'실버애쉬',    color:'#A8B8C4', h:210, s:10, l:68,  lMin:52, lMax:78, sMin:12, sMax:6,  tone:'ash' },
+  { key:'darkash',   label:'다크애쉬',    color:'#4A5E6A', h:210, s:14, l:32,  lMin:20, lMax:45, sMin:18, sMax:10, tone:'ash' },
+  { key:'blueash',   label:'블루애쉬',    color:'#4A72C4', h:220, s:40, l:50,  lMin:32, lMax:65, sMin:50, sMax:28, tone:'blue' },
+  { key:'ashviolet', label:'애쉬바이올렛',color:'#7A52C4', h:265, s:28, l:52,  lMin:35, lMax:68, sMin:35, sMax:18, tone:'violet' },
+  { key:'ashpink',   label:'애쉬핑크',    color:'#D4789C', h:320, s:22, l:62,  lMin:45, lMax:75, sMin:28, sMax:14, tone:'pink' },
+  { key:'red',       label:'레드',        color:'#CC4A4A', h:5,   s:65, l:50,  lMin:28, lMax:62, sMin:65, sMax:45, tone:'red' },
+  { key:'copper',    label:'코퍼',        color:'#C87840', h:28,  s:60, l:52,  lMin:32, lMax:65, sMin:65, sMax:42, tone:'orange' },
+  { key:'yellow',    label:'골드',        color:'#C0A830', h:50,  s:68, l:52,  lMin:40, lMax:75, sMin:70, sMax:40, tone:'yellow' },
+  { key:'green',     label:'그린',        color:'#5BAE6E', h:135, s:42, l:48,  lMin:30, lMax:65, sMin:48, sMax:28, tone:'green' },
+];
+
+var TARGET_SEGS = [
+  {p:0, t:'다크'},{p:0.25, t:'어두움'},{p:0.5, t:'비비드'},{p:0.75, t:'밝음'},{p:1.0, t:'파스텔'}
+];
+
+var tCurZone = null;
+var tBp = 0.5;
+
+function tInterp(z, p) {
+  var l = z.lMin + p*(z.lMax-z.lMin);
+  var s = z.sMin + p*(z.sMax-z.sMin);
+  return 'hsl('+z.h+','+Math.round(s)+'%,'+Math.round(l)+'%)';
+}
+function tSegLabel(p) {
+  if(p<0.15) return '다크'; if(p<0.35) return '어두움';
+  if(p<0.58) return '비비드'; if(p<0.80) return '밝음';
+  return '파스텔';
+}
+function tApply(z, p) {
+  targetHSL.h = z.h;
+  targetHSL.s = Math.round(z.sMin + p*(z.sMax-z.sMin));
+  targetHSL.l = Math.round(z.lMin + p*(z.lMax-z.lMin));
+  var col = tInterp(z, p);
+  var tb = document.getElementById('target-swatch-box'); if(tb) tb.style.background = col;
+  var th = document.getElementById('t-thumb'); if(th) th.style.background = col;
+  var tag = document.getElementById('t-cur-tag');
+  if(tag){ tag.textContent=tSegLabel(p); tag.style.background=col; tag.style.color=z.l>58?'rgba(0,0,0,0.75)':'#fff'; tag.style.left=(p*100)+'%'; }
+  var tbg = document.getElementById('t-track-bg');
+  if(tbg) tbg.style.background='linear-gradient(to right,'+tInterp(z,0)+','+tInterp(z,0.5)+','+tInterp(z,1)+')';
+  /* _targetType 자동 결정 */
+  window._targetType = (z.tone === 'ash' || targetHSL.s < 25) ? 'ash' : 'non-ash';
+  window._targetSubType = z.key;
+}
+
+function tSelect(z) {
+  tCurZone = z;
+  document.querySelectorAll('.t-sw-item').forEach(function(el){ el.classList.toggle('t-active', el.dataset.key===z.key); });
+  var pct = _tBarZonePct(z);
+  var th = document.getElementById('t-bar-thumb');
+  if(th){ th.style.left=(pct*100)+'%'; th.style.background=z.color; }
+  tApply(z, tBp);
+}
+
+function _tBarZonePct(z) {
+  /* 목표색 그래프 위치 매핑 */
+  var map = {ash:0.08, silver:0.18, darkash:0.28, blueash:0.38, ashviolet:0.48, ashpink:0.56, red:0.65, copper:0.73, yellow:0.82, green:0.92};
+  return map[z.key] !== undefined ? map[z.key] : 0.08;
+}
+
+function targetInitUI() {
+  var row = document.getElementById('target-swatch-row');
+  if (!row) return;
+
+  if(!document.getElementById('t-sw-style')){
+    var st=document.createElement('style'); st.id='t-sw-style';
+    st.textContent='.t-sw-item{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;min-width:52px}'+
+      '.t-sw-circle{width:50px;height:50px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.15);transition:transform .15s,box-shadow .15s}'+
+      '.t-sw-item.t-active .t-sw-circle{transform:scale(1.12);box-shadow:0 0 0 3.5px rgba(255,255,255,0.5)}'+
+      '.t-sw-name{font-size:11px;color:#888;text-align:center;line-height:1.35;max-width:58px;word-break:keep-all}'+
+      '.t-sw-item.t-active .t-sw-name{color:#fff;font-weight:600}';
+    document.head.appendChild(st);
+  }
+
+  if (!row.dataset.init) {
+    row.dataset.init = '1';
+    row.innerHTML = '';
+    TARGET_ZONES.forEach(function(z){
+      var item=document.createElement('div'); item.className='t-sw-item'; item.dataset.key=z.key;
+      var circ=document.createElement('div'); circ.className='t-sw-circle'; circ.style.background=z.color;
+      var name=document.createElement('div'); name.className='t-sw-name'; name.textContent=z.label;
+      item.appendChild(circ); item.appendChild(name);
+      item.addEventListener('click', function(){ tSelect(z); });
+      row.appendChild(item);
+    });
+    var segRow=document.getElementById('t-seg-row');
+    if(segRow){ segRow.innerHTML=''; TARGET_SEGS.forEach(function(s){
+      var el=document.createElement('div');
+      el.style.cssText='position:absolute;display:flex;flex-direction:column;align-items:center;gap:3px;transform:translateX(-50%);left:'+(s.p*100)+'%;';
+      el.innerHTML='<div style="width:1px;height:6px;background:rgba(255,255,255,0.2);"></div><div style="font-size:11px;color:#888;white-space:nowrap;">'+s.t+'</div>';
+      segRow.appendChild(el);
+    }); }
+  }
+
+  /* 가로 그래프 이벤트 — 매번 재등록 */
+  var tWrap = document.getElementById('t-bar-wrap');
+  if (tWrap) {
+    var newWrap = tWrap.cloneNode(true);
+    tWrap.parentNode.replaceChild(newWrap, tWrap);
+    tWrap = newWrap;
+    function tOnMove(clientX) {
+      var r = tWrap.getBoundingClientRect(); if(!r.width) return;
+      var pct = Math.max(0, Math.min(1, (clientX-r.left)/r.width));
+      var best = TARGET_ZONES[0], bd = 999;
+      TARGET_ZONES.forEach(function(z){ var d=Math.abs(_tBarZonePct(z)-pct); if(d<bd){bd=d;best=z;} });
+      var th = document.getElementById('t-bar-thumb');
+      if(th){ th.style.transition='none'; th.style.left=(pct*100)+'%'; th.style.background=best.color; }
+      tSelect(best);
+    }
+    tWrap.addEventListener('pointerdown', function(e){ tWrap.setPointerCapture(e.pointerId); tOnMove(e.clientX); });
+    tWrap.addEventListener('pointermove', function(e){ if(e.buttons) tOnMove(e.clientX); });
+    tWrap.addEventListener('touchstart', function(e){ e.preventDefault(); tOnMove(e.touches[0].clientX); },{passive:false});
+    tWrap.addEventListener('touchmove',  function(e){ e.preventDefault(); tOnMove(e.touches[0].clientX); },{passive:false});
+  }
+
+  /* 명도 슬라이더 */
+  var tw = document.getElementById('t-track-wrap');
+  if(tw){
+    tw.addEventListener('pointerdown', function(e){
+      tw.setPointerCapture(e.pointerId);
+      var r=tw.getBoundingClientRect(); tBp=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
+      var th=document.getElementById('t-thumb'); if(th) th.style.left=(tBp*100)+'%';
+      if(tCurZone) tApply(tCurZone,tBp);
+    });
+    tw.addEventListener('pointermove', function(e){
+      if(!e.buttons) return;
+      var r=tw.getBoundingClientRect(); tBp=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
+      var th=document.getElementById('t-thumb'); if(th) th.style.left=(tBp*100)+'%';
+      if(tCurZone) tApply(tCurZone,tBp);
+    });
+  }
+
+  /* 기본 선택 — 애쉬그레이 */
+  tSelect(TARGET_ZONES[0]);
+}
+
 var ASH_PRESET_HSL = {
   'ash':       { h: 210, s: 18, l: 55 },  /* 애쉬그레이 */
   'darkash':   { h: 210, s: 14, l: 32 },  /* 다크애쉬 */
@@ -1594,6 +1670,7 @@ function confirmManualColor() {
     var step2 = document.getElementById('step2-card');
     if (step2) {
       step2.style.display = 'block';
+      requestAnimationFrame(function(){ targetInitUI(); });
     } else {
       alert('[오류] step2-card 요소를 찾을 수 없습니다.');
       return;
@@ -2239,7 +2316,7 @@ function confirmCurrentColor() {
   var step1 = document.getElementById('step1-card');
   if (step1) step1.style.display = 'none';
   var step2 = document.getElementById('step2-card');
-  if (step2) step2.style.display = 'block';
+  if (step2) { step2.style.display = 'block'; requestAnimationFrame(function(){ targetInitUI(); }); }
 
   /* 현재색 미니 스와치 */
   var mini = document.getElementById('current-swatch-mini');
