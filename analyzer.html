@@ -667,7 +667,7 @@ var UT_ZONES = [
   { key:'orange', label:'주황',      color:'#D96820', h:22,  lMin:32, lMax:64, sMin:80, sMax:60, tone:'orange' },
   { key:'brown',  label:'브라운',    color:'#8C6040', h:28,  lMin:24, lMax:52, sMin:45, sMax:28, tone:'orange' },
   { key:'yellow', label:'노랑',      color:'#C0A830', h:50,  lMin:42, lMax:82, sMin:75, sMax:42, tone:'yellow' },
-  { key:'faded',  label:'매트',      color:'#B2A62C', h:51,  lMin:42, lMax:75, sMin:58, sMax:36, tone:'yellow' },
+  { key:'faded',  label:'매트',      color:'#B2A62C', h:51,  lMin:42, lMax:75, sMin:58, sMax:36, tone:'faded' },
   { key:'matte',  label:'카키',      color:'#787848', h:72,  lMin:28, lMax:50, sMin:28, sMax:14, tone:'yellow' },
   { key:'cool',   label:'쿨·애쉬',  color:'#6888A0', h:205, lMin:36, lMax:68, sMin:32, sMax:12, tone:'blue' },
   { key:'blue',   label:'블루',      color:'#4A72C4', h:225, lMin:32, lMax:62, sMin:65, sMax:38, tone:'blue' },
@@ -858,6 +858,7 @@ function utApply(z, p) {
 
 function utSelect(z) {
   utCurZone = z;
+  window._utCurZone = z;
   window._curTone = z.tone;
   var items = document.querySelectorAll('.ut-sw-item');
   for (var i = 0; i < items.length; i++) {
@@ -2200,6 +2201,7 @@ function showResult(r) {
 
     /* utCurZone 세팅 — 슬라이더 즉시 반응하도록 */
     utCurZone = best;
+    window._utCurZone = best;
 
     /* 7. current-swatch-box 색상 반영 */
     var col = 'hsl('+best.h+','+currentHSL.s+'%,'+currentHSL.l+'%)';
@@ -3307,7 +3309,8 @@ function confirmTargetColor() {
     'violet': 'violet', 'ash_violet': 'violet',
     'pink': 'violet', 'ash_pink': 'violet',
     'ash_gray': 'neutral', 'dark_ash': 'neutral',
-    'dark_neutral': 'neutral', 'black': 'neutral'
+    'dark_neutral': 'neutral', 'black': 'neutral',
+    'faded': 'faded', 'matte': 'matte'
   };
   window._curTone = curToneMap[curKey] || 'neutral';
   console.log('[confirmTargetColor]', {
