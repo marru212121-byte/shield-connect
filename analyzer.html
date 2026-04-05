@@ -1039,12 +1039,7 @@ function utInitUI() {
   var cam = document.getElementById('ut-cam-pip');
   if (cam) cam.style.left = (utBp*100)+'%';
 
-  /* 기본 선택 주황 */
-  utSelect(UT_ZONES[1]);
-  setTimeout(function() {
-    var pct = zonePct(UT_ZONES[1]);
-    setThumb('ut-bar-thumb-c', pct, utInterp(UT_ZONES[1], utBp));
-  }, 60);
+  /* 기본 선택은 showResult의 자동 매핑 또는 수동 선택으로 처리 */
 }
 
 
@@ -2299,32 +2294,52 @@ function showResult(r) {
   /* 언더톤 스워치 UI 초기화 */
   utInitUI();
 
-  /* 카메라 분석 결과 → 언더톤 자동 매핑 */
-  (function() {
+  /* 카메라 분석 결과 → 언더톤 자동 매핑 (DOM 완성 후 실행) */
+  requestAnimationFrame(function() {
     var h = currentHSL.h, s = currentHSL.s, l = currentHSL.l;
+
+    /* 1. 가장 가까운 UT_ZONE 찾기 */
     var best = UT_ZONES[0], bd = 999;
     UT_ZONES.forEach(function(z) {
-      /* h 거리 + 채도/명도 가중치로 가장 가까운 존 선택 */
       var dh = Math.min(Math.abs(h - z.h), 360 - Math.abs(h - z.h));
-      var ds = Math.abs(s - (z.sMin + z.sMax)/2) * 0.3;
-      var dl = Math.abs(l - (z.lMin + z.lMax)/2) * 0.2;
-      var d = dh + ds + dl;
-      if (d < bd) { bd = d; best = z; }
+      var ds = Math.abs(s - (z.sMin + z.sMax) / 2) * 0.3;
+      var dl = Math.abs(l - (z.lMin + z.lMax) / 2) * 0.2;
+      if (dh + ds + dl < bd) { bd = dh + ds + dl; best = z; }
     });
-    /* 명도 → tBp 계산 */
+
+    /* 2. 명도 슬라이더 위치 계산 */
     var bp = Math.max(0, Math.min(1, (l - best.lMin) / Math.max(1, best.lMax - best.lMin)));
     utBp = bp;
-    utSelect(best);
-    /* c-bar-thumb 위치 + 카메라 마커 위치 */
-    var pct = (window._utZonePct || _barZonePct)(best);
+
+    /* 3. 가로 그래프 커서 이동 */
+    var pct = window._utZonePct ? window._utZonePct(best) : _barZonePct(best);
     var th = document.getElementById('c-bar-thumb');
     if (th) { th.style.transition = 'none'; th.style.left = (pct*100)+'%'; th.style.background = best.color; }
-    var cam = document.getElementById('c-bar-cam');
-    if (cam) { cam.style.left = (pct*100)+'%'; }
-    /* 명도 슬라이더 위치 */
+
+    /* 4. 카메라 마커 위치 */
+    var camMark = document.getElementById('c-bar-cam');
+    if (camMark) { camMark.style.left = (pct*100)+'%'; }
+
+    /* 5. 명도 슬라이더 thumb 이동 */
     var utThumb = document.getElementById('ut-thumb');
-    if (utThumb) utThumb.style.left = (bp*100)+'%';
-  })();
+    if (utThumb) { utThumb.style.left = (bp*100)+'%'; }
+
+    /* 6. currentHSL 업데이트 + window._curTone 세팅 */
+    currentHSL.h = best.h;
+    currentHSL.s = Math.round(best.sMin + bp*(best.sMax-best.sMin));
+    currentHSL.l = Math.round(best.lMin + bp*(best.lMax-best.lMin));
+    window._curTone = best.tone;
+
+    /* 7. current-swatch-box 색상 반영 */
+    var col = 'hsl('+best.h+','+currentHSL.s+'%,'+currentHSL.l+'%)';
+    var swBox = document.getElementById('current-swatch-box');
+    if (swBox) swBox.style.background = col;
+
+    /* 8. utApply로 슬라이더 트랙 색상 + 태그 업데이트 */
+    utApply(best, bp);
+
+    /* 9. 스와치 버튼 active 없음 — 사용자가 직접 선택 */
+  });
 
   userLevel = null;
   userTarget = null;
