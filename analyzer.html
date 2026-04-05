@@ -2299,6 +2299,33 @@ function showResult(r) {
   /* 언더톤 스워치 UI 초기화 */
   utInitUI();
 
+  /* 카메라 분석 결과 → 언더톤 자동 매핑 */
+  (function() {
+    var h = currentHSL.h, s = currentHSL.s, l = currentHSL.l;
+    var best = UT_ZONES[0], bd = 999;
+    UT_ZONES.forEach(function(z) {
+      /* h 거리 + 채도/명도 가중치로 가장 가까운 존 선택 */
+      var dh = Math.min(Math.abs(h - z.h), 360 - Math.abs(h - z.h));
+      var ds = Math.abs(s - (z.sMin + z.sMax)/2) * 0.3;
+      var dl = Math.abs(l - (z.lMin + z.lMax)/2) * 0.2;
+      var d = dh + ds + dl;
+      if (d < bd) { bd = d; best = z; }
+    });
+    /* 명도 → tBp 계산 */
+    var bp = Math.max(0, Math.min(1, (l - best.lMin) / Math.max(1, best.lMax - best.lMin)));
+    utBp = bp;
+    utSelect(best);
+    /* c-bar-thumb 위치 + 카메라 마커 위치 */
+    var pct = (window._utZonePct || _barZonePct)(best);
+    var th = document.getElementById('c-bar-thumb');
+    if (th) { th.style.transition = 'none'; th.style.left = (pct*100)+'%'; th.style.background = best.color; }
+    var cam = document.getElementById('c-bar-cam');
+    if (cam) { cam.style.left = (pct*100)+'%'; }
+    /* 명도 슬라이더 위치 */
+    var utThumb = document.getElementById('ut-thumb');
+    if (utThumb) utThumb.style.left = (bp*100)+'%';
+  })();
+
   userLevel = null;
   userTarget = null;
   clearRecipe();
