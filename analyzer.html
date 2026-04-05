@@ -2330,6 +2330,9 @@ function showResult(r) {
     currentHSL.l = Math.round(best.lMin + bp*(best.lMax-best.lMin));
     window._curTone = best.tone;
 
+    /* utCurZone 세팅 — 슬라이더 즉시 반응하도록 */
+    utCurZone = best;
+
     /* 7. current-swatch-box 색상 반영 */
     var col = 'hsl('+best.h+','+currentHSL.s+'%,'+currentHSL.l+'%)';
     var swBox = document.getElementById('current-swatch-box');
