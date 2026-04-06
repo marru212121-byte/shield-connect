@@ -831,6 +831,8 @@ function utApply(z, p) {
   currentHSL.h = z.h;
   currentHSL.s = Math.round(z.sMin + p * (z.sMax - z.sMin));
   currentHSL.l = Math.round(z.lMin + p * (z.lMax - z.lMin));
+  /* STRONG/LIGHT 확정 — utBp 기준으로 저장 */
+  window._undertoneStrength = (p >= 0.9) ? 'LIGHT' : 'STRONG';
   /* hue-thumb-c hidden이지만 left 값 유지 (confirmCurrentColor 참조) */
   var hThumb = document.getElementById('hue-thumb-c');
   if (hThumb) hThumb.style.left = ((z.h / 360) * 100) + '%';
@@ -1038,6 +1040,7 @@ function utInitUI() {
     return Math.abs(seg.p - utBp) < Math.abs(best.p - utBp) ? seg : best;
   });
   utBp = snap.p;
+  window._savedUtBp = utBp; /* showResult 덮어씌우기 방지 */
   var th = document.getElementById('ut-thumb');
   if (th) { th.style.transition = 'left .2s cubic-bezier(.4,0,.2,1)'; th.style.left = (utBp*100)+'%'; }
   if (utCurZone) utApply(utCurZone, utBp);
@@ -1350,7 +1353,20 @@ function manualInitUI() {
       var th=document.getElementById('m-thumb'); if(th) th.style.left=(mBp*100)+'%';
       if(mCurZone) mApply(mCurZone,mBp);
     });
-    tw.addEventListener('pointerup',function(){slDrag=false;});
+    tw.addEventListener('pointerup', function() {
+      slDrag = false;
+      /* UT_SEGS 스냅 */
+      var SEGS = [{p:0},{p:0.25},{p:0.5},{p:0.75},{p:1.0}];
+      var snap = SEGS.reduce(function(best, seg) {
+        return Math.abs(seg.p - mBp) < Math.abs(best.p - mBp) ? seg : best;
+      });
+      mBp = snap.p;
+      utBp = snap.p;
+      window._savedUtBp = snap.p;
+      var th = document.getElementById('ut-thumb');
+      if (th) { th.style.transition = 'left .2s cubic-bezier(.4,0,.2,1)'; th.style.left = (snap.p*100)+'%'; }
+      if (utCurZone) utApply(utCurZone, snap.p);
+    });
   }
 
   /* 기본 선택 — 주황 */
@@ -3304,6 +3320,10 @@ function confirmTargetColor() {
   if (!window._currentUndertoneKey) {
     window._currentUndertoneKey = (utCurZone && utCurZone.key) || window._curTone || 'yellow';
   }
+  /* _undertoneStrength 확정 — utBp 슬라이더 기준 */
+  /* _savedUtBp: 사용자가 마지막으로 스냅한 utBp 값 우선 사용 */
+  var _bp = (window._savedUtBp !== undefined) ? window._savedUtBp : utBp;
+  window._undertoneStrength = (_bp >= 0.9) ? 'LIGHT' : 'STRONG';
 
   /* 새 분석 시작 — 히스테리시스 초기화 */
   _prevCurBase = null;
@@ -3867,9 +3887,11 @@ var HAIR_RULE_MATRIX = (function() {
 
   /* ── 4. bleachLv → STRONG / LIGHT ── */
   function residual(bleachLv, curL) {
-    /* STRONG/LIGHT = 언더톤 그래프 슬라이더(utBp) 기준
-       다크(0) ~ 밝음(0.75) → STRONG
-       파스텔(0.9~1.0)      → LIGHT */
+    /* STRONG/LIGHT 판단 순서:
+       1순위: utApply에서 저장한 _undertoneStrength (가장 정확)
+       2순위: utBp 슬라이더 위치
+       3순위: curL 폴백 */
+    if (window._undertoneStrength) return window._undertoneStrength;
     var bp = (typeof utBp !== 'undefined') ? utBp : null;
     if (bp !== null) return (bp >= 0.9) ? 'LIGHT' : 'STRONG';
     if (curL !== undefined) return (curL >= 65) ? 'LIGHT' : 'STRONG';
@@ -4879,7 +4901,7 @@ function renderAnalysisResult(result) {
   var _tarKey  = window._targetSubType || 'ash';
   var _toneDir = window._toneDir       || 'same';
 
-  var _bleachLv = Math.round((targetHSL && targetHSL.l) ? targetHSL.l / 5 : 10);
+  var _bleachLv = 10; /* STRONG/LIGHT는 _undertoneStrength로 결정, bleachLv 미사용 */
   var _rule    = HAIR_RULE_MATRIX.getRule(_utKey, _tarKey, _bleachLv, _toneDir, currentHSL.l, targetHSL.l);
   var frontMsg;
 
