@@ -415,14 +415,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
   <!-- 레시피 -->
   <div class="recipe-card" id="recipe-card" style="display:none;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+    <div style="margin-bottom:10px;">
       <div class="recipe-title" style="margin-bottom:0;">✂️ 시술 방향</div>
-      <div id="tone-dir-badge" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;background:rgba(158,127,191,0.15);border:1px solid rgba(158,127,191,0.3);color:#9E7FBF;"></div>
-    </div>
-    <!-- 다른 방향으로 보기 -->
-    <div id="alt-dir-wrap" style="display:none;margin-bottom:12px;">
-      <div style="font-size:10px;color:#555;margin-bottom:6px;font-weight:600;">다른 방향으로도 볼 수 있어요</div>
-      <div style="display:flex;gap:6px;" id="alt-dir-btns"></div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;">
       <div id="recipe-current-swatch" style="width:52px;height:52px;border-radius:9px;border:2px solid #333;flex-shrink:0;"></div>
@@ -1429,17 +1423,33 @@ function updateManualSwatch() {
 /* 실무 포인트 확정 문구 3가지 */
 var HINT_MSG = {
   1: "탈색 후 착색을 가장 추천해요.\n현재 잔류색소가 강해서 탈색 없이는 원하는 색이 제대로 나오기 어려워요.",
-  2: "선명한 발색을 위해서는 탈색을 추천해요.\n탈색 없이 보색을 믹스하여 착색도 가능하지만, 잔류색소로 인해 색감이 탁하거나 예상보다 어둡게 나올 수 있어요.",
+  2: "선명한 발색을 위해서는 탈색을 추천해요.\n탈색 없이 착색도 가능하지만, 잔류색소로 인해 색감이 탁하거나 예상보다 어둡게 나올 수 있어요.",
   3: "바로 착색 가능해요.\n잔류색소가 거의 없어 목표색이 잘 올라가요.\n미세한 잔류가 남아있다면 토닝 또는 단시간 탈색 후 착색도 좋아요."
 };
 
+/* 언더톤별 보강 한 줄 */
+var UNDERTONE_BOOSTER = {
+  'red':    "붉은기가 남으면 블루를 소량 믹스하세요.",
+  'orange': "주황기가 남으면 블루를 소량 믹스하세요.",
+  'brown':  "붉은·주황기가 남으면 블루를 소량 믹스하세요.",
+  'yellow': "노랑기가 남으면 보라를 소량 믹스하세요.",
+  'faded':  "매트 잔류가 있으면 색감이 탁해질 수 있어요. 시나몬브라운 또는 보라 소량 믹스를 고려하세요.",
+  'matte':  "카키 잔류가 있으면 올리브 빛이 섞일 수 있어요.",
+  'cool':   "쿨 잔류가 있으면 색감이 차갑게 발색될 수 있어요."
+};
+
 /* 밝은 Cool 목표색 — ① 해당 */
-var BRIGHT_COOL_TARGETS = ['silver','blueash','blue','ashviolet','violet','ashpink'];
+var BRIGHT_COOL_TARGETS = ['blueash','blue','ashviolet','violet','ashpink'];
+
+/* 쿨 베이스 언더톤 — 이미 밝은 상태, ③ 적용 */
+var COOL_UNDERTONES = ['blue','violet','pink'];
 
 /* 판결 함수 */
 function getHintCase(targetKey) {
   var strength = window._undertoneStrength || 'STRONG';
   if (strength === 'LIGHT') return 3;
+  var utKey = window._utCurZone ? window._utCurZone.key : '';
+  if (COOL_UNDERTONES.indexOf(utKey) > -1) return 3;
   if (BRIGHT_COOL_TARGETS.indexOf(targetKey) > -1) return 1;
   return 2;
 }
@@ -1477,6 +1487,14 @@ function tApply(z) {
 function updateHintBox(targetKey) {
   var caseNum = getHintCase(targetKey);
   var msg = HINT_MSG[caseNum];
+
+  /* ①② 케이스에만 언더톤별 보강 한 줄 추가 */
+  if (caseNum === 1 || caseNum === 2) {
+    var utKey = window._utCurZone ? window._utCurZone.key : '';
+    var booster = UNDERTONE_BOOSTER[utKey];
+    if (booster) msg = msg + '\n' + booster;
+  }
+
   var hBox = document.getElementById('target-hint-box');
   var hTxt = document.getElementById('target-hint-text');
   if (hBox && hTxt) {
@@ -3398,29 +3416,9 @@ function confirmTargetColor() {
   var isAshTarget = ashTargets.indexOf(tarKey) > -1 || tarNorm.tone === 'ash' || tarSatLow;
   window._targetType = isAshTarget ? 'ash' : 'non-ash';
 
-  /* targetSubType: 표현용 — 로직 분기 금지
-     tarKey 기반 + 저채도 hue 기반 보완 */
-  var subTypeMap = {
-    'ash_gray':   'ash',
-    'dark_ash':   'ash',
-    'blue_ash':   'ash_blue',
-    'ash_violet': 'ash_violet',
-    'ash_pink':   'ash_pink'
-  };
-
-  /* tarKey가 subTypeMap에 없지만 isAshTarget인 경우
-     hue 기반으로 세부 subType 결정 */
-  function getSubTypeFromHSL(h, s) {
-    if (s >= 25) return 'non-ash'; /* 고채도 → non-ash */
-    if ((h >= 270 && h < 345) || (h >= 215 && h < 270)) return 'ash_violet'; /* 바이올렛/블루바이올렛 구간 */
-    if (h >= 300 && h < 345) return 'ash_pink';
-    if (h >= 155 && h < 215) return 'ash_blue';
-    return 'ash'; /* 기본 애쉬그레이 */
-  }
-
-  window._targetSubType = isAshTarget
-    ? (subTypeMap[tarKey] || getSubTypeFromHSL(targetHSL.h, targetHSL.s))
-    : 'non-ash';
+  /* targetSubType — tApply에서 이미 z.key로 확정됨, 그대로 사용 */
+  /* TAR_MID 키: ash/silver/darkash → null(애쉬계열), blue/blueash → BLUE, violet/ashviolet → VIOLET, ashpink → ASHPINK, green → GREEN */
+  /* _targetSubType은 tApply에서 설정된 값 유지 */
 
   /* ── _toneDir 자동 확정 (판결표 기준) ── */
   var caseNum = getHintCase(tCurZone ? tCurZone.key : 'ash');
@@ -3545,19 +3543,6 @@ function showBlackChoiceCard() {
      블랙 = 레벨 1~3, 가장 어두운 상태
      톤다운: 개념적으로 불가능
      톤인톤: 블랙에서 명도 유지 = 의미없음 */
-  var downBtn = document.getElementById('tone-btn-down');
-  var sameBtn = document.getElementById('tone-btn-same');
-  function lockBlackBtn(btn, reason) {
-    if (!btn) return;
-    btn.disabled = true;
-    btn.style.opacity = '0.3';
-    btn.style.cursor = 'not-allowed';
-    btn.style.borderColor = '#1a1a1a';
-    btn.style.background = '#0a0a0a';
-    var sub = btn.querySelector('div');
-    if (sub) sub.textContent = '🔒 ' + reason;
-  }
-  lockBlackBtn(downBtn, '블랙에서 더 어둡게는 불가능해요');
   lockBlackBtn(sameBtn, '블랙 명도에서 색감 전환은 의미없어요');
 
   /* 블랙 절대값 경고 배너 */
@@ -3743,7 +3728,8 @@ var HAIR_RULE_MATRIX = (function() {
     'violet':   'VIOLET', 'ashviolet': 'VIOLET','ashpink':   'ASHPINK',
     /* 애쉬 계열 — mid 없음 (prefix+residual만) */
     'ash':null, 'silver':null, 'darkash':null,
-    /* 웜톤 — HAIR_RULES 미존재 → buildSentence 폴백 */
+    /* 웜톤 */
+    'red':      'RED',    'copper':    'COPPER',
     'matte':'MATTE',
   };
 
@@ -3969,7 +3955,7 @@ var HAIR_RULES = [
     detail: '주황 잔류색소가 강한 상태에서 애쉬를 올리면 브라운에 가까운 애쉬로 표현됩니다. 밝기를 올리는 방향이라면 18레벨 아이보리까지 탈색하는 것이 가장 안전하고, 색감만 바꾸는 방향이라면 탈색 없이 블루를 소량 믹스해도 어느 정도 억제는 가능합니다.',
     guide: [
       '18레벨 아이보리까지 탈색 후 착색 추천',
-      '색감만 바꾸는 방향이라면 — 애쉬염모제에 블루를 소량 믹스하여 주황기를 억제하며 착색',
+      '색감만 바꾸는 방향이라면 — 애쉬염모제에 블루를 소량 믹스하여 주황기를 억제하며 착색 (회기도는 브라운, 스모키브라운, 브라운에 가까운 애쉬로 표현될 수 있어요)',
       '주황기가 강하게 남았다면 — 추가 탈색 또는 다음 내원 시 완성 권장'
     ],
     direction: {
@@ -4212,8 +4198,7 @@ var HAIR_RULES = [
     summary: '파스텔 주황이에요. 바로 착색하거나 잔류색소를 살짝 정리한 후 블루를 착색하세요.',
     detail: '파스텔 주황 위에 블루는 주황기를 어느 정도 잡아주지만, 완전한 블루 발색을 위해 잔류색소를 먼저 확인하는 것이 좋습니다.',
     guide: [
-      '바로 착색하거나 잔류색소를 살짝 정리한 후 착색',
-      '주황기가 살짝 남았다면 — 블루 염모제에 그린을 소량 믹스'
+      '바로 착색하거나 잔류색소를 살짝 정리한 후 착색'
     ],
     direction: {
       tone_up:      'warning',
@@ -4566,7 +4551,347 @@ var HAIR_RULES = [
     summary: '파스텔 매트예요. 바로 착색하거나 잔류색소를 살짝 정리한 후 애쉬핑크를 착색하세요.',
     detail: '잔류가 약해 애쉬핑크가 비교적 잘 올라와요.',
     guide: [
-      '바로 착색하거나 잔류색소를 살짝 정리한 후 착색'
+      '바로 착색하거나 잔류색소를 살짝 정리한 후 착색 (토닝 또는 짧은 탈색)'
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
+  }
+
+  /* ══════════════════════════════════════
+     애쉬핑크 목표색 — RED/YELLOW/ORANGE (Phase 5)
+  ══════════════════════════════════════ */
+  ,{
+    key: 'RED_ASHPINK_STRONG',
+    summary: '레드 잔류색소가 강해요. 탈색 후 애쉬핑크 염모제로 착색하세요.',
+    detail: '레드 잔류색소가 강한 상태에서 애쉬핑크를 올리면 변동이 크게 없을 거예요. 적브라운이나 따뜻한 로즈브라운 방향으로 수렴되기 쉽습니다. 애쉬의 쿨한 느낌이 레드에 눌려 제대로 표현되지 않을 수 있어요. 선명하고 깨끗한 애쉬핑크를 원한다면 충분한 탈색이 중요합니다.',
+    guide: [
+      '18레벨 연노랑까지 탈색 후 애쉬핑크 염모제로 착색 추천',
+      '색감만 바꾸는 방향이라면 — 추가 탈색 후 착색 권장',
+      '레드가 강하게 남았다면 — 추가 탈색 후 착색 권장'
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'difficult',
+      tone_down:    'difficult',
+      warning_msg:  '레드 잔류 강함 — 탈색 권장'
+    }
+  },
+  {
+    key: 'RED_ASHPINK_LIGHT',
+    summary: '파스텔 레드예요. 바로 착색하거나 잔류색소를 살짝 정리한 후 애쉬핑크를 착색하세요.',
+    detail: '파스텔 레드 잔류는 색소 파워가 약하고 핑크와 유사색 관계라 애쉬핑크가 비교적 자연스럽게 올라갑니다. 미세한 레드기가 있다면 좀 더 따뜻한 톤의 애쉬핑크로 표현될 수 있어요.',
+    guide: [
+      '바로 착색하거나 잔류색소를 살짝 정리한 후 밝은 명도의 애쉬핑크 염모제로 착색 (토닝 또는 짧은 탈색)'
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
+  },
+  {
+    key: 'YELLOW_ASHPINK_STRONG',
+    summary: '노랑 잔류색소가 강해요. 연노랑까지 탈색 후 애쉬핑크 염모제로 착색하세요.',
+    detail: '노랑 잔류가 강한 상태에서 애쉬핑크를 올리면 노랑기와 핑크가 섞이며 보색중화되어 살구색이나 오렌지브라운 방향으로 수렴되기 쉽습니다. 선명하고 깨끗한 애쉬핑크를 원한다면 최소 연노랑 수준까지 탈색하는 것이 중요합니다.',
+    guide: [
+      '18레벨 연노랑(아이보리) 수준까지 탈색 후 착색 추천',
+      '색감만 바꾸는 방향이라면 — 애쉬핑크 염모제에 바이올렛 또는 핑크를 소량 믹스하여 어두운 적보라 베이스로 가는 방향',
+      '노랑기가 강하게 남았다면 — 추가 탈색 후 착색 권장'
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'warning',
+      tone_down:    'difficult',
+      warning_msg:  '노랑+핑크 보색중화 — 살구색 가능'
+    }
+  },
+  {
+    key: 'YELLOW_ASHPINK_LIGHT',
+    summary: '파스텔 노랑이에요. 애쉬핑크 염모제로 바로 착색하세요.',
+    detail: '파스텔 노랑은 잔류색소가 적어 애쉬핑크가 비교적 선명하게 올라갑니다.',
+    guide: [
+      '바로 착색하거나 잔류색소를 살짝 정리한 후 착색 (토닝 또는 짧은 탈색)'
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
+  },
+  {
+    key: 'ORANGE_ASHPINK_STRONG',
+    summary: '주황 잔류색소가 강해요. 연노랑까지 탈색 후 애쉬핑크 염모제로 착색하세요.',
+    detail: '주황 잔류가 강한 상태에서 애쉬핑크를 올리면 주황기가 핑크와 섞여 연한 붉은오렌지 방향으로 수렴되기 쉽습니다. 애쉬의 쿨한 느낌이 주황에 눌려 제대로 표현되지 않을 수 있어요. 선명한 애쉬핑크를 원한다면 최소 연노랑 수준까지 탈색하는 것이 중요합니다.',
+    guide: [
+      '18레벨 연노랑까지 탈색 후 애쉬핑크 염모제로 착색 추천',
+      '색감만 바꾸는 방향이라면 — 추가 탈색 후 착색 권장',
+      '주황기가 강하게 남았다면 — 추가 탈색 후 착색 권장'
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'warning',
+      tone_down:    'difficult',
+      warning_msg:  '주황+핑크 충돌 — 탈색 권장'
+    }
+  },
+  {
+    key: 'ORANGE_ASHPINK_LIGHT',
+    summary: '파스텔 주황이에요. 바로 착색하거나 잔류색소를 살짝 정리한 후 애쉬핑크를 착색하세요.',
+    detail: '파스텔 주황 위에 애쉬핑크는 비교적 자연스럽게 올라갑니다. 미세한 주황기가 따뜻한 톤의 핑크로 표현될 수 있어요.',
+    guide: [
+      '바로 착색하거나 잔류색소를 살짝 정리한 후 착색 (토닝 또는 짧은 탈색)'
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
+  }
+
+  /* ══════════════════════════════════════
+     레드 목표색 (Phase 5)
+  ══════════════════════════════════════ */
+  ,{
+    key: 'RED_RED_STRONG',
+    summary: '레드 잔류색소가 있는 상태에서 레드를 원하시네요. 명도 차이에 따라 시술 방향이 달라져요.',
+    detail: '같은 레드 계열이라 색감 충돌은 없습니다. 현재보다 밝은 레드를 원한다면 탈색 후 착색이 필요하고, 같은 명도나 어두운 레드를 원한다면 바로 착색이 가능합니다.',
+    guide: [
+      '밝은 레드를 원한다면 — 탈색 후 레드 염모제로 착색',
+      '같은 명도·어두운 레드를 원한다면 — 레드 염모제로 바로 착색 가능'
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'recommended',
+      tone_down:    'recommended',
+      warning_msg:  ''
+    }
+  },
+  {
+    key: 'RED_RED_LIGHT',
+    summary: '파스텔 레드예요. 레드 염모제로 바로 착색하세요.',
+    detail: '파스텔 레드는 이미 색소가 약한 상태이므로 레드 염모제로 바로 착색하면 선명한 레드가 잘 올라갑니다.',
+    guide: [
+      '바로 착색 추천',
+      '더 선명한 레드를 원한다면 — 잔류색소를 살짝 정리한 후 착색 (토닝 또는 짧은 탈색)'
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'recommended',
+      warning_msg:  ''
+    }
+  },
+  {
+    key: 'ORANGE_RED_STRONG',
+    summary: '주황 잔류색소가 강해요. 레드 염모제로 착색하세요.',
+    detail: '주황과 레드는 유사색 관계라 주황 잔류 위에 레드를 올려도 비교적 자연스럽게 발색됩니다. 다만 주황기가 강하면 순수한 레드보다는 오렌지레드 방향으로 표현될 수 있어요. 순수한 레드를 원한다면 탈색 후 착색이 더 안전합니다.',
+    guide: [
+      '레드 염모제로 바로 착색 가능 (주황기가 약간 섞인 따뜻한 레드로 표현될 수 있어요)',
+      '순수한 레드를 원한다면 — 탈색 후 착색 추천',
+      '주황기가 매우 강하다면 — 레드 염모제에 블루를 소량 믹스하여 주황기를 억제'
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
+  },
+  {
+    key: 'ORANGE_RED_LIGHT',
+    summary: '파스텔 주황이에요. 레드 염모제로 바로 착색하세요.',
+    detail: '파스텔 주황은 잔류색소가 적어 레드 염모제로 바로 착색해도 선명한 발색이 기대됩니다.',
+    guide: [
+      '바로 착색 추천 (토닝 또는 짧은 탈색)'
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'recommended',
+      warning_msg:  ''
+    }
+  },
+  {
+    key: 'YELLOW_RED_STRONG',
+    summary: '노랑 잔류색소가 강해요. 레드 염모제로 착색하세요.',
+    detail: '노랑 잔류가 강한 상태에서 레드를 올리면 노랑기가 섞여 오렌지레드 방향으로 수렴되기 쉽습니다. 순수한 레드를 원한다면 18레벨 연노랑까지 탈색한 후 착색하는 것이 더 안전합니다.',
+    guide: [
+      '레드 염모제로 바로 착색 가능 (노랑기가 섞여 따뜻한 오렌지레드로 표현될 수 있어요)',
+      '순수하고 선명한 레드를 원한다면 — 18레벨 연노랑까지 탈색 후 착색 추천',
+      '노랑기가 매우 강하다면 — 레드 염모제에 바이올렛을 소량 믹스하여 노랑기를 억제'
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'warning',
+      tone_down:    'warning',
+      warning_msg:  '노랑+레드 — 오렌지레드 가능'
+    }
+  },
+  {
+    key: 'YELLOW_RED_LIGHT',
+    summary: '파스텔 노랑이에요. 레드 염모제로 바로 착색하세요.',
+    detail: '파스텔 노랑은 잔류색소가 적어 레드 염모제로 바로 착색하면 선명한 레드가 잘 올라갑니다.',
+    guide: [
+      '레드 염모제로 바로 착색 추천 (토닝 또는 짧은 탈색)'
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'recommended',
+      warning_msg:  ''
+    }
+  },
+  {
+    key: 'MATTE_RED_STRONG',
+    summary: '매트 잔류가 강해요. 레드 염모제로 착색하세요.',
+    detail: '매트(카키) 잔류가 강한 상태에서 레드를 올리면 선명한 레드는 표현이 되지 않을 수 있습니다.',
+    guide: [
+      '탈색 후 레드 염모제로 착색 추천',
+      '색감만 바꾸는 방향이라면 — 낮은 명도 레드 염모제에 바이올렛 소량 믹스하여 착색 (탁한 와인 느낌 가능)',
+      '선명한 레드를 원한다면 — 추가 탈색 후 착색 권장'
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'warning',
+      tone_down:    'difficult',
+      warning_msg:  '매트 잔류 강함 — 선명한 레드 어려움'
+    }
+  },
+  {
+    key: 'MATTE_RED_LIGHT',
+    summary: '파스텔 매트예요. 바로 착색하거나 잔류색소를 살짝 정리한 후 레드를 착색하세요.',
+    detail: '잔류가 약해 레드가 비교적 잘 올라와요.',
+    guide: [
+      '레드 염모제로 바로 착색 (토닝 또는 짧은 탈색)'
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
+  }
+
+  /* ══════════════════════════════════════
+     오렌지(코퍼) 목표색 (Phase 5)
+     코퍼 → 오렌지로 용어 통일
+  ══════════════════════════════════════ */
+  ,{
+    key: 'RED_COPPER_STRONG',
+    summary: '레드 잔류색소가 강해요. 오렌지 염모제로 착색하세요.',
+    detail: '레드와 오렌지는 유사색 관계라 레드 잔류 위에 오렌지를 올려도 비교적 자연스럽게 발색됩니다. 레드기가 강하면 따뜻한 레드오렌지 방향으로 표현될 수 있어요.',
+    guide: [
+      '오렌지 염모제로 바로 착색 가능 (레드기가 섞여 따뜻한 레드오렌지로 표현될 수 있어요)',
+      '순수한 오렌지를 원한다면 — 탈색 후 착색 추천'
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
+  },
+  {
+    key: 'RED_COPPER_LIGHT',
+    summary: '파스텔 레드예요. 오렌지 염모제로 바로 착색하세요.',
+    detail: '파스텔 레드는 잔류색소가 적어 오렌지 염모제로 바로 착색하면 자연스러운 오렌지가 잘 올라갑니다.',
+    guide: [
+      '바로 착색 추천 (토닝 또는 짧은 탈색)'
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'recommended',
+      warning_msg:  ''
+    }
+  },
+  {
+    key: 'ORANGE_COPPER_STRONG',
+    summary: '주황 잔류색소가 있는 상태에서 오렌지를 원하시네요. 오렌지 염모제로 바로 착색하세요.',
+    detail: '주황과 오렌지는 거의 같은 계열이라 색감 충돌이 없습니다. 바로 착색해도 자연스러운 오렌지가 표현됩니다. 현재보다 밝은 오렌지를 원한다면 탈색 후 착색이 필요합니다.',
+    guide: [
+      '오렌지 염모제로 바로 착색 가능',
+      '밝은 오렌지를 원한다면 — 탈색 후 착색 추천'
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'recommended',
+      tone_down:    'recommended',
+      warning_msg:  ''
+    }
+  },
+  {
+    key: 'ORANGE_COPPER_LIGHT',
+    summary: '파스텔 주황이에요. 오렌지 염모제로 바로 착색하세요.',
+    detail: '파스텔 주황은 오렌지와 같은 계열이라 바로 착색하면 선명한 오렌지가 잘 올라갑니다.',
+    guide: [
+      '바로 착색 추천 (토닝 또는 짧은 탈색)'
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'recommended',
+      warning_msg:  ''
+    }
+  },
+  {
+    key: 'YELLOW_COPPER_STRONG',
+    summary: '노랑 잔류색소가 강해요. 오렌지 염모제로 착색하세요.',
+    detail: '노랑과 오렌지는 유사색 관계라 비교적 자연스럽게 발색됩니다. 노랑기가 강하면 밝은 골드오렌지 방향으로 표현될 수 있어요. 더 진하고 선명한 오렌지를 원한다면 낮은 명도 오렌지 염모제를 사용하세요.',
+    guide: [
+      '오렌지 염모제로 바로 착색 가능',
+      '더 진하고 선명한 오렌지를 원한다면 — 낮은 명도 오렌지 염모제 사용',
+      '노랑기가 매우 강하다면 — 바이올렛을 극소량 믹스하여 노랑기를 억제'
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'recommended',
+      tone_down:    'warning',
+      warning_msg:  ''
+    }
+  },
+  {
+    key: 'YELLOW_COPPER_LIGHT',
+    summary: '파스텔 노랑이에요. 오렌지 염모제로 바로 착색하세요.',
+    detail: '파스텔 노랑은 잔류색소가 적고 오렌지와 유사색 관계라 바로 착색하면 자연스럽고 선명한 오렌지가 올라갑니다.',
+    guide: [
+      '바로 착색 추천 (토닝 또는 짧은 탈색)'
+    ],
+    direction: {
+      tone_up:      'warning',
+      tone_in_tone: 'recommended',
+      tone_down:    'recommended',
+      warning_msg:  ''
+    }
+  },
+  {
+    key: 'MATTE_COPPER_STRONG',
+    summary: '매트 잔류가 강해요. 오렌지 염모제에 바이올렛 또는 시나몬브라운 계열을 소량 믹스하여 착색하세요.',
+    detail: '매트(카키·올리브) 잔류 위에 오렌지를 올리면 올리브 기운이 섞여 탁한 연두오렌지나 매트한 오렌지브라운 방향으로 수렴될 수 있습니다. 바이올렛을 소량 믹스하면 매트기를 부드럽게 잡아줄 수 있어요. 선명한 오렌지를 원한다면 탈색 후 착색을 권장합니다.',
+    guide: [
+      '오렌지 염모제에 바이올렛 또는 시나몬브라운을 소량 믹스하여 착색',
+      '선명한 오렌지를 원한다면 — 탈색 후 착색 권장'
+    ],
+    direction: {
+      tone_up:      'recommended',
+      tone_in_tone: 'warning',
+      tone_down:    'difficult',
+      warning_msg:  '매트 잔류 강함 — 보색중화 필요'
+    }
+  },
+  {
+    key: 'MATTE_COPPER_LIGHT',
+    summary: '파스텔 매트예요. 바로 착색하거나 잔류색소를 살짝 정리한 후 오렌지를 착색하세요.',
+    detail: '잔류가 약해 오렌지가 비교적 잘 올라와요.',
+    guide: [
+      '바로 착색하거나 잔류색소를 살짝 정리한 후 착색 (토닝 또는 짧은 탈색)'
     ],
     direction: {
       tone_up:      'warning',
@@ -4612,42 +4937,7 @@ function renderAnalysisResult(result) {
   if (desc)    desc.textContent = curName + ' → ' + tarName;
 
   /* 방향 뱃지 */
-  var badge = document.getElementById('tone-dir-badge');
-  var dirLabels = { up:'↑ 톤업 방향으로 선택하셨어요', same:'= 톤인톤 방향으로 선택하셨어요', down:'↓ 톤다운 방향으로 선택하셨어요' };
   var curDir = window._toneDir;
-  if (badge && curDir) badge.textContent = dirLabels[curDir] || '';
-
-  /* 다른 방향 버튼 생성 (API 호출 없이 프론트만) */
-  var altWrap = document.getElementById('alt-dir-wrap');
-  var altBtns = document.getElementById('alt-dir-btns');
-  if (altWrap && altBtns && curDir) {
-    altBtns.innerHTML = '';
-    var ALL_DIRS = [
-      { key:'up',   label:'↑ 톤업으로 보기' },
-      { key:'same', label:'= 톤인톤으로 보기' },
-      { key:'down', label:'↓ 톤다운으로 보기' }
-    ];
-    var hasAlt = false;
-    ALL_DIRS.forEach(function(d) {
-      if (d.key === curDir) return; /* 현재 방향 제외 */
-      /* 잠긴 버튼도 제외 */
-      var lockedBtn = document.getElementById('tone-btn-' + d.key);
-      if (lockedBtn && lockedBtn.disabled) return;
-      var b = document.createElement('button');
-      b.textContent = d.label;
-      b.style.cssText = 'flex:1;padding:8px 6px;border-radius:9px;border:1px solid #333;background:#0e0e0e;color:#888;font-size:11px;font-weight:600;cursor:pointer;';
-      b.onclick = (function(dk){ return function() {
-        window._toneDir = dk;
-        var autoDmg = estimateDamageLevel(currentHSL, targetHSL);
-        window._currentDamageLevel = autoDmg;
-        var r2 = analyzeColorFlow(currentHSL, targetHSL, autoDmg, dk);
-        renderAnalysisResult(r2);
-      }; })(d.key);
-      altBtns.appendChild(b);
-      hasAlt = true;
-    });
-    altWrap.style.display = hasAlt ? 'block' : 'none';
-  }
 
   /* 팁 문구 — BLEACH 계열에만 표시 */
   var needsDmgTip = (result.processType === 'BLEACH_FIRST' || result.processType === 'BLEACH_SHORT_TONING');
