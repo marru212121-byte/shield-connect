@@ -1030,7 +1030,18 @@ function utInitUI() {
       var th = document.getElementById('ut-thumb'); if(th) th.style.left=(utBp*100)+'%';
       if(utCurZone) utApply(utCurZone, utBp);
     });
-    tw.addEventListener('pointerup', function() { slDrag = false; });
+    tw.addEventListener('pointerup', function() {
+  slDrag = false;
+  /* UT_SEGS 구간으로 스냅 */
+  var SEGS = [{p:0},{p:0.25},{p:0.5},{p:0.75},{p:1.0}];
+  var snap = SEGS.reduce(function(best, seg) {
+    return Math.abs(seg.p - utBp) < Math.abs(best.p - utBp) ? seg : best;
+  });
+  utBp = snap.p;
+  var th = document.getElementById('ut-thumb');
+  if (th) { th.style.transition = 'left .2s cubic-bezier(.4,0,.2,1)'; th.style.left = (utBp*100)+'%'; }
+  if (utCurZone) utApply(utCurZone, utBp);
+});
   }
 
   /* cam pip */
