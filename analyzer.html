@@ -3855,10 +3855,13 @@ var HAIR_RULE_MATRIX = (function() {
   };
 
   /* ── 4. bleachLv → STRONG / LIGHT ── */
-  function residual(bleachLv) {
-    /* bleachLv = Math.round(tarL/5)
-       LIGHT: bleachLv >= 14 (tarL≈70, 밝음~파스텔)
-       STRONG: bleachLv < 14 (tarL<70, 비비드 이하) */
+  function residual(bleachLv, curL) {
+    /* STRONG/LIGHT = 언더톤 그래프 슬라이더(utBp) 기준
+       다크(0) ~ 밝음(0.75) → STRONG
+       파스텔(0.9~1.0)      → LIGHT */
+    var bp = (typeof utBp !== 'undefined') ? utBp : null;
+    if (bp !== null) return (bp >= 0.9) ? 'LIGHT' : 'STRONG';
+    if (curL !== undefined) return (curL >= 65) ? 'LIGHT' : 'STRONG';
     return (bleachLv >= 14) ? 'LIGHT' : 'STRONG';
   }
 
@@ -3874,9 +3877,9 @@ var HAIR_RULE_MATRIX = (function() {
        mid null  → PREFIX_RESIDUAL      (예: YELLOW_STRONG)
        non-ash + mid null → null (buildSentence 폴백)
   ──────────────────────────────────────────────────────── */
-  function toRulesKey(utKey, tarKey, bleachLv, targetType) {
+  function toRulesKey(utKey, tarKey, bleachLv, targetType, curL) {
     var prefix = UT_PREFIX[utKey] || 'COOL';
-    var res    = residual(bleachLv);
+    var res    = residual(bleachLv, curL);
 
     /* tarKey가 TAR_MID에 있는지 명확히 구분 */
     var inMap  = (tarKey in TAR_MID);
@@ -3926,7 +3929,7 @@ var HAIR_RULE_MATRIX = (function() {
     tarL    = tarL    || 50;
     var targetType = window._targetType || 'ash';
 
-    var key  = toRulesKey(utKey, tarKey, bleachLv, targetType);
+    var key  = toRulesKey(utKey, tarKey, bleachLv, targetType, curL);
     var rule = _findByKey(key);
 
     /* fallback 1: STRONG ↔ LIGHT 교체 */
