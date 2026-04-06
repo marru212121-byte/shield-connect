@@ -667,7 +667,7 @@ var UT_ZONES = [
   { key:'orange', label:'주황',      color:'#D96820', h:22,  lMin:32, lMax:64, sMin:80, sMax:60, tone:'orange' },
   { key:'brown',  label:'브라운',    color:'#8C6040', h:28,  lMin:24, lMax:52, sMin:45, sMax:28, tone:'orange' },
   { key:'yellow', label:'노랑',      color:'#C0A830', h:50,  lMin:42, lMax:82, sMin:75, sMax:42, tone:'yellow' },
-  { key:'faded',  label:'매트',      color:'#B2A62C', h:51,  lMin:42, lMax:75, sMin:58, sMax:36, tone:'faded' },
+  { key:'faded',  label:'매트',      color:'#A8A028', h:58,  lMin:42, lMax:75, sMin:55, sMax:33, tone:'faded' },
   { key:'matte',  label:'카키',      color:'#787848', h:72,  lMin:28, lMax:50, sMin:28, sMax:14, tone:'yellow' },
   { key:'cool',   label:'쿨·애쉬',  color:'#6888A0', h:205, lMin:36, lMax:68, sMin:32, sMax:12, tone:'blue' },
   { key:'blue',   label:'블루',      color:'#4A72C4', h:225, lMin:32, lMax:62, sMin:65, sMax:38, tone:'blue' },
@@ -750,7 +750,7 @@ var _mBarDragging = false;
 /* 수동/카메라 공용 — HUE_STOPS 내장 */
 var _BAR_HUE_STOPS = [
   {h:0,p:0},{h:5,p:0.06},{h:22,p:0.13},{h:28,p:0.20},
-  {h:50,p:0.30},{h:51,p:0.36},{h:72,p:0.45},
+  {h:50,p:0.30},{h:58,p:0.40},{h:72,p:0.48},
   {h:100,p:0.50},{h:205,p:0.56},{h:225,p:0.62},
   {h:270,p:0.70},{h:340,p:0.84},{h:360,p:1.0}
 ];
@@ -859,7 +859,9 @@ function utApply(z, p) {
 function utSelect(z) {
   utCurZone = z;
   window._utCurZone = z;
-  window._curTone = z.tone;
+  window._curTone = z.key;
+  window._currentUndertoneKey = z.key;
+  window._savedUtKey = z.key;
   var items = document.querySelectorAll('.ut-sw-item');
   for (var i = 0; i < items.length; i++) {
     items[i].classList.toggle('ut-active', items[i].dataset.key === z.key);
@@ -881,7 +883,7 @@ function utInitUI() {
   /* HUE_STOPS — 전역 공유 */
   var HUE_STOPS = [
     {h:0,p:0},{h:5,p:0.06},{h:22,p:0.13},{h:28,p:0.20},
-    {h:50,p:0.30},{h:51,p:0.36},{h:72,p:0.45},
+    {h:50,p:0.30},{h:58,p:0.40},{h:72,p:0.48},
     {h:100,p:0.50},{h:205,p:0.56},{h:225,p:0.62},
     {h:270,p:0.70},{h:340,p:0.84},{h:360,p:1.0}
   ];
@@ -2199,9 +2201,12 @@ function showResult(r) {
     currentHSL.l = Math.round(best.lMin + bp*(best.lMax-best.lMin));
     window._curTone = best.tone;
 
-    /* utCurZone 세팅 — 슬라이더 즉시 반응하도록 */
+    /* utCurZone 세팅 — showResult 자동 매핑 */
     utCurZone = best;
     window._utCurZone = best;
+    window._curTone = best.tone;
+    window._currentUndertoneKey = best.key;
+    window._savedUtKey = best.key;
 
     /* 7. current-swatch-box 색상 반영 */
     var col = 'hsl('+best.h+','+currentHSL.s+'%,'+currentHSL.l+'%)';
@@ -2223,6 +2228,20 @@ function showResult(r) {
 function confirmCurrentColor() {
   var l = currentHSL.l;
   analysisResult.base = l < 20 ? 'dark' : l < 45 ? 'brown' : l < 62 ? 'light' : l < 78 ? 'bleached' : 'ivory';
+
+  /* currentHSL 기준으로 가장 가까운 UT_ZONES 자동 세팅 */
+  if (typeof UT_ZONES !== 'undefined' && UT_ZONES.length) {
+    var _best = UT_ZONES[0], _bd = 999;
+    UT_ZONES.forEach(function(z) {
+      var dh = Math.min(Math.abs(currentHSL.h - z.h), 360 - Math.abs(currentHSL.h - z.h));
+      if (dh < _bd) { _bd = dh; _best = z; }
+    });
+    utCurZone = _best;
+    window._utCurZone = _best;
+    window._curTone = _best.key;
+    window._currentUndertoneKey = _best.key;
+    window._savedUtKey = _best.key;
+  }
 
   /* 목표색 초기값 */
   targetHSL = { h: (currentHSL.h + 30) % 360, s: 55, l: Math.min(80, currentHSL.l + 18) };
@@ -3270,6 +3289,11 @@ function analyzeColorFlow(current, target, damageLevel, toneDir) {
 
 /* ── confirmTargetColor → 스와치 표시 + 딜레이 + 3방향 선택 ── */
 function confirmTargetColor() {
+  /* _currentUndertoneKey 보호 — 없으면 현재 utCurZone에서 복원 */
+  if (!window._currentUndertoneKey) {
+    window._currentUndertoneKey = (utCurZone && utCurZone.key) || window._curTone || 'yellow';
+  }
+
   /* 새 분석 시작 — 히스테리시스 초기화 */
   _prevCurBase = null;
   _prevTarBase = null;
@@ -3312,13 +3336,11 @@ function confirmTargetColor() {
     'dark_neutral': 'neutral', 'black': 'neutral',
     'faded': 'faded', 'matte': 'matte'
   };
+  /* utCurZone.key 우선 사용, 없으면 curToneMap */
   window._curTone = curToneMap[curKey] || 'neutral';
-  console.log('[confirmTargetColor]', {
-    curKey: curKey, curTone: window._curTone,
-    tarKey: tarKey, targetType: window._targetType,
-    curHSL: currentHSL, tarHSL: targetHSL
-  });
-
+  /* 수동 선택된 utCurZone이 있으면 그 key를 보존 */
+  window._savedUtKey = (window._utCurZone && window._utCurZone.key) || window._curTone || 'yellow';
+  
   /* targetType: 판단 기준 — ash / non-ash 만 사용
      저채도(s<25) = 애쉬 계열로 처리
      tarKey가 ash 계열이거나 tone이 ash이거나 채도가 낮으면 ash */
@@ -3465,6 +3487,9 @@ function confirmTargetColor() {
     var rec = document.getElementById('tone-up-recommend');
     if (rec) rec.style.display = 'block';
   }
+
+  /* ── _savedUtKey 최종 확정 (카드 표시 직전) ── */
+  window._savedUtKey = window._currentUndertoneKey || (window._utCurZone && window._utCurZone.key) || window._curTone || 'yellow';
 
   /* ── 카드 표시 ── */
   var tc = document.getElementById('tone-dir-card');
@@ -4497,7 +4522,7 @@ var HAIR_RULES = [
   },
   {
     key: 'MATTE_ASH_STRONG',
-    summary: '카키·매트 잔류가 강해요. 탈색 후 애쉬에 바이올렛 소량 믹스하세요.',
+    summary: '카키·매트 잔류가 강해요. 애쉬 염모제에 시나몬브라운 또는 바이올렛 소량 믹스하세요.',
     detail: '매트 베이스에서 보색 중화를 하면 색감이 탁해질 수 있어요. 시나몬브라운(한색+난색 동시 존재 브라운) 소량 믹스가 더 부드럽고 안전해요. 보라는 극소량만 권장해요. 선명한 발색을 원한다면 탈색 후 착색을 권장해요.',
     guide: [
       '애쉬 염모제에 바이올렛 소량 믹스하여 착색',
@@ -4507,7 +4532,7 @@ var HAIR_RULES = [
     direction: {
       tone_up:      'recommended',
       tone_in_tone: 'warning',
-      tone_down:    'difficult',
+      tone_down:    'warning',
       warning_msg:  '보색 중화 하면서 표현하지만 색감과 밝기가 탁해질 수 있어요. 선명한 발색은 톤업을 권장해요'
     }
   },
@@ -4832,13 +4857,16 @@ function renderAnalysisResult(result) {
   }
 
   /* summary 문장 — HAIR_RULE_MATRIX.getRule() */
-  var _utKey  = (window._utCurZone && window._utCurZone.key)
-                ? window._utCurZone.key
-                : (window._curTone || 'yellow');
+  /* confirmTargetColor에서 저장한 utKey 사용 (showResult 덮어씌우기 방지) */
+  var _utKey = window._currentUndertoneKey ||
+                window._savedUtKey ||
+                (window._utCurZone ? window._utCurZone.key : null) ||
+                window._curTone || 'yellow';
   var _tarKey  = window._targetSubType || 'ash';
   var _toneDir = window._toneDir       || 'same';
 
-  var _rule    = HAIR_RULE_MATRIX.getRule(_utKey, _tarKey, _toneDir, currentHSL.l, targetHSL.l);
+  var _bleachLv = Math.round((targetHSL && targetHSL.l) ? targetHSL.l / 5 : 10);
+  var _rule    = HAIR_RULE_MATRIX.getRule(_utKey, _tarKey, _bleachLv, _toneDir, currentHSL.l, targetHSL.l);
   var frontMsg;
 
   if (_rule && _rule.key !== 'DEFAULT') {
