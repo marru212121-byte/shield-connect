@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<title>모발 색상 분석기 v11</title>
+<title>모발 색상 분석기 v12</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0a;color:#fff;min-height:100dvh;overflow-x:hidden}
@@ -147,7 +147,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div class="header">
   <button class="back-btn" onclick="history.back()">‹</button>
   <div>
-    <div class="header-title" id="header-title">모발 색상 분석 <span style="font-size:10px;color:#9E7FBF;">v11</span></div>
+    <div class="header-title" id="header-title">모발 색상 분석 <span style="font-size:10px;color:#9E7FBF;">v12</span></div>
     <div class="header-sub" id="header-sub">분석 방식을 선택해주세요</div>
   </div>
 </div>
@@ -345,27 +345,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     </div>
     <div id="rec-undertone-label" style="display:none;"></div>
 
-    <!-- 2단계 목표색 버튼식 UI -->
-    <div style="font-size:12px;color:#888;font-weight:500;margin-bottom:12px;">목표 색상 계열</div>
+    <!-- 2단계 목표색 버튼식 UI (v12: 슬라이더 제거, 버튼만) -->
+    <div style="font-size:12px;color:#888;font-weight:500;margin-bottom:14px;">원하는 색상을 선택하세요</div>
 
-    <!-- 가로 색감 그래프 (목표색) -->
-    <div id="t-bar-wrap" style="position:relative;height:44px;border-radius:10px;margin-bottom:16px;background:linear-gradient(to right,hsl(210,18%,48%),hsl(210,10%,68%),hsl(220,40%,52%),hsl(265,45%,52%),hsl(320,18%,62%),hsl(340,50%,60%),hsl(0,65%,50%),hsl(28,70%,52%),hsl(50,70%,52%),hsl(130,45%,45%));touch-action:none;user-select:none;cursor:pointer;">
-      <div id="t-bar-thumb" style="position:absolute;top:50%;left:8%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.3);background:hsl(210,18%,48%);pointer-events:none;transition:left .2s cubic-bezier(.4,0,.2,1);"></div>
-    </div>
-
-    <!-- 목표색 원형 카드 -->
+    <!-- 목표색 원형 버튼 -->
     <div id="target-swatch-row" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;"></div>
 
-    <!-- 명도 슬라이더 (STRONG↔LIGHT) -->
-    <div style="font-size:12px;color:#888;font-weight:500;margin-bottom:10px;">밝기</div>
-    <div style="position:relative;margin-bottom:6px;">
-      <div id="t-cur-tag" style="position:absolute;top:-26px;transform:translateX(-50%);font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;white-space:nowrap;pointer-events:none;z-index:4;color:#fff;background:#555;left:35%;"></div>
-      <div id="t-track-wrap" style="position:relative;height:44px;cursor:pointer;touch-action:none;">
-        <div id="t-track-bg" style="position:absolute;top:50%;transform:translateY(-50%);left:0;right:0;height:7px;border-radius:4px;background:#333;"></div>
-        <div id="t-thumb" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.3);z-index:3;left:35%;"></div>
-      </div>
+    <!-- 실무 힌트 박스 (버튼 선택 시 자동 표시) -->
+    <div id="target-hint-box" style="display:none;padding:11px 13px;border-radius:10px;background:rgba(158,127,191,0.07);border:1px solid rgba(158,127,191,0.25);margin-bottom:16px;">
+      <div style="font-size:11px;color:#9E7FBF;font-weight:700;margin-bottom:5px;">💡 실무 포인트</div>
+      <div id="target-hint-text" style="font-size:12px;color:#bbb;line-height:1.8;"></div>
     </div>
-    <div id="t-seg-row" style="position:relative;height:28px;margin-bottom:20px;"></div>
+
+    <!-- JS 호환용 hidden 요소 -->
+    <div id="t-bar-wrap" style="display:none;"><div id="t-bar-thumb"></div></div>
+    <div id="t-cur-tag" style="display:none;"></div>
+    <div id="t-track-wrap" style="display:none;"><div id="t-track-bg"></div><div id="t-thumb"></div></div>
+    <div id="t-seg-row" style="display:none;"></div>
 
     <button onclick="confirmTargetColor()" style="width:100%;padding:13px;border-radius:11px;background:#fff;border:none;color:#000;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.3px;">
       시술 방향 확인 →
@@ -1382,157 +1378,196 @@ function updateManualSwatch() {
   if (dot) dot.style.background = hslStr(manualHSL.h, Math.min(manualHSL.s + 10, 100), Math.max(manualHSL.l - 5, 10));
 }
 
-/* ── 애쉬 빠른선택 (목표색 step2) ── */
 /* ══════════════════════════════════════
-   2단계 목표색 버튼식 UI
+   2단계 목표색 버튼식 UI — v12
+   슬라이더 제거. 버튼 선택만으로 targetHSL 확정.
+   각 버튼에 hints 구조 추가 (utBp 강도 기반 실무 조언)
 ══════════════════════════════════════ */
 var TARGET_ZONES = [
-  /* defaultBp: 카드 선택 시 명도·채도 슬라이더 기본 위치 (0=다크, 1=파스텔) */
-  { key:'ash',       label:'애쉬그레이',  color:'#8FAFC0', h:210, s:16, l:62,  lMin:30, lMax:70, sMin:20, sMax:8,  tone:'ash',    defaultBp:0.55 },
-  { key:'silver',    label:'실버애쉬',    color:'#BDC9D4', h:210, s:10, l:72,  lMin:58, lMax:82, sMin:12, sMax:5,  tone:'ash',    defaultBp:0.80 },
-  { key:'darkash',   label:'다크애쉬',    color:'#4A5E6A', h:210, s:14, l:32,  lMin:20, lMax:48, sMin:18, sMax:10, tone:'ash',    defaultBp:0.20 },
-  { key:'blueash',   label:'블루애쉬',    color:'#8FADD4', h:220, s:35, l:68,  lMin:45, lMax:78, sMin:42, sMax:20, tone:'blue',   defaultBp:0.72 },
-  { key:'blue',      label:'블루',        color:'#4A72C4', h:225, s:65, l:52,  lMin:32, lMax:68, sMin:70, sMax:38, tone:'blue',   defaultBp:0.40 },
-  { key:'ashviolet', label:'애쉬바이올렛',color:'#AA98D8', h:265, s:32, l:70,  lMin:48, lMax:78, sMin:38, sMax:18, tone:'violet', defaultBp:0.72 },
-  { key:'violet',    label:'바이올렛',    color:'#7A52C4', h:270, s:58, l:52,  lMin:32, lMax:68, sMin:65, sMax:35, tone:'violet', defaultBp:0.40 },
-  { key:'ashpink',   label:'애쉬핑크',    color:'#DFA8BE', h:335, s:38, l:74,  lMin:55, lMax:82, sMin:42, sMax:18, tone:'pink',   defaultBp:0.78 },
-  { key:'red',       label:'레드',        color:'#CC4A4A', h:5,   s:65, l:50,  lMin:28, lMax:65, sMin:68, sMax:45, tone:'red',    defaultBp:0.40 },
-  { key:'copper',    label:'코퍼',        color:'#C87840', h:28,  s:60, l:52,  lMin:32, lMax:65, sMin:68, sMax:42, tone:'orange', defaultBp:0.40 },
-  { key:'yellow',    label:'골드',        color:'#C0A830', h:50,  s:68, l:52,  lMin:40, lMax:78, sMin:72, sMax:40, tone:'yellow', defaultBp:0.40 },
-  { key:'matte',     label:'매트',        color:'#B2A62C', h:51,  s:55, l:52,  lMin:32, lMax:72, sMin:60, sMax:30, tone:'yellow', defaultBp:0.50 },
-  { key:'green',     label:'카키',        color:'#787848', h:72,  s:22, l:38,  lMin:22, lMax:55, sMin:28, sMax:12, tone:'yellow', defaultBp:0.45 },
+  { key:'ash',       label:'애쉬그레이',   color:'#8FAFC0', h:210, s:16, l:55,  tone:'ash',
+    hints: {
+      dark:    "어두운 모발에서 애쉬그레이는 14lv 이상 탈색 후 시술을 권장해요. 노랑기가 남으면 색이 탁해질 수 있어요.",
+      yellow:  "노랑기가 강하면 애쉬 단독보다 보라를 소량 믹스해서 중화하며 시술하세요.",
+      default: null
+    }
+  },
+  { key:'silver',    label:'실버애쉬',     color:'#BDC9D4', h:210, s:10, l:72,  tone:'ash',
+    hints: {
+      dark:    "실버는 잔류색소가 거의 없어야 올라가요. 18lv 이상 탈색이 필요하며 한 번에 불가능한 경우가 많아요.",
+      yellow:  "노랑기가 남아있으면 실버 대신 애쉬그레이로 먼저 착색 후 재방문 시 실버로 전환을 권장해요.",
+      strong:  "현재 언더톤이 강한 편이에요. 실버는 잔류색소에 매우 민감하므로 탈색 충분히 진행 후 시술하세요.",
+      default: "실버애쉬는 잔류색소가 거의 없는 18lv 이상에서 가장 깨끗하게 발색해요."
+    }
+  },
+  { key:'darkash',   label:'다크애쉬',     color:'#4A5E6A', h:210, s:14, l:32,  tone:'ash',
+    hints: {
+      dark:    "다크애쉬는 어두운 모발에서도 시술 가능하지만, 새치·탈색모에서 결과가 달라질 수 있어요.",
+      yellow:  "노랑기가 있으면 다크애쉬에 소량의 보라를 섞어 중화하세요.",
+      default: "다크애쉬·그레이 계열은 염색 이력에 따라 흡수 편차가 있으므로 1회 시술 후 반응을 확인하세요."
+    }
+  },
+  { key:'blueash',   label:'블루애쉬',     color:'#8FADD4', h:220, s:35, l:62,  tone:'blue',
+    hints: {
+      dark:    "블루애쉬는 14lv 이상 탈색 상태에서 선명하게 발색해요. 어두운 모발에선 흐리게 올라올 수 있어요.",
+      yellow:  "노랑기가 있으면 블루와 보라를 섞어 노랑을 중화하며 시술하는 것을 권장해요.",
+      default: null
+    }
+  },
+  { key:'blue',      label:'블루',          color:'#4A72C4', h:225, s:65, l:48,  tone:'blue',
+    hints: {
+      dark:    "비비드 블루는 16lv 이상 탈색 후 시술해야 선명하게 발색해요. 낮은 레벨에서는 네이비·잿빛으로 수렴돼요.",
+      yellow:  "노랑기가 강한 상태에서 블루를 올리면 초록빛으로 흐려질 수 있어요. 탈색 충분히 후 시술하세요.",
+      default: null
+    }
+  },
+  { key:'ashviolet', label:'애쉬바이올렛', color:'#AA98D8', h:265, s:32, l:65,  tone:'violet',
+    hints: {
+      dark:    "애쉬바이올렛은 14lv 이상 탈색 후 가장 자연스럽게 올라가요. 어두운 모발에선 채도가 낮게 표현돼요.",
+      yellow:  "노랑기가 있으면 바이올렛이 중화제 역할을 하지만 과하면 회색·베이지로 수렴될 수 있어요.",
+      default: null
+    }
+  },
+  { key:'violet',    label:'바이올렛',      color:'#7A52C4', h:270, s:58, l:48,  tone:'violet',
+    hints: {
+      dark:    "비비드 바이올렛은 16lv 이상 탈색 후 시술하세요. 어두운 모발에선 선명도가 크게 떨어져요.",
+      yellow:  "노랑기가 강하면 바이올렛 발색이 적갈색·탁한 보라로 수렴될 수 있어요. 충분한 탈색 후 시술하세요.",
+      default: null
+    }
+  },
+  { key:'ashpink',   label:'애쉬핑크',      color:'#DFA8BE', h:335, s:38, l:70,  tone:'pink',
+    hints: {
+      dark:    "애쉬핑크는 14lv 이상 탈색 후 시술하세요. 어두운 모발에선 연핑크 대신 탁한 핑크베이지가 될 수 있어요.",
+      yellow:  "노랑기가 있으면 핑크가 살구·코랄 빛으로 수렴될 수 있어요. 보라 소량 믹스로 중화 후 시술하세요.",
+      default: null
+    }
+  },
+  { key:'red',       label:'레드',          color:'#CC4A4A', h:5,   s:65, l:46,  tone:'red',
+    hints: {
+      dark:    "레드는 어두운 모발에서도 착색이 가능하지만 발색이 어둡고 무겁게 올라와요. 탈색 후 시술하면 선명해져요.",
+      yellow:  "레드 계열은 노랑기가 있어도 색을 흡수하는 편이지만, 선명한 레드를 원한다면 14lv 정도 탈색을 권장해요.",
+      default: null
+    }
+  },
+  { key:'copper',    label:'코퍼',          color:'#C87840', h:28,  s:60, l:48,  tone:'orange',
+    hints: {
+      dark:    "코퍼는 어두운 모발에서도 어느 정도 발색이 가능해요. 선명한 코퍼를 원하면 12~14lv 탈색 후 시술하세요.",
+      yellow:  "노랑기가 있는 모발에서 코퍼는 자연스럽게 섞여 들어가는 편이에요.",
+      default: null
+    }
+  },
+  { key:'yellow',    label:'골드',          color:'#C0A830', h:50,  s:68, l:50,  tone:'yellow',
+    hints: {
+      dark:    "골드는 밝은 모발에서 가장 선명하게 발색해요. 어두운 모발에선 노란기가 거의 보이지 않을 수 있어요.",
+      default: "골드·옐로우 계열은 밝은 언더톤과 자연스럽게 어우러져요."
+    }
+  },
+  { key:'matte',     label:'매트',          color:'#B2A62C', h:51,  s:55, l:48,  tone:'yellow',
+    hints: {
+      dark:    "매트 계열은 어두운 모발에서도 착색이 가능하지만 올리브·카키 빛으로 수렴되는 경향이 있어요.",
+      yellow:  "노랑기가 있으면 매트 계열이 자연스럽게 맞아요. 단 과하면 칙칙해 보일 수 있어요.",
+      default: null
+    }
+  },
+  { key:'green',     label:'카키',          color:'#787848', h:72,  s:22, l:36,  tone:'yellow',
+    hints: {
+      dark:    "카키는 어두운 모발에서 어두운 올리브 그린으로 발색해요. 선명한 카키를 원하면 12lv 이상 탈색하세요.",
+      yellow:  "노랑기가 있으면 카키 계열 색이 자연스럽게 맞아요.",
+      default: null
+    }
+  },
 ];
 
-var TARGET_SEGS = [
-  {p:0, t:'다크'},{p:0.25, t:'어두움'},{p:0.5, t:'비비드'},{p:0.75, t:'밝음'},{p:1.0, t:'파스텔'}
-];
-
+/* ── v12: tBp 없음 — 버튼 선택 시 zone 고정값으로 targetHSL 확정 ── */
 var tCurZone = null;
-var tBp = 0.5;
 
-function tInterp(z, p) {
-  var l = z.lMin + p*(z.lMax-z.lMin);
-  var s = z.sMin + p*(z.sMax-z.sMin);
-  return 'hsl('+z.h+','+Math.round(s)+'%,'+Math.round(l)+'%)';
-}
-function tSegLabel(p) {
-  if(p<0.15) return '다크'; if(p<0.35) return '어두움';
-  if(p<0.58) return '비비드'; if(p<0.80) return '밝음';
-  return '파스텔';
-}
-function tApply(z, p) {
+/* targetHSL을 zone 고정값으로 설정 */
+function tApply(z) {
   targetHSL.h = z.h;
-  targetHSL.s = Math.round(z.sMin + p*(z.sMax-z.sMin));
-  targetHSL.l = Math.round(z.lMin + p*(z.lMax-z.lMin));
-  var col = tInterp(z, p);
+  targetHSL.s = z.s;
+  targetHSL.l = z.l;
+  var col = 'hsl(' + z.h + ',' + z.s + '%,' + z.l + '%)';
   var tb = document.getElementById('target-swatch-box'); if(tb) tb.style.background = col;
-  var th = document.getElementById('t-thumb'); if(th) th.style.background = col;
-  var tag = document.getElementById('t-cur-tag');
-  if(tag){ tag.textContent=tSegLabel(p); tag.style.background=col; tag.style.color=targetHSL.l>58?'rgba(0,0,0,0.75)':'#fff'; tag.style.left=(p*100)+'%'; }
-  var tbg = document.getElementById('t-track-bg');
-  if(tbg) tbg.style.background='linear-gradient(to right,'+tInterp(z,0)+','+tInterp(z,0.5)+','+tInterp(z,1)+')';
-  /* _targetType 자동 결정 */
-  window._targetType = (z.tone === 'ash' || targetHSL.s < 25) ? 'ash' : 'non-ash';
+  window._targetType    = (z.tone === 'ash' || z.s < 25) ? 'ash' : 'non-ash';
   window._targetSubType = z.key;
 }
 
-function tSelect(z) {
-  tCurZone = z;
-  document.querySelectorAll('.t-sw-item').forEach(function(el){ el.classList.toggle('t-active', el.dataset.key===z.key); });
+/* hint 계산 — utBp(언더톤 강도) 기반으로 가장 적절한 힌트 선택 */
+function tGetHint(z) {
+  if (!z || !z.hints) return null;
+  var bp = (window._savedUtBp !== undefined) ? window._savedUtBp : (typeof utBp !== 'undefined' ? utBp : 0.35);
+  /* utCurZone의 tone 체크 */
+  var utTone = window._utCurZone ? window._utCurZone.tone : '';
 
-  /* defaultBp로 슬라이더 자동 이동 */
-  if (z.defaultBp !== undefined) {
-    tBp = z.defaultBp;
-    var th = document.getElementById('t-thumb');
-    if (th) { th.style.transition='left .2s cubic-bezier(.4,0,.2,1)'; th.style.left=(tBp*100)+'%'; }
-  }
-
-  var pct = _tBarZonePct(z);
-  var barTh = document.getElementById('t-bar-thumb');
-  if(barTh){ barTh.style.left=(pct*100)+'%'; barTh.style.background=z.color; }
-  tApply(z, tBp);
+  /* 어두운 언더톤: p < 0.25 */
+  if (bp < 0.25 && z.hints.dark)   return z.hints.dark;
+  /* 노랑기 언더톤: yellow/orange 계열 */
+  if ((utTone === 'yellow' || utTone === 'orange') && z.hints.yellow) return z.hints.yellow;
+  /* 강한 언더톤: p < 0.5 */
+  if (bp < 0.5 && z.hints.strong)  return z.hints.strong;
+  return z.hints.default || null;
 }
 
+/* 버튼 선택 핸들러 */
+function tSelect(z) {
+  tCurZone = z;
+  document.querySelectorAll('.t-sw-item').forEach(function(el){
+    el.classList.toggle('t-active', el.dataset.key === z.key);
+  });
+  tApply(z);
+
+  /* hint 박스 표시 */
+  var hint = tGetHint(z);
+  var hBox = document.getElementById('target-hint-box');
+  var hTxt = document.getElementById('target-hint-text');
+  if (hBox && hTxt) {
+    if (hint) { hTxt.textContent = hint; hBox.style.display = 'block'; }
+    else      { hBox.style.display = 'none'; }
+  }
+}
+
+/* _tBarZonePct — hidden bar thumb 호환용으로만 유지 */
 function _tBarZonePct(z) {
   var map = {
-    ash:0.08, silver:0.16, darkash:0.24,
-    blueash:0.32, blue:0.40,
-    ashviolet:0.50, violet:0.58,
-    ashpink:0.66,
-    red:0.74, copper:0.80, yellow:0.87, green:0.94
+    ash:0.08, silver:0.16, darkash:0.24, blueash:0.32, blue:0.40,
+    ashviolet:0.50, violet:0.58, ashpink:0.66,
+    red:0.74, copper:0.80, yellow:0.87, matte:0.90, green:0.94
   };
   return map[z.key] !== undefined ? map[z.key] : 0.08;
 }
 
+/* ── targetInitUI v12: 버튼만 렌더링, 슬라이더 없음 ── */
 function targetInitUI() {
   var row = document.getElementById('target-swatch-row');
   if (!row) return;
 
-  if(!document.getElementById('t-sw-style')){
-    var st=document.createElement('style'); st.id='t-sw-style';
-    st.textContent='.t-sw-item{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;min-width:52px}'+
-      '.t-sw-circle{width:50px;height:50px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.15);transition:transform .15s,box-shadow .15s}'+
-      '.t-sw-item.t-active .t-sw-circle{transform:scale(1.12);box-shadow:0 0 0 3.5px rgba(255,255,255,0.5)}'+
-      '.t-sw-name{font-size:11px;color:#888;text-align:center;line-height:1.35;max-width:58px;word-break:keep-all}'+
-      '.t-sw-item.t-active .t-sw-name{color:#fff;font-weight:600}';
+  if (!document.getElementById('t-sw-style')) {
+    var st = document.createElement('style'); st.id = 't-sw-style';
+    st.textContent =
+      '.t-sw-item{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;min-width:52px}' +
+      '.t-sw-circle{width:50px;height:50px;border-radius:50%;border:3px solid rgba(255,255,255,0.15);transition:transform .15s,box-shadow .15s,border-color .15s}' +
+      '.t-sw-item.t-active .t-sw-circle{transform:scale(1.12);border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,0.35)}' +
+      '.t-sw-name{font-size:11px;color:#666;text-align:center;line-height:1.35;max-width:58px;word-break:keep-all}' +
+      '.t-sw-item.t-active .t-sw-name{color:#fff;font-weight:700}';
     document.head.appendChild(st);
   }
 
   if (!row.dataset.init) {
     row.dataset.init = '1';
     row.innerHTML = '';
-    TARGET_ZONES.forEach(function(z){
-      var item=document.createElement('div'); item.className='t-sw-item'; item.dataset.key=z.key;
-      var circ=document.createElement('div'); circ.className='t-sw-circle'; circ.style.background=z.color;
-      var name=document.createElement('div'); name.className='t-sw-name'; name.textContent=z.label;
-      item.appendChild(circ); item.appendChild(name);
-      item.addEventListener('click', function(){ tSelect(z); });
+    TARGET_ZONES.forEach(function(z) {
+      var item = document.createElement('div');
+      item.className = 't-sw-item';
+      item.dataset.key = z.key;
+      var circ = document.createElement('div');
+      circ.className = 't-sw-circle';
+      circ.style.background = z.color;
+      var name = document.createElement('div');
+      name.className = 't-sw-name';
+      name.textContent = z.label;
+      item.appendChild(circ);
+      item.appendChild(name);
+      item.addEventListener('click', function() { tSelect(z); });
       row.appendChild(item);
-    });
-    var segRow=document.getElementById('t-seg-row');
-    if(segRow){ segRow.innerHTML=''; TARGET_SEGS.forEach(function(s){
-      var el=document.createElement('div');
-      el.style.cssText='position:absolute;display:flex;flex-direction:column;align-items:center;gap:3px;transform:translateX(-50%);left:'+(s.p*100)+'%;';
-      el.innerHTML='<div style="width:1px;height:6px;background:rgba(255,255,255,0.2);"></div><div style="font-size:11px;color:#888;white-space:nowrap;">'+s.t+'</div>';
-      segRow.appendChild(el);
-    }); }
-  }
-
-  /* 가로 그래프 이벤트 — 매번 재등록 */
-  var tWrap = document.getElementById('t-bar-wrap');
-  if (tWrap) {
-    var newWrap = tWrap.cloneNode(true);
-    tWrap.parentNode.replaceChild(newWrap, tWrap);
-    tWrap = newWrap;
-    function tOnMove(clientX) {
-      var r = tWrap.getBoundingClientRect(); if(!r.width) return;
-      var pct = Math.max(0, Math.min(1, (clientX-r.left)/r.width));
-      var best = TARGET_ZONES[0], bd = 999;
-      TARGET_ZONES.forEach(function(z){ var d=Math.abs(_tBarZonePct(z)-pct); if(d<bd){bd=d;best=z;} });
-      var th = document.getElementById('t-bar-thumb');
-      if(th){ th.style.transition='none'; th.style.left=(pct*100)+'%'; th.style.background=best.color; }
-      tSelect(best);
-    }
-    tWrap.addEventListener('pointerdown', function(e){ tWrap.setPointerCapture(e.pointerId); tOnMove(e.clientX); });
-    tWrap.addEventListener('pointermove', function(e){ if(e.buttons) tOnMove(e.clientX); });
-    tWrap.addEventListener('touchstart', function(e){ e.preventDefault(); tOnMove(e.touches[0].clientX); },{passive:false});
-    tWrap.addEventListener('touchmove',  function(e){ e.preventDefault(); tOnMove(e.touches[0].clientX); },{passive:false});
-  }
-
-  /* 명도 슬라이더 */
-  var tw = document.getElementById('t-track-wrap');
-  if(tw){
-    tw.addEventListener('pointerdown', function(e){
-      tw.setPointerCapture(e.pointerId);
-      var r=tw.getBoundingClientRect(); tBp=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
-      var th=document.getElementById('t-thumb'); if(th) th.style.left=(tBp*100)+'%';
-      if(tCurZone) tApply(tCurZone,tBp);
-    });
-    tw.addEventListener('pointermove', function(e){
-      if(!e.buttons) return;
-      var r=tw.getBoundingClientRect(); tBp=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
-      var th=document.getElementById('t-thumb'); if(th) th.style.left=(tBp*100)+'%';
-      if(tCurZone) tApply(tCurZone,tBp);
     });
   }
 
@@ -3316,14 +3351,24 @@ function analyzeColorFlow(current, target, damageLevel, toneDir) {
 
 /* ── confirmTargetColor → 스와치 표시 + 딜레이 + 3방향 선택 ── */
 function confirmTargetColor() {
-  /* _currentUndertoneKey 보호 — 없으면 현재 utCurZone에서 복원 */
+  /* _currentUndertoneKey 보호 */
   if (!window._currentUndertoneKey) {
     window._currentUndertoneKey = (utCurZone && utCurZone.key) || window._curTone || 'yellow';
   }
-  /* _undertoneStrength 확정 — utBp 슬라이더 기준 */
-  /* _savedUtBp: 사용자가 마지막으로 스냅한 utBp 값 우선 사용 */
-  var _bp = (window._savedUtBp !== undefined) ? window._savedUtBp : utBp;
+  /* _undertoneStrength 확정 — utBp(현재색 슬라이더) 기준 유지 */
+  var _bp = (window._savedUtBp !== undefined) ? window._savedUtBp : (typeof utBp !== 'undefined' ? utBp : 0.35);
   window._undertoneStrength = (_bp >= 0.9) ? 'LIGHT' : 'STRONG';
+
+  /* hint 박스 최신 언더톤 기준으로 재갱신 */
+  if (tCurZone) {
+    var hint = tGetHint(tCurZone);
+    var hBox = document.getElementById('target-hint-box');
+    var hTxt = document.getElementById('target-hint-text');
+    if (hBox && hTxt) {
+      if (hint) { hTxt.textContent = hint; hBox.style.display = 'block'; }
+      else      { hBox.style.display = 'none'; }
+    }
+  }
 
   /* 새 분석 시작 — 히스테리시스 초기화 */
   _prevCurBase = null;
