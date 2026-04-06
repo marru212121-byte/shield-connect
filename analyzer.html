@@ -118,6 +118,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 /* 색감 보정 버튼 제거됨 */
 
+/* 언더톤 명도·채도 클릭존 */
+.ut-click-zone.ut-zone-active,
+.m-click-zone.m-zone-active {
+  background: rgba(255,255,255,0.10);
+  border-radius: 4px;
+}
+.ut-click-zone::after, .m-click-zone::after {
+  content: '✓';
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255,255,255,0);
+  transition: color 0.15s;
+}
+.ut-click-zone.ut-zone-active::after,
+.m-click-zone.m-zone-active::after {
+  color: rgba(255,255,255,0.9);
+}
+
 /* 목표 색감 버튼 강조 */
 .target-btn{padding:9px 16px;border-radius:20px;border:2px solid #333;background:#111;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;}
 .target-btn.active{border-width:2px;box-shadow:0 0 0 2px currentColor;background:rgba(255,255,255,0.06);}
@@ -251,9 +269,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div style="font-size:12px;color:#888;font-weight:500;margin-bottom:10px;">명도 · 채도</div>
     <div style="position:relative;margin-bottom:6px;">
       <div id="m-cur-tag" style="position:absolute;top:-26px;transform:translateX(-50%);font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;white-space:nowrap;pointer-events:none;z-index:4;color:#fff;background:#555;left:35%;"></div>
-      <div id="m-track-wrap" style="position:relative;height:44px;cursor:pointer;touch-action:none;">
+      <div id="m-track-wrap" style="position:relative;height:44px;touch-action:none;">
         <div id="m-track-bg" style="position:absolute;top:50%;transform:translateY(-50%);left:0;right:0;height:7px;border-radius:4px;background:#333;"></div>
         <div id="m-thumb" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.3);z-index:3;left:35%;"></div>
+        <div id="m-click-zones" style="position:absolute;inset:0;display:flex;z-index:5;">
+          <div class="m-click-zone" data-p="0"    style="flex:1;cursor:pointer;border-right:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;"></div>
+          <div class="m-click-zone" data-p="0.25" style="flex:1;cursor:pointer;border-right:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;"></div>
+          <div class="m-click-zone" data-p="0.5"  style="flex:1;cursor:pointer;border-right:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;"></div>
+          <div class="m-click-zone" data-p="1.0"  style="flex:1;cursor:pointer;display:flex;align-items:center;justify-content:center;"></div>
+        </div>
       </div>
     </div>
     <div id="m-seg-row" style="position:relative;height:28px;margin-bottom:20px;"></div>
@@ -306,9 +330,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div style="position:relative;margin-bottom:6px;">
       <div id="ut-cur-tag" style="position:absolute;top:-26px;transform:translateX(-50%);font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;white-space:nowrap;pointer-events:none;z-index:4;color:#fff;background:#555;left:35%;"></div>
       <div id="ut-cam-pip" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:12px;height:12px;border-radius:50%;border:2px dashed rgba(0,0,0,0.3);z-index:2;pointer-events:none;left:35%;"></div>
-      <div id="ut-track-wrap" style="position:relative;height:44px;cursor:pointer;touch-action:none;">
+      <div id="ut-track-wrap" style="position:relative;height:44px;touch-action:none;">
         <div id="ut-track-bg" style="position:absolute;top:50%;transform:translateY(-50%);left:0;right:0;height:7px;border-radius:4px;background:#333;"></div>
         <div id="ut-thumb" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.3);z-index:3;left:35%;"></div>
+        <div id="ut-click-zones" style="position:absolute;inset:0;display:flex;z-index:5;">
+          <div class="ut-click-zone" data-p="0"    style="flex:1;cursor:pointer;border-right:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;"></div>
+          <div class="ut-click-zone" data-p="0.25" style="flex:1;cursor:pointer;border-right:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;"></div>
+          <div class="ut-click-zone" data-p="0.5"  style="flex:1;cursor:pointer;border-right:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;"></div>
+          <div class="ut-click-zone" data-p="1.0"  style="flex:1;cursor:pointer;display:flex;align-items:center;justify-content:center;"></div>
+        </div>
       </div>
     </div>
     <div id="ut-seg-row" style="position:relative;height:28px;margin-bottom:16px;"></div>
@@ -368,48 +398,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     </button>
   </div>
 
-  <!-- 시술 방향 선택 카드 -->
-  <div class="result-card" id="tone-dir-card" style="display:none;">
-    <div class="result-card-title">시술 방향 선택</div>
-    <!-- 스와치 미리보기 -->
-    <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;">
-      <div id="tone-cur-swatch" style="width:48px;height:48px;border-radius:9px;border:2px solid #333;flex-shrink:0;"></div>
-      <div style="font-size:18px;color:#444;">→</div>
-      <div id="tone-tar-swatch" style="width:48px;height:48px;border-radius:9px;border:2px solid #9E7FBF;flex-shrink:0;"></div>
-      <div id="tone-color-desc" style="flex:1;font-size:11px;color:#777;line-height:1.5;"></div>
+  <!-- tone-dir-card 제거됨 (v13) — JS 참조 호환용 hidden 유지 -->
+  <div id="tone-dir-card" style="display:none;">
+    <div id="tone-cur-swatch"></div>
+    <div id="tone-tar-swatch"></div>
+    <div id="tone-color-desc"></div>
+    <div id="tone-analyzing"></div>
+    <div id="tone-btn-group">
+      <button id="tone-btn-up"></button>
+      <button id="tone-btn-same"></button>
+      <button id="tone-btn-down"></button>
     </div>
-    <div id="tone-analyzing" style="font-size:12px;color:#9E7FBF;margin-bottom:10px;display:none;">✦ 분석 중...</div>
-    <div style="font-size:11px;color:#555;margin-bottom:14px;line-height:1.7;">
-      매장 조명과 카메라 특성상 오차가 생길 수 있어요.<br>
-      한 가지만 더 선택해주시면 지금 바로 정확한 시술 방향을 확정할게요.
-    </div>
-    <div style="display:flex;flex-direction:column;gap:10px;" id="tone-btn-group">
-      <button id="tone-btn-up" onclick="pickToneDir('up')"
-        style="padding:16px 14px;border-radius:13px;border:1.5px solid #333;background:#111;color:#fff;font-size:15px;font-weight:700;cursor:pointer;text-align:left;line-height:1.4;transition:all 0.15s;">
-        <span style="font-size:18px;margin-right:8px;">↑</span>지금보다 밝게 올리고 싶어요
-        <div style="font-size:12px;color:#777;margin-top:5px;font-weight:400;line-height:1.6;">탈색 또는 톤업이 필요한 방향이에요.<br>탈색 횟수에 따라 발색 결과가 달라질 수 있어요.</div>
-      </button>
-      <button id="tone-btn-same" onclick="pickToneDir('same')"
-        style="padding:16px 14px;border-radius:13px;border:1.5px solid #333;background:#111;color:#fff;font-size:15px;font-weight:700;cursor:pointer;text-align:left;line-height:1.4;transition:all 0.15s;">
-        <span style="font-size:18px;margin-right:8px;">=</span>밝기는 유지하고 색감만 바꾸고 싶어요
-        <div style="font-size:12px;color:#777;margin-top:5px;font-weight:400;line-height:1.6;">탈색 없이 현재 명도에서 색상 전환이에요.<br>잔류색소로 인해 완벽한 발색이 어려울 수 있어요.</div>
-      </button>
-      <button id="tone-btn-down" onclick="pickToneDir('down')"
-        style="padding:16px 14px;border-radius:13px;border:1.5px solid #333;background:#111;color:#fff;font-size:15px;font-weight:700;cursor:pointer;text-align:left;line-height:1.4;transition:all 0.15s;">
-        <span style="font-size:18px;margin-right:8px;">↓</span>지금보다 어둡게 깔고 싶어요
-        <div style="font-size:12px;color:#777;margin-top:5px;font-weight:400;line-height:1.6;">톤다운 방향이에요.<br>보색 중화가 필요한 경우 함께 안내해드려요.</div>
-      </button>
-    </div>
-    <!-- 톤업 추천 문구 (주의 케이스에서 표시) -->
-    <div id="tone-up-recommend" style="display:none;margin-top:8px;padding:9px 12px;background:rgba(180,130,40,0.08);border-radius:10px;border:1px solid rgba(180,130,40,0.25);">
-      <div style="font-size:12px;color:#b08020;font-weight:600;">↑ 톤업 방향을 추천드립니다</div>
-      <div style="font-size:11px;color:#a07818;margin-top:2px;line-height:1.6;">원하는 색감을 가장 정확하게 표현할 수 있는 방향이에요.</div>
-    </div>
-    <!-- 확정 버튼 (선택 후 활성화) -->
-    <button id="tone-confirm-btn" onclick="confirmToneDir()" disabled
-      style="width:100%;margin-top:14px;padding:14px;border-radius:12px;border:none;background:#333;color:#666;font-size:14px;font-weight:700;cursor:not-allowed;transition:all 0.2s;letter-spacing:0.3px;">
-      방향을 선택해주세요
-    </button>
+    <div id="tone-up-recommend"></div>
+    <button id="tone-confirm-btn"></button>
   </div>
 
   <!-- 레시피 -->
@@ -797,13 +798,29 @@ document.addEventListener('pointerup', function(e) {
 });
 
 /* mBarDown만 div에서 호출 (manualInitUI에서 addEventListener로 등록) */
+/* UT_SEGS — 4단계 (밝음 제거)
+   pct: 시각적 레이블 위치 (균등 4등분)
+   p:   실제 내부 계산값
+*/
 var UT_SEGS = [
-  {p:0,    t:'다크'},
-  {p:0.25, t:'어두움'},
-  {p:0.5,  t:'비비드'},
-  {p:0.75, t:'밝음'},
-  {p:1.0,  t:'파스텔'},
+  {p:0,    pct:0,    t:'다크'},
+  {p:0.25, pct:0.33, t:'어두움'},
+  {p:0.5,  pct:0.66, t:'비비드'},
+  {p:1.0,  pct:1.0,  t:'파스텔'},
 ];
+
+/* 시각적 위치(0~1) → 실제 p값 */
+function utVisualToReal(v) {
+  if (v <= 0.33) return (v / 0.33) * 0.25;
+  if (v <= 0.66) return 0.25 + ((v - 0.33) / 0.33) * 0.25;
+  return 0.5 + ((v - 0.66) / 0.34) * 0.5;
+}
+/* 실제 p값 → 시각적 위치 */
+function utRealToVisual(p) {
+  if (p <= 0.25) return (p / 0.25) * 0.33;
+  if (p <= 0.5)  return 0.33 + ((p - 0.25) / 0.25) * 0.33;
+  return 0.66 + ((p - 0.5) / 0.5) * 0.34;
+}
 
 var utCurZone = null;
 var utBp = 0.35; /* 기본 비비드 구간 */
@@ -817,8 +834,7 @@ function utInterp(z, p) {
 function utSegLabel(p) {
   if (p < 0.15) return '다크';
   if (p < 0.35) return '어두움';
-  if (p < 0.58) return '비비드';
-  if (p < 0.80) return '밝음';
+  if (p < 0.75) return '비비드';
   return '파스텔';
 }
 
@@ -827,8 +843,18 @@ function utApply(z, p) {
   currentHSL.h = z.h;
   currentHSL.s = Math.round(z.sMin + p * (z.sMax - z.sMin));
   currentHSL.l = Math.round(z.lMin + p * (z.lMax - z.lMin));
-  /* STRONG/LIGHT 확정 — utBp 기준으로 저장 */
-  window._undertoneStrength = (p >= 0.9) ? 'LIGHT' : 'STRONG';
+  /* STRONG/LIGHT 확정 — 파스텔(p>=0.75)이면 LIGHT, 나머지 STRONG */
+  window._undertoneStrength = (p >= 0.75) ? 'LIGHT' : 'STRONG';
+  /* 클릭존 active 동기화 */
+  var _snap = [{p:0},{p:0.25},{p:0.5},{p:1.0}].reduce(function(b,s){
+    return Math.abs(s.p-p) < Math.abs(b.p-p) ? s : b;
+  });
+  ['ut-click-zone','m-click-zone'].forEach(function(cls) {
+    document.querySelectorAll('.'+cls).forEach(function(z) {
+      var isActive = (Math.abs(parseFloat(z.dataset.p) - _snap.p) < 0.01);
+      z.classList.toggle(cls === 'ut-click-zone' ? 'ut-zone-active' : 'm-zone-active', isActive);
+    });
+  });
   /* hue-thumb-c hidden이지만 left 값 유지 (confirmCurrentColor 참조) */
   var hThumb = document.getElementById('hue-thumb-c');
   if (hThumb) hThumb.style.left = ((z.h / 360) * 100) + '%';
@@ -964,7 +990,7 @@ function utInitUI() {
     segRow.innerHTML = '';
     UT_SEGS.forEach(function(s) {
       var el = document.createElement('div');
-      el.style.cssText = 'position:absolute;display:flex;flex-direction:column;align-items:center;gap:3px;transform:translateX(-50%);left:'+(s.p*100)+'%;';
+      el.style.cssText = 'position:absolute;display:flex;flex-direction:column;align-items:center;gap:3px;transform:translateX(-50%);left:'+(s.pct*100)+'%;';
       el.innerHTML = '<div style="width:1px;height:6px;background:rgba(255,255,255,0.25);"></div><div style="font-size:11px;color:#888;white-space:nowrap;">'+s.t+'</div>';
       segRow.appendChild(el);
     });
@@ -1010,42 +1036,49 @@ function utInitUI() {
     cWrap.addEventListener('touchstart', function(e) { e.preventDefault(); _cBarStart(e.touches[0].clientX); }, { passive: false });
   }
 
-  /* 슬라이더 */
-  var tw = document.getElementById('ut-track-wrap');
-  if (tw) {
-    var slDrag = false;
-    tw.addEventListener('pointerdown', function(e) {
-      slDrag = true; tw.setPointerCapture(e.pointerId);
-      var r = tw.getBoundingClientRect();
-      utBp = Math.max(0, Math.min(1, (e.clientX-r.left)/r.width));
-      var th = document.getElementById('ut-thumb'); if(th) th.style.left=(utBp*100)+'%';
-      if(utCurZone) utApply(utCurZone, utBp);
+  /* 명도·채도 — 4칸 클릭존 이벤트 (카메라 경로) */
+  var czWrap = document.getElementById('ut-click-zones');
+  if (czWrap) {
+    var czDrag = false;
+    /* 드래그 시 4칸 스냅 */
+    czWrap.addEventListener('pointerdown', function(e) {
+      czDrag = true; czWrap.setPointerCapture(e.pointerId);
     });
-    tw.addEventListener('pointermove', function(e) {
-      if(!slDrag) return;
-      var r = tw.getBoundingClientRect();
-      utBp = Math.max(0, Math.min(1, (e.clientX-r.left)/r.width));
-      var th = document.getElementById('ut-thumb'); if(th) th.style.left=(utBp*100)+'%';
-      if(utCurZone) utApply(utCurZone, utBp);
+    czWrap.addEventListener('pointermove', function(e) {
+      if (!czDrag) return;
+      var r = czWrap.getBoundingClientRect();
+      var v = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      var p = v < 0.25 ? 0 : v < 0.5 ? 0.25 : v < 0.75 ? 0.5 : 1.0;
+      utBp = p; window._savedUtBp = p;
+      var th = document.getElementById('ut-thumb');
+      if (th) { th.style.transition='left .1s cubic-bezier(.4,0,.2,1)'; th.style.left=(utRealToVisual(p)*100)+'%'; }
+      if (utCurZone) utApply(utCurZone, p);
+      czWrap.querySelectorAll('.ut-click-zone').forEach(function(z) {
+        z.classList.toggle('ut-zone-active', Math.abs(parseFloat(z.dataset.p) - p) < 0.01);
+      });
     });
-    tw.addEventListener('pointerup', function() {
-  slDrag = false;
-  /* UT_SEGS 구간으로 스냅 */
-  var SEGS = [{p:0},{p:0.25},{p:0.5},{p:0.75},{p:1.0}];
-  var snap = SEGS.reduce(function(best, seg) {
-    return Math.abs(seg.p - utBp) < Math.abs(best.p - utBp) ? seg : best;
-  });
-  utBp = snap.p;
-  window._savedUtBp = utBp; /* showResult 덮어씌우기 방지 */
-  var th = document.getElementById('ut-thumb');
-  if (th) { th.style.transition = 'left .2s cubic-bezier(.4,0,.2,1)'; th.style.left = (utBp*100)+'%'; }
-  if (utCurZone) utApply(utCurZone, utBp);
-});
+    czWrap.addEventListener('pointerup', function() { czDrag = false; });
+    czWrap.addEventListener('lostpointercapture', function() { czDrag = false; });
   }
+  /* 클릭 이벤트 */
+  document.querySelectorAll('.ut-click-zone').forEach(function(zone) {
+    function onSnap() {
+      var p = parseFloat(zone.dataset.p);
+      utBp = p; window._savedUtBp = p;
+      var th = document.getElementById('ut-thumb');
+      if (th) { th.style.transition='left .2s cubic-bezier(.4,0,.2,1)'; th.style.left=(utRealToVisual(p)*100)+'%'; }
+      if (utCurZone) utApply(utCurZone, p);
+      document.querySelectorAll('.ut-click-zone').forEach(function(z) {
+        z.classList.toggle('ut-zone-active', z === zone);
+      });
+    }
+    zone.addEventListener('click', onSnap);
+    zone.addEventListener('touchend', function(e) { e.preventDefault(); onSnap(); }, { passive: false });
+  });
 
   /* cam pip */
   var cam = document.getElementById('ut-cam-pip');
-  if (cam) cam.style.left = (utBp*100)+'%';
+  if (cam) cam.style.left = (utRealToVisual(utBp)*100)+'%';
 
   /* 기본 선택은 showResult의 자동 매핑 또는 수동 선택으로 처리 */
 }
@@ -1228,7 +1261,7 @@ function manualInitUI() {
   }
   function mSegLabel(p) {
     if(p<0.15) return '다크'; if(p<0.35) return '어두움';
-    if(p<0.58) return '비비드'; if(p<0.80) return '밝음';
+    if(p<0.75) return '비비드';
     return '파스텔';
   }
   function mApply(z, p) {
@@ -1280,7 +1313,7 @@ function manualInitUI() {
     var segRow=document.getElementById('m-seg-row');
     if(segRow){ segRow.innerHTML=''; UT_SEGS.forEach(function(s){
       var el=document.createElement('div');
-      el.style.cssText='position:absolute;display:flex;flex-direction:column;align-items:center;gap:3px;transform:translateX(-50%);left:'+(s.p*100)+'%;';
+      el.style.cssText='position:absolute;display:flex;flex-direction:column;align-items:center;gap:3px;transform:translateX(-50%);left:'+(s.pct*100)+'%;';
       el.innerHTML='<div style="width:1px;height:6px;background:rgba(255,255,255,0.2);"></div><div style="font-size:11px;color:#888;white-space:nowrap;">'+s.t+'</div>';
       segRow.appendChild(el);
     }); }
@@ -1333,37 +1366,46 @@ function manualInitUI() {
     mWrap.addEventListener('lostpointercapture', function(){ _barState.active = null; });
   }
 
-  /* 명도·채도 슬라이더 */
-  var tw=document.getElementById('m-track-wrap');
-  if(tw){
-    var slDrag=false;
-    tw.addEventListener('pointerdown',function(e){
-      slDrag=true; tw.setPointerCapture(e.pointerId);
-      var r=tw.getBoundingClientRect(); mBp=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
-      var th=document.getElementById('m-thumb'); if(th) th.style.left=(mBp*100)+'%';
-      if(mCurZone) mApply(mCurZone,mBp);
+  /* 명도·채도 — 4칸 클릭존 이벤트 (수동 경로) */
+  var mczWrap = document.getElementById('m-click-zones');
+  if (mczWrap) {
+    var mczDrag = false;
+    mczWrap.addEventListener('pointerdown', function(e) {
+      mczDrag = true; mczWrap.setPointerCapture(e.pointerId);
     });
-    tw.addEventListener('pointermove',function(e){
-      if(!slDrag) return;
-      var r=tw.getBoundingClientRect(); mBp=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
-      var th=document.getElementById('m-thumb'); if(th) th.style.left=(mBp*100)+'%';
-      if(mCurZone) mApply(mCurZone,mBp);
-    });
-    tw.addEventListener('pointerup', function() {
-      slDrag = false;
-      /* UT_SEGS 스냅 */
-      var SEGS = [{p:0},{p:0.25},{p:0.5},{p:0.75},{p:1.0}];
-      var snap = SEGS.reduce(function(best, seg) {
-        return Math.abs(seg.p - mBp) < Math.abs(best.p - mBp) ? seg : best;
+    mczWrap.addEventListener('pointermove', function(e) {
+      if (!mczDrag) return;
+      var r = mczWrap.getBoundingClientRect();
+      var v = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      var p = v < 0.25 ? 0 : v < 0.5 ? 0.25 : v < 0.75 ? 0.5 : 1.0;
+      mBp = p; utBp = p; window._savedUtBp = p;
+      var mth = document.getElementById('m-thumb');
+      if (mth) { mth.style.transition='left .1s cubic-bezier(.4,0,.2,1)'; mth.style.left=(utRealToVisual(p)*100)+'%'; }
+      if (mCurZone) mApply(mCurZone, p);
+      if (utCurZone) utApply(utCurZone, p);
+      mczWrap.querySelectorAll('.m-click-zone').forEach(function(z) {
+        z.classList.toggle('m-zone-active', Math.abs(parseFloat(z.dataset.p) - p) < 0.01);
       });
-      mBp = snap.p;
-      utBp = snap.p;
-      window._savedUtBp = snap.p;
-      var th = document.getElementById('ut-thumb');
-      if (th) { th.style.transition = 'left .2s cubic-bezier(.4,0,.2,1)'; th.style.left = (snap.p*100)+'%'; }
-      if (utCurZone) utApply(utCurZone, snap.p);
     });
+    mczWrap.addEventListener('pointerup', function() { mczDrag = false; });
+    mczWrap.addEventListener('lostpointercapture', function() { mczDrag = false; });
   }
+  /* 클릭 이벤트 */
+  document.querySelectorAll('.m-click-zone').forEach(function(zone) {
+    function onSnap() {
+      var p = parseFloat(zone.dataset.p);
+      mBp = p; utBp = p; window._savedUtBp = p;
+      var mth = document.getElementById('m-thumb');
+      if (mth) { mth.style.transition='left .2s cubic-bezier(.4,0,.2,1)'; mth.style.left=(utRealToVisual(p)*100)+'%'; }
+      if (mCurZone) mApply(mCurZone, p);
+      if (utCurZone) utApply(utCurZone, p);
+      document.querySelectorAll('.m-click-zone').forEach(function(z) {
+        z.classList.toggle('m-zone-active', z === zone);
+      });
+    }
+    zone.addEventListener('click', onSnap);
+    zone.addEventListener('touchend', function(e) { e.preventDefault(); onSnap(); }, { passive: false });
+  });
 
   /* 기본 선택 — 주황 */
   mSelect(UT_ZONES[1]);
@@ -1379,102 +1421,41 @@ function updateManualSwatch() {
 }
 
 /* ══════════════════════════════════════
-   2단계 목표색 버튼식 UI — v12
+   2단계 목표색 버튼식 UI — v13
    슬라이더 제거. 버튼 선택만으로 targetHSL 확정.
-   각 버튼에 hints 구조 추가 (utBp 강도 기반 실무 조언)
+   실무 포인트: STRONG/LIGHT + 목표색 계열로 3문구 자동 판결
 ══════════════════════════════════════ */
+
+/* 실무 포인트 확정 문구 3가지 */
+var HINT_MSG = {
+  1: "탈색 후 착색을 가장 추천해요.\n현재 잔류색소가 강해서 탈색 없이는 원하는 색이 제대로 나오기 어려워요.",
+  2: "선명한 발색을 위해서는 탈색을 추천해요.\n탈색 없이 보색을 믹스하여 착색도 가능하지만, 잔류색소로 인해 색감이 탁하거나 예상보다 어둡게 나올 수 있어요.",
+  3: "바로 착색 가능해요.\n잔류색소가 거의 없어 목표색이 잘 올라가요.\n미세한 잔류가 남아있다면 토닝 또는 단시간 탈색 후 착색도 좋아요."
+};
+
+/* 밝은 Cool 목표색 — ① 해당 */
+var BRIGHT_COOL_TARGETS = ['silver','blueash','blue','ashviolet','violet','ashpink'];
+
+/* 판결 함수 */
+function getHintCase(targetKey) {
+  var strength = window._undertoneStrength || 'STRONG';
+  if (strength === 'LIGHT') return 3;
+  if (BRIGHT_COOL_TARGETS.indexOf(targetKey) > -1) return 1;
+  return 2;
+}
+
 var TARGET_ZONES = [
-  { key:'ash',       label:'애쉬그레이',   color:'#8FAFC0', h:210, s:16, l:55,  tone:'ash',
-    hints: {
-      dark:    "어두운 모발에서 애쉬그레이는 14lv 이상 탈색 후 시술을 권장해요. 노랑기가 남으면 색이 탁해질 수 있어요.",
-      yellow:  "노랑기가 강하면 애쉬 단독보다 보라를 소량 믹스해서 중화하며 시술하세요.",
-      default: null
-    }
-  },
-  { key:'silver',    label:'실버애쉬',     color:'#BDC9D4', h:210, s:10, l:72,  tone:'ash',
-    hints: {
-      dark:    "실버는 잔류색소가 거의 없어야 올라가요. 18lv 이상 탈색이 필요하며 한 번에 불가능한 경우가 많아요.",
-      yellow:  "노랑기가 남아있으면 실버 대신 애쉬그레이로 먼저 착색 후 재방문 시 실버로 전환을 권장해요.",
-      strong:  "현재 언더톤이 강한 편이에요. 실버는 잔류색소에 매우 민감하므로 탈색 충분히 진행 후 시술하세요.",
-      default: "실버애쉬는 잔류색소가 거의 없는 18lv 이상에서 가장 깨끗하게 발색해요."
-    }
-  },
-  { key:'darkash',   label:'다크애쉬',     color:'#4A5E6A', h:210, s:14, l:32,  tone:'ash',
-    hints: {
-      dark:    "다크애쉬는 어두운 모발에서도 시술 가능하지만, 새치·탈색모에서 결과가 달라질 수 있어요.",
-      yellow:  "노랑기가 있으면 다크애쉬에 소량의 보라를 섞어 중화하세요.",
-      default: "다크애쉬·그레이 계열은 염색 이력에 따라 흡수 편차가 있으므로 1회 시술 후 반응을 확인하세요."
-    }
-  },
-  { key:'blueash',   label:'블루애쉬',     color:'#8FADD4', h:220, s:35, l:62,  tone:'blue',
-    hints: {
-      dark:    "블루애쉬는 14lv 이상 탈색 상태에서 선명하게 발색해요. 어두운 모발에선 흐리게 올라올 수 있어요.",
-      yellow:  "노랑기가 있으면 블루와 보라를 섞어 노랑을 중화하며 시술하는 것을 권장해요.",
-      default: null
-    }
-  },
-  { key:'blue',      label:'블루',          color:'#4A72C4', h:225, s:65, l:48,  tone:'blue',
-    hints: {
-      dark:    "비비드 블루는 16lv 이상 탈색 후 시술해야 선명하게 발색해요. 낮은 레벨에서는 네이비·잿빛으로 수렴돼요.",
-      yellow:  "노랑기가 강한 상태에서 블루를 올리면 초록빛으로 흐려질 수 있어요. 탈색 충분히 후 시술하세요.",
-      default: null
-    }
-  },
-  { key:'ashviolet', label:'애쉬바이올렛', color:'#AA98D8', h:265, s:32, l:65,  tone:'violet',
-    hints: {
-      dark:    "애쉬바이올렛은 14lv 이상 탈색 후 가장 자연스럽게 올라가요. 어두운 모발에선 채도가 낮게 표현돼요.",
-      yellow:  "노랑기가 있으면 바이올렛이 중화제 역할을 하지만 과하면 회색·베이지로 수렴될 수 있어요.",
-      default: null
-    }
-  },
-  { key:'violet',    label:'바이올렛',      color:'#7A52C4', h:270, s:58, l:48,  tone:'violet',
-    hints: {
-      dark:    "비비드 바이올렛은 16lv 이상 탈색 후 시술하세요. 어두운 모발에선 선명도가 크게 떨어져요.",
-      yellow:  "노랑기가 강하면 바이올렛 발색이 적갈색·탁한 보라로 수렴될 수 있어요. 충분한 탈색 후 시술하세요.",
-      default: null
-    }
-  },
-  { key:'ashpink',   label:'애쉬핑크',      color:'#DFA8BE', h:335, s:38, l:70,  tone:'pink',
-    hints: {
-      dark:    "애쉬핑크는 14lv 이상 탈색 후 시술하세요. 어두운 모발에선 연핑크 대신 탁한 핑크베이지가 될 수 있어요.",
-      yellow:  "노랑기가 있으면 핑크가 살구·코랄 빛으로 수렴될 수 있어요. 보라 소량 믹스로 중화 후 시술하세요.",
-      default: null
-    }
-  },
-  { key:'red',       label:'레드',          color:'#CC4A4A', h:5,   s:65, l:46,  tone:'red',
-    hints: {
-      dark:    "레드는 어두운 모발에서도 착색이 가능하지만 발색이 어둡고 무겁게 올라와요. 탈색 후 시술하면 선명해져요.",
-      yellow:  "레드 계열은 노랑기가 있어도 색을 흡수하는 편이지만, 선명한 레드를 원한다면 14lv 정도 탈색을 권장해요.",
-      default: null
-    }
-  },
-  { key:'copper',    label:'코퍼',          color:'#C87840', h:28,  s:60, l:48,  tone:'orange',
-    hints: {
-      dark:    "코퍼는 어두운 모발에서도 어느 정도 발색이 가능해요. 선명한 코퍼를 원하면 12~14lv 탈색 후 시술하세요.",
-      yellow:  "노랑기가 있는 모발에서 코퍼는 자연스럽게 섞여 들어가는 편이에요.",
-      default: null
-    }
-  },
-  { key:'yellow',    label:'골드',          color:'#C0A830', h:50,  s:68, l:50,  tone:'yellow',
-    hints: {
-      dark:    "골드는 밝은 모발에서 가장 선명하게 발색해요. 어두운 모발에선 노란기가 거의 보이지 않을 수 있어요.",
-      default: "골드·옐로우 계열은 밝은 언더톤과 자연스럽게 어우러져요."
-    }
-  },
-  { key:'matte',     label:'매트',          color:'#B2A62C', h:51,  s:55, l:48,  tone:'yellow',
-    hints: {
-      dark:    "매트 계열은 어두운 모발에서도 착색이 가능하지만 올리브·카키 빛으로 수렴되는 경향이 있어요.",
-      yellow:  "노랑기가 있으면 매트 계열이 자연스럽게 맞아요. 단 과하면 칙칙해 보일 수 있어요.",
-      default: null
-    }
-  },
-  { key:'green',     label:'카키',          color:'#787848', h:72,  s:22, l:36,  tone:'yellow',
-    hints: {
-      dark:    "카키는 어두운 모발에서 어두운 올리브 그린으로 발색해요. 선명한 카키를 원하면 12lv 이상 탈색하세요.",
-      yellow:  "노랑기가 있으면 카키 계열 색이 자연스럽게 맞아요.",
-      default: null
-    }
-  },
+  { key:'ash',       label:'애쉬그레이',   color:'#8FAFC0', h:210, s:16, l:55,  tone:'ash'    },
+  { key:'silver',    label:'실버애쉬',     color:'#BDC9D4', h:210, s:10, l:72,  tone:'ash'    },
+  { key:'darkash',   label:'다크애쉬',     color:'#4A5E6A', h:210, s:14, l:32,  tone:'ash'    },
+  { key:'blueash',   label:'블루애쉬',     color:'#8FADD4', h:220, s:35, l:62,  tone:'blue'   },
+  { key:'blue',      label:'블루',          color:'#4A72C4', h:225, s:65, l:48,  tone:'blue'   },
+  { key:'ashviolet', label:'애쉬바이올렛', color:'#AA98D8', h:265, s:32, l:65,  tone:'violet' },
+  { key:'violet',    label:'바이올렛',      color:'#7A52C4', h:270, s:58, l:48,  tone:'violet' },
+  { key:'ashpink',   label:'애쉬핑크',      color:'#DFA8BE', h:335, s:38, l:70,  tone:'pink'   },
+  { key:'red',       label:'레드',          color:'#CC4A4A', h:5,   s:65, l:46,  tone:'red'    },
+  { key:'copper',    label:'코퍼',          color:'#C87840', h:28,  s:60, l:48,  tone:'orange' },
+  { key:'green',     label:'카키',          color:'#787848', h:72,  s:22, l:36,  tone:'yellow' },
 ];
 
 /* ── v12: tBp 없음 — 버튼 선택 시 zone 고정값으로 targetHSL 확정 ── */
@@ -1492,19 +1473,17 @@ function tApply(z) {
 }
 
 /* hint 계산 — utBp(언더톤 강도) 기반으로 가장 적절한 힌트 선택 */
-function tGetHint(z) {
-  if (!z || !z.hints) return null;
-  var bp = (window._savedUtBp !== undefined) ? window._savedUtBp : (typeof utBp !== 'undefined' ? utBp : 0.35);
-  /* utCurZone의 tone 체크 */
-  var utTone = window._utCurZone ? window._utCurZone.tone : '';
-
-  /* 어두운 언더톤: p < 0.25 */
-  if (bp < 0.25 && z.hints.dark)   return z.hints.dark;
-  /* 노랑기 언더톤: yellow/orange 계열 */
-  if ((utTone === 'yellow' || utTone === 'orange') && z.hints.yellow) return z.hints.yellow;
-  /* 강한 언더톤: p < 0.5 */
-  if (bp < 0.5 && z.hints.strong)  return z.hints.strong;
-  return z.hints.default || null;
+/* 실무 포인트 힌트 박스 업데이트 */
+function updateHintBox(targetKey) {
+  var caseNum = getHintCase(targetKey);
+  var msg = HINT_MSG[caseNum];
+  var hBox = document.getElementById('target-hint-box');
+  var hTxt = document.getElementById('target-hint-text');
+  if (hBox && hTxt) {
+    hTxt.style.whiteSpace = 'pre-line';
+    hTxt.textContent = msg;
+    hBox.style.display = 'block';
+  }
 }
 
 /* 버튼 선택 핸들러 */
@@ -1514,15 +1493,7 @@ function tSelect(z) {
     el.classList.toggle('t-active', el.dataset.key === z.key);
   });
   tApply(z);
-
-  /* hint 박스 표시 */
-  var hint = tGetHint(z);
-  var hBox = document.getElementById('target-hint-box');
-  var hTxt = document.getElementById('target-hint-text');
-  if (hBox && hTxt) {
-    if (hint) { hTxt.textContent = hint; hBox.style.display = 'block'; }
-    else      { hBox.style.display = 'none'; }
-  }
+  updateHintBox(z.key);
 }
 
 /* _tBarZonePct — hidden bar thumb 호환용으로만 유지 */
@@ -2240,45 +2211,55 @@ function showResult(r) {
       if (dh + ds + dl < bd) { bd = dh + ds + dl; best = z; }
     });
 
-    /* 2. 명도 슬라이더 위치 계산 */
-    var bp = Math.max(0, Math.min(1, (l - best.lMin) / Math.max(1, best.lMax - best.lMin)));
-    utBp = bp;
+    /* 2. 연속 bp → 4개 스냅 포인트로 스냅 */
+    var rawBp = Math.max(0, Math.min(1, (l - best.lMin) / Math.max(1, best.lMax - best.lMin)));
+    var SNAPS = [0, 0.25, 0.5, 1.0];
+    var snappedBp = SNAPS.reduce(function(prev, curr) {
+      return Math.abs(curr - rawBp) < Math.abs(prev - rawBp) ? curr : prev;
+    });
+    utBp = snappedBp;
+    window._savedUtBp = snappedBp;
 
-    /* 3. 가로 그래프 커서 이동 */
+    /* 3. 언더톤 색감 바 thumb — best zone 위치로 */
     var pct = window._utZonePct ? window._utZonePct(best) : _barZonePct(best);
     var th = document.getElementById('c-bar-thumb');
-    if (th) { th.style.transition = 'none'; th.style.left = (pct*100)+'%'; th.style.background = best.color; }
+    if (th) { th.style.transition = 'left .3s cubic-bezier(.4,0,.2,1)'; th.style.left = (pct*100)+'%'; th.style.background = best.color; }
 
-    /* 4. 카메라 마커 위치 */
+    /* 4. cam-pip 위치 */
     var camMark = document.getElementById('c-bar-cam');
     if (camMark) { camMark.style.left = (pct*100)+'%'; }
 
-    /* 5. 명도 슬라이더 thumb 이동 */
+    /* 5. 명도·채도 thumb — 스냅된 시각적 위치로 이동 */
     var utThumb = document.getElementById('ut-thumb');
-    if (utThumb) { utThumb.style.left = (bp*100)+'%'; }
+    if (utThumb) {
+      utThumb.style.transition = 'left .3s cubic-bezier(.4,0,.2,1)';
+      utThumb.style.left = (utRealToVisual(snappedBp)*100)+'%';
+    }
 
-    /* 6. currentHSL 업데이트 + window._curTone 세팅 */
+    /* 6. currentHSL — 스냅된 bp 기준 */
     currentHSL.h = best.h;
-    currentHSL.s = Math.round(best.sMin + bp*(best.sMax-best.sMin));
-    currentHSL.l = Math.round(best.lMin + bp*(best.lMax-best.lMin));
+    currentHSL.s = Math.round(best.sMin + snappedBp*(best.sMax-best.sMin));
+    currentHSL.l = Math.round(best.lMin + snappedBp*(best.lMax-best.lMin));
     window._curTone = best.tone;
 
-    /* utCurZone 세팅 — showResult 자동 매핑 */
+    /* 7. utCurZone 세팅 */
     utCurZone = best;
     window._utCurZone = best;
-    window._curTone = best.tone;
     window._currentUndertoneKey = best.key;
     window._savedUtKey = best.key;
 
-    /* 7. current-swatch-box 색상 반영 */
+    /* 8. current-swatch-box 색상 반영 */
     var col = 'hsl('+best.h+','+currentHSL.s+'%,'+currentHSL.l+'%)';
     var swBox = document.getElementById('current-swatch-box');
     if (swBox) swBox.style.background = col;
 
-    /* 8. utApply로 슬라이더 트랙 색상 + 태그 업데이트 */
-    utApply(best, bp);
+    /* 9. utApply — 스냅된 bp, 클릭존 active 동기화 포함 */
+    utApply(best, snappedBp);
 
-    /* 9. 스와치 버튼 active 없음 — 사용자가 직접 선택 */
+    /* 10. 원형 스와치 버튼 active */
+    document.querySelectorAll('.ut-sw-item').forEach(function(el) {
+      el.classList.toggle('ut-active', el.dataset.key === best.key);
+    });
   });
 
   userLevel = null;
@@ -3357,18 +3338,10 @@ function confirmTargetColor() {
   }
   /* _undertoneStrength 확정 — utBp(현재색 슬라이더) 기준 유지 */
   var _bp = (window._savedUtBp !== undefined) ? window._savedUtBp : (typeof utBp !== 'undefined' ? utBp : 0.35);
-  window._undertoneStrength = (_bp >= 0.9) ? 'LIGHT' : 'STRONG';
+  window._undertoneStrength = (_bp >= 0.75) ? 'LIGHT' : 'STRONG';
 
   /* hint 박스 최신 언더톤 기준으로 재갱신 */
-  if (tCurZone) {
-    var hint = tGetHint(tCurZone);
-    var hBox = document.getElementById('target-hint-box');
-    var hTxt = document.getElementById('target-hint-text');
-    if (hBox && hTxt) {
-      if (hint) { hTxt.textContent = hint; hBox.style.display = 'block'; }
-      else      { hBox.style.display = 'none'; }
-    }
-  }
+  if (tCurZone) updateHintBox(tCurZone.key);
 
   /* 새 분석 시작 — 히스테리시스 초기화 */
   _prevCurBase = null;
@@ -3449,187 +3422,37 @@ function confirmTargetColor() {
     ? (subTypeMap[tarKey] || getSubTypeFromHSL(targetHSL.h, targetHSL.s))
     : 'non-ash';
 
-  /* 명도 기반 기본 불가 판단 */
-  var cL = currentHSL.l, tL = targetHSL.l;
-  var cH = currentHSL.h, cS = currentHSL.s;
-  var tH = targetHSL.h, tS = targetHSL.s;
-  var gap = tL - cL;
-  var hueDiff = Math.min(Math.abs(tH-cH), 360-Math.abs(tH-cH));
-  var satGap = tS - cS;
+  /* ── _toneDir 자동 확정 (판결표 기준) ── */
+  var caseNum = getHintCase(tCurZone ? tCurZone.key : 'ash');
+  window._toneDir = (caseNum === 1) ? 'up' : 'same';
 
-  var D1 = tL > cL;
-  var D1_ok = (hueDiff < 20 && Math.abs(tS-cS) < 20 && gap <= 15);
-  var D2 = (satGap > 30) && (tL >= cL - 8) && (hueDiff > 20);
-  var downImpossible = (D1 && !D1_ok) || D2;
-
-  /* 한색(애쉬·블루·바이올렛) 목표는 탈색 후 착색이므로
-     명도가 낮아도 톤업 가능 — upImpossible 예외 처리 */
-  var isCoolTarKey = ['ash_gray','dark_ash','blue_ash','ash_violet','ash_pink','blue','violet','teal'].indexOf(tarKey) > -1;
-  var upImpossible = (gap < -12) && !isCoolTarKey;
-  /* 쿨톤 목표색(애쉬 계열)은 명도 차이와 무관하게 =버튼 열어둠
-     — 탈색 없이 블루·바이올렛 믹스로 색감 전환 가능 */
-  var isCoolTarget = ['ash_gray','dark_ash','silver','blue_ash','ash_violet','ash_pink','blue','violet','teal'].indexOf(tarKey) > -1;
-  var sameImpossible = !isCoolTarget && (gap > 22 || gap < -28);
-
-  /* ── 버튼 기본 복원 ── */
-  var recDiv = document.getElementById('tone-up-recommend');
-  if (recDiv) recDiv.style.display = 'none';
-  ['up','same','down'].forEach(function(d) {
-    var btn = document.getElementById('tone-btn-' + d);
-    if (!btn) return;
-    btn.disabled = false;
-    btn.style.opacity = '1';
-    btn.style.cursor = 'pointer';
-    btn.style.borderColor = '#333';
-    btn.style.background = '#111';
-    btn.style.color = '#fff';
-    btn.dataset.warnReason = '';
-    var sub = btn.querySelector('div');
-    if (sub) {
-      if (d==='up')   sub.textContent = '탈색·톤업이 필요한 방향';
-      if (d==='same') sub.textContent = '탈색 없이 현재 명도에서 색상 전환';
-      if (d==='down') sub.textContent = '톤다운 방향';
-    }
-  });
-
-  function lockBtn(id, reason) {
-    var btn = document.getElementById('tone-btn-' + id);
-    if (!btn) return;
-    btn.disabled = true;
-    btn.style.opacity = '0.3';
-    btn.style.cursor = 'not-allowed';
-    btn.style.borderColor = '#1a1a1a';
-    btn.style.background = '#0a0a0a';
-    var sub = btn.querySelector('div');
-    if (sub) sub.textContent = '🔒 ' + (reason || '탈색 후 착색을 권장해요');
-  }
-
-  function warnBtn(id, reason) {
-    var btn = document.getElementById('tone-btn-' + id);
-    if (!btn) return;
-    if (btn.disabled) return;
-    btn.style.borderColor = 'rgba(180,130,40,0.7)';
-    btn.style.background = 'rgba(180,130,40,0.10)';
-    btn.style.color = '#d4a820';
-    btn.dataset.warnReason = reason;
-    var icons = {up:'↑',same:'=',down:'↓'};
-    var labels = {
-      up:'지금보다 밝게 올리고 싶어요',
-      same:'밝기는 유지하고 색감만 바꾸고 싶어요',
-      down:'지금보다 어둡게 깔고 싶어요'
-    };
-    btn.innerHTML = '<span style="font-size:16px;margin-right:6px;">⚠</span>'
-      + '<span style="font-size:14px;font-weight:700;">' + labels[id] + '</span>'
-      + '<div style="font-size:11px;color:#c49a20;margin-top:5px;font-weight:400;line-height:1.6;">'
-      + reason + '</div>';
-  }
-
-  /* ── 명도 기반 기본 잠금 ── */
-  if (downImpossible) lockBtn('down', '목표가 더 밝거나 채도가 높아 톤다운으로 달성할 수 없어요');
-  if (upImpossible)   lockBtn('up',   '목표가 더 어두워 톤업이 필요 없어요');
-  if (sameImpossible) lockBtn('same', '명도 차이가 커 현재 명도에서 색감 전환이 어려워요');
-
-  /* ── RULE_TABLE 기반 잠금/경고 적용 ── */
-  ['up','same','down'].forEach(function(dir) {
-    var rule = lookupRule(curKey, tarKey, dir);
-    if (rule.state === 'lock') {
-      lockBtn(dir, rule.msg || '이 방향으로는 시술이 어려워요.');
-    } else if (rule.state === 'warn') {
-      warnBtn(dir, rule.msg || '주의가 필요해요.');
-    }
-  });
-
-  /* ── toneUpType 분기 — RULE_TABLE 판단 이후 실행 ── */
+  /* ── toneUpType 확정 ── */
   var tarNormForType = normalizeColor(targetHSL.h, targetHSL.s, targetHSL.l, 'tar');
   window._toneUpType = getToneUpType(tarNormForType.base, tarNormForType.tone, targetHSL.l);
 
-  /* 톤업 버튼 서브텍스트 업데이트 */
-  var upBtn = document.getElementById('tone-btn-up');
-  if (upBtn && !upBtn.disabled) {
-    var upSub = upBtn.querySelector('div');
-    if (upSub) {
-      if (window._toneUpType === 'dye') {
-        upSub.textContent = '산화염모제로 명도 상승 (탈색 없이 시술 가능)';
-      } else {
-        upSub.textContent = '탈색 후 원하는 색감으로 착색';
-      }
-    }
-  }
-
-  /* ── 톤업 추천 표시 (잠금/경고 케이스) ── */
-  var sameBtn = document.getElementById('tone-btn-same');
-  var downBtn = document.getElementById('tone-btn-down');
-  if ((sameBtn && sameBtn.disabled) || (downBtn && downBtn.disabled)) {
-    var rec = document.getElementById('tone-up-recommend');
-    if (rec) rec.style.display = 'block';
-  }
-
-  /* ── _savedUtKey 최종 확정 (카드 표시 직전) ── */
+  /* ── _savedUtKey 최종 확정 ── */
   window._savedUtKey = window._currentUndertoneKey || (window._utCurZone && window._utCurZone.key) || window._curTone || 'yellow';
 
-  /* ── 카드 표시 ── */
-  var tc = document.getElementById('tone-dir-card');
-  var ta = document.getElementById('tone-analyzing');
-  if (tc) {
-    tc.style.display = 'block';
-    tc.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-  if (ta) {
-    ta.style.display = 'block';
-    setTimeout(function() { if (ta) ta.style.display = 'none'; }, 900);
-  }
+  /* ── 실무 포인트 힌트 업데이트 ── */
+  if (tCurZone) updateHintBox(tCurZone.key);
+
+  /* ── 바로 레시피 실행 ── */
+  var autoDmg = estimateDamageLevel(currentHSL, targetHSL);
+  window._currentDamageLevel = autoDmg;
+  var result = analyzeColorFlow(currentHSL, targetHSL, autoDmg, window._toneDir);
+  renderAnalysisResult(result);
 }
 
-/* ── 방향 선택 (선택만, 확정 아님) ── */
-
-function pickToneDir(dir) {
-  var btn = document.getElementById('tone-btn-' + dir);
-  if (btn && btn.disabled) return;
-  window._pendingToneDir = dir;
-  /* warnReason 저장 */
-  window._warnReason = (btn && btn.dataset.warnReason) ? btn.dataset.warnReason : '';
-
-  /* 버튼 선택 표시 — ⚠ 경고 버튼은 노란빛 유지 */
-  ['up','same','down'].forEach(function(d) {
-    var b = document.getElementById('tone-btn-' + d);
-    if (!b || b.disabled) return;
-    var isWarn = !!b.dataset.warnReason;
-    if (d === dir) {
-      /* 선택된 버튼 */
-      b.style.borderColor = isWarn ? 'rgba(180,130,40,0.9)' : '#fff';
-      b.style.background  = isWarn ? 'rgba(180,130,40,0.15)' : 'rgba(255,255,255,0.06)';
-    } else {
-      /* 미선택 버튼 */
-      b.style.borderColor = isWarn ? 'rgba(180,130,40,0.4)' : '#333';
-      b.style.background  = isWarn ? 'rgba(180,130,40,0.06)' : '#111';
-    }
-  });
-
-  /* 확정 버튼 활성화 */
-  var cb = document.getElementById('tone-confirm-btn');
-  if (cb) {
-    cb.disabled = false;
-    cb.style.background = '#fff';
-    cb.style.color = '#000';
-    cb.style.cursor = 'pointer';
-    cb.textContent = '이 방향으로 분석하기 →';
-  }
-}
-
-/* ── 방향 확정 후 분석 실행 ── */
+/* ── pickToneDir / confirmToneDir — v13 stub (호환용) ── */
+function pickToneDir(dir) { window._pendingToneDir = dir; }
 function confirmToneDir() {
-  var dir = window._pendingToneDir;
-  if (!dir) return;
+  var dir = window._pendingToneDir || window._toneDir || 'same';
   window._toneDir = dir;
-  var tc = document.getElementById('tone-dir-card');
-  if (tc) tc.style.display = 'none';
   var autoDmg = estimateDamageLevel(currentHSL, targetHSL);
   window._currentDamageLevel = autoDmg;
   var result = analyzeColorFlow(currentHSL, targetHSL, autoDmg, dir);
   renderAnalysisResult(result);
 }
-
-/* ── 구 selectToneDir 호환 유지 ── */
 function selectToneDir(dir) { pickToneDir(dir); }
 
 /* ── 손상도 변경 (결과 화면 인라인) ── */
@@ -3938,7 +3761,7 @@ var HAIR_RULE_MATRIX = (function() {
        3순위: curL 폴백 */
     if (window._undertoneStrength) return window._undertoneStrength;
     var bp = (typeof utBp !== 'undefined') ? utBp : null;
-    if (bp !== null) return (bp >= 0.9) ? 'LIGHT' : 'STRONG';
+    if (bp !== null) return (bp >= 0.75) ? 'LIGHT' : 'STRONG';
     if (curL !== undefined) return (curL >= 65) ? 'LIGHT' : 'STRONG';
     return (bleachLv >= 14) ? 'LIGHT' : 'STRONG';
   }
