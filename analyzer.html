@@ -210,42 +210,58 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
       </div>
 
       <div class="base-option-group">
-        <!-- 모발 유형 2개 -->
         <div class="base-option-title">모발 유형</div>
-        <div class="base-btn-row">
-          <button class="base-btn" data-type="virgin" onclick="selectType(this)">
+        <div class="base-btn-row" style="flex-wrap:wrap">
+          <button class="base-btn" data-type="virgin" onclick="selectType(this)" style="min-width:100%">
             <div class="label">버진모</div>
-            <div class="desc">시술 이력 없음</div>
+            <div class="desc">시술 이력 없음 (자연 검정)</div>
           </button>
-          <button class="base-btn" data-type="treated" onclick="selectType(this)">
-            <div class="label">염색모 · 탈색모</div>
-            <div class="desc">시술 이력 있음</div>
+          <button class="base-btn" data-type="colored" onclick="selectType(this)">
+            <div class="label">염색모</div>
+            <div class="desc">탈색 없이 염색만</div>
+          </button>
+          <button class="base-btn" data-type="bleached" onclick="selectType(this)">
+            <div class="label">탈색모</div>
+            <div class="desc">탈색 이력 있음</div>
           </button>
         </div>
 
-        <!-- 언더톤 선택 (버진모 시 숨김) -->
-        <div id="undertoneWrap" style="display:none">
-          <div class="base-option-title" style="margin-top:16px">현재 언더톤을 선택하세요</div>
-          <!-- 선택 전: 버튼 -->
-          <div id="utSelectBtn" class="ut-select-btn" onclick="openUndertoneModal()">
-            <span class="ut-select-text">언더톤이 어떻게 되요?</span>
-            <span class="ut-select-arrow">›</span>
+        <!-- 염색모 하위 선택 -->
+        <div id="coloredSub" style="display:none">
+          <div class="base-option-title" style="margin-top:16px">현재 잔류 색감</div>
+          <div class="base-btn-row" style="flex-wrap:wrap">
+            <button class="base-btn sub-btn" data-sub="red" onclick="selectSub(this)">
+              <div class="label">붉은기</div>
+            </button>
+            <button class="base-btn sub-btn" data-sub="orange" onclick="selectSub(this)">
+              <div class="label">주황기</div>
+            </button>
+            <button class="base-btn sub-btn" data-sub="neutral-brown" onclick="selectSub(this)">
+              <div class="label">뉴트럴 브라운</div>
+            </button>
           </div>
-          <!-- 선택 후: 결과 표시 -->
-          <div id="utResult" class="ut-result" style="display:none" onclick="openUndertoneModal()">
-            <div class="ut-result-swatch" id="utResultSwatch"></div>
-            <div class="ut-result-info">
-              <div class="ut-result-level" id="utResultLevel"></div>
-              <div class="ut-result-tone" id="utResultTone"></div>
-            </div>
-            <span class="ut-result-change">변경 ›</span>
+        </div>
+
+        <!-- 탈색모 하위 선택 -->
+        <div id="bleachedSub" style="display:none">
+          <div class="base-option-title" style="margin-top:16px">현재 베이스 색감</div>
+          <div class="base-btn-row" style="flex-wrap:wrap">
+            <button class="base-btn sub-btn" data-sub="yellow" onclick="selectSub(this)">
+              <div class="label">노랑</div>
+            </button>
+            <button class="base-btn sub-btn" data-sub="mat" onclick="selectSub(this)">
+              <div class="label">매트 (단무지색)</div>
+            </button>
+            <button class="base-btn sub-btn" data-sub="pale-yellow" onclick="selectSub(this)">
+              <div class="label">연노랑</div>
+            </button>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 언더톤 선택 모달 (base.jpg 풀스크린) -->
+  <!-- 언더톤 선택 모달 — 주석 처리 (나중에 복원 가능)
   <div id="utModal" class="ut-modal" style="display:none">
     <div class="ut-modal-header">
       <span class="ut-modal-title">현재 모발과 가장 비슷한 구간을 선택하세요</span>
@@ -260,6 +276,7 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
       </div>
     </div>
   </div>
+  -->
 
   <!-- 레시피 생성 버튼 -->
   <button class="recipe-btn" id="recipeBtn" onclick="generateRecipe()" disabled>레시피 생성</button>
@@ -290,9 +307,8 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 var ST = {
   imageBase64: null,
   analysis: null,    // API 분석 결과
-  type: null,        // virgin, colored, bleached-cool, bleached-warm
-  level: null,       // 5,6,8,10,12,14,16,18,20
-  residue: null      // none, red, orange, yellow, mat, ash, blue, violet
+  type: null,        // virgin, colored, bleached
+  subType: null      // colored: red, orange, neutral-brown / bleached: yellow, mat, pale-yellow
 };
 
 var API_URL = '/api/recipe';
@@ -366,7 +382,7 @@ function analyzeImage(base64, mediaType){
   boxEl.classList.remove('show');
   loadEl.classList.add('show');
 
-  var sysPrompt = '너는 모발 색상 분석 전문가야. 사진 속 모발의 "보이는 색감"만 분석해.\n\n[금지] 멜라닌 레벨 숫자 추정, 시술 방향·방법 언급, 실현 가능성 판단\n[할 것] 감성적·전문적 색감 네이밍, 투명감·채도·뉘앙스·언더톤·질감 묘사\n\nJSON만 응답:\n{\n  "color_name_ko": "한국어 색감명 (예: 쿨 애쉬베이지, 밀크티 브라운)",\n  "tone": "cool" 또는 "warm" 또는 "neutral",\n  "hex": "#RRGGBB",\n  "description": "색감 묘사 2~3문장 (투명감, 채도, 뉘앙스, 빛 반사 느낌 등. 시술 관련 언급 금지)"\n}';
+  var sysPrompt = '너는 모발 색상 분석 전문가야. 사진 속 모발의 "보이는 색감"만 분석해.\n\n[금지] 멜라닌 레벨 숫자 추정, 시술 방향·방법 언급, 실현 가능성 판단, "도미넌트" 같은 영어 전문용어\n[할 것] 감성적·전문적 색감 네이밍(한국어로), 투명감·채도·뉘앙스·언더톤·질감을 자연스러운 한국어로 묘사\n\nJSON만 응답:\n{\n  "color_name_ko": "한국어 색감명 (예: 쿨 애쉬베이지, 밀크티 브라운)",\n  "tone": "cool" 또는 "warm" 또는 "neutral",\n  "hex": "#RRGGBB",\n  "description": "색감 묘사 2~3문장. 자연스러운 한국어로. 시술 관련 언급 금지"\n}';
 
   fetch(API_URL, {
     method: 'POST',
@@ -438,89 +454,38 @@ function selectType(btn){
   document.querySelectorAll('[data-type]').forEach(function(b){ b.classList.remove('selected'); });
   btn.classList.add('selected');
   ST.type = btn.dataset.type;
+  ST.subType = null;
+
+  // 하위 선택 초기화
+  document.querySelectorAll('.sub-btn').forEach(function(b){ b.classList.remove('selected'); });
+  document.getElementById('coloredSub').style.display = 'none';
+  document.getElementById('bleachedSub').style.display = 'none';
 
   if(ST.type === 'virgin'){
-    document.getElementById('undertoneWrap').style.display = 'none';
-    ST.level = 5;
-    ST.toneSide = 'warm';
-    ST.residue = 'none';
-  } else {
-    document.getElementById('undertoneWrap').style.display = 'block';
-    ST.level = null;
-    ST.toneSide = null;
-    ST.residue = 'none';
-    document.getElementById('utSelectBtn').style.display = 'flex';
-    document.getElementById('utResult').style.display = 'none';
+    // 버진모: 바로 ready
+  } else if(ST.type === 'colored'){
+    document.getElementById('coloredSub').style.display = 'block';
+  } else if(ST.type === 'bleached'){
+    document.getElementById('bleachedSub').style.display = 'block';
   }
   checkReady();
 }
 
-function openUndertoneModal(){
-  var modal = document.getElementById('utModal');
-  modal.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-  buildZones();
-}
-
-function closeUndertoneModal(){
-  document.getElementById('utModal').style.display = 'none';
-  document.body.style.overflow = '';
-}
-
-function buildZones(){
-  var container = document.getElementById('utModalZones');
-  container.innerHTML = '';
-  ZONE_DATA.forEach(function(z){
-    var row = document.createElement('div');
-    row.className = 'ut-zone';
-
-    var coolHalf = document.createElement('div');
-    coolHalf.className = 'ut-zone-half';
-    coolHalf.setAttribute('data-lv', z.lv);
-    coolHalf.setAttribute('data-side', 'cool');
-    coolHalf.innerHTML = '<span class="ut-zone-num">' + z.lv + '</span><span class="ut-zone-guide">' + z.coolGuide + '</span>';
-    coolHalf.onclick = function(){ pickZone(z.lv, 'cool', z.cool, z.coolGuide, coolHalf); };
-
-    var warmHalf = document.createElement('div');
-    warmHalf.className = 'ut-zone-half';
-    warmHalf.setAttribute('data-lv', z.lv);
-    warmHalf.setAttribute('data-side', 'warm');
-    warmHalf.innerHTML = '<span class="ut-zone-num">' + z.lv + '</span><span class="ut-zone-guide">' + z.warmGuide + '</span>';
-    warmHalf.onclick = function(){ pickZone(z.lv, 'warm', z.warm, z.warmGuide, warmHalf); };
-
-    row.appendChild(coolHalf);
-    row.appendChild(warmHalf);
-    container.appendChild(row);
-  });
-}
-
-function pickZone(lv, side, hex, guide, el){
-  ST.level = lv;
-  ST.toneSide = side;
-
-  // 하이라이트 초기화 후 선택된 것만 표시
-  document.querySelectorAll('.ut-zone-half').forEach(function(h){ h.classList.remove('picked'); });
-  el.classList.add('picked');
-
-  // 결과 표시
-  document.getElementById('utSelectBtn').style.display = 'none';
-  var result = document.getElementById('utResult');
-  result.style.display = 'flex';
-  document.getElementById('utResultSwatch').style.background = hex;
-  document.getElementById('utResultLevel').textContent = lv + '레벨 · ' + guide;
-  document.getElementById('utResultTone').textContent = (side === 'cool' ? '한색 언더톤' : '난색 언더톤');
-
-  closeUndertoneModal();
+function selectSub(btn){
+  // 같은 그룹 내 선택 초기화
+  btn.parentNode.querySelectorAll('.sub-btn').forEach(function(b){ b.classList.remove('selected'); });
+  btn.classList.add('selected');
+  ST.subType = btn.dataset.sub;
   checkReady();
 }
 
 function checkReady(){
-  var ready = ST.analysis && ST.type;
+  var ready = false;
 
-  if(ST.type === 'virgin'){
-    ready = true && ST.analysis;
-  } else {
-    ready = ST.analysis && ST.level && ST.toneSide;
+  if(ST.analysis && ST.type === 'virgin'){
+    ready = true;
+  } else if(ST.analysis && (ST.type === 'colored' || ST.type === 'bleached') && ST.subType){
+    ready = true;
   }
 
   var btn = document.getElementById('recipeBtn');
@@ -572,17 +537,19 @@ function analysisToColor(a){
 
 function generateRecipeAPI(){
   var baseDesc;
+  var subLabels = {
+    'red': '염색모 (붉은기 잔류)',
+    'orange': '염색모 (주황기 잔류)',
+    'neutral-brown': '염색모 (뉴트럴 브라운)',
+    'yellow': '탈색모 (노랑 베이스)',
+    'mat': '탈색모 (매트/단무지색 베이스)',
+    'pale-yellow': '탈색모 (연노랑 베이스)'
+  };
+
   if(ST.type === 'virgin'){
     baseDesc = '버진모';
   } else {
-    var toneLabel = ST.toneSide === 'cool' ? '한색' : '난색';
-    var guideText = '';
-    ZONE_DATA.forEach(function(z){
-      if(z.lv === ST.level){
-        guideText = ST.toneSide === 'cool' ? z.coolGuide : z.warmGuide;
-      }
-    });
-    baseDesc = toneLabel + ' ' + guideText + ' 구간 (' + ST.level + '레벨)';
+    baseDesc = subLabels[ST.subType] || ST.type;
   }
 
   var knowledgeBase = [
@@ -637,18 +604,16 @@ function generateRecipeAPI(){
     '12% 극강: 투명 색감 전용. 두피보호제 필수, 클리닉 병행',
     '강모 버진모에서는 9~12%가 오히려 효과적',
     '',
-    '[컨트롤컬러 (직접 염료)]',
-    '모발 외부(큐티클)에만 부착, 유지력 짧음',
-    '염모제에 추가로 얹는 개념 (염모제 양 유지 + CC 추가)',
-    '탈색모: 소량만 넣어도 비비드해질 수 있으니 주의',
-    '14레벨 이상 탈색모→색감 표현 가능',
-    '버진모/저명도→한색계열은 색감 안 보임, 보색중화 용도 한계. 난색(레드·바이올렛·핑크)만 유효',
+    '[컨트롤컬러 — 버진모 전용 테크닉에서만 사용]',
+    '컨트롤컬러 = 직접 염료. 모발 외부에만 부착, 유지력 짧음',
+    '버진모에서 고명도 염모제(13·15)와 함께 믹스하여 탈색+착색을 한번에 진행할 때만 사용',
+    '보색중화 시에는 컨트롤컬러 말고 일반 염모제에 소량 믹스로 충분',
     '',
     '[버진모 테크닉]',
     '버진모 = 적색멜라닌 가득',
     '탈색 없이 염모제만 → 브라운+뉘앙스가 한계 (레드 제외)',
     '레드→가장 잘 발색 / 바이올렛·핑크→와인빛·퍼플빛 브라운 / 블루·애쉬·매트→쿨브라운·매트브라운',
-    '고명도 염모제(13·15)+컨트롤컬러+9% = 원샷 테크닉 (탈색→착색 한번에)',
+    '탈색 없이 최대한: 고명도 염모제(13·15)+컨트롤컬러+9%~12% → 탈색과 착색을 한번에',
     '난색CC: +레드→선명한레드 / +레드+바이올렛→투명한RV / +매트→매트브라운',
     '한색CC: +블루→적빛없는 투명 베이지브라운 / +블루+바이올렛→투명 쿨브라운 / +바이올렛→와인빛 퍼플브라운',
     '"탈색은 싫은데 쿨브라운 해주세요"→이 테크닉 활용',
@@ -687,8 +652,8 @@ function generateRecipeAPI(){
     '바이올렛 소량→라벤더블론드/플래티넘',
     '',
     '[탈색 없이 최대한]',
-    '고명도 염모제(13/15)+12%산화제+컨트롤컬러→원샷 리프트+착색',
-    '이후 샴푸실에서 추가 착색/토닝',
+    '위의 버진모 테크닉 참고 (고명도 염모제+컨트롤컬러+9~12%)',
+    '이후 샴푸실에서 추가 착색/토닝 가능',
     '한계 있지만 탈색 부담 없이 갈 수 있는 최대치',
     '',
     '[톤다운]',
@@ -698,6 +663,7 @@ function generateRecipeAPI(){
     '',
     '[탈색 횟수 기준]',
     '한색계열(블루,애쉬,바이올렛,라벤더애쉬)→최소 노랑기 베이스 필요→버진모에서 최소 탈색 2회',
+    '탈색 후에도 노랑기가 남아있다면 바이올렛을 믹스하여 어두운 애쉬그레이로 표현 가능',
     '난색계열(레드,RV,핑크)→적색멜라닌과 같은 방향이라 탈색 1~2회',
     '맑고 투명한 색감(파스텔,블론드,백모)→18+베이스 필요→탈색 3회 이상',
     '뉴트럴/웜 브라운→탈색 1~2회'
@@ -718,7 +684,7 @@ function generateRecipeAPI(){
     '[tips]',
     '존댓말(~해요, ~하세요, ~있어요). 줄바꿈(\\n)으로 블록 구분.',
     '① 왜 이렇게 해야 하는지 (베이스 조건, 보색 필요 이유 등)',
-    '② "탈색이 제한된다면," — 고명도 염모제(13,15레벨)+한색계열 컨트롤컬러+9% 또는 12% 산화제로 대안. 레벨·산화제 숫자는 이 블록에서만',
+    '② "탈색이 제한된다면," — 버진모일 때만: 고명도 염모제(13,15레벨)+컨트롤컬러+9% 또는 12% 산화제로 탈색과 착색을 한번에 진행하는 대안. 탈색모/염색모에서는 컨트롤컬러 언급 불필요. 레벨·산화제 숫자는 이 블록에서만',
     '③ 주의사항 한 줄 (두피보호제, 손상 등)',
     '',
     '[절대 금지]',
@@ -807,7 +773,7 @@ function showRecipeError(){
    RESET
 ══════════════════════════════════ */
 function resetAll(){
-  ST = { imageBase64:null, imageMediaType:null, analysis:null, type:null, level:null, toneSide:null, residue:null };
+  ST = { imageBase64:null, imageMediaType:null, analysis:null, type:null, subType:null };
 
   // 업로드 영역 초기화
   var zone = document.getElementById('uploadZone');
@@ -847,9 +813,8 @@ function resetAll(){
 
   // 선택 초기화
   document.querySelectorAll('.selected').forEach(function(b){ b.classList.remove('selected'); });
-  document.getElementById('undertoneWrap').style.display = 'none';
-  document.getElementById('utSelectBtn').style.display = 'flex';
-  document.getElementById('utResult').style.display = 'none';
+  document.getElementById('coloredSub').style.display = 'none';
+  document.getElementById('bleachedSub').style.display = 'none';
 
   // 레시피 내용 초기화
   document.getElementById('recipeSource').innerHTML = '';
