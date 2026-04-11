@@ -87,6 +87,12 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 .recipe-tips{background:#F5F3FF;border-radius:10px;padding:14px}
 .recipe-tips-title{font-size:13px;font-weight:700;color:#7B5EA7;margin-bottom:6px}
 .recipe-tips-text{font-size:13px;color:#555;line-height:1.9;white-space:pre-line}
+.recipe-tips-text .base-label{font-size:13px;font-weight:700;color:#1A1814}
+.recipe-tips-text .mix-label{font-weight:600;color:#7B5EA7}
+.recipe-summary-note{font-size:11px;color:#999;margin-top:6px;line-height:1.5}
+.recipe-virgin-box{background:rgba(158,127,191,0.06);border:1px solid rgba(158,127,191,0.15);border-radius:10px;padding:13px;margin-top:10px}
+.recipe-virgin-title{font-size:12px;font-weight:700;color:#9E7FBF;margin-bottom:6px}
+.recipe-virgin-text{font-size:12px;color:#666;line-height:1.8}
 
 /* source 표시 */
 .source-tag{display:inline-block;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;margin-bottom:8px}
@@ -630,15 +636,16 @@ function generateRecipe(){
     '{"summary":"시술 한 줄 요약","tips":"실무조언 여러 줄"}',
     '',
     '[summary 규칙 — 존댓말, 한 줄]',
-    '형식: "탈색 N~M회 후(모질에 따라 편차) [염모제]에 [믹스] 소량 믹스하여 착색하세요"',
+    '형식: "탈색 N~M회 후 [염모제]에 [믹스] 소량 믹스하여 착색하세요"',
     '탈색 횟수는 범위로 적어 (예: 2~3회). 참고: 1회→주황~노랑, 2회→노랑, 3회→노랑~연노랑 (모발편차 있음)',
+    '"(모질에 따라 탈색횟수는 차이가 날 수 있습니다)"는 넣지 마. 시스템이 자동으로 붙임.',
     '현재 베이스가 이미 탈색모면 → "탈색 후" 없이 바로 현재 베이스 상태 기준으로 최선의 레시피를 제시',
-    '현재 베이스가 자연모/염색모면 → "탈색 N~M회 후(모질에 따라 편차) ~"',
+    '현재 베이스가 자연모/염색모면 → "탈색 N~M회 후 ~"',
     '레시피가 2개 방향으로 나올 수 있으면 2줄까지 OK.',
-    '예: "탈색 2~3회(노랑~연노랑) 후(모질에 따라 편차) 애쉬 염모제에 바이올렛 소량 믹스하여 착색하세요"',
-    '예: "탈색 2~3회(노랑~연노랑) 후(모질에 따라 편차) 핑크 염모제에 클리어 믹스하여 착색하세요"',
-    '예: "밝은 명도의 뉴트럴브라운에 애쉬 소량 믹스하여 착색하세요"',
-    'summary에 넣지 말 것: 감상, 설명, 산화제, 원샷, 결과색감명',
+    '예: "탈색 2~3회 후 밝은 명도 애쉬 염모제에 뉴트럴브라운 소량 믹스하여 착색하세요"',
+    '예: "탈색 2~3회 후 핑크 염모제에 클리어 믹스하여 착색하세요"',
+    '예: "밝은 명도 뉴트럴브라운에 애쉬 소량 믹스하여 착색하세요"',
+    'summary에 넣지 말 것: 감상, 설명, 산화제, 원샷, 결과색감명, (모질에 따라 편차)',
     '',
     '[tips 규칙 — 존댓말(~해요, ~하세요)]',
     '블록 사이에 빈 줄(\\n\\n)로 구분. 반드시 블록 사이 빈 줄 넣어.',
@@ -646,19 +653,20 @@ function generateRecipe(){
     '블록①: 이 색감은 최소 어떤 베이스까지 도달해야 연출 가능한지',
     '- "이 색감은 최소 노랑 베이스는 나와야 연출 가능해요." 또는 "최소 연노랑 베이스를 추천해요."',
     '',
-    '블록②: 현재 베이스 상태별 구체적 시술',
-    '- 베이스 충분 → "밝은 명도 [염모제]에 [믹스] 소량 믹스하여 맑게 착색하세요"',
-    '- 베이스 부족 → 너프 색감 제안. 예: "노랑기가 남아있다면 [목표색감] 연출은 어려워요. [너프색감]으로 연출하세요."',
+    '블록②: 베이스 상태별 구체적 시술 (높은 베이스부터 → 낮은 베이스 순서로)',
+    '- 각 베이스를 <b>베이스명</b>으로 시작하고 한 줄씩 끊어서 작성',
+    '- 예: "<b>연노랑 베이스</b> — <span>밝은 명도 애쉬 염모제에 뉴트럴브라운</span> 소량 믹스하여 투명한 밀크티 애쉬로 착색하세요."',
+    '- 예: "<b>노랑 베이스</b> — <span>애쉬 염모제에 뉴트럴브라운</span> 소량 믹스하여 쿨 애쉬 브라운으로 착색하세요."',
+    '- 밀크티, 블론드, 매트베이지, 애쉬베이지 같은 고명도 색감은 뉘앙스에 따라 조합이 달라질 수 있으므로 2가지 레시피를 나열해도 좋다.',
+    '- 베이스 부족 시 너프 색감 제안도 포함',
     '',
-    '블록③: "탈색이 제한된다면," 대안 (자연모/염색모일 때만)',
-    '- 형식: "고명도(13·15레벨) [메인염모제]에 [서브] 컨트롤컬러를 소량 믹스하고 9% 산화제를 이용하여 착색해보세요. ~까지는 연출 가능해요."',
-    '- 산화제 농도는 이 블록에서만 허용',
+    '블록③은 넣지 마. 시스템이 자연모/염색모일 때 자동으로 고정 문구를 붙임.',
     '',
-    '블록④: 주의문구 한 줄 (모발 손상 주의, 두피보호제 등 간략하게)',
+    '블록③(마지막): 주의문구 한 줄 (모발 손상 주의, 두피보호제 등 간략하게)',
     '',
     '[절대 금지]',
     '- "원샷"이라는 단어',
-    '- 산화제 농도를 블록③ 외에서 언급',
+    '- 산화제 농도 언급 (시스템이 별도로 처리함)',
     '- 숫자 비율 (7:3, 80% 등). "소량"으로만',
     '- "파우더". "탈색약"으로',
     '- 디자이너가 당연히 아는 것 (체온, 균일도포, 발색체크 등)',
@@ -729,13 +737,34 @@ function showRecipe(recipe){
 
   var hdr = document.getElementById('recipeHeader');
   var summaryHtml = (recipe.summary || '').replace(/\n/g, '<br>');
-  hdr.innerHTML = '<div class="recipe-from-to">' + summaryHtml + '</div>';
+  hdr.innerHTML = '<div class="recipe-from-to">' + summaryHtml + '</div>'
+    + '<div class="recipe-summary-note">모질에 따라 탈색횟수는 차이가 날 수 있습니다</div>';
 
   var body = document.getElementById('recipeBody');
   var html = '';
   if(recipe.tips){
-    var tipsHtml = recipe.tips.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
-    html = '<div class="recipe-tips"><div class="recipe-tips-title">💡 실무조언</div><div class="recipe-tips-text">' + tipsHtml + '</div></div>';
+    var tipsText = recipe.tips;
+    // <b> <span> 태그는 유지, \n\n → <br><br>, \n → <br>
+    var tipsHtml = tipsText.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+    // <b>베이스명</b> → base-label 클래스
+    tipsHtml = tipsHtml.replace(/<b>/g, '<span class="base-label">').replace(/<\/b>/g, '</span>');
+    // <span>염모제 조합</span> → mix-label 클래스
+    tipsHtml = tipsHtml.replace(/<span>/g, '<span class="mix-label">').replace(/<\/span><\/span>/g, '</span>');
+    html = '<div class="recipe-tips"><div class="recipe-tips-title">💡 실무조언</div><div class="recipe-tips-text">' + tipsHtml + '</div>';
+
+    // 자연모/염색모일 때 버진모 테크닉 고정 블록 삽입
+    if(ST.type === 'natural'){
+      var tone = (ST.analysis && ST.analysis.tone) || 'cool';
+      var virginHtml = '';
+      if(tone === 'warm'){
+        virginHtml = '탈색이 제한된다면, 고명도(13·15레벨) 난색 계열 염모제에 난색 CC를 믹스하고 9% 산화제를 이용하여 착색해보세요. 선명한 레드, 투명한 레드바이올렛 등 난색 뉘앙스까지는 연출 가능해요.';
+      } else {
+        virginHtml = '탈색이 제한된다면, 고명도(13·15레벨) 한색 염모제에 한색 CC(블루, 바이올렛, 애쉬)를 믹스하고 9% 산화제를 이용하여 착색해보세요. 적빛 없는 투명 쿨브라운, 베이지브라운까지는 연출 가능해요.';
+      }
+      html += '<div class="recipe-virgin-box"><div class="recipe-virgin-title">탈색 없이 연출하려면</div><div class="recipe-virgin-text">' + virginHtml + '</div></div>';
+    }
+
+    html += '</div>';
   }
   body.innerHTML = html;
 
