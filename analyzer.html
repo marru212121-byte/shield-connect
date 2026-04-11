@@ -49,11 +49,6 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 .analysis-color-level{font-size:12px;color:#888;margin-top:2px}
 .analysis-desc{font-size:13px;color:#555;line-height:1.7;margin-top:8px}
 
-/* 시술 판단 태그 */
-.analysis-tag{display:inline-block;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:700;margin-top:8px}
-.analysis-tag.bleached{background:rgba(255,152,0,0.1);color:#E88B00}
-.analysis-tag.natural{background:rgba(76,175,80,0.1);color:#4CAF50}
-
 /* 분석 중 로딩 */
 .analyzing{text-align:center;padding:24px;display:none}
 .analyzing.show{display:block}
@@ -299,59 +294,65 @@ function analyzeImage(base64, mediaType){
   boxEl.classList.remove('show');
   loadEl.classList.add('show');
 
-  /* ── 분석 프롬프트: 역공학 판단 핵심 ── */
+  /* ── 분석 프롬프트: 보이는 색감 + 색감 속성 + 조색 방향 ── */
   var sysPrompt = [
-    '너는 미용실 헤어 컬러리스트를 위한 모발 색감 역공학 분석 전문가야.',
-    '사진 속 모발의 "보이는 색감"을 분석하되, 단순히 보이는 색으로만 네이밍하지 마.',
+    '너는 미용실 헤어 컬러리스트를 위한 모발 색감 분석 전문가야.',
+    '사진 속 모발의 색감을 분석하고, 동양인 모발에서 이 색감을 만들려면 어떤 조색이 필요한지 역추론해.',
     '',
-    '■ 핵심 임무: "이 색감을 만들려면 어떤 조색을 했는가"를 역추론해.',
-    '',
-    '■ 동양인 모발 역공학 판단 기준:',
-    '동양인 버진모 = 적색 멜라닌이 가득 차 있어서 자연 상태에서는 검정~짙은 갈색만 가능.',
+    '■ 동양인 모발 기본 전제:',
+    '동양인 버진모 = 적색 멜라닌이 가득 차 있음.',
     '탈색 시 멜라닌이 깨지는 순서: 검정 → 붉은기 → 주황 → 노랑 → 매트(단무지색) → 연노랑 → 페일옐로(미색).',
+    '따라서 적색 멜라닌을 얼마나 깨고, 무엇으로 눌렀느냐에 따라 최종 색감이 결정됨.',
     '',
-    '■ 투명한 브라운 = 탈색 후 한색계열 조합일 가능성 높음:',
-    '- 투명하고 윤기 있는 베이지브라운, 모카브라운, 밀크브라운 → 탈색 후 블루+바이올렛 또는 애쉬+바이올렛으로 적색 멜라닌을 중화한 결과',
-    '- 황금빛이 은은하게 비치면서도 붉은기가 없는 브라운 → 한색(블루, 애쉬)으로 적색을 눌러서 나온 투명감',
-    '- 적색기 없는 쿨한 브라운 = 절대 단순 웜브라운이 아님',
-    '- 이런 색감을 "웜 모카 브라운", "카라멜 브라운" 같은 웜 네이밍으로 잡으면 틀린 레시피가 나감',
+    '■ 색감 속성(elements) 읽는 법:',
+    '사진에서 아래 속성들이 보이는지 판단해. 보이는 것만 배열에 넣어.',
+    '- "투명감": 빛이 통과하는 듯한 맑은 느낌, 탁하지 않음',
+    '- "매트함": 광택 없이 뽀얀, 단무지 같은 질감',
+    '- "황금빛": 금빛이 은은하게 비침',
+    '- "붉은기": 적색·구리빛·앰버빛이 보임',
+    '- "주황기": 주황빛이 보임',
+    '- "잿빛": 회색·재 같은 무채색 느낌',
+    '- "청보라": 파란기+보라기가 함께 보임',
+    '- "보라기": 보라·퍼플 느낌',
+    '- "핑크기": 분홍빛이 보임',
+    '- "파스텔": 연하고 부드러운 색감',
+    '- "비비드": 선명하고 채도 높은 색감',
+    '- "깊이감": 어두운 부분과 밝은 부분의 입체적 색 차이',
+    '- "윤기": 건강한 광택감',
     '',
-    '■ 진짜 웜 브라운의 특징:',
-    '- 붉은기가 선명하게 비침, 적갈색 느낌',
-    '- 따뜻하되 탁한 느낌 (투명감 없음)',
-    '- 금색보다는 구리빛, 앰버빛',
+    '■ 조색 방향(recipe_direction) 역추론:',
+    '위 속성들을 보고, 동양인 모발에서 이 색감을 만들려면 어떤 염모제 계열이 필요한지 추론해.',
     '',
-    '■ 판단 분기:',
-    '투명감+윤기+붉은기없음+깊이감 → construction: "bleach_cool" (탈색 후 한색계열 조합)',
-    '투명감+파스텔+연한 색감 → construction: "bleach_pastel" (탈색 3회이상 후 파스텔 착색)',
-    '붉은기 선명+따뜻+탁함 → construction: "warm_natural" (웜 계열 자연 발색 또는 난색 조합)',
-    '선명한 단일 색감(블루,핑크 등) → construction: "bleach_vivid" (탈색 후 단일 색감 착색)',
-    '어두운 브라운 뉘앙스 → construction: "low_lift" (탈색 없이 또는 최소 리프트)',
+    '역추론 원리:',
+    '- 투명감이 있고 붉은기가 없다 → 적색 멜라닌을 눌러야 함 → 블루, 애쉬, 바이올렛 등 한색 계열 필요',
+    '- 황금빛+투명감+붉은기 없음 → 웜으로 보이지만 실제 조색은 한색 베이스로 적색을 중화한 것',
+    '- 붉은기가 선명하게 보인다 → 적색 멜라닌 방향과 같으므로 레드 계열 염모제',
+    '- 보라기가 보인다 → 바이올렛 계열',
+    '- 잿빛+투명감 → 애쉬 계열',
+    '- 파스텔+연한 → 해당 색감 + 클리어 믹스',
     '',
-    '■ 조색 구성 추론 (recipe_direction):',
-    '이 색감을 만들기 위해 어떤 계열의 염모제 조합이 필요한지 추론해.',
     '예시:',
-    '- "블루+바이올렛 베이스로 적색을 중화한 투명 쿨브라운"',
-    '- "애쉬 베이스에 바이올렛 소량 믹스로 연출한 라벤더그레이"',
-    '- "레드 염모제 단독으로 연출한 비비드 레드"',
-    '- "핑크+클리어 믹스로 연출한 파스텔 핑크"',
+    '- "블루+바이올렛으로 적색을 중화한 투명 쿨 계열"',
+    '- "애쉬 베이스에 바이올렛 소량 믹스"',
+    '- "레드 염모제 단독"',
+    '- "핑크+클리어 믹스 파스텔"',
     '',
-    '[금지] 멜라닌 레벨 숫자 추정, 시술 방법 구체적 언급(몇 회 탈색해라 등), "도미넌트" 같은 영어 전문용어',
+    '[금지] 멜라닌 레벨 숫자, 시술 방법(몇 회 탈색 등), 탈색 여부 판단, 영어 전문용어',
     '',
     '[할 것]',
-    '- 감성적·전문적 색감 네이밍(한국어로)',
-    '- 투명감·채도·뉘앙스·언더톤·질감을 자연스러운 한국어로 묘사',
-    '- construction 판단 (위 5가지 중 택1)',
-    '- recipe_direction: 조색 방향 한 줄 추론',
+    '- 보이는 그대로 감성적 색감 네이밍 (한국어)',
+    '- 색감 속성 태그 (elements 배열)',
+    '- 조색 방향 역추론 (recipe_direction)',
+    '- 색감 묘사 2~3문장 (description)',
     '',
     'JSON만 응답:',
     '{',
     '  "color_name_ko": "한국어 색감명",',
     '  "tone": "cool" 또는 "warm" 또는 "neutral",',
     '  "hex": "#RRGGBB",',
-    '  "construction": "bleach_cool|bleach_pastel|warm_natural|bleach_vivid|low_lift",',
-    '  "recipe_direction": "조색 방향 추론 한 줄",',
-    '  "description": "색감 묘사 + 왜 이런 construction 판단을 했는지. 2~3문장"',
+    '  "elements": ["투명감","매트함","황금빛"],',
+    '  "recipe_direction": "조색 방향 역추론 한 줄",',
+    '  "description": "색감 묘사 2~3문장"',
     '}'
   ].join('\n');
 
@@ -403,22 +404,27 @@ function showAnalysis(result){
 
   document.getElementById('analysisDesc').textContent = result.description || '';
 
-  // construction 태그 표시
+  // elements 태그 + recipe_direction 표시
   var tagWrap = document.getElementById('analysisTagWrap');
-  var conLabels = {
-    'bleach_cool': '탈색 + 한색 계열 조합 추정',
-    'bleach_pastel': '탈색 + 파스텔 착색 추정',
-    'warm_natural': '웜/난색 계열',
-    'bleach_vivid': '탈색 + 비비드 착색 추정',
-    'low_lift': '저리프트 / 톤다운'
-  };
-  var conClass = (result.construction && result.construction.indexOf('bleach') >= 0) ? 'bleached' : 'natural';
-  var conLabel = conLabels[result.construction] || result.construction || '';
-  if(conLabel){
-    tagWrap.innerHTML = '<div class="analysis-tag '+conClass+'">'+conLabel+'</div>';
-  } else {
-    tagWrap.innerHTML = '';
+  var html = '';
+
+  // elements 태그들
+  if(result.elements && result.elements.length > 0){
+    html += '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:10px">';
+    result.elements.forEach(function(el){
+      html += '<span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;background:rgba(158,127,191,0.08);color:#9E7FBF">' + el + '</span>';
+    });
+    html += '</div>';
   }
+
+  // recipe_direction
+  if(result.recipe_direction){
+    html += '<div style="margin-top:10px;padding:10px 12px;border-radius:8px;background:rgba(26,24,20,0.04);font-size:12px;color:#555;line-height:1.6">';
+    html += '<span style="font-weight:700;color:#1A1814">조색 방향</span> · ' + result.recipe_direction;
+    html += '</div>';
+  }
+
+  tagWrap.innerHTML = html;
 
   box.classList.add('show');
 
@@ -636,23 +642,27 @@ function generateRecipe(){
     '- 원리 나열, 교육, ** 기호, step1 step2 구분',
     '- 매트 염모제 사용 (카키/올리브 요청 아닌 한 절대 금지)',
     '- 컨트롤컬러를 보색중화 용도로 사용 (보색중화는 일반 염모제 소량 믹스로)',
-    '- 웜 분석이라고 해서 무조건 웜 레시피. construction 판단을 따라',
+    '- 웜 네이밍이라고 해서 무조건 웜 레시피. recipe_direction과 elements를 따라',
     '',
     '[핵심 판단 규칙]',
-    'AI 분석의 construction이 "bleach_cool"이면 → 한색 계열(블루, 애쉬, 바이올렛 등) 조합 레시피',
-    'construction이 "bleach_pastel"이면 → 해당 색감 + 클리어 믹스 레시피',
-    'construction이 "warm_natural"이면 → 난색 계열 또는 뉴트럴 레시피',
-    'construction이 "bleach_vivid"이면 → 해당 색감 단독 레시피',
-    'construction이 "low_lift"이면 → 저리프트 또는 톤다운 레시피',
+    'recipe_direction이 레시피의 방향을 결정한다.',
+    'elements(색감 속성)를 보고 판단을 보강한다:',
+    '- "투명감"이 있고 "붉은기"가 없다 → 적색 멜라닌을 중화해야 함 → 한색 계열 조합',
+    '- "황금빛"+"투명감"+"붉은기없음" → 웜으로 보이지만 조색은 한색 베이스',
+    '- "붉은기"가 있다 → 적색 방향 → 레드/RV/핑크 계열',
+    '- "파스텔"이 있다 → 해당 색감 + 클리어 믹스',
+    '- "잿빛"이 있다 → 애쉬 계열',
+    '- "보라기"/"청보라"가 있다 → 바이올렛/라벤더애쉬 계열',
     '',
-    '사진의 "보이는 색"이 아니라 "만드는 방법"을 레시피로 출력해.'
+    'recipe_direction과 elements가 가리키는 조색 방향으로 레시피를 만들어.',
+    'color_name_ko(보이는 색 이름)에 끌려가지 마.'
   ].join('\n');
 
   var userMsg = [
     '현재 모발: ' + baseDesc,
     'AI 분석 색감: ' + ST.analysis.color_name_ko,
     '톤: ' + ST.analysis.tone,
-    'construction: ' + (ST.analysis.construction || 'unknown'),
+    '색감 속성: ' + (ST.analysis.elements ? ST.analysis.elements.join(', ') : '없음'),
     '조색 방향: ' + (ST.analysis.recipe_direction || ''),
     '색감 설명: ' + ST.analysis.description,
     '',
