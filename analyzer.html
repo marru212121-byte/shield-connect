@@ -319,6 +319,10 @@ function analyzeImage(base64, mediaType){
     '- 황금빛+투명감+붉은기 없음 → 시각적 warm이어도 recipe_direction은 "한색 계열"',
     '- 붉은기·핑크기가 선명한 사진만 → 난색 계열',
     '',
+    '■ 탈색 필수 판단 (중요):',
+    '어둡게 보여도 잿빛·투명감·매트함이 있으면 → 탈색이 필요한 색감이다. "다크"라고 해서 자연모에서 바로 가능한 게 아님.',
+    '자연모에서 탈색 없이 가능한 색감은: 웜브라운, 쿨브라운, 레드/레드브라운, 블랙커런트 정도. 그 외 잿빛·투명감·파스텔이 보이면 전부 탈색 필수.',
+    '',
     '■ 조색 방향(recipe_direction) 역추론:',
     '투명감+붉은기 없음 → 한색 계열 / 붉은기 선명 → 난색 계열(레드, RV) / 핑크기 → 핑크 계열 / 보라기 → 바이올렛 계열 / 잿빛+투명감 → 애쉬 계열 / 파스텔+연한 → 파스텔 계열',
     '',
@@ -480,9 +484,10 @@ function generateRecipe(){
     '=== 사고 순서 (이 순서로 판단해. 출력에는 넣지 마) ===',
     '',
     '① 목표 색감의 필요 베이스 결정',
+    '모든 색감은 최소 탈색 1회 이상 필요. 자연모(5레벨)에서 탈색 없이 바로 착색하는 레시피는 내지 마.',
     '파스텔/블론드/백모/실버/화이트 → 연노랑~미색(18+)',
     '투명한 애쉬/라벤더/밀크티/맑은 쿨톤 → 노랑~연노랑(16+)',
-    '쿨브라운/베이지브라운 → 주황~노랑(12~14)',
+    '쿨브라운/베이지브라운/다크애쉬 → 주황~노랑(12~14)',
     '레드/핑크/RV → 주황~노랑(12~14)도 가능',
     '',
     '② 현재 베이스 → 필요 베이스까지 탈색 횟수',
@@ -555,9 +560,12 @@ function generateRecipe(){
     '노랑~매트(14~16) → 레드/적핑크/RV 가능. 16 너프: 레드→레드오렌지(바이올렛 소량), 핑크→코럴브라운(바이올렛/RV 소량), RV→레드 치우침(바이올렛 소량).',
     '연노랑~미색(18~20) → 비비드 레드, 파스텔 핑크, 맑은 RV 가능.',
     '',
-    '[저명도 공통 (5~8, 자연모)]',
-    '어떤 염모제든 브라운+뉘앙스가 한계 (레드만 예외).',
-    '블루/애쉬 → 쿨브라운 / 바이올렛 → 와인빛 브라운 / 매트 → 매트브라운.',
+    '[자연모/저명도 (5~8) — 탈색 판단]',
+    'elements에 투명감 또는 파스텔이 있으면 → 최소 탈색 1회 필수.',
+    '잿빛/매트함만 있고 투명감 없으면 → 버진모에서도 쿨브라운/애쉬브라운 수준으로 연출 가능.',
+    '자연모에서 탈색 없이 가능한 색감: 웜브라운, 쿨브라운, 애쉬브라운, 매트브라운, 레드/레드브라운, 블랙커런트.',
+    '밀크티, 라벤더, 실버, 파스텔 등 투명감 필요한 색감은 전부 탈색 필수.',
+    '탈색 없이 최대치: 고명도 염모제(13·15)+컨트롤컬러+9% 테크닉 → 쿨브라운, 쿨베이지, 한색브라운이 한계.',
     '',
     '=== 특수 규칙 ===',
     '',
@@ -668,20 +676,43 @@ function showRecipe(recipe){
     tipsHtml = tipsHtml.replace(/<span>/g, '<span class="mix-label">').replace(/<\/span><\/span>/g, '</span>');
     html = '<div class="recipe-tips"><div class="recipe-tips-title">💡 실무조언</div><div class="recipe-tips-text">' + tipsHtml + '</div>';
 
-    // 자연모/염색모일 때 버진모 테크닉 고정 블록 삽입
+    // 자연모/염색모일 때 분기 처리
     if(ST.type === 'natural'){
       var tone = (ST.analysis && ST.analysis.tone) || 'cool';
       var elems = (ST.analysis && ST.analysis.elements) || [];
-      // 핑크기, 붉은기가 있으면 난색 시술
       var hasWarmElem = elems.indexOf('핑크기') >= 0 || elems.indexOf('붉은기') >= 0;
+      var hasCoolSoft = (elems.indexOf('잿빛') >= 0 || elems.indexOf('매트함') >= 0);
+      var hasTransparency = elems.indexOf('투명감') >= 0;
+      var hasPastel = elems.indexOf('파스텔') >= 0;
       var isWarm = tone === 'warm' || hasWarmElem;
-      var virginHtml = '';
-      if(isWarm){
-        virginHtml = '탈색이 제한된다면, 고명도(13·15레벨) 난색 계열 염모제에 난색 컨트롤컬러를 믹스하고 9% 산화제를 이용하여 착색해보세요. 와인브라운, 레드브라운 등 난색 뉘앙스까지는 연출 가능해요.';
+
+      // 케이스 A: 잿빛/매트함 있고, 투명감·파스텔·붉은기·핑크기 없음
+      // → 버진모에서도 연출 가능한 애매 구간 → ⚠ 주의문구 + 버진모 먼저 + 탈색 보조
+      if(hasCoolSoft && !hasTransparency && !hasPastel && !hasWarmElem){
+        // ⚠ 주의문구를 tips 위에 삽입
+        var warningHtml = '<div style="background:#FFF8E7;border:1px solid #F0D58C;border-radius:10px;padding:12px;margin-bottom:10px;font-size:12px;color:#8B7355;line-height:1.7">'
+          + '<span style="font-size:14px">⚠️</span> 이 사진은 조명을 가까이 비춰 촬영하여 실제보다 투명하고 밝게 보일 수 있어요. 버진모에서 연출한 색감인지, 탈색 후 연출한 색감인지 판단이 어려워요. 두 가지 경우 모두 안내해드릴게요.'
+          + '</div>';
+        // 버진모 테크닉 먼저
+        html += '<div class="recipe-virgin-box"><div class="recipe-virgin-title">버진모에서 연출하려면</div><div class="recipe-virgin-text">';
+        html += '고명도(13·15레벨) 한색 염모제에 한색 컨트롤컬러(블루, 바이올렛, 애쉬)를 믹스하고 9% 산화제를 이용하여 착색해보세요. 적빛 없는 투명 쿨브라운, 베이지브라운까지는 연출 가능해요.';
+        html += '</div></div>';
+        // 탈색 보조
+        html += '<div class="recipe-virgin-box" style="margin-top:10px"><div class="recipe-virgin-title">더 선명하게 연출하려면</div><div class="recipe-virgin-text">';
+        html += '탈색 1회 이상 진행하면 더 맑고 선명한 발색이 가능해요.';
+        html += '</div></div>';
+        // 주의문구를 맨 앞에 넣기
+        html = warningHtml + '<div class="recipe-tips"><div class="recipe-tips-title">💡 실무조언</div><div class="recipe-tips-text">' + tipsHtml + '</div>' + html;
       } else {
-        virginHtml = '탈색이 제한된다면, 고명도(13·15레벨) 한색 염모제에 한색 컨트롤컬러(블루, 바이올렛, 애쉬)를 믹스하고 9% 산화제를 이용하여 착색해보세요. 적빛 없는 투명 쿨브라운, 베이지브라운까지는 연출 가능해요.';
+        // 기존 구조: 탈색 레시피 먼저 + "탈색 없이 연출하려면" 보조
+        var virginHtml = '';
+        if(isWarm){
+          virginHtml = '탈색이 제한된다면, 고명도(13·15레벨) 난색 계열 염모제에 난색 컨트롤컬러를 믹스하고 9% 산화제를 이용하여 착색해보세요. 와인브라운, 레드브라운 등 난색 뉘앙스까지는 연출 가능해요.';
+        } else {
+          virginHtml = '탈색이 제한된다면, 고명도(13·15레벨) 한색 염모제에 한색 컨트롤컬러(블루, 바이올렛, 애쉬)를 믹스하고 9% 산화제를 이용하여 착색해보세요. 적빛 없는 투명 쿨브라운, 베이지브라운까지는 연출 가능해요.';
+        }
+        html += '<div class="recipe-virgin-box"><div class="recipe-virgin-title">탈색 없이 연출하려면</div><div class="recipe-virgin-text">' + virginHtml + '</div></div>';
       }
-      html += '<div class="recipe-virgin-box"><div class="recipe-virgin-title">탈색 없이 연출하려면</div><div class="recipe-virgin-text">' + virginHtml + '</div></div>';
     }
 
     html += '</div>';
