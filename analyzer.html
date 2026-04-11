@@ -99,6 +99,9 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 .recipe-step-detail{font-size:12px;color:#888;line-height:1.7;margin-top:6px}
 .recipe-note{background:#FFFBF0;border-radius:10px;padding:12px;margin-top:12px;font-size:12px;color:#8B7355;line-height:1.7}
 .recipe-note b{font-weight:600;color:#7B6A4F}
+.recipe-tips{background:#F5F3FF;border-radius:10px;padding:14px;margin-top:12px}
+.recipe-tips-title{font-size:13px;font-weight:700;color:#7B5EA7;margin-bottom:6px}
+.recipe-tips-text{font-size:13px;color:#555;line-height:1.8}
 
 /* 다시하기 버튼 */
 .reset-btn{width:calc(100% - 32px);margin:8px 16px 24px;padding:14px;border-radius:14px;border:1.5px solid #eee;background:#fff;color:#888;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;display:none}
@@ -109,6 +112,41 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 .source-tag{display:inline-block;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;margin-bottom:8px}
 .source-tag.matrix{background:rgba(76,175,80,0.1);color:#4CAF50}
 .source-tag.ai{background:rgba(158,127,191,0.12);color:#9E7FBF}
+
+/* 언더톤 선택 버튼 */
+.ut-select-btn{display:flex;align-items:center;justify-content:space-between;padding:16px;border-radius:12px;border:1.5px solid #eee;background:#fff;cursor:pointer;transition:all .15s}
+.ut-select-btn:active{transform:scale(0.98);border-color:#9E7FBF}
+.ut-select-text{font-size:14px;font-weight:600;color:#1A1814}
+.ut-select-arrow{font-size:20px;color:#bbb}
+
+/* 선택 결과 표시 */
+.ut-result{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;border:1.5px solid #9E7FBF;background:rgba(158,127,191,0.04);cursor:pointer}
+.ut-result-swatch{width:40px;height:40px;border-radius:10px;border:1px solid rgba(0,0,0,0.1);flex-shrink:0}
+.ut-result-level{font-size:14px;font-weight:700;color:#1A1814}
+.ut-result-tone{font-size:11px;color:#888;margin-top:2px}
+.ut-result-change{margin-left:auto;font-size:12px;color:#9E7FBF;font-weight:600}
+
+/* 풀스크린 모달 */
+.ut-modal{position:fixed;inset:0;z-index:9999;background:#000;display:flex;flex-direction:column;overflow:hidden}
+.ut-modal-header{display:flex;align-items:center;justify-content:space-between;padding:max(env(safe-area-inset-top),12px) 16px 10px;background:#000;flex-shrink:0}
+.ut-modal-title{font-size:13px;font-weight:600;color:rgba(255,255,255,0.8)}
+.ut-modal-close{width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.ut-modal-img-wrap{flex:1;position:relative;overflow:hidden}
+.ut-modal-img{width:100%;height:100%;object-fit:cover;display:block}
+.ut-modal-zones{position:absolute;inset:0;display:flex;flex-direction:column}
+.ut-modal-side-labels{position:absolute;bottom:8px;left:0;right:0;display:flex;justify-content:space-between;padding:0 12px;pointer-events:none}
+.ut-side-label{font-size:9px;font-weight:600;color:rgba(255,255,255,0.4);letter-spacing:0.3px}
+
+/* 존 행 */
+.ut-zone{flex:1;display:flex;position:relative;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.08)}
+.ut-zone:last-child{border-bottom:none}
+.ut-zone-half{width:50%;position:relative;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.ut-zone-half:active{background:rgba(255,255,255,0.12)}
+.ut-zone-half.picked{box-shadow:inset 0 0 0 2.5px #fff;background:rgba(255,255,255,0.08)}
+.ut-zone-num{font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;color:rgba(255,255,255,0.45);text-shadow:0 1px 3px rgba(0,0,0,0.7);pointer-events:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+.ut-zone-half.picked .ut-zone-num{color:#fff;font-size:16px;font-weight:800}
+.ut-zone-guide{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);font-size:8px;font-weight:500;color:rgba(255,255,255,0.35);white-space:nowrap;pointer-events:none;letter-spacing:0.2px}
+.ut-zone-half.picked .ut-zone-guide{color:rgba(255,255,255,0.8)}
 
 /* 애니메이션 */
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
@@ -170,55 +208,53 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
       </div>
 
       <div class="base-option-group">
-        <!-- 모발 유형 -->
+        <!-- 모발 유형 2개 -->
         <div class="base-option-title">모발 유형</div>
         <div class="base-btn-row">
           <button class="base-btn" data-type="virgin" onclick="selectType(this)">
             <div class="label">버진모</div>
-            <div class="desc">염색·탈색 이력 없음</div>
+            <div class="desc">시술 이력 없음</div>
           </button>
-          <button class="base-btn" data-type="colored" onclick="selectType(this)">
-            <div class="label">염색모</div>
-            <div class="desc">염색 이력 있음</div>
-          </button>
-        </div>
-        <div class="base-btn-row" style="margin-top:0">
-          <button class="base-btn" data-type="bleached-cool" onclick="selectType(this)">
-            <div class="label">탈색모 (한색)</div>
-            <div class="desc">한색 퇴색 상태</div>
-          </button>
-          <button class="base-btn" data-type="bleached-warm" onclick="selectType(this)">
-            <div class="label">탈색모 (난색)</div>
-            <div class="desc">난색 퇴색 상태</div>
+          <button class="base-btn" data-type="treated" onclick="selectType(this)">
+            <div class="label">염색모 · 탈색모</div>
+            <div class="desc">시술 이력 있음</div>
           </button>
         </div>
 
-        <!-- 현재 명도 -->
-        <div class="base-option-title" style="margin-top:16px">현재 명도 (레벨)</div>
-        <div class="level-grid" id="levelGrid">
-          <button class="level-btn" data-lv="5" onclick="selectLevel(this)">5</button>
-          <button class="level-btn" data-lv="6" onclick="selectLevel(this)">6</button>
-          <button class="level-btn" data-lv="8" onclick="selectLevel(this)">8</button>
-          <button class="level-btn" data-lv="10" onclick="selectLevel(this)">10</button>
-          <button class="level-btn" data-lv="12" onclick="selectLevel(this)">12</button>
-          <button class="level-btn" data-lv="14" onclick="selectLevel(this)">14</button>
-          <button class="level-btn" data-lv="16" onclick="selectLevel(this)">16</button>
-          <button class="level-btn" data-lv="18" onclick="selectLevel(this)">18</button>
-          <button class="level-btn" data-lv="20" onclick="selectLevel(this)">20</button>
+        <!-- 언더톤 선택 (버진모 시 숨김) -->
+        <div id="undertoneWrap" style="display:none">
+          <div class="base-option-title" style="margin-top:16px">현재 언더톤을 선택하세요</div>
+          <!-- 선택 전: 버튼 -->
+          <div id="utSelectBtn" class="ut-select-btn" onclick="openUndertoneModal()">
+            <span class="ut-select-text">언더톤이 어떻게 되요?</span>
+            <span class="ut-select-arrow">›</span>
+          </div>
+          <!-- 선택 후: 결과 표시 -->
+          <div id="utResult" class="ut-result" style="display:none" onclick="openUndertoneModal()">
+            <div class="ut-result-swatch" id="utResultSwatch"></div>
+            <div class="ut-result-info">
+              <div class="ut-result-level" id="utResultLevel"></div>
+              <div class="ut-result-tone" id="utResultTone"></div>
+            </div>
+            <span class="ut-result-change">변경 ›</span>
+          </div>
         </div>
+      </div>
+    </div>
+  </div>
 
-        <!-- 잔류 색소 -->
-        <div class="base-option-title" id="residueTitle" style="margin-top:16px;display:none">잔류 색소 (해당 시 선택)</div>
-        <div class="residue-grid" id="residueGrid" style="display:none">
-          <button class="residue-btn" data-res="none" onclick="selectResidue(this)">없음</button>
-          <button class="residue-btn" data-res="red" onclick="selectResidue(this)">붉은기</button>
-          <button class="residue-btn" data-res="orange" onclick="selectResidue(this)">주황기</button>
-          <button class="residue-btn" data-res="yellow" onclick="selectResidue(this)">노랑기</button>
-          <button class="residue-btn" data-res="mat" onclick="selectResidue(this)">매트기</button>
-          <button class="residue-btn" data-res="ash" onclick="selectResidue(this)">애쉬 잔류</button>
-          <button class="residue-btn" data-res="blue" onclick="selectResidue(this)">블루 잔류</button>
-          <button class="residue-btn" data-res="violet" onclick="selectResidue(this)">바이올렛 잔류</button>
-        </div>
+  <!-- 언더톤 선택 모달 (base.jpg 풀스크린) -->
+  <div id="utModal" class="ut-modal" style="display:none">
+    <div class="ut-modal-header">
+      <span class="ut-modal-title">현재 모발과 가장 비슷한 구간을 선택하세요</span>
+      <button class="ut-modal-close" onclick="closeUndertoneModal()">✕</button>
+    </div>
+    <div class="ut-modal-img-wrap">
+      <img src="./base.jpg" class="ut-modal-img"/>
+      <div class="ut-modal-zones" id="utModalZones"></div>
+      <div class="ut-modal-side-labels">
+        <span class="ut-side-label left">한색 퇴색모</span>
+        <span class="ut-side-label right">난색 퇴색모 · 자연모</span>
       </div>
     </div>
   </div>
@@ -328,7 +364,7 @@ function analyzeImage(base64, mediaType){
   boxEl.classList.remove('show');
   loadEl.classList.add('show');
 
-  var sysPrompt = '너는 미용 전문가 수준의 모발 색상 분석기야.\n사진 속 모발의 색감을 분석해서 아래 JSON 형식으로만 응답해. 다른 텍스트 없이 순수 JSON만.\n\n{\n  "color_name_ko": "한국어 색감명 (예: 쿨 애쉬베이지, 골드블론드, 라벤더애쉬 등)",\n  "level": 숫자 (5~20 사이, 멜라닌 레벨),\n  "tone": "cool" 또는 "warm" 또는 "neutral",\n  "hex": "#RRGGBB 대표 색상 코드",\n  "description": "이 색감에 대한 전문적이고 세세한 설명 2~3문장. 디자이너가 읽고 바로 이해할 수 있게. 투명감, 채도, 뉘앙스, 언더톤 등 포함."\n}';
+  var sysPrompt = '너는 미용 전문가 수준의 모발 색상 분석기야.\n사진 속 모발의 "보이는 색감"만 분석해. 멜라닌 레벨, 시술 이력, 탈색 여부, 시술 방향은 절대 판단하지 마.\n\n[절대 금지]\n- 멜라닌 레벨 숫자 판단 금지 (몇 레벨인지 추정하지 마)\n- "탈색 없이도 가능", "탈색이 필요" 등 시술 방향 언급 금지\n- "버진모에서도 연출 가능" 같은 실현 가능성 판단 금지\n- 시술 방법, 염모제, 산화제 등 시술 관련 언급 일체 금지\n\n[해야 할 것]\n- 색감명을 감성적이고 전문적으로 네이밍\n- 투명감, 채도, 뉘앙스, 언더톤, 질감, 빛에 따른 변화 등 순수하게 "보이는 색감"만 묘사\n- 디자이너가 읽었을 때 "아 이 색감이구나" 하고 바로 감이 오게\n\n아래 JSON 형식으로만 응답해. 다른 텍스트 없이 순수 JSON만.\n\n{\n  "color_name_ko": "한국어 색감명 (예: 쿨 애쉬베이지, 골드블론드, 밀크티 브라운 등)",\n  "tone": "cool" 또는 "warm" 또는 "neutral",\n  "hex": "#RRGGBB 대표 색상 코드",\n  "description": "이 색감에 대한 감성적이고 전문적인 묘사 2~3문장. 투명감, 채도, 뉘앙스, 언더톤, 빛 반사 느낌 등. 시술 방법이나 가능성은 절대 언급하지 마."\n}';
 
   fetch(API_URL, {
     method: 'POST',
@@ -371,7 +407,7 @@ function showAnalysis(result){
   var box = document.getElementById('analysisBox');
   document.getElementById('analysisSwatch').style.background = result.hex || '#ccc';
   document.getElementById('analysisName').textContent = result.color_name_ko || '—';
-  document.getElementById('analysisLevel').textContent = '약 ' + result.level + '레벨 · ' + (result.tone==='cool'?'한색(쿨)':result.tone==='warm'?'난색(웜)':'뉴트럴');
+  document.getElementById('analysisLevel').textContent = (result.tone==='cool'?'한색(쿨) 계열':result.tone==='warm'?'난색(웜) 계열':'뉴트럴 계열');
   document.getElementById('analysisDesc').textContent = result.description || '';
   box.classList.add('show');
 
@@ -384,41 +420,106 @@ function showAnalysis(result){
 /* ══════════════════════════════════
    STEP 2: 베이스 선택
 ══════════════════════════════════ */
+
+/* 존 데이터: 레벨별 색상 + 가이드 텍스트 (위→아래 = 20→8) */
+var ZONE_DATA = [
+  {lv:20, cool:'#bbaea3', warm:'#bbaa9e', coolGuide:'미색',        warmGuide:'아이보리'},
+  {lv:18, cool:'#c6b9ac', warm:'#c3b2a6', coolGuide:'아이보리',    warmGuide:'연노랑'},
+  {lv:16, cool:'#b39777', warm:'#d9b586', coolGuide:'매트~노랑',   warmGuide:'노랑~주황'},
+  {lv:14, cool:'#b28357', warm:'#c1753d', coolGuide:'매트~노랑 잔류', warmGuide:'주황~노랑'},
+  {lv:12, cool:'#b0733f', warm:'#aa461f', coolGuide:'뉴트럴브라운', warmGuide:'주황'},
+  {lv:10, cool:'#956446', warm:'#6e2019', coolGuide:'뉴트럴브라운', warmGuide:'레드'},
+  {lv:8,  cool:'#3d1609', warm:'#420e0e', coolGuide:'뉴트럴브라운', warmGuide:'레드'}
+];
+
 function selectType(btn){
   document.querySelectorAll('[data-type]').forEach(function(b){ b.classList.remove('selected'); });
   btn.classList.add('selected');
   ST.type = btn.dataset.type;
 
-  // 잔류 색소 표시 (버진모가 아닐 때)
-  if(ST.type !== 'virgin'){
-    document.getElementById('residueTitle').style.display = 'block';
-    document.getElementById('residueGrid').style.display = 'flex';
-  } else {
-    document.getElementById('residueTitle').style.display = 'none';
-    document.getElementById('residueGrid').style.display = 'none';
+  if(ST.type === 'virgin'){
+    document.getElementById('undertoneWrap').style.display = 'none';
+    ST.level = 5;
+    ST.toneSide = 'warm';
     ST.residue = 'none';
+  } else {
+    document.getElementById('undertoneWrap').style.display = 'block';
+    ST.level = null;
+    ST.toneSide = null;
+    ST.residue = 'none';
+    document.getElementById('utSelectBtn').style.display = 'flex';
+    document.getElementById('utResult').style.display = 'none';
   }
   checkReady();
 }
 
-function selectLevel(btn){
-  document.querySelectorAll('.level-btn').forEach(function(b){ b.classList.remove('selected'); });
-  btn.classList.add('selected');
-  ST.level = parseInt(btn.dataset.lv);
-  checkReady();
+function openUndertoneModal(){
+  var modal = document.getElementById('utModal');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  buildZones();
 }
 
-function selectResidue(btn){
-  document.querySelectorAll('.residue-btn').forEach(function(b){ b.classList.remove('selected'); });
-  btn.classList.add('selected');
-  ST.residue = btn.dataset.res;
+function closeUndertoneModal(){
+  document.getElementById('utModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function buildZones(){
+  var container = document.getElementById('utModalZones');
+  container.innerHTML = '';
+  ZONE_DATA.forEach(function(z){
+    var row = document.createElement('div');
+    row.className = 'ut-zone';
+
+    var coolHalf = document.createElement('div');
+    coolHalf.className = 'ut-zone-half';
+    coolHalf.setAttribute('data-lv', z.lv);
+    coolHalf.setAttribute('data-side', 'cool');
+    coolHalf.innerHTML = '<span class="ut-zone-num">' + z.lv + '</span><span class="ut-zone-guide">' + z.coolGuide + '</span>';
+    coolHalf.onclick = function(){ pickZone(z.lv, 'cool', z.cool, z.coolGuide, coolHalf); };
+
+    var warmHalf = document.createElement('div');
+    warmHalf.className = 'ut-zone-half';
+    warmHalf.setAttribute('data-lv', z.lv);
+    warmHalf.setAttribute('data-side', 'warm');
+    warmHalf.innerHTML = '<span class="ut-zone-num">' + z.lv + '</span><span class="ut-zone-guide">' + z.warmGuide + '</span>';
+    warmHalf.onclick = function(){ pickZone(z.lv, 'warm', z.warm, z.warmGuide, warmHalf); };
+
+    row.appendChild(coolHalf);
+    row.appendChild(warmHalf);
+    container.appendChild(row);
+  });
+}
+
+function pickZone(lv, side, hex, guide, el){
+  ST.level = lv;
+  ST.toneSide = side;
+
+  // 하이라이트 초기화 후 선택된 것만 표시
+  document.querySelectorAll('.ut-zone-half').forEach(function(h){ h.classList.remove('picked'); });
+  el.classList.add('picked');
+
+  // 결과 표시
+  document.getElementById('utSelectBtn').style.display = 'none';
+  var result = document.getElementById('utResult');
+  result.style.display = 'flex';
+  document.getElementById('utResultSwatch').style.background = hex;
+  document.getElementById('utResultLevel').textContent = lv + '레벨 · ' + guide;
+  document.getElementById('utResultTone').textContent = (side === 'cool' ? '한색 언더톤' : '난색 언더톤');
+
+  closeUndertoneModal();
   checkReady();
 }
 
 function checkReady(){
-  var ready = ST.analysis && ST.type && ST.level;
-  if(ST.type !== 'virgin' && !ST.residue) ready = false;
-  if(ST.type === 'virgin') ST.residue = 'none';
+  var ready = ST.analysis && ST.type;
+
+  if(ST.type === 'virgin'){
+    ready = true && ST.analysis;
+  } else {
+    ready = ST.analysis && ST.level && ST.toneSide;
+  }
 
   var btn = document.getElementById('recipeBtn');
   if(ready){
@@ -440,7 +541,6 @@ function generateRecipe(){
   // 현재 베이스 → G() 매칭용 구간 변환
   var curZone = levelToZone(ST.level);
   var tarColor = analysisToColor(ST.analysis);
-  var tarZone = levelToZone(ST.analysis.level);
 
   // TODO: G() 룰매트릭스 매칭 시도 (추후 melanin_level.html의 GUIDE 데이터 연동)
   // 지금은 전부 API 생성으로 처리
@@ -469,12 +569,15 @@ function analysisToColor(a){
 }
 
 function generateRecipeAPI(){
-  var typeLabel = {virgin:'버진모',colored:'염색모','bleached-cool':'한색 퇴색 탈색모','bleached-warm':'난색 퇴색 탈색모'}[ST.type];
-  var residueLabel = {none:'없음',red:'붉은기',orange:'주황기',yellow:'노랑기',mat:'매트기(단무지색)',ash:'애쉬 잔류',blue:'블루 잔류',violet:'바이올렛 잔류'}[ST.residue];
+  var typeLabel = {virgin:'버진모 (5레벨, 검정)',treated:'염색·탈색모'}[ST.type];
+  var toneLabel = ST.toneSide === 'cool' ? '한색' : '난색';
+  var residueLabel = {none:'없음',mat:'매트기(단무지색) 있음',residue:'미량의 잔류 색소 남아있음','mat+residue':'매트기 + 미량의 잔류 색소 남아있음'}[ST.residue] || '없음';
 
-  var sysPrompt = '너는 미용실 디자이너를 위한 시술 레시피 생성기야.\n\n핵심 원리:\n- 산화제: 3%약/6%중/9%강/12%극강(투명색감전용). 9~12%는 두피보호제 필수.\n- 멜라닌 레벨: 5(검정)→20(페일옐로). 낮을수록 적색멜라닌 많음.\n- 보색중화: 주황→블루, 노랑→바이올렛, 매트→시나본브라운\n- 한색(블루,애쉬,바이올렛,라벤더애쉬)은 잔류 보색중화 필요. 난색(레드,핑크,레드바이올렛)은 보색중화 불필요.\n- 버진모: 적색멜라닌 가득→탈색 없이는 브라운+뉘앙스가 한계(레드 제외). 고명도염모제(13/15)+컨트롤컬러+9%로 원샷 가능.\n- 클리어: 색소 농도 희석. 18+에서 파스텔 연출.\n- 백모/블론드: 18+연노랑 베이스→미색 핑크+클리어=백모. 골드→골드블론드. 애쉬+그린→쿨블론드.\n- 톤다운: 브라운 믹스, 5/6/8은 블루블랙 소량.\n- 컨트롤컬러: 직접염료, 염모제에 추가(탈색모~30%, 버진모~50%).\n- 토닝: 미세잔류→토닝정리, 강한잔류→무조건탈색.\n- 퇴색 시 인공색소 먼저 빠짐→자연멜라닌(붉은기) 돌아옴.\n\n출력 규칙:\n- 교육하지마. 원리를 나열하지마.\n- 디자이너가 바로 시술할 수 있게 직관적으로.\n- 산화제는 "6% 산화제" 수준으로만.\n- 아래 JSON 형식으로만 응답. 다른 텍스트 없이 순수 JSON만.\n\n{\n  "from_summary": "현재 상태 요약 (1줄)",\n  "to_summary": "목표 색감 요약 (1줄)",\n  "steps": [\n    {"title": "단계 제목", "instruction": "구체적 시술 지시", "detail": "보충 설명 (선택)"}\n  ],\n  "caution": "주의사항 (선택, 없으면 빈 문자열)"\n}';
+  var baseDesc = ST.type === 'virgin' ? '버진모 5레벨 검정' : typeLabel + ' ' + ST.level + '레벨 ' + toneLabel + ' 언더톤, 잔류: ' + residueLabel;
 
-  var userMsg = '현재 모발: ' + typeLabel + ', ' + ST.level + '레벨, 잔류색소: ' + residueLabel + '\n목표 색감: ' + ST.analysis.color_name_ko + ' (약 ' + ST.analysis.level + '레벨, ' + ST.analysis.tone + ')\n\n이 모발에서 목표 색감까지 가는 시술 레시피를 만들어줘.';
+  var sysPrompt = '너는 미용실 현장에서 옆에서 조언해주는 선배 디자이너야.\n교육하지 마. 원리 나열하지 마. 비율 수치(80%, 1:1 등) 쓰지 마. ** 기호 쓰지 마.\n디자이너가 바로 이해하고 시술할 수 있게, 현장 말투로.\n\n핵심 지식 (이걸 기반으로 판단해, 절대 그대로 출력하지 마):\n- 멜라닌 레벨 5(검정)→20(페일옐로). 낮을수록 적색멜라닌 많음.\n- 산화제: 3%약/6%중/9%강/12%극강. 9%이상은 두피보호제 필수.\n- 버진모: 적색멜라닌 가득. 탈색 없이는 브라운+뉘앙스가 한계(레드 제외). 고명도염모제(13/15레벨)+컨트롤컬러+9%로 원샷 가능.\n- 보색중화: 주황→블루, 노랑→바이올렛, 매트→시나본브라운. 난색(레드,핑크,RV)은 보색 불필요.\n- 클리어: 색소농도 희석. 18+에서 파스텔.\n- 컨트롤컬러: 직접염료, 염모제에 추가.\n- 톤다운: 브라운 믹스.\n\n출력은 아래 JSON만. 다른 텍스트 없이.\n\n{\n  "summary": "~한 언더톤에서 ~한 색감으로 가시려는 거군요. (시술 방향 한마디)",\n  "steps": [\n    {"title": "단계명", "instruction": "구체적 시술 지시 (비율 수치 없이)"}\n  ],\n  "tips": "실무조언 — 대안 방법, 너프(타협점), 주의점 등을 자연스럽게 풀어서. 탈색 부담 줄이는 방법, 탈색 없이 최대한 가까이 가는 법, 색감이 조금 탁해질 수 있다는 현실적 이야기 등. 디자이너가 고객한테 설명할 때 참고할 수 있게."\n}\n\n좋은 예시 (이 톤과 구조를 따라해):\n{\n  "summary": "버진모 5레벨에서 웜 밀크티 브라운으로 가시려는 거군요. 투명한 베이지 톤이라 탈색 후 착색이 가장 깔끔합니다.",\n  "steps": [\n    {"title": "베이스 탈색", "instruction": "탈색제 + 9% 산화제로 옐로우 베이스까지 탈색해주세요. 두피보호제 필수, 두피 최대한 안 닿게."},\n    {"title": "착색", "instruction": "골드브라운 또는 골드베이지 염모제에 6% 산화제로 착색해주세요. 웜톤이라 보색중화 없이 바로 올려도 됩니다."}\n  ],\n  "tips": "탈색 부담이 크다면, 고명도 염모제(13레벨)에 9% 산화제로 원샷 시술도 가능해요. 사진만큼 투명하진 않고 좀 더 묵직한 웜브라운으로 빠질 수 있는데, 버진모에서 탈색 없이 갈 수 있는 최대치예요. 고객한테 차이를 미리 설명해주시면 좋습니다. 모발이 굵고 강하면 12% 산화제도 고려해볼 수 있는데 손상 주의하세요."\n}';
+
+  var userMsg = '현재 모발: ' + baseDesc + '\n목표 색감: ' + ST.analysis.color_name_ko + ' (' + ST.analysis.tone + ' 계열)\n목표 색감 설명: ' + ST.analysis.description + '\n\n이 모발에서 목표 색감까지 가는 시술 레시피를 만들어줘.';
 
   fetch(API_URL, {
     method: 'POST',
@@ -514,12 +617,9 @@ function showRecipe(recipe, source){
     srcEl.innerHTML = '<span class="source-tag ai">AI 원리 기반 생성</span>';
   }
 
-  // from → to 헤더
+  // 써머리 헤더
   var hdr = document.getElementById('recipeHeader');
-  hdr.innerHTML = '<div class="recipe-from-to">' +
-    '<span class="highlight">현재</span> ' + recipe.from_summary + '<br>' +
-    '<span class="highlight">목표</span> ' + recipe.to_summary +
-    '</div>';
+  hdr.innerHTML = '<div class="recipe-from-to">' + (recipe.summary || '') + '</div>';
 
   // 시술 단계
   var body = document.getElementById('recipeBody');
@@ -528,17 +628,15 @@ function showRecipe(recipe, source){
     html += '<div class="recipe-step">';
     html += '<div class="recipe-step-num">STEP ' + (i+1) + ' · ' + s.title + '</div>';
     html += '<div class="recipe-step-text">' + s.instruction + '</div>';
-    if(s.detail){
-      html += '<div class="recipe-step-detail">' + s.detail + '</div>';
-    }
     html += '</div>';
   });
-  body.innerHTML = html;
 
-  // 주의사항
-  if(recipe.caution){
-    body.innerHTML += '<div class="recipe-note"><b>⚠ 주의</b><br>' + recipe.caution + '</div>';
+  // 실무조언
+  if(recipe.tips){
+    html += '<div class="recipe-tips"><div class="recipe-tips-title">💡 실무조언</div><div class="recipe-tips-text">' + recipe.tips + '</div></div>';
   }
+
+  body.innerHTML = html;
 
   // 표시
   document.getElementById('recipeWrap').classList.add('show');
@@ -561,7 +659,7 @@ function showRecipeError(){
    RESET
 ══════════════════════════════════ */
 function resetAll(){
-  ST = { imageBase64:null, analysis:null, type:null, level:null, residue:null };
+  ST = { imageBase64:null, analysis:null, type:null, level:null, toneSide:null, residue:null };
 
   // 업로드 영역 초기화
   var zone = document.getElementById('uploadZone');
@@ -588,8 +686,9 @@ function resetAll(){
 
   // 선택 초기화
   document.querySelectorAll('.selected').forEach(function(b){ b.classList.remove('selected'); });
-  document.getElementById('residueTitle').style.display = 'none';
-  document.getElementById('residueGrid').style.display = 'none';
+  document.getElementById('undertoneWrap').style.display = 'none';
+  document.getElementById('utSelectBtn').style.display = 'flex';
+  document.getElementById('utResult').style.display = 'none';
 
   window.scrollTo({top:0, behavior:'smooth'});
 }
