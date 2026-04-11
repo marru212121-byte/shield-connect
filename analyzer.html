@@ -49,6 +49,11 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 .analysis-color-level{font-size:12px;color:#888;margin-top:2px}
 .analysis-desc{font-size:13px;color:#555;line-height:1.7;margin-top:8px}
 
+/* 시술 판단 태그 */
+.analysis-tag{display:inline-block;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:700;margin-top:8px}
+.analysis-tag.bleached{background:rgba(255,152,0,0.1);color:#E88B00}
+.analysis-tag.natural{background:rgba(76,175,80,0.1);color:#4CAF50}
+
 /* 분석 중 로딩 */
 .analyzing{text-align:center;padding:24px;display:none}
 .analyzing.show{display:block}
@@ -67,17 +72,8 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 .base-btn .label{font-size:13px;font-weight:600;color:#1A1814}
 .base-btn .desc{font-size:10px;color:#999;margin-top:3px}
 
-/* 명도 선택 - 원형 버튼들 */
-.level-grid{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
-.level-btn{width:44px;height:44px;border-radius:12px;border:1.5px solid #eee;background:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#1A1814;cursor:pointer;transition:all .15s;font-family:inherit}
-.level-btn:active{transform:scale(0.95)}
-.level-btn.selected{border-color:#9E7FBF;background:rgba(158,127,191,0.08);box-shadow:0 0 0 1px #9E7FBF;color:#7B5EA7}
-
-/* 잔류 선택 */
-.residue-grid{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
-.residue-btn{padding:10px 14px;border-radius:10px;border:1.5px solid #eee;background:#fff;font-size:12px;font-weight:500;color:#555;cursor:pointer;transition:all .15s;font-family:inherit}
-.residue-btn:active{transform:scale(0.97)}
-.residue-btn.selected{border-color:#9E7FBF;background:rgba(158,127,191,0.06);box-shadow:0 0 0 1px #9E7FBF;color:#7B5EA7;font-weight:600}
+/* 탈색모 하위 */
+#bleachedSub{display:none}
 
 /* 레시피 요청 버튼 */
 .recipe-btn{width:calc(100% - 32px);margin:8px 16px 16px;padding:16px;border-radius:14px;border:none;background:#1A1814;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;display:none}
@@ -92,63 +88,19 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 .recipe-from-to{font-size:14px;font-weight:600;color:#1A1814;line-height:1.7}
 .recipe-from-to .highlight{color:#9E7FBF;font-weight:700}
 .recipe-body{background:#fff;border-radius:14px;border:1.5px solid #eee;padding:16px}
-.recipe-step{padding:12px 0;border-bottom:1px solid #f0f0f0}
-.recipe-step:last-child{border-bottom:none}
-.recipe-step-num{font-size:10px;font-weight:700;color:#9E7FBF;letter-spacing:0.5px;margin-bottom:4px}
-.recipe-step-text{font-size:14px;color:#1A1814;line-height:1.8;font-weight:500}
-.recipe-step-detail{font-size:12px;color:#888;line-height:1.7;margin-top:6px}
-.recipe-note{background:#FFFBF0;border-radius:10px;padding:12px;margin-top:12px;font-size:12px;color:#8B7355;line-height:1.7}
-.recipe-note b{font-weight:600;color:#7B6A4F}
-.recipe-tips{background:#F5F3FF;border-radius:10px;padding:14px;margin-top:12px}
+
+.recipe-tips{background:#F5F3FF;border-radius:10px;padding:14px}
 .recipe-tips-title{font-size:13px;font-weight:700;color:#7B5EA7;margin-bottom:6px}
 .recipe-tips-text{font-size:13px;color:#555;line-height:1.9;white-space:pre-line}
+
+/* source 표시 */
+.source-tag{display:inline-block;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;margin-bottom:8px}
+.source-tag.ai{background:rgba(158,127,191,0.12);color:#9E7FBF}
 
 /* 다시하기 버튼 */
 .reset-btn{width:calc(100% - 32px);margin:8px 16px 24px;padding:14px;border-radius:14px;border:1.5px solid #eee;background:#fff;color:#888;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;display:none}
 .reset-btn.show{display:block}
 .reset-btn:active{transform:scale(0.98)}
-
-/* source 표시 */
-.source-tag{display:inline-block;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;margin-bottom:8px}
-.source-tag.matrix{background:rgba(76,175,80,0.1);color:#4CAF50}
-.source-tag.ai{background:rgba(158,127,191,0.12);color:#9E7FBF}
-
-/* 언더톤 선택 버튼 */
-.ut-select-btn{display:flex;align-items:center;justify-content:space-between;padding:16px;border-radius:12px;border:1.5px solid #eee;background:#fff;cursor:pointer;transition:all .15s}
-.ut-select-btn:active{transform:scale(0.98);border-color:#9E7FBF}
-.ut-select-text{font-size:14px;font-weight:600;color:#1A1814}
-.ut-select-arrow{font-size:20px;color:#bbb}
-
-/* 선택 결과 표시 */
-.ut-result{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;border:1.5px solid #9E7FBF;background:rgba(158,127,191,0.04);cursor:pointer}
-.ut-result-swatch{width:40px;height:40px;border-radius:10px;border:1px solid rgba(0,0,0,0.1);flex-shrink:0}
-.ut-result-level{font-size:14px;font-weight:700;color:#1A1814}
-.ut-result-tone{font-size:11px;color:#888;margin-top:2px}
-.ut-result-change{margin-left:auto;font-size:12px;color:#9E7FBF;font-weight:600}
-
-/* 풀스크린 모달 */
-.ut-modal{position:fixed;inset:0;z-index:9999;background:#000;display:flex;flex-direction:column;overflow:hidden}
-.ut-modal-header{display:flex;align-items:center;justify-content:space-between;padding:max(env(safe-area-inset-top),12px) 16px 10px;background:#000;flex-shrink:0}
-.ut-modal-title{font-size:13px;font-weight:600;color:rgba(255,255,255,0.8)}
-.ut-modal-close{width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.ut-modal-img-wrap{position:relative;overflow:hidden;max-height:70vh;margin:0 auto;width:100%}
-.ut-modal-img{width:100%;height:100%;object-fit:cover;display:block}
-.ut-modal-zones{position:absolute;inset:0;display:flex;flex-direction:column}
-.ut-modal-side-labels{position:absolute;bottom:8px;left:0;right:0;display:flex;justify-content:space-between;padding:0 12px;pointer-events:none}
-.ut-side-label{font-size:10px;font-weight:700;color:rgba(255,255,255,0.55);letter-spacing:0.3px;text-shadow:0 1px 4px rgba(0,0,0,0.8)}
-
-/* 존 행 */
-.ut-zone{flex:1;display:flex;position:relative;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.08)}
-.ut-zone:last-child{border-bottom:none}
-.ut-zone-half{width:50%;position:relative;display:flex;align-items:center;justify-content:center;transition:all .15s;border-right:1px solid rgba(255,255,255,0.06)}
-.ut-zone-half:last-child{border-right:none}
-.ut-zone-half:active{background:rgba(255,255,255,0.15)}
-.ut-zone-half.picked{box-shadow:inset 0 0 0 3px #fff;background:rgba(255,255,255,0.15);border-radius:4px}
-.ut-zone-half.picked::after{content:'✓';position:absolute;top:4px;right:6px;font-size:14px;font-weight:900;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,0.8)}
-.ut-zone-num{font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:800;color:rgba(255,255,255,0.6);text-shadow:0 1px 4px rgba(0,0,0,0.8);pointer-events:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-60%)}
-.ut-zone-half.picked .ut-zone-num{color:#fff;font-size:18px;font-weight:900}
-.ut-zone-guide{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);white-space:nowrap;pointer-events:none;letter-spacing:0.3px;text-shadow:0 1px 4px rgba(0,0,0,0.8)}
-.ut-zone-half.picked .ut-zone-guide{color:#fff;font-size:12px}
 
 /* 애니메이션 */
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
@@ -198,6 +150,7 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
         </div>
       </div>
       <div class="analysis-desc" id="analysisDesc"></div>
+      <div id="analysisTagWrap"></div>
     </div>
   </div>
 
@@ -226,10 +179,8 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
           </button>
         </div>
 
-        <!-- 염색모: 하위 선택 없음 -->
-
         <!-- 탈색모 하위 선택: 횟수 -->
-        <div id="bleachedSub" style="display:none">
+        <div id="bleachedSub">
           <div class="base-option-title" style="margin-top:16px">탈색 횟수</div>
           <div class="base-btn-row" style="flex-wrap:wrap">
             <button class="base-btn sub-btn" data-sub="bleach1" onclick="selectSub(this)">
@@ -246,23 +197,6 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
       </div>
     </div>
   </div>
-
-  <!-- 언더톤 선택 모달 — 주석 처리 (나중에 복원 가능)
-  <div id="utModal" class="ut-modal" style="display:none">
-    <div class="ut-modal-header">
-      <span class="ut-modal-title">현재 모발과 가장 비슷한 구간을 선택하세요</span>
-      <button class="ut-modal-close" onclick="closeUndertoneModal()">✕</button>
-    </div>
-    <div class="ut-modal-img-wrap">
-      <img src="./base.jpg" class="ut-modal-img"/>
-      <div class="ut-modal-zones" id="utModalZones"></div>
-      <div class="ut-modal-side-labels">
-        <span class="ut-side-label left">한색 퇴색모</span>
-        <span class="ut-side-label right">난색 퇴색모 · 자연모</span>
-      </div>
-    </div>
-  </div>
-  -->
 
   <!-- 레시피 생성 버튼 -->
   <button class="recipe-btn" id="recipeBtn" onclick="generateRecipe()" disabled>레시피 생성</button>
@@ -286,22 +220,23 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
   <div style="height:40px"></div>
 </div>
 
-<script src="./guide-data.js"></script>
 <script>
 /* ══════════════════════════════════
-   STATE
+   STATE — guide-data.js 의존성 제거
 ══════════════════════════════════ */
 var ST = {
   imageBase64: null,
-  analysis: null,    // API 분석 결과
-  type: null,        // virgin, colored, bleached
-  subType: null      // colored: red, orange, neutral-brown / bleached: yellow, mat, pale-yellow
+  imageMediaType: null,
+  analysis: null,
+  type: null,
+  subType: null
 };
 
 var API_URL = '/api/recipe';
 
 /* ══════════════════════════════════
-   STEP 1: 사진 업로드 + API 분석
+   STEP 1: 사진 업로드 + AI 분석
+   — 핵심 개선: 동양인 모발 역공학 판단
 ══════════════════════════════════ */
 function handleUpload(input){
   var file = input.files[0];
@@ -313,20 +248,17 @@ function handleUpload(input){
     var base64Data = base64Full.split(',')[1];
     var mediaType = file.type || 'image/jpeg';
 
-    // 미리보기 표시
     var zone = document.getElementById('uploadZone');
     zone.classList.add('has-image');
     zone.innerHTML = '<img class="upload-preview" src="'+base64Full+'" alt="업로드 사진"/>';
     zone.onclick = null;
 
-    // 사진 변경 링크
     var changeEl = document.createElement('div');
     changeEl.className = 'upload-change';
     changeEl.textContent = '사진 변경';
     changeEl.onclick = function(){ document.getElementById('fileInput').click(); };
     zone.parentNode.insertBefore(changeEl, zone.nextSibling);
 
-    // 재업로드 핸들러
     document.getElementById('fileInput').onchange = function(ev){
       handleReupload(ev.target);
     };
@@ -351,7 +283,6 @@ function handleReupload(input){
 
     document.querySelector('.upload-preview').src = base64Full;
 
-    // 이전 결과 숨기기
     document.getElementById('analysisBox').classList.remove('show');
     document.getElementById('step2Wrap').classList.remove('show');
     document.getElementById('recipeWrap').classList.remove('show');
@@ -369,19 +300,73 @@ function analyzeImage(base64, mediaType){
   boxEl.classList.remove('show');
   loadEl.classList.add('show');
 
-  var sysPrompt = '너는 모발 색상 분석 전문가야. 사진 속 모발의 "보이는 색감"을 분석해.\n\n[금지] 멜라닌 레벨 숫자 추정, 시술 방법 언급(뭘 써라, 몇 회 탈색해라 등), 실현 가능성 판단, "도미넌트" 같은 영어 전문용어\n\n[할 것]\n- 감성적·전문적 색감 네이밍(한국어로)\n- 투명감·채도·뉘앙스·언더톤·질감을 자연스러운 한국어로 묘사\n- 이 색감이 자연 발색인지, 탈색 후 염색으로 연출된 색감인지를 판단하여 description에 포함\n\n[동양인 모발 기준]\n동양인의 적색멜라닌은 탈색 시 다음 순서로 깨짐: 검정→붉은기→주황→노랑→매트(단무지색)→연노랑→페일옐로.\n투명한 윤기, 깊이감, 황금빛이 은은하게 비치는 브라운은 단순 웜브라운이 아니라 탈색 후 한색계열을 입혀서 나온 색감일 가능성이 높음.\n이 판단을 description에 반영해.\n\nJSON만 응답:\n{\n  "color_name_ko": "한국어 색감명",\n  "tone": "cool" 또는 "warm" 또는 "neutral",\n  "hex": "#RRGGBB",\n  "description": "색감 묘사 + 자연 발색인지 탈색 후 연출인지 판단 포함. 2~3문장"\n}';
+  /* ── 분석 프롬프트: 역공학 판단 핵심 ── */
+  var sysPrompt = [
+    '너는 미용실 헤어 컬러리스트를 위한 모발 색감 역공학 분석 전문가야.',
+    '사진 속 모발의 "보이는 색감"을 분석하되, 단순히 보이는 색으로만 네이밍하지 마.',
+    '',
+    '■ 핵심 임무: "이 색감을 만들려면 어떤 조색을 했는가"를 역추론해.',
+    '',
+    '■ 동양인 모발 역공학 판단 기준:',
+    '동양인 버진모 = 적색 멜라닌이 가득 차 있어서 자연 상태에서는 검정~짙은 갈색만 가능.',
+    '탈색 시 멜라닌이 깨지는 순서: 검정 → 붉은기 → 주황 → 노랑 → 매트(단무지색) → 연노랑 → 페일옐로(미색).',
+    '',
+    '■ 투명한 브라운 = 탈색 후 한색계열 조합일 가능성 높음:',
+    '- 투명하고 윤기 있는 베이지브라운, 모카브라운, 밀크브라운 → 탈색 후 블루+바이올렛 또는 애쉬+바이올렛으로 적색 멜라닌을 중화한 결과',
+    '- 황금빛이 은은하게 비치면서도 붉은기가 없는 브라운 → 한색(블루, 애쉬)으로 적색을 눌러서 나온 투명감',
+    '- 적색기 없는 쿨한 브라운 = 절대 단순 웜브라운이 아님',
+    '- 이런 색감을 "웜 모카 브라운", "카라멜 브라운" 같은 웜 네이밍으로 잡으면 틀린 레시피가 나감',
+    '',
+    '■ 진짜 웜 브라운의 특징:',
+    '- 붉은기가 선명하게 비침, 적갈색 느낌',
+    '- 따뜻하되 탁한 느낌 (투명감 없음)',
+    '- 금색보다는 구리빛, 앰버빛',
+    '',
+    '■ 판단 분기:',
+    '투명감+윤기+붉은기없음+깊이감 → construction: "bleach_cool" (탈색 후 한색계열 조합)',
+    '투명감+파스텔+연한 색감 → construction: "bleach_pastel" (탈색 3회이상 후 파스텔 착색)',
+    '붉은기 선명+따뜻+탁함 → construction: "warm_natural" (웜 계열 자연 발색 또는 난색 조합)',
+    '선명한 단일 색감(블루,핑크 등) → construction: "bleach_vivid" (탈색 후 단일 색감 착색)',
+    '어두운 브라운 뉘앙스 → construction: "low_lift" (탈색 없이 또는 최소 리프트)',
+    '',
+    '■ 조색 구성 추론 (recipe_direction):',
+    '이 색감을 만들기 위해 어떤 계열의 염모제 조합이 필요한지 추론해.',
+    '예시:',
+    '- "블루+바이올렛 베이스로 적색을 중화한 투명 쿨브라운"',
+    '- "애쉬 베이스에 바이올렛 소량 믹스로 연출한 라벤더그레이"',
+    '- "레드 염모제 단독으로 연출한 비비드 레드"',
+    '- "핑크+클리어 믹스로 연출한 파스텔 핑크"',
+    '',
+    '[금지] 멜라닌 레벨 숫자 추정, 시술 방법 구체적 언급(몇 회 탈색해라 등), "도미넌트" 같은 영어 전문용어',
+    '',
+    '[할 것]',
+    '- 감성적·전문적 색감 네이밍(한국어로)',
+    '- 투명감·채도·뉘앙스·언더톤·질감을 자연스러운 한국어로 묘사',
+    '- construction 판단 (위 5가지 중 택1)',
+    '- recipe_direction: 조색 방향 한 줄 추론',
+    '',
+    'JSON만 응답:',
+    '{',
+    '  "color_name_ko": "한국어 색감명",',
+    '  "tone": "cool" 또는 "warm" 또는 "neutral",',
+    '  "hex": "#RRGGBB",',
+    '  "construction": "bleach_cool|bleach_pastel|warm_natural|bleach_vivid|low_lift",',
+    '  "recipe_direction": "조색 방향 추론 한 줄",',
+    '  "description": "색감 묘사 + 왜 이런 construction 판단을 했는지. 2~3문장"',
+    '}'
+  ].join('\n');
 
   fetch(API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 500,
+      max_tokens: 600,
       messages: [{
         role: 'user',
         content: [
           { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
-          { type: 'text', text: '이 사진 속 모발의 색감을 분석해줘.' }
+          { type: 'text', text: '이 사진 속 모발의 색감을 역공학 분석해줘.' }
         ]
       }],
       system: sysPrompt
@@ -412,11 +397,32 @@ function showAnalysis(result){
   var box = document.getElementById('analysisBox');
   document.getElementById('analysisSwatch').style.background = result.hex || '#ccc';
   document.getElementById('analysisName').textContent = result.color_name_ko || '—';
-  document.getElementById('analysisLevel').textContent = (result.tone==='cool'?'한색(쿨) 계열':result.tone==='warm'?'난색(웜) 계열':'뉴트럴 계열');
+
+  // 톤 표시
+  var toneMap = {cool:'한색(쿨) 계열', warm:'난색(웜) 계열', neutral:'뉴트럴 계열'};
+  document.getElementById('analysisLevel').textContent = toneMap[result.tone] || '—';
+
   document.getElementById('analysisDesc').textContent = result.description || '';
+
+  // construction 태그 표시
+  var tagWrap = document.getElementById('analysisTagWrap');
+  var conLabels = {
+    'bleach_cool': '탈색 + 한색 계열 조합 추정',
+    'bleach_pastel': '탈색 + 파스텔 착색 추정',
+    'warm_natural': '웜/난색 계열',
+    'bleach_vivid': '탈색 + 비비드 착색 추정',
+    'low_lift': '저리프트 / 톤다운'
+  };
+  var conClass = (result.construction && result.construction.indexOf('bleach') >= 0) ? 'bleached' : 'natural';
+  var conLabel = conLabels[result.construction] || result.construction || '';
+  if(conLabel){
+    tagWrap.innerHTML = '<div class="analysis-tag '+conClass+'">'+conLabel+'</div>';
+  } else {
+    tagWrap.innerHTML = '';
+  }
+
   box.classList.add('show');
 
-  // STEP 2 표시
   setTimeout(function(){
     document.getElementById('step2Wrap').classList.add('show');
   }, 300);
@@ -425,32 +431,18 @@ function showAnalysis(result){
 /* ══════════════════════════════════
    STEP 2: 베이스 선택
 ══════════════════════════════════ */
-
-/* 존 데이터: 레벨별 색상 + 가이드 텍스트 (위→아래 = 20→8) */
-var ZONE_DATA = [
-  {lv:20, cool:'#bbaea3', warm:'#bbaa9e', coolGuide:'미색',        warmGuide:'아이보리'},
-  {lv:18, cool:'#c6b9ac', warm:'#c3b2a6', coolGuide:'아이보리',    warmGuide:'연노랑'},
-  {lv:16, cool:'#b39777', warm:'#d9b586', coolGuide:'매트~노랑',   warmGuide:'노랑~주황'},
-  {lv:14, cool:'#b28357', warm:'#c1753d', coolGuide:'매트~노랑 잔류', warmGuide:'주황~노랑'},
-  {lv:12, cool:'#b0733f', warm:'#aa461f', coolGuide:'뉴트럴브라운', warmGuide:'주황'},
-  {lv:10, cool:'#956446', warm:'#6e2019', coolGuide:'뉴트럴브라운', warmGuide:'레드'},
-  {lv:8,  cool:'#3d1609', warm:'#420e0e', coolGuide:'뉴트럴브라운', warmGuide:'레드'}
-];
-
 function selectType(btn){
   document.querySelectorAll('[data-type]').forEach(function(b){ b.classList.remove('selected'); });
   btn.classList.add('selected');
   ST.type = btn.dataset.type;
   ST.subType = null;
 
-  // 하위 선택 초기화
   document.querySelectorAll('.sub-btn').forEach(function(b){ b.classList.remove('selected'); });
   document.getElementById('bleachedSub').style.display = 'none';
 
   if(ST.type === 'virgin'){
     // 바로 ready
   } else if(ST.type === 'colored'){
-    // 염색모: 하위 선택 없이 바로 ready
     ST.subType = 'colored';
   } else if(ST.type === 'bleached'){
     document.getElementById('bleachedSub').style.display = 'block';
@@ -459,7 +451,6 @@ function selectType(btn){
 }
 
 function selectSub(btn){
-  // 같은 그룹 내 선택 초기화
   btn.parentNode.querySelectorAll('.sub-btn').forEach(function(b){ b.classList.remove('selected'); });
   btn.classList.add('selected');
   ST.subType = btn.dataset.sub;
@@ -468,12 +459,9 @@ function selectSub(btn){
 
 function checkReady(){
   var ready = false;
-
-  if(ST.analysis && ST.type === 'virgin'){
-    ready = true;
-  } else if(ST.analysis && (ST.type === 'colored' || ST.type === 'bleached') && ST.subType){
-    ready = true;
-  }
+  if(ST.analysis && ST.type === 'virgin') ready = true;
+  else if(ST.analysis && ST.type === 'colored') ready = true;
+  else if(ST.analysis && ST.type === 'bleached' && ST.subType) ready = true;
 
   var btn = document.getElementById('recipeBtn');
   if(ready){
@@ -485,196 +473,91 @@ function checkReady(){
 }
 
 /* ══════════════════════════════════
-   STEP 3: 레시피 생성
+   STEP 3: 레시피 생성 — 순수 AI + MD 원리
+   G() 매칭 완전 제거
 ══════════════════════════════════ */
 function generateRecipe(){
   var btn = document.getElementById('recipeBtn');
   btn.disabled = true;
   btn.textContent = '레시피 생성 중...';
 
-  var tarColor = analysisToColor(ST.analysis);
-  var curZone = baseToCurZone();
-  var tarZone = guessTargetZone(ST.analysis);
-
-  // G() 매칭 시도
-  if(tarColor && curZone){
-    var key = tarColor + '_' + curZone + '_' + tarZone;
-    var recipe = GUIDE[key];
-
-    // 정확한 키 없으면 tarZone 퍼지 매칭
-    if(!recipe){
-      var fallbacks = tarZoneFallbacks(tarZone);
-      for(var i=0; i<fallbacks.length; i++){
-        var fk = tarColor + '_' + curZone + '_' + fallbacks[i];
-        if(GUIDE[fk]){ recipe = GUIDE[fk]; break; }
-      }
-    }
-
-    if(recipe){
-      // G() 매칭 성공 — 검증된 레시피
-      var procText = recipe.proc.replace(/\\n/g, '\n');
-      var detText = recipe.det.replace(/\\n/g, '\n');
-      var formatted = {
-        summary: procText,
-        tips: detText
-      };
-      showRecipe(formatted, 'matrix');
-      return;
-    }
-  }
-
-  // G() 매칭 실패 → AI 생성
-  generateRecipeAPI();
-}
-
-/* 현재 베이스(STEP 2 선택) → G() curZone 매핑 */
-function baseToCurZone(){
-  if(ST.type === 'virgin') return 'low';
-  if(ST.type === 'colored') return 'mid';
-  if(ST.type === 'bleached'){
-    if(ST.subType === 'bleach1') return 'mid';
-    if(ST.subType === 'bleach2') return 'high16';
-    if(ST.subType === 'bleach3') return 'high20';
-  }
-  return 'low';
-}
-
-/* 분석 결과에서 목표 tarZone 추정 */
-function guessTargetZone(analysis){
-  var desc = (analysis.description || '').toLowerCase();
-  var name = (analysis.color_name_ko || '').toLowerCase();
-
-  // 파스텔/투명/맑은/실버/백모 → 18~20
-  if(name.indexOf('파스텔')>=0 || name.indexOf('실버')>=0 || name.indexOf('백모')>=0 ||
-     desc.indexOf('투명')>=0 || desc.indexOf('파스텔')>=0 || desc.indexOf('실버')>=0) return '18';
-
-  // 선명한/비비드 → 16~18
-  if(desc.indexOf('선명')>=0 || desc.indexOf('비비드')>=0) return '16';
-
-  // 스모키/어두운/다크/딥 → mid~14
-  if(desc.indexOf('스모키')>=0 || desc.indexOf('어두운')>=0 || desc.indexOf('다크')>=0 ||
-     desc.indexOf('딥')>=0 || desc.indexOf('깊이감')>=0) return 'mid';
-
-  // 기본: 색감이 보이는 최소 구간
-  return '16';
-}
-
-/* tarZone 퍼지 매칭 — 정확한 키가 없을 때 인접 구간 시도 */
-function tarZoneFallbacks(tz){
-  var map = {
-    '20': ['18','high','sky'],
-    '18': ['16','20','high'],
-    '16': ['18','14','mid'],
-    '14': ['mid','16'],
-    'mid': ['14','low','mid8'],
-    'mid8': ['mid','low'],
-    'low': ['mid','vlow'],
-    'vlow': ['low'],
-    'high': ['18','20'],
-    'sky': ['20','18','high']
-  };
-  return map[tz] || [];
-}
-
-function levelToZone(lv){
-  if(lv <= 8) return 'low';
-  if(lv <= 14) return 'mid';
-  if(lv <= 16) return '16';
-  if(lv <= 18) return '18';
-  return '20';
-}
-
-function analysisToColor(a){
-  var name = (a.color_name_ko || '').toLowerCase();
-  // 라벤더애쉬 먼저 체크 (애쉬보다 앞에)
-  if(name.indexOf('라벤더')>=0) return 'lavash';
-  // 레드바이올렛 먼저 (레드, 바이올렛보다 앞에)
-  if(name.indexOf('레드바이올렛')>=0 || name.indexOf('레드 바이올렛')>=0) return 'rv';
-  if(name.indexOf('블루')>=0) return 'blue';
-  if(name.indexOf('애쉬')>=0 || name.indexOf('그레이')>=0 || name.indexOf('실버')>=0) return 'ash';
-  if(name.indexOf('바이올렛')>=0 || name.indexOf('보라')>=0) return 'violet';
-  if(name.indexOf('핑크')>=0) return 'pink';
-  if(name.indexOf('레드')>=0) return 'red';
-  return null;
-}
-
-function generateRecipeAPI(){
   var baseDesc;
   var subLabels = {
-    'colored': '염색모 (동양인 적색멜라닌 기반, 붉은기·주황기 잔류 가능성 높음)',
-    'bleach1': '탈색모 1회 (주황~노랑 잔류 예상)',
-    'bleach2': '탈색모 2회 (노랑~매트 잔류 예상)',
-    'bleach3': '탈색모 3회 이상 (연노랑~페일옐로 베이스 예상)'
+    'colored': '염색모 (탈색 없이 염색만 한 상태. 동양인 적색멜라닌 기반, 붉은기·주황기 잔류 가능성 높음)',
+    'bleach1': '탈색모 1회 (주황~노랑 잔류 예상, 약 10~14레벨)',
+    'bleach2': '탈색모 2회 (노랑~매트 잔류 예상, 약 14~16레벨)',
+    'bleach3': '탈색모 3회 이상 (연노랑~페일옐로 베이스 예상, 약 18~20레벨)'
   };
 
   if(ST.type === 'virgin'){
-    baseDesc = '버진모 (동양인, 적색멜라닌 가득)';
+    baseDesc = '버진모 (동양인, 적색멜라닌 가득, 약 5레벨 자연 검정)';
   } else {
     baseDesc = subLabels[ST.subType] || ST.type;
   }
 
-  var knowledgeBase = [
-    '=== 멜라닌 컬러 가이드 지식 (이걸 기반으로 판단해. 절대 그대로 출력하지 마) ===',
+  /* ── MD 원리 기반 시스템 프롬프트 ── */
+  var sysPrompt = [
+    '너는 미용실 디자이너를 위한 모발 컬러 레시피 전문가야.',
+    'AI 분석 결과와 현재 모발 상태를 보고 실전 레시피를 만들어.',
     '',
-    '[색감별 구조]',
+    '=== 멜라닌 컬러 가이드 원리 (이걸 기반으로 판단해. 절대 그대로 출력하지 마) ===',
     '',
-    '블루 — 한색+난색 확정',
-    '애쉬 — 한색+난색 확정',
-    '바이올렛 — 한색+난색 확정',
-    '라벤더애쉬 — 한색+난색 확정',
-    '레드 — 한색+난색 확정 (파워 강해서 단순, 보색 불필요, 한색/난색 거의 동일)',
-    '레드바이올렛 — 한색+난색 확정 (레드+바이올렛 중간, 자주색·마젠타)',
-    '핑크 — 한색+난색 확정 (바이올렛·RV와 한끗차)',
+    '[동양인 모발 멜라닌 구조]',
+    '버진모 = 적색 멜라닌이 가득 찬 상태 (약 5레벨)',
+    '탈색 시 멜라닌이 깨지는 순서: 검정→붉은기→주황→노랑→매트(단무지색)→연노랑→페일옐로(미색)',
+    '탈색 횟수별 예상 도달 레벨: 1회→10~14레벨, 2회→14~16레벨, 3회 이상→18~20레벨 (모발편차 있음)',
     '',
-    '[레드]',
-    '염모제: 전 구간 레드 염모제',
-    '5·6: 다크레드 / 8·10·12·14: 레드브라운',
-    '16: 레드 — 노랑기 남으면 레드오렌지 → 바이올렛 소량 믹스',
-    '18: 비비드레드 / 20: 밝은레드 (보색중화 불필요)',
-    '톤다운: 10·12→브라운믹스, 5·6·8→브라운 또는 블루블랙 소량',
+    '[색감별 핵심 원리]',
     '',
-    '[레드바이올렛]',
-    '맑고 투명한 RV = 최소 18레벨 이상 연노랑 베이스',
-    '저명도에서는 다크레드로 묻힘',
-    '염모제: 전 구간 레드바이올렛',
-    '16 너프: 노랑기→레드 치우침→바이올렛 소량 믹스',
-    '5·6: 다크레드 / 8·6: 플럼브라운 / 10·12·14: 적보라(로즈와인·버건디BR)',
-    '16: 레드바이올렛 / 18: 선명한RV / 20: 맑고 투명한RV',
+    '한색 계열 (블루, 애쉬, 바이올렛, 라벤더애쉬):',
+    '- 적색 멜라닌의 반대 방향이라 발색 어려움',
+    '- 최소 노랑~연노랑 베이스(16레벨 이상) 필요',
+    '- 선명한 발색은 18레벨 이상에서만 가능',
+    '- 저명도(5~8)에서는 다크 쿨브라운으로 수렴',
+    '- 중명도(10~14)에서는 브라운+뉘앙스가 한계',
+    '- 보색: 주황→블루, 노랑→바이올렛, 매트→시나본브라운',
     '',
-    '[핑크]',
-    '맑고 파스텔한 핑크 = 최소 18레벨 이상 연노랑 베이스',
-    '파스텔+파스텔 — 클리어 믹스로 더욱 맑게',
-    '염모제: 전 구간 핑크',
-    '5: 다크레드 / 8·6: 플럼브라운 / 10·12: 로즈브라운 / 14·16: 적핑크',
-    '18: 선명한 파스텔핑크 / 20: 맑고 투명한 파스텔핑크',
-    '16 너프 = 코럴브라운 (바이올렛이나 RV 소량 믹스→적핑크 연출 가능)',
-    '14 너프: 코럴브라운 쪽으로 빠질 수 있음',
-    '18·20: 클리어 믹스하면 더 맑고 파스텔',
-    '난색: 적핑크·적보라 쪽 치우침 (잔류 붉은기)',
+    '난색 계열 (레드, 레드바이올렛, 핑크):',
+    '- 적색 멜라닌과 같은 방향이라 발색 수월',
+    '- 보색 불필요, 한색/난색 퇴색모 차이 거의 없음',
+    '- 레드: 파워 강해서 구조 단순. 16레벨 노랑기 남으면 레드오렌지→바이올렛 소량 믹스',
+    '- 레드바이올렛: 맑은 RV는 18레벨 이상. 저명도=다크레드 묻힘',
+    '- 핑크: 맑은 파스텔 핑크=18레벨 이상. 16 너프=코럴브라운. 클리어 믹스로 파스텔',
     '',
-    '[라벤더애쉬]',
-    '난색 중명도 보색: 블루 보색',
-    '18·20: 탈색 캔버스 1개만',
-    '노랑기 남으면 애쉬 쪽으로 수렴',
-    '블루 소량 믹스→청보라 애쉬로 보정',
+    '바이올렛 특수 규칙:',
+    '- 한색 퇴색모에서는 붉은 멜라닌 부족 → 바이올렛만 입히면 차분한 브라운 수렴',
+    '- 한색 퇴색모에서 바이올렛 원할 때 → 레드바이올렛 염모제로 적색 보강',
+    '- 난색 퇴색모에서는 적색이 잔류해 바이올렛이 자연스럽게 적보라로 수렴',
+    '',
+    '라벤더애쉬 특수 규칙:',
+    '- 난색에서 보색: 블루 보색 (그린 불필요)',
+    '- 노랑기 남으면 애쉬 쪽으로 수렴',
+    '- 블루 소량 믹스→청보라 애쉬로 보정',
+    '',
+    '[투명한 브라운/블론드 = 한색 조합의 결과물]',
+    '*** 이 섹션이 핵심 ***',
+    '투명하고 윤기 있는 베이지·모카·밀크 브라운 = 대부분 탈색 후 블루+바이올렛 또는 애쉬+바이올렛 조합',
+    '→ 적색 멜라닌을 중화해서 나온 결과물이지, 골드나 웜 염모제를 쓴 게 아님',
+    '→ 레시피도 한색 계열로 잡아야 함',
+    '→ "블루+바이올렛 베이스 투명 쿨브라운" / "애쉬+바이올렛 쿨 베이지" 등으로 방향 잡기',
     '',
     '[산화제]',
     '3% 약: 탈색모 착색·톤다운',
     '6% 중: 버진모 톤업·맑은 발색 (톤다운에도 가능, 유지력 짧아질 위험)',
-    '9% 강: 리프팅 극대화, 탈색약과 함께. 두피보호제 필수',
+    '9% 강: 리프팅 극대화, 탈색약과 함께. 두피보호제 필수, 두피 안 닿게',
     '12% 극강: 투명 색감 전용. 두피보호제 필수, 클리닉 병행',
     '강모 버진모에서는 9~12%가 오히려 효과적',
+    '원리 나열 금지 — 결과만 출력',
     '',
-    '[컨트롤컬러 — 버진모 전용 테크닉에서만 사용]',
-    '컨트롤컬러 = 직접 염료. 모발 외부에만 부착, 유지력 짧음',
-    '버진모에서 고명도 염모제(13·15)와 함께 믹스하여 탈색+착색을 한번에 진행할 때만 사용',
-    '보색중화 시에는 컨트롤컬러 말고 일반 염모제에 소량 믹스로 충분',
+    '[컨트롤컬러 = 직접 염료]',
+    '모발 외부에만 부착, 유지력 짧음',
+    '염모제에 추가로 얹는 개념 (염모제 100 + CC 30 = 130)',
+    '비율: 탈색모 최대 ~30%, 버진모/염색모 최대 ~50%',
+    '탈색모 10%만 넣어도 비비드 주의',
     '',
-    '[버진모 테크닉]',
-    '버진모 = 적색멜라닌 가득',
-    '탈색 없이 염모제만 → 브라운+뉘앙스가 한계 (레드 제외)',
-    '레드→가장 잘 발색 / 바이올렛·핑크→와인빛·퍼플빛 브라운 / 블루·애쉬·매트→쿨브라운·매트브라운',
-    '탈색 없이 최대한: 고명도 염모제(13·15)+컨트롤컬러+9%~12% → 탈색과 착색을 한번에',
+    '[버진모 테크닉 — 탈색 없이 최대치]',
+    '버진모 = 적색멜라닌 가득 → 브라운+뉘앙스가 한계 (레드 제외)',
+    '탈색 없이 최대한: 고명도 염모제(13·15레벨)+컨트롤컬러+9%~12% → 원샷(탈색+착색 한번에)',
     '난색CC: +레드→선명한레드 / +레드+바이올렛→투명한RV / +매트→매트브라운',
     '한색CC: +블루→적빛없는 투명 베이지브라운 / +블루+바이올렛→투명 쿨브라운 / +바이올렛→와인빛 퍼플브라운',
     '"탈색은 싫은데 쿨브라운 해주세요"→이 테크닉 활용',
@@ -689,13 +572,14 @@ function generateRecipeAPI(){
     '샴푸실 토닝: 파스텔 착색·보색중화',
     '강한 잔류/염색모/버진모→무조건 탈색 (토닝 대상 아님)',
     '미세한 잔류→토닝으로 정리 가능 (판단은 디자이너)',
+    '토닝 산화제: 걱정되면 6%+트리트먼트/물, OK면 3%',
     '',
-    '[보색]',
+    '[보색 규칙]',
     '주황→블루, 노랑→바이올렛, 매트→시나본브라운',
     '난색(레드,핑크,RV)은 보색 불필요',
     '',
-    '[주의: 매트 염모제 사용 제한]',
-    '매트 염모제 = 초록 계열. 카키/올리브 계열 요청일 때만 사용. 그 외에는 절대 넣지 마',
+    '[매트 염모제 사용 제한]',
+    '매트 = 초록 계열. 카키/올리브 요청일 때만. 그 외 절대 넣지 마',
     '',
     '[퇴색 원리]',
     '퇴색 시 인공 색소(블루·애쉬 등) 먼저 빠짐→자연 멜라닌(붉은기) 돌아옴',
@@ -704,8 +588,7 @@ function generateRecipeAPI(){
     '[백모/화이트블론드]',
     '탈색→18+연노랑 베이스→미색 핑크+클리어 착색→중화→백모 수렴',
     '10분마다 체크, 연핑크 발현 시 헹굼',
-    '18+균일 연노랑 필수 (얼룩 있으면 얼룩 그대로)',
-    '버진모→백모: 탈색 3~4회 이상, 손상 부담 큼',
+    '18+균일 연노랑 필수',
     '',
     '[블론드 분기]',
     '18+연노랑 위에 극소량 파스텔 착색',
@@ -718,17 +601,14 @@ function generateRecipeAPI(){
     '[톤다운]',
     '브라운 믹스 기본',
     '5·6·8: 브라운 또는 블루블랙 소량 (핑크는 브라운만)',
-    '20→5·6·8: 색이 새빨갛게 나올 수 있으니 주의 (레드)',
+    '20→5·6·8: 새빨갛게 나올 수 있으니 주의 (레드)',
     '',
     '[탈색 횟수 기준]',
     '한색계열(블루,애쉬,바이올렛,라벤더애쉬)→최소 노랑기 베이스 필요→버진모에서 최소 탈색 2회',
-    '탈색 후에도 노랑기가 남아있다면 바이올렛을 믹스하여 어두운 애쉬그레이로 표현 가능',
-    '난색계열(레드,RV,핑크)→적색멜라닌과 같은 방향이라 탈색 1~2회',
+    '난색계열(레드,RV,핑크)→적색멜라닌과 같은 방향→탈색 1~2회',
     '맑고 투명한 색감(파스텔,블론드,백모)→18+베이스 필요→탈색 3회 이상',
-    '뉴트럴/웜 브라운→탈색 1~2회'
-  ].join('\n');
-
-  var outputRules = [
+    '뉴트럴/웜 브라운→탈색 1~2회',
+    '투명한 쿨브라운→탈색 2회 + 블루+바이올렛 또는 애쉬+바이올렛 조합',
     '',
     '=== 출력 규칙 ===',
     '',
@@ -737,17 +617,18 @@ function generateRecipeAPI(){
     '',
     '[summary]',
     '반말. 시술 흐름 한 줄. 탈색 횟수 + 어떤 염모제 + 무슨 믹스.',
-    '예: "탈색 2회 후 애쉬 염모제에 바이올렛 소량 믹스하여 착색"',
-    '감상, 설명, 레벨 숫자 넣지 마.',
+    '예: "탈색 2회 후 블루+바이올렛 소량 믹스하여 착색 → 투명 쿨브라운"',
+    '예: "고명도 염모제(13레벨)+컨트롤컬러 블루+바이올렛+9% 산화제로 원샷"',
+    '감상, 설명, 레벨 숫자 넣지 마 (단, 고명도 염모제 레벨은 예외).',
     '',
     '[tips]',
     '존댓말(~해요, ~하세요, ~있어요). 줄바꿈(\\n)으로 블록 구분.',
-    '① 왜 이렇게 해야 하는지 (베이스 조건, 보색 필요 이유 등)',
-    '② "탈색이 제한된다면," — 두 가지 분기:',
-    '   - 버진모: 고명도 염모제(13,15레벨)+컨트롤컬러+9% 또는 12% 산화제로 탈색과 착색을 한번에 진행하는 대안',
-    '   - 탈색은 했지만 횟수가 부족할 때: 현재 베이스에서 가능한 너프 색감 제안. 잔류 색소(노랑기, 주황기 등)가 남아있을 때 그걸 활용하거나 보색으로 눌러서 가능한 색감을 안내. 예) "노랑기가 남아있다면 바이올렛을 소량 믹스하여 어두운 애쉬그레이로 연출 가능해요", "주황기가 남아있다면 블루를 소량 믹스하여 뉴트럴 브라운으로 정리 가능해요"',
-    '   레벨·산화제 숫자는 이 블록에서만',
-    '③ 주의사항 한 줄 (두피보호제, 손상 등)',
+    '① 왜 이렇게 해야 하는지 (이 사진의 색감이 어떤 조합으로 만들어진 것인지 설명)',
+    '② 잔류 색소별 대응 (노랑기/주황기/매트기가 남아있을 때 어떻게 보색중화)',
+    '③ "탈색이 제한된다면," — 두 가지 분기:',
+    '   - 버진모: 고명도 염모제+컨트롤컬러+9%/12% 산화제로 원샷 대안',
+    '   - 탈색 부족: 현재 베이스에서 가능한 너프 색감 제안',
+    '④ 주의사항 한 줄 (두피보호제, 손상 등)',
     '',
     '[절대 금지]',
     '- 숫자 비율 (7:3, 1:1.5, 80% 등). "소량"으로만',
@@ -755,13 +636,31 @@ function generateRecipeAPI(){
     '- 디자이너가 당연히 아는 것 (체온, 균일 도포, 중간부터 발라라 등)',
     '- 구체적 염모제 색감명 (골드베이지, 카라멜브라운 등). 범주만 (웜계열, 뉴트럴브라운계열 등)',
     '- "탈색 없이도 충분히 가능". 탈색 필요하면 솔직하게',
-    '- 원리 나열, 교육, ** 기호',
-    '- 동양인 모발은 적색멜라닌이 강함. 사진이 웜으로 보여도 실제 조색은 뉴트럴+애쉬·매트일 수 있음. 사진을 액면 그대로 웜으로 판단하지 마'
+    '- 원리 나열, 교육, ** 기호, step1 step2 구분',
+    '- 매트 염모제 사용 (카키/올리브 요청 아닌 한 절대 금지)',
+    '- 컨트롤컬러를 보색중화 용도로 사용 (보색중화는 일반 염모제 소량 믹스로)',
+    '- 웜 분석이라고 해서 무조건 웜 레시피. construction 판단을 따라',
+    '',
+    '[핵심 판단 규칙]',
+    'AI 분석의 construction이 "bleach_cool"이면 → 한색 계열(블루, 애쉬, 바이올렛 등) 조합 레시피',
+    'construction이 "bleach_pastel"이면 → 해당 색감 + 클리어 믹스 레시피',
+    'construction이 "warm_natural"이면 → 난색 계열 또는 뉴트럴 레시피',
+    'construction이 "bleach_vivid"이면 → 해당 색감 단독 레시피',
+    'construction이 "low_lift"이면 → 저리프트 또는 톤다운 레시피',
+    '',
+    '사진의 "보이는 색"이 아니라 "만드는 방법"을 레시피로 출력해.'
   ].join('\n');
 
-  var sysPrompt = knowledgeBase + outputRules;
-
-  var userMsg = '현재 모발: ' + baseDesc + '\n색감 참고: ' + ST.analysis.description + '\n\n레시피 만들어줘.';
+  var userMsg = [
+    '현재 모발: ' + baseDesc,
+    'AI 분석 색감: ' + ST.analysis.color_name_ko,
+    '톤: ' + ST.analysis.tone,
+    'construction: ' + (ST.analysis.construction || 'unknown'),
+    '조색 방향: ' + (ST.analysis.recipe_direction || ''),
+    '색감 설명: ' + ST.analysis.description,
+    '',
+    '레시피 만들어줘.'
+  ].join('\n');
 
   fetch(API_URL, {
     method: 'POST',
@@ -779,7 +678,7 @@ function generateRecipeAPI(){
       var txt = data.content.map(function(b){ return b.text||''; }).join('');
       txt = txt.replace(/```json|```/g,'').trim();
       var recipe = JSON.parse(txt);
-      showRecipe(recipe, 'ai');
+      showRecipe(recipe);
     } catch(e) {
       showRecipeError();
     }
@@ -789,24 +688,17 @@ function generateRecipeAPI(){
   });
 }
 
-function showRecipe(recipe, source){
+function showRecipe(recipe){
   var btn = document.getElementById('recipeBtn');
   btn.style.display = 'none';
 
-  // 소스 태그
   var srcEl = document.getElementById('recipeSource');
-  if(source === 'matrix'){
-    srcEl.innerHTML = '<span class="source-tag matrix">검증된 룰매트릭스</span>';
-  } else {
-    srcEl.innerHTML = '<span class="source-tag ai">AI 원리 기반 생성</span>';
-  }
+  srcEl.innerHTML = '<span class="source-tag ai">AI 원리 기반 생성</span>';
 
-  // 써머리 헤더 (proc 전체 또는 summary)
   var hdr = document.getElementById('recipeHeader');
   var summaryHtml = (recipe.summary || '').replace(/\n/g, '<br>');
   hdr.innerHTML = '<div class="recipe-from-to">' + summaryHtml + '</div>';
 
-  // 실무조언 (det 또는 tips)
   var body = document.getElementById('recipeBody');
   var html = '';
   if(recipe.tips){
@@ -815,11 +707,9 @@ function showRecipe(recipe, source){
   }
   body.innerHTML = html;
 
-  // 표시
   document.getElementById('recipeWrap').classList.add('show');
   document.getElementById('resetBtn').classList.add('show');
 
-  // 스크롤
   setTimeout(function(){
     document.getElementById('recipeWrap').scrollIntoView({behavior:'smooth', block:'start'});
   }, 200);
@@ -838,17 +728,14 @@ function showRecipeError(){
 function resetAll(){
   ST = { imageBase64:null, imageMediaType:null, analysis:null, type:null, subType:null };
 
-  // 업로드 영역 초기화
   var zone = document.getElementById('uploadZone');
   zone.classList.remove('has-image');
   zone.innerHTML = '<div class="icon">📸</div><div class="txt">고객이 원하는 헤어 컬러 사진을<br><b>탭하여 업로드</b>해주세요</div>';
   zone.onclick = function(){ document.getElementById('fileInput').click(); };
 
-  // 변경 링크 제거
   var changeEl = document.querySelector('.upload-change');
   if(changeEl) changeEl.remove();
 
-  // fileInput 완전 교체 (이벤트 꼬임 방지)
   var oldInput = document.getElementById('fileInput');
   var newInput = document.createElement('input');
   newInput.type = 'file';
@@ -858,13 +745,11 @@ function resetAll(){
   newInput.onchange = function(ev){ handleUpload(ev.target); };
   oldInput.parentNode.replaceChild(newInput, oldInput);
 
-  // UI 숨기기
   document.getElementById('analysisBox').classList.remove('show');
-  document.getElementById('analysisBox').innerHTML = '<div class="analysis-label">AI 분석 결과</div><div class="analysis-color-row"><div class="analysis-swatch" id="analysisSwatch"></div><div><div class="analysis-color-name" id="analysisName">—</div><div class="analysis-color-level" id="analysisLevel">—</div></div></div><div class="analysis-desc" id="analysisDesc"></div>';
+  document.getElementById('analysisBox').innerHTML = '<div class="analysis-label">AI 분석 결과</div><div class="analysis-color-row"><div class="analysis-swatch" id="analysisSwatch"></div><div><div class="analysis-color-name" id="analysisName">—</div><div class="analysis-color-level" id="analysisLevel">—</div></div></div><div class="analysis-desc" id="analysisDesc"></div><div id="analysisTagWrap"></div>';
   document.getElementById('analyzing').classList.remove('show');
   document.getElementById('step2Wrap').classList.remove('show');
 
-  // 레시피 버튼 완전 초기화
   var btn = document.getElementById('recipeBtn');
   btn.style.display = 'none';
   btn.classList.remove('show');
@@ -874,11 +759,9 @@ function resetAll(){
   document.getElementById('recipeWrap').classList.remove('show');
   document.getElementById('resetBtn').classList.remove('show');
 
-  // 선택 초기화
   document.querySelectorAll('.selected').forEach(function(b){ b.classList.remove('selected'); });
   document.getElementById('bleachedSub').style.display = 'none';
 
-  // 레시피 내용 초기화
   document.getElementById('recipeSource').innerHTML = '';
   document.getElementById('recipeHeader').innerHTML = '';
   document.getElementById('recipeBody').innerHTML = '';
