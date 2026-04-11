@@ -226,34 +226,20 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
           </button>
         </div>
 
-        <!-- 염색모 하위 선택 -->
-        <div id="coloredSub" style="display:none">
-          <div class="base-option-title" style="margin-top:16px">현재 잔류 색감</div>
-          <div class="base-btn-row" style="flex-wrap:wrap">
-            <button class="base-btn sub-btn" data-sub="red" onclick="selectSub(this)">
-              <div class="label">붉은기</div>
-            </button>
-            <button class="base-btn sub-btn" data-sub="orange" onclick="selectSub(this)">
-              <div class="label">주황기</div>
-            </button>
-            <button class="base-btn sub-btn" data-sub="neutral-brown" onclick="selectSub(this)">
-              <div class="label">뉴트럴 브라운</div>
-            </button>
-          </div>
-        </div>
+        <!-- 염색모: 하위 선택 없음 -->
 
-        <!-- 탈색모 하위 선택 -->
+        <!-- 탈색모 하위 선택: 횟수 -->
         <div id="bleachedSub" style="display:none">
-          <div class="base-option-title" style="margin-top:16px">현재 베이스 색감</div>
+          <div class="base-option-title" style="margin-top:16px">탈색 횟수</div>
           <div class="base-btn-row" style="flex-wrap:wrap">
-            <button class="base-btn sub-btn" data-sub="yellow" onclick="selectSub(this)">
-              <div class="label">노랑</div>
+            <button class="base-btn sub-btn" data-sub="bleach1" onclick="selectSub(this)">
+              <div class="label">1회</div>
             </button>
-            <button class="base-btn sub-btn" data-sub="mat" onclick="selectSub(this)">
-              <div class="label">매트 (단무지색)</div>
+            <button class="base-btn sub-btn" data-sub="bleach2" onclick="selectSub(this)">
+              <div class="label">2회</div>
             </button>
-            <button class="base-btn sub-btn" data-sub="pale-yellow" onclick="selectSub(this)">
-              <div class="label">연노랑</div>
+            <button class="base-btn sub-btn" data-sub="bleach3" onclick="selectSub(this)">
+              <div class="label">3회 이상</div>
             </button>
           </div>
         </div>
@@ -383,7 +369,7 @@ function analyzeImage(base64, mediaType){
   boxEl.classList.remove('show');
   loadEl.classList.add('show');
 
-  var sysPrompt = '너는 모발 색상 분석 전문가야. 사진 속 모발의 "보이는 색감"만 분석해.\n\n[금지] 멜라닌 레벨 숫자 추정, 시술 방향·방법 언급, 실현 가능성 판단, "도미넌트" 같은 영어 전문용어\n[할 것] 감성적·전문적 색감 네이밍(한국어로), 투명감·채도·뉘앙스·언더톤·질감을 자연스러운 한국어로 묘사\n\nJSON만 응답:\n{\n  "color_name_ko": "한국어 색감명 (예: 쿨 애쉬베이지, 밀크티 브라운)",\n  "tone": "cool" 또는 "warm" 또는 "neutral",\n  "hex": "#RRGGBB",\n  "description": "색감 묘사 2~3문장. 자연스러운 한국어로. 시술 관련 언급 금지"\n}';
+  var sysPrompt = '너는 모발 색상 분석 전문가야. 사진 속 모발의 "보이는 색감"을 분석해.\n\n[금지] 멜라닌 레벨 숫자 추정, 시술 방법 언급(뭘 써라, 몇 회 탈색해라 등), 실현 가능성 판단, "도미넌트" 같은 영어 전문용어\n\n[할 것]\n- 감성적·전문적 색감 네이밍(한국어로)\n- 투명감·채도·뉘앙스·언더톤·질감을 자연스러운 한국어로 묘사\n- 이 색감이 자연 발색인지, 탈색 후 염색으로 연출된 색감인지를 판단하여 description에 포함\n\n[동양인 모발 기준]\n동양인의 적색멜라닌은 탈색 시 다음 순서로 깨짐: 검정→붉은기→주황→노랑→매트(단무지색)→연노랑→페일옐로.\n투명한 윤기, 깊이감, 황금빛이 은은하게 비치는 브라운은 단순 웜브라운이 아니라 탈색 후 한색계열을 입혀서 나온 색감일 가능성이 높음.\n이 판단을 description에 반영해.\n\nJSON만 응답:\n{\n  "color_name_ko": "한국어 색감명",\n  "tone": "cool" 또는 "warm" 또는 "neutral",\n  "hex": "#RRGGBB",\n  "description": "색감 묘사 + 자연 발색인지 탈색 후 연출인지 판단 포함. 2~3문장"\n}';
 
   fetch(API_URL, {
     method: 'POST',
@@ -459,13 +445,13 @@ function selectType(btn){
 
   // 하위 선택 초기화
   document.querySelectorAll('.sub-btn').forEach(function(b){ b.classList.remove('selected'); });
-  document.getElementById('coloredSub').style.display = 'none';
   document.getElementById('bleachedSub').style.display = 'none';
 
   if(ST.type === 'virgin'){
-    // 버진모: 바로 ready
+    // 바로 ready
   } else if(ST.type === 'colored'){
-    document.getElementById('coloredSub').style.display = 'block';
+    // 염색모: 하위 선택 없이 바로 ready
+    ST.subType = 'colored';
   } else if(ST.type === 'bleached'){
     document.getElementById('bleachedSub').style.display = 'block';
   }
@@ -544,15 +530,11 @@ function generateRecipe(){
 /* 현재 베이스(STEP 2 선택) → G() curZone 매핑 */
 function baseToCurZone(){
   if(ST.type === 'virgin') return 'low';
-  if(ST.type === 'colored'){
-    if(ST.subType === 'red') return 'low';
-    if(ST.subType === 'orange') return 'mid';
-    if(ST.subType === 'neutral-brown') return 'mid';
-  }
+  if(ST.type === 'colored') return 'mid';
   if(ST.type === 'bleached'){
-    if(ST.subType === 'yellow') return 'high16';
-    if(ST.subType === 'mat') return 'high16';
-    if(ST.subType === 'pale-yellow') return 'high20';
+    if(ST.subType === 'bleach1') return 'mid';
+    if(ST.subType === 'bleach2') return 'high16';
+    if(ST.subType === 'bleach3') return 'high20';
   }
   return 'low';
 }
@@ -619,16 +601,14 @@ function analysisToColor(a){
 function generateRecipeAPI(){
   var baseDesc;
   var subLabels = {
-    'red': '염색모 (붉은기 잔류)',
-    'orange': '염색모 (주황기 잔류)',
-    'neutral-brown': '염색모 (뉴트럴 브라운)',
-    'yellow': '탈색모 (노랑 베이스)',
-    'mat': '탈색모 (매트/단무지색 베이스)',
-    'pale-yellow': '탈색모 (연노랑 베이스)'
+    'colored': '염색모 (동양인 적색멜라닌 기반, 붉은기·주황기 잔류 가능성 높음)',
+    'bleach1': '탈색모 1회 (주황~노랑 잔류 예상)',
+    'bleach2': '탈색모 2회 (노랑~매트 잔류 예상)',
+    'bleach3': '탈색모 3회 이상 (연노랑~페일옐로 베이스 예상)'
   };
 
   if(ST.type === 'virgin'){
-    baseDesc = '버진모';
+    baseDesc = '버진모 (동양인, 적색멜라닌 가득)';
   } else {
     baseDesc = subLabels[ST.subType] || ST.type;
   }
@@ -896,7 +876,6 @@ function resetAll(){
 
   // 선택 초기화
   document.querySelectorAll('.selected').forEach(function(b){ b.classList.remove('selected'); });
-  document.getElementById('coloredSub').style.display = 'none';
   document.getElementById('bleachedSub').style.display = 'none';
 
   // 레시피 내용 초기화
