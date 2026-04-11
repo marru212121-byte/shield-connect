@@ -165,32 +165,31 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
       <div class="base-option-group">
         <div class="base-option-title">모발 유형</div>
         <div class="base-btn-row" style="flex-wrap:wrap">
-          <button class="base-btn" data-type="virgin" onclick="selectType(this)" style="min-width:100%">
-            <div class="label">버진모</div>
-            <div class="desc">시술 이력 없음 (자연 검정)</div>
+          <button class="base-btn" data-type="natural" onclick="selectType(this)" style="min-width:100%">
+            <div class="label">자연모 / 염색모</div>
+            <div class="desc">탈색 이력 없음</div>
           </button>
-          <button class="base-btn" data-type="colored" onclick="selectType(this)">
-            <div class="label">염색모</div>
-            <div class="desc">탈색 없이 염색만</div>
-          </button>
-          <button class="base-btn" data-type="bleached" onclick="selectType(this)">
+          <button class="base-btn" data-type="bleached" onclick="selectType(this)" style="min-width:100%">
             <div class="label">탈색모</div>
             <div class="desc">탈색 이력 있음</div>
           </button>
         </div>
 
-        <!-- 탈색모 하위 선택: 횟수 -->
+        <!-- 탈색모 하위 선택: 현재 베이스 상태 -->
         <div id="bleachedSub">
-          <div class="base-option-title" style="margin-top:16px">탈색 횟수</div>
+          <div class="base-option-title" style="margin-top:16px">현재 베이스 상태 <span style="font-weight:400;color:#aaa">(모발에 따라 편차가 날 수 있습니다)</span></div>
           <div class="base-btn-row" style="flex-wrap:wrap">
-            <button class="base-btn sub-btn" data-sub="bleach1" onclick="selectSub(this)">
-              <div class="label">1회</div>
+            <button class="base-btn sub-btn" data-sub="orange_yellow" onclick="selectSub(this)" style="min-width:100%">
+              <div class="label" style="display:flex;align-items:center;justify-content:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;background:#c17a3d;border:1px solid rgba(0,0,0,0.1);flex-shrink:0"></span> 주황~노랑 잔류</div>
+              <div class="desc">붉은기·주황기가 남아있는 상태</div>
             </button>
-            <button class="base-btn sub-btn" data-sub="bleach2" onclick="selectSub(this)">
-              <div class="label">2회</div>
+            <button class="base-btn sub-btn" data-sub="yellow_mat" onclick="selectSub(this)" style="min-width:100%">
+              <div class="label" style="display:flex;align-items:center;justify-content:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;background:#d9b586;border:1px solid rgba(0,0,0,0.1);flex-shrink:0"></span> 노랑~매트 잔류</div>
+              <div class="desc">주황기는 빠지고 노랑·매트(단무지)기</div>
             </button>
-            <button class="base-btn sub-btn" data-sub="bleach3" onclick="selectSub(this)">
-              <div class="label">3회 이상</div>
+            <button class="base-btn sub-btn" data-sub="pale_yellow" onclick="selectSub(this)" style="min-width:100%">
+              <div class="label" style="display:flex;align-items:center;justify-content:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;background:#c6b9ac;border:1px solid rgba(0,0,0,0.1);flex-shrink:0"></span> 연노랑~미색</div>
+              <div class="desc">거의 다 빠진 상태</div>
             </button>
           </div>
         </div>
@@ -440,10 +439,8 @@ function selectType(btn){
   document.querySelectorAll('.sub-btn').forEach(function(b){ b.classList.remove('selected'); });
   document.getElementById('bleachedSub').style.display = 'none';
 
-  if(ST.type === 'virgin'){
-    // 바로 ready
-  } else if(ST.type === 'colored'){
-    ST.subType = 'colored';
+  if(ST.type === 'natural'){
+    // 자연모/염색모 — 바로 ready
   } else if(ST.type === 'bleached'){
     document.getElementById('bleachedSub').style.display = 'block';
   }
@@ -459,8 +456,7 @@ function selectSub(btn){
 
 function checkReady(){
   var ready = false;
-  if(ST.analysis && ST.type === 'virgin') ready = true;
-  else if(ST.analysis && ST.type === 'colored') ready = true;
+  if(ST.analysis && ST.type === 'natural') ready = true;
   else if(ST.analysis && ST.type === 'bleached' && ST.subType) ready = true;
 
   var btn = document.getElementById('recipeBtn');
@@ -483,14 +479,13 @@ function generateRecipe(){
 
   var baseDesc;
   var subLabels = {
-    'colored': '염색모 (탈색 없이 염색만 한 상태. 동양인 적색멜라닌 기반, 붉은기·주황기 잔류 가능성 높음)',
-    'bleach1': '탈색모 1회 (주황~노랑 잔류 예상, 약 10~14레벨)',
-    'bleach2': '탈색모 2회 (노랑~매트 잔류 예상, 약 14~16레벨)',
-    'bleach3': '탈색모 3회 이상 (연노랑~페일옐로 베이스 예상, 약 18~20레벨)'
+    'orange_yellow': '탈색모 — 주황~노랑 잔류 (붉은기·주황기가 남아있는 상태, 약 10~14레벨)',
+    'yellow_mat': '탈색모 — 노랑~매트 잔류 (주황기는 빠지고 노랑·매트기, 약 14~16레벨)',
+    'pale_yellow': '탈색모 — 연노랑~미색 (거의 다 빠진 상태, 약 18~20레벨)'
   };
 
-  if(ST.type === 'virgin'){
-    baseDesc = '버진모 (동양인, 적색멜라닌 가득, 약 5레벨 자연 검정)';
+  if(ST.type === 'natural'){
+    baseDesc = '자연모/염색모 (동양인, 적색멜라닌 가득, 탈색 이력 없음, 약 5레벨)';
   } else {
     baseDesc = subLabels[ST.subType] || ST.type;
   }
@@ -603,12 +598,12 @@ function generateRecipe(){
     '5·6·8: 브라운 또는 블루블랙 소량 (핑크는 브라운만)',
     '20→5·6·8: 새빨갛게 나올 수 있으니 주의 (레드)',
     '',
-    '[탈색 횟수 기준]',
-    '한색계열(블루,애쉬,바이올렛,라벤더애쉬)→최소 노랑기 베이스 필요→버진모에서 최소 탈색 2회',
-    '난색계열(레드,RV,핑크)→적색멜라닌과 같은 방향→탈색 1~2회',
-    '맑고 투명한 색감(파스텔,블론드,백모)→18+베이스 필요→탈색 3회 이상',
-    '뉴트럴/웜 브라운→탈색 1~2회',
-    '투명한 쿨브라운→탈색 2회 + 블루+바이올렛 또는 애쉬+바이올렛 조합',
+    '[베이스별 시술 방향]',
+    '자연모/염색모(적색멜라닌 가득)→탈색 필요 여부와 횟수를 레시피에 명시',
+    '탈색모 주황~노랑 잔류→한색 계열은 보색중화 필수, 선명한 색감 어려움',
+    '탈색모 노랑~매트 잔류→한색 계열 발색 시작, 보색중화로 정리하면 네이비·애쉬그레이 가능',
+    '탈색모 연노랑~미색→맑고 투명한 발색 가능, 파스텔·블론드·백모까지',
+    '투명한 쿨브라운→노랑~매트 이상 베이스 + 블루+바이올렛 또는 애쉬+바이올렛 조합',
     '',
     '=== 출력 규칙 ===',
     '',
@@ -616,18 +611,20 @@ function generateRecipe(){
     '{"summary":"시술 한 줄 요약","tips":"실무조언 여러 줄"}',
     '',
     '[summary]',
-    '반말. 시술 흐름 한 줄. 탈색 횟수 + 어떤 염모제 + 무슨 믹스.',
-    '예: "탈색 2회 후 블루+바이올렛 소량 믹스하여 착색 → 투명 쿨브라운"',
+    '반말. 시술 흐름 한 줄. 어떤 염모제 + 무슨 믹스.',
+    '자연모/염색모일 때 탈색이 필요하면 "탈색 후"를 앞에 붙여.',
+    '예: "탈색 후 블루+바이올렛 소량 믹스하여 착색 → 투명 쿨브라운"',
     '예: "고명도 염모제(13레벨)+컨트롤컬러 블루+바이올렛+9% 산화제로 원샷"',
+    '예: "블루 염모제에 바이올렛 소량 믹스하여 착색"',
     '감상, 설명, 레벨 숫자 넣지 마 (단, 고명도 염모제 레벨은 예외).',
     '',
     '[tips]',
     '존댓말(~해요, ~하세요, ~있어요). 줄바꿈(\\n)으로 블록 구분.',
     '① 왜 이렇게 해야 하는지 (이 사진의 색감이 어떤 조합으로 만들어진 것인지 설명)',
-    '② 잔류 색소별 대응 (노랑기/주황기/매트기가 남아있을 때 어떻게 보색중화)',
-    '③ "탈색이 제한된다면," — 두 가지 분기:',
-    '   - 버진모: 고명도 염모제+컨트롤컬러+9%/12% 산화제로 원샷 대안',
-    '   - 탈색 부족: 현재 베이스에서 가능한 너프 색감 제안',
+    '② 현재 베이스 상태에 맞는 구체적 대응 (잔류 색소가 있을 때 어떻게 보색중화)',
+    '③ "탈색이 제한된다면," — 분기:',
+    '   - 자연모/염색모: 고명도 염모제+컨트롤컬러+9%/12% 산화제로 원샷 대안',
+    '   - 탈색모인데 베이스가 부족할 때: 현재 베이스에서 가능한 너프 색감 제안',
     '④ 주의사항 한 줄 (두피보호제, 손상 등)',
     '',
     '[절대 금지]',
