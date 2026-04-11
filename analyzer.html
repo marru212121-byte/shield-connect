@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<title>AI 컬러 레시피</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{font-family:'Noto Sans KR',sans-serif;background:#FAFAF8;color:#1A1814;min-height:100dvh;overflow-x:hidden}
+input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-family:inherit}
+
+.app{width:100%;max-width:430px;margin:0 auto;min-height:100dvh;background:#FAFAF8}
+@media(min-width:431px){.app{border-left:1px solid #eee;border-right:1px solid #eee}}
+
+/* 헤더 */
+.page-header{display:flex;align-items:center;gap:12px;padding:14px 16px;position:sticky;top:0;z-index:100;background:rgba(250,250,248,0.92);backdrop-filter:blur(12px);border-bottom:1px solid #eee}
+.back-btn{width:34px;height:34px;border-radius:12px;border:1.5px solid #eee;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.back-btn svg{color:#555}
+.page-header h2{font-size:16px;font-weight:800;color:#1A1814;margin:0}
+.page-header .sub{font-size:11px;color:#888;margin-top:2px}
+
+/* 카드 */
+.card{background:#fff;border-radius:16px;border:1.5px solid #eee;padding:20px;margin:0 16px 12px}
+.card-title{font-size:13px;font-weight:700;color:#1A1814;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.card-title .badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;background:rgba(158,127,191,0.12);color:#9E7FBF}
+
+/* STEP 1: 사진 업로드 */
+.upload-zone{border:2px dashed #ddd;border-radius:14px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:#FAFAF8}
+.upload-zone:active{border-color:#9E7FBF;background:rgba(158,127,191,0.04)}
+.upload-zone.has-image{border:none;padding:0;background:none}
+.upload-zone .icon{font-size:32px;margin-bottom:8px;color:#bbb}
+.upload-zone .txt{font-size:13px;color:#888;line-height:1.6}
+.upload-zone .txt b{color:#9E7FBF;font-weight:600}
+.upload-preview{width:100%;border-radius:14px;display:block;object-fit:cover;max-height:280px}
+.upload-change{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;font-size:12px;color:#9E7FBF;font-weight:600;cursor:pointer;padding:8px}
+.upload-change:active{opacity:0.6}
+
+/* 분석 결과 */
+.analysis-box{background:linear-gradient(135deg,#f8f6fb,#f3f0f8);border-radius:14px;padding:16px;margin-top:12px;display:none}
+.analysis-box.show{display:block;animation:fadeUp .4s ease}
+.analysis-label{font-size:10px;font-weight:700;color:#9E7FBF;letter-spacing:0.5px;margin-bottom:8px}
+.analysis-color-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.analysis-swatch{width:36px;height:36px;border-radius:10px;border:1.5px solid rgba(0,0,0,0.08);flex-shrink:0}
+.analysis-color-name{font-size:15px;font-weight:700;color:#1A1814}
+.analysis-color-level{font-size:12px;color:#888;margin-top:2px}
+.analysis-desc{font-size:13px;color:#555;line-height:1.7;margin-top:8px}
+
+/* 분석 중 로딩 */
+.analyzing{text-align:center;padding:24px;display:none}
+.analyzing.show{display:block}
+.analyzing .spinner{width:28px;height:28px;border:3px solid #eee;border-top-color:#9E7FBF;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+.analyzing .txt{font-size:13px;color:#888}
+
+/* STEP 2: 베이스 선택 */
+.step2-wrap{display:none;animation:fadeUp .4s ease}
+.step2-wrap.show{display:block}
+.base-option-group{display:flex;flex-direction:column;gap:8px}
+.base-option-title{font-size:11px;font-weight:600;color:#888;margin-bottom:4px;margin-top:8px}
+.base-btn-row{display:flex;gap:8px;flex-wrap:wrap}
+.base-btn{flex:1;min-width:calc(50% - 4px);padding:14px 12px;border-radius:12px;border:1.5px solid #eee;background:#fff;cursor:pointer;text-align:center;transition:all .15s;font-family:inherit}
+.base-btn:active{transform:scale(0.97)}
+.base-btn.selected{border-color:#9E7FBF;background:rgba(158,127,191,0.06);box-shadow:0 0 0 1px #9E7FBF}
+.base-btn .label{font-size:13px;font-weight:600;color:#1A1814}
+.base-btn .desc{font-size:10px;color:#999;margin-top:3px}
+
+/* 명도 선택 - 원형 버튼들 */
+.level-grid{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.level-btn{width:44px;height:44px;border-radius:12px;border:1.5px solid #eee;background:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#1A1814;cursor:pointer;transition:all .15s;font-family:inherit}
+.level-btn:active{transform:scale(0.95)}
+.level-btn.selected{border-color:#9E7FBF;background:rgba(158,127,191,0.08);box-shadow:0 0 0 1px #9E7FBF;color:#7B5EA7}
+
+/* 잔류 선택 */
+.residue-grid{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.residue-btn{padding:10px 14px;border-radius:10px;border:1.5px solid #eee;background:#fff;font-size:12px;font-weight:500;color:#555;cursor:pointer;transition:all .15s;font-family:inherit}
+.residue-btn:active{transform:scale(0.97)}
+.residue-btn.selected{border-color:#9E7FBF;background:rgba(158,127,191,0.06);box-shadow:0 0 0 1px #9E7FBF;color:#7B5EA7;font-weight:600}
+
+/* 레시피 요청 버튼 */
+.recipe-btn{width:calc(100% - 32px);margin:8px 16px 16px;padding:16px;border-radius:14px;border:none;background:#1A1814;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;display:none}
+.recipe-btn.show{display:block;animation:fadeUp .3s ease}
+.recipe-btn:active{transform:scale(0.98);opacity:0.9}
+.recipe-btn:disabled{opacity:0.4;cursor:not-allowed}
+
+/* STEP 3: 레시피 결과 */
+.recipe-wrap{display:none;animation:fadeUp .4s ease}
+.recipe-wrap.show{display:block}
+.recipe-header{background:linear-gradient(135deg,#f8f6fb,#eee8f5);border-radius:14px;padding:16px;margin-bottom:12px}
+.recipe-from-to{font-size:14px;font-weight:600;color:#1A1814;line-height:1.7}
+.recipe-from-to .highlight{color:#9E7FBF;font-weight:700}
+.recipe-body{background:#fff;border-radius:14px;border:1.5px solid #eee;padding:16px}
+.recipe-step{padding:12px 0;border-bottom:1px solid #f0f0f0}
+.recipe-step:last-child{border-bottom:none}
+.recipe-step-num{font-size:10px;font-weight:700;color:#9E7FBF;letter-spacing:0.5px;margin-bottom:4px}
+.recipe-step-text{font-size:14px;color:#1A1814;line-height:1.8;font-weight:500}
+.recipe-step-detail{font-size:12px;color:#888;line-height:1.7;margin-top:6px}
+.recipe-note{background:#FFFBF0;border-radius:10px;padding:12px;margin-top:12px;font-size:12px;color:#8B7355;line-height:1.7}
+.recipe-note b{font-weight:600;color:#7B6A4F}
+
+/* 다시하기 버튼 */
+.reset-btn{width:calc(100% - 32px);margin:8px 16px 24px;padding:14px;border-radius:14px;border:1.5px solid #eee;background:#fff;color:#888;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;display:none}
+.reset-btn.show{display:block}
+.reset-btn:active{transform:scale(0.98)}
+
+/* source 표시 */
+.source-tag{display:inline-block;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;margin-bottom:8px}
+.source-tag.matrix{background:rgba(76,175,80,0.1);color:#4CAF50}
+.source-tag.ai{background:rgba(158,127,191,0.12);color:#9E7FBF}
+
+/* 애니메이션 */
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- 헤더 -->
+  <div class="page-header">
+    <a class="back-btn" href="./index.html">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </a>
+    <div>
+      <h2>AI 컬러 레시피</h2>
+      <div class="sub">사진 분석 → 시술 레시피 자동 생성</div>
+    </div>
+  </div>
+
+  <!-- STEP 1: 레퍼런스 사진 -->
+  <div class="card" id="step1Card">
+    <div class="card-title">
+      원하는 컬러 사진
+      <span class="badge">STEP 1</span>
+    </div>
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+      <div class="icon">📸</div>
+      <div class="txt">고객이 원하는 헤어 컬러 사진을<br><b>탭하여 업로드</b>해주세요</div>
+    </div>
+    <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleUpload(this)"/>
+
+    <!-- 분석 중 -->
+    <div class="analyzing" id="analyzing">
+      <div class="spinner"></div>
+      <div class="txt">색감을 분석하고 있어요...</div>
+    </div>
+
+    <!-- 분석 결과 -->
+    <div class="analysis-box" id="analysisBox">
+      <div class="analysis-label">AI 분석 결과</div>
+      <div class="analysis-color-row">
+        <div class="analysis-swatch" id="analysisSwatch"></div>
+        <div>
+          <div class="analysis-color-name" id="analysisName">—</div>
+          <div class="analysis-color-level" id="analysisLevel">—</div>
+        </div>
+      </div>
+      <div class="analysis-desc" id="analysisDesc"></div>
+    </div>
+  </div>
+
+  <!-- STEP 2: 현재 베이스 선택 -->
+  <div class="step2-wrap" id="step2Wrap">
+    <div class="card">
+      <div class="card-title">
+        현재 모발 상태
+        <span class="badge">STEP 2</span>
+      </div>
+
+      <div class="base-option-group">
+        <!-- 모발 유형 -->
+        <div class="base-option-title">모발 유형</div>
+        <div class="base-btn-row">
+          <button class="base-btn" data-type="virgin" onclick="selectType(this)">
+            <div class="label">버진모</div>
+            <div class="desc">염색·탈색 이력 없음</div>
+          </button>
+          <button class="base-btn" data-type="colored" onclick="selectType(this)">
+            <div class="label">염색모</div>
+            <div class="desc">염색 이력 있음</div>
+          </button>
+        </div>
+        <div class="base-btn-row" style="margin-top:0">
+          <button class="base-btn" data-type="bleached-cool" onclick="selectType(this)">
+            <div class="label">탈색모 (한색)</div>
+            <div class="desc">한색 퇴색 상태</div>
+          </button>
+          <button class="base-btn" data-type="bleached-warm" onclick="selectType(this)">
+            <div class="label">탈색모 (난색)</div>
+            <div class="desc">난색 퇴색 상태</div>
+          </button>
+        </div>
+
+        <!-- 현재 명도 -->
+        <div class="base-option-title" style="margin-top:16px">현재 명도 (레벨)</div>
+        <div class="level-grid" id="levelGrid">
+          <button class="level-btn" data-lv="5" onclick="selectLevel(this)">5</button>
+          <button class="level-btn" data-lv="6" onclick="selectLevel(this)">6</button>
+          <button class="level-btn" data-lv="8" onclick="selectLevel(this)">8</button>
+          <button class="level-btn" data-lv="10" onclick="selectLevel(this)">10</button>
+          <button class="level-btn" data-lv="12" onclick="selectLevel(this)">12</button>
+          <button class="level-btn" data-lv="14" onclick="selectLevel(this)">14</button>
+          <button class="level-btn" data-lv="16" onclick="selectLevel(this)">16</button>
+          <button class="level-btn" data-lv="18" onclick="selectLevel(this)">18</button>
+          <button class="level-btn" data-lv="20" onclick="selectLevel(this)">20</button>
+        </div>
+
+        <!-- 잔류 색소 -->
+        <div class="base-option-title" id="residueTitle" style="margin-top:16px;display:none">잔류 색소 (해당 시 선택)</div>
+        <div class="residue-grid" id="residueGrid" style="display:none">
+          <button class="residue-btn" data-res="none" onclick="selectResidue(this)">없음</button>
+          <button class="residue-btn" data-res="red" onclick="selectResidue(this)">붉은기</button>
+          <button class="residue-btn" data-res="orange" onclick="selectResidue(this)">주황기</button>
+          <button class="residue-btn" data-res="yellow" onclick="selectResidue(this)">노랑기</button>
+          <button class="residue-btn" data-res="mat" onclick="selectResidue(this)">매트기</button>
+          <button class="residue-btn" data-res="ash" onclick="selectResidue(this)">애쉬 잔류</button>
+          <button class="residue-btn" data-res="blue" onclick="selectResidue(this)">블루 잔류</button>
+          <button class="residue-btn" data-res="violet" onclick="selectResidue(this)">바이올렛 잔류</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 레시피 생성 버튼 -->
+  <button class="recipe-btn" id="recipeBtn" onclick="generateRecipe()" disabled>레시피 생성</button>
+
+  <!-- STEP 3: 레시피 결과 -->
+  <div class="recipe-wrap" id="recipeWrap">
+    <div class="card">
+      <div class="card-title">
+        시술 레시피
+        <span class="badge">STEP 3</span>
+      </div>
+      <div id="recipeSource"></div>
+      <div class="recipe-header" id="recipeHeader"></div>
+      <div class="recipe-body" id="recipeBody"></div>
+    </div>
+  </div>
+
+  <!-- 다시하기 -->
+  <button class="reset-btn" id="resetBtn" onclick="resetAll()">처음부터 다시하기</button>
+
+  <div style="height:40px"></div>
+</div>
+
+<script>
+/* ══════════════════════════════════
+   STATE
+══════════════════════════════════ */
+var ST = {
+  imageBase64: null,
+  analysis: null,    // API 분석 결과
+  type: null,        // virgin, colored, bleached-cool, bleached-warm
+  level: null,       // 5,6,8,10,12,14,16,18,20
+  residue: null      // none, red, orange, yellow, mat, ash, blue, violet
+};
+
+var API_URL = '/api/recipe';
+
+/* ══════════════════════════════════
+   STEP 1: 사진 업로드 + API 분석
+══════════════════════════════════ */
+function handleUpload(input){
+  var file = input.files[0];
+  if(!file) return;
+
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var base64Full = e.target.result;
+    var base64Data = base64Full.split(',')[1];
+    var mediaType = file.type || 'image/jpeg';
+
+    // 미리보기 표시
+    var zone = document.getElementById('uploadZone');
+    zone.classList.add('has-image');
+    zone.innerHTML = '<img class="upload-preview" src="'+base64Full+'" alt="업로드 사진"/>';
+    zone.onclick = null;
+
+    // 사진 변경 링크
+    var changeEl = document.createElement('div');
+    changeEl.className = 'upload-change';
+    changeEl.textContent = '사진 변경';
+    changeEl.onclick = function(){ document.getElementById('fileInput').click(); };
+    zone.parentNode.insertBefore(changeEl, zone.nextSibling);
+
+    // 재업로드 핸들러
+    document.getElementById('fileInput').onchange = function(ev){
+      handleReupload(ev.target);
+    };
+
+    ST.imageBase64 = base64Data;
+    ST.imageMediaType = mediaType;
+
+    analyzeImage(base64Data, mediaType);
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleReupload(input){
+  var file = input.files[0];
+  if(!file) return;
+
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var base64Full = e.target.result;
+    ST.imageBase64 = base64Full.split(',')[1];
+    ST.imageMediaType = file.type || 'image/jpeg';
+
+    document.querySelector('.upload-preview').src = base64Full;
+
+    // 이전 결과 숨기기
+    document.getElementById('analysisBox').classList.remove('show');
+    document.getElementById('step2Wrap').classList.remove('show');
+    document.getElementById('recipeWrap').classList.remove('show');
+    document.getElementById('recipeBtn').style.display = 'none';
+    document.getElementById('resetBtn').classList.remove('show');
+
+    analyzeImage(ST.imageBase64, ST.imageMediaType);
+  };
+  reader.readAsDataURL(file);
+}
+
+function analyzeImage(base64, mediaType){
+  var loadEl = document.getElementById('analyzing');
+  var boxEl = document.getElementById('analysisBox');
+  boxEl.classList.remove('show');
+  loadEl.classList.add('show');
+
+  var sysPrompt = '너는 미용 전문가 수준의 모발 색상 분석기야.\n사진 속 모발의 색감을 분석해서 아래 JSON 형식으로만 응답해. 다른 텍스트 없이 순수 JSON만.\n\n{\n  "color_name_ko": "한국어 색감명 (예: 쿨 애쉬베이지, 골드블론드, 라벤더애쉬 등)",\n  "level": 숫자 (5~20 사이, 멜라닌 레벨),\n  "tone": "cool" 또는 "warm" 또는 "neutral",\n  "hex": "#RRGGBB 대표 색상 코드",\n  "description": "이 색감에 대한 전문적이고 세세한 설명 2~3문장. 디자이너가 읽고 바로 이해할 수 있게. 투명감, 채도, 뉘앙스, 언더톤 등 포함."\n}';
+
+  fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 500,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+          { type: 'text', text: '이 사진 속 모발의 색감을 분석해줘.' }
+        ]
+      }],
+      system: sysPrompt
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    loadEl.classList.remove('show');
+    try {
+      var txt = data.content.map(function(b){ return b.text||''; }).join('');
+      txt = txt.replace(/```json|```/g,'').trim();
+      var result = JSON.parse(txt);
+      ST.analysis = result;
+      showAnalysis(result);
+    } catch(e) {
+      boxEl.innerHTML = '<div class="analysis-label">분석 실패</div><div class="analysis-desc">사진을 다시 업로드해주세요. 모발이 잘 보이는 사진이면 더 정확해요.</div>';
+      boxEl.classList.add('show');
+    }
+  })
+  .catch(function(err){
+    loadEl.classList.remove('show');
+    boxEl.innerHTML = '<div class="analysis-label">연결 오류</div><div class="analysis-desc">네트워크를 확인해주세요.</div>';
+    boxEl.classList.add('show');
+  });
+}
+
+function showAnalysis(result){
+  var box = document.getElementById('analysisBox');
+  document.getElementById('analysisSwatch').style.background = result.hex || '#ccc';
+  document.getElementById('analysisName').textContent = result.color_name_ko || '—';
+  document.getElementById('analysisLevel').textContent = '약 ' + result.level + '레벨 · ' + (result.tone==='cool'?'한색(쿨)':result.tone==='warm'?'난색(웜)':'뉴트럴');
+  document.getElementById('analysisDesc').textContent = result.description || '';
+  box.classList.add('show');
+
+  // STEP 2 표시
+  setTimeout(function(){
+    document.getElementById('step2Wrap').classList.add('show');
+  }, 300);
+}
+
+/* ══════════════════════════════════
+   STEP 2: 베이스 선택
+══════════════════════════════════ */
+function selectType(btn){
+  document.querySelectorAll('[data-type]').forEach(function(b){ b.classList.remove('selected'); });
+  btn.classList.add('selected');
+  ST.type = btn.dataset.type;
+
+  // 잔류 색소 표시 (버진모가 아닐 때)
+  if(ST.type !== 'virgin'){
+    document.getElementById('residueTitle').style.display = 'block';
+    document.getElementById('residueGrid').style.display = 'flex';
+  } else {
+    document.getElementById('residueTitle').style.display = 'none';
+    document.getElementById('residueGrid').style.display = 'none';
+    ST.residue = 'none';
+  }
+  checkReady();
+}
+
+function selectLevel(btn){
+  document.querySelectorAll('.level-btn').forEach(function(b){ b.classList.remove('selected'); });
+  btn.classList.add('selected');
+  ST.level = parseInt(btn.dataset.lv);
+  checkReady();
+}
+
+function selectResidue(btn){
+  document.querySelectorAll('.residue-btn').forEach(function(b){ b.classList.remove('selected'); });
+  btn.classList.add('selected');
+  ST.residue = btn.dataset.res;
+  checkReady();
+}
+
+function checkReady(){
+  var ready = ST.analysis && ST.type && ST.level;
+  if(ST.type !== 'virgin' && !ST.residue) ready = false;
+  if(ST.type === 'virgin') ST.residue = 'none';
+
+  var btn = document.getElementById('recipeBtn');
+  if(ready){
+    btn.classList.add('show');
+    btn.disabled = false;
+  } else {
+    btn.disabled = true;
+  }
+}
+
+/* ══════════════════════════════════
+   STEP 3: 레시피 생성
+══════════════════════════════════ */
+function generateRecipe(){
+  var btn = document.getElementById('recipeBtn');
+  btn.disabled = true;
+  btn.textContent = '레시피 생성 중...';
+
+  // 현재 베이스 → G() 매칭용 구간 변환
+  var curZone = levelToZone(ST.level);
+  var tarColor = analysisToColor(ST.analysis);
+  var tarZone = levelToZone(ST.analysis.level);
+
+  // TODO: G() 룰매트릭스 매칭 시도 (추후 melanin_level.html의 GUIDE 데이터 연동)
+  // 지금은 전부 API 생성으로 처리
+
+  generateRecipeAPI();
+}
+
+function levelToZone(lv){
+  if(lv <= 8) return 'low';
+  if(lv <= 14) return 'mid';
+  if(lv <= 16) return '16';
+  if(lv <= 18) return '18';
+  return '20';
+}
+
+function analysisToColor(a){
+  var name = (a.color_name_ko || '').toLowerCase();
+  if(name.indexOf('블루')>=0) return 'blue';
+  if(name.indexOf('애쉬')>=0) return 'ash';
+  if(name.indexOf('라벤더')>=0) return 'lavash';
+  if(name.indexOf('바이올렛')>=0 || name.indexOf('보라')>=0) return 'violet';
+  if(name.indexOf('핑크')>=0) return 'pink';
+  if(name.indexOf('레드바이올렛')>=0) return 'rv';
+  if(name.indexOf('레드')>=0) return 'red';
+  return null;
+}
+
+function generateRecipeAPI(){
+  var typeLabel = {virgin:'버진모',colored:'염색모','bleached-cool':'한색 퇴색 탈색모','bleached-warm':'난색 퇴색 탈색모'}[ST.type];
+  var residueLabel = {none:'없음',red:'붉은기',orange:'주황기',yellow:'노랑기',mat:'매트기(단무지색)',ash:'애쉬 잔류',blue:'블루 잔류',violet:'바이올렛 잔류'}[ST.residue];
+
+  var sysPrompt = '너는 미용실 디자이너를 위한 시술 레시피 생성기야.\n\n핵심 원리:\n- 산화제: 3%약/6%중/9%강/12%극강(투명색감전용). 9~12%는 두피보호제 필수.\n- 멜라닌 레벨: 5(검정)→20(페일옐로). 낮을수록 적색멜라닌 많음.\n- 보색중화: 주황→블루, 노랑→바이올렛, 매트→시나본브라운\n- 한색(블루,애쉬,바이올렛,라벤더애쉬)은 잔류 보색중화 필요. 난색(레드,핑크,레드바이올렛)은 보색중화 불필요.\n- 버진모: 적색멜라닌 가득→탈색 없이는 브라운+뉘앙스가 한계(레드 제외). 고명도염모제(13/15)+컨트롤컬러+9%로 원샷 가능.\n- 클리어: 색소 농도 희석. 18+에서 파스텔 연출.\n- 백모/블론드: 18+연노랑 베이스→미색 핑크+클리어=백모. 골드→골드블론드. 애쉬+그린→쿨블론드.\n- 톤다운: 브라운 믹스, 5/6/8은 블루블랙 소량.\n- 컨트롤컬러: 직접염료, 염모제에 추가(탈색모~30%, 버진모~50%).\n- 토닝: 미세잔류→토닝정리, 강한잔류→무조건탈색.\n- 퇴색 시 인공색소 먼저 빠짐→자연멜라닌(붉은기) 돌아옴.\n\n출력 규칙:\n- 교육하지마. 원리를 나열하지마.\n- 디자이너가 바로 시술할 수 있게 직관적으로.\n- 산화제는 "6% 산화제" 수준으로만.\n- 아래 JSON 형식으로만 응답. 다른 텍스트 없이 순수 JSON만.\n\n{\n  "from_summary": "현재 상태 요약 (1줄)",\n  "to_summary": "목표 색감 요약 (1줄)",\n  "steps": [\n    {"title": "단계 제목", "instruction": "구체적 시술 지시", "detail": "보충 설명 (선택)"}\n  ],\n  "caution": "주의사항 (선택, 없으면 빈 문자열)"\n}';
+
+  var userMsg = '현재 모발: ' + typeLabel + ', ' + ST.level + '레벨, 잔류색소: ' + residueLabel + '\n목표 색감: ' + ST.analysis.color_name_ko + ' (약 ' + ST.analysis.level + '레벨, ' + ST.analysis.tone + ')\n\n이 모발에서 목표 색감까지 가는 시술 레시피를 만들어줘.';
+
+  fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      system: sysPrompt,
+      messages: [{ role: 'user', content: userMsg }]
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    try {
+      var txt = data.content.map(function(b){ return b.text||''; }).join('');
+      txt = txt.replace(/```json|```/g,'').trim();
+      var recipe = JSON.parse(txt);
+      showRecipe(recipe, 'ai');
+    } catch(e) {
+      showRecipeError();
+    }
+  })
+  .catch(function(err){
+    showRecipeError();
+  });
+}
+
+function showRecipe(recipe, source){
+  var btn = document.getElementById('recipeBtn');
+  btn.style.display = 'none';
+
+  // 소스 태그
+  var srcEl = document.getElementById('recipeSource');
+  if(source === 'matrix'){
+    srcEl.innerHTML = '<span class="source-tag matrix">검증된 룰매트릭스</span>';
+  } else {
+    srcEl.innerHTML = '<span class="source-tag ai">AI 원리 기반 생성</span>';
+  }
+
+  // from → to 헤더
+  var hdr = document.getElementById('recipeHeader');
+  hdr.innerHTML = '<div class="recipe-from-to">' +
+    '<span class="highlight">현재</span> ' + recipe.from_summary + '<br>' +
+    '<span class="highlight">목표</span> ' + recipe.to_summary +
+    '</div>';
+
+  // 시술 단계
+  var body = document.getElementById('recipeBody');
+  var html = '';
+  recipe.steps.forEach(function(s, i){
+    html += '<div class="recipe-step">';
+    html += '<div class="recipe-step-num">STEP ' + (i+1) + ' · ' + s.title + '</div>';
+    html += '<div class="recipe-step-text">' + s.instruction + '</div>';
+    if(s.detail){
+      html += '<div class="recipe-step-detail">' + s.detail + '</div>';
+    }
+    html += '</div>';
+  });
+  body.innerHTML = html;
+
+  // 주의사항
+  if(recipe.caution){
+    body.innerHTML += '<div class="recipe-note"><b>⚠ 주의</b><br>' + recipe.caution + '</div>';
+  }
+
+  // 표시
+  document.getElementById('recipeWrap').classList.add('show');
+  document.getElementById('resetBtn').classList.add('show');
+
+  // 스크롤
+  setTimeout(function(){
+    document.getElementById('recipeWrap').scrollIntoView({behavior:'smooth', block:'start'});
+  }, 200);
+}
+
+function showRecipeError(){
+  var btn = document.getElementById('recipeBtn');
+  btn.disabled = false;
+  btn.textContent = '레시피 생성';
+  alert('레시피 생성에 실패했어요. 다시 시도해주세요.');
+}
+
+/* ══════════════════════════════════
+   RESET
+══════════════════════════════════ */
+function resetAll(){
+  ST = { imageBase64:null, analysis:null, type:null, level:null, residue:null };
+
+  // 업로드 영역 초기화
+  var zone = document.getElementById('uploadZone');
+  zone.classList.remove('has-image');
+  zone.innerHTML = '<div class="icon">📸</div><div class="txt">고객이 원하는 헤어 컬러 사진을<br><b>탭하여 업로드</b>해주세요</div>';
+  zone.onclick = function(){ document.getElementById('fileInput').click(); };
+
+  // 변경 링크 제거
+  var changeEl = document.querySelector('.upload-change');
+  if(changeEl) changeEl.remove();
+
+  // fileInput 초기화
+  document.getElementById('fileInput').value = '';
+  document.getElementById('fileInput').onchange = function(ev){ handleUpload(ev.target); };
+
+  // UI 숨기기
+  document.getElementById('analysisBox').classList.remove('show');
+  document.getElementById('analyzing').classList.remove('show');
+  document.getElementById('step2Wrap').classList.remove('show');
+  document.getElementById('recipeBtn').style.display = 'none';
+  document.getElementById('recipeBtn').classList.remove('show');
+  document.getElementById('recipeWrap').classList.remove('show');
+  document.getElementById('resetBtn').classList.remove('show');
+
+  // 선택 초기화
+  document.querySelectorAll('.selected').forEach(function(b){ b.classList.remove('selected'); });
+  document.getElementById('residueTitle').style.display = 'none';
+  document.getElementById('residueGrid').style.display = 'none';
+
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>
