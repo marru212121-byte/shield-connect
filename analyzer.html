@@ -300,6 +300,7 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
   <div style="height:40px"></div>
 </div>
 
+<script src="./guide-data.js"></script>
 <script>
 /* ══════════════════════════════════
    STATE
@@ -505,14 +506,92 @@ function generateRecipe(){
   btn.disabled = true;
   btn.textContent = '레시피 생성 중...';
 
-  // 현재 베이스 → G() 매칭용 구간 변환
-  var curZone = levelToZone(ST.level);
   var tarColor = analysisToColor(ST.analysis);
+  var curZone = baseToCurZone();
+  var tarZone = guessTargetZone(ST.analysis);
 
-  // TODO: G() 룰매트릭스 매칭 시도 (추후 melanin_level.html의 GUIDE 데이터 연동)
-  // 지금은 전부 API 생성으로 처리
+  // G() 매칭 시도
+  if(tarColor && curZone){
+    var key = tarColor + '_' + curZone + '_' + tarZone;
+    var recipe = GUIDE[key];
 
+    // 정확한 키 없으면 tarZone 퍼지 매칭
+    if(!recipe){
+      var fallbacks = tarZoneFallbacks(tarZone);
+      for(var i=0; i<fallbacks.length; i++){
+        var fk = tarColor + '_' + curZone + '_' + fallbacks[i];
+        if(GUIDE[fk]){ recipe = GUIDE[fk]; break; }
+      }
+    }
+
+    if(recipe){
+      // G() 매칭 성공 — 검증된 레시피
+      var procText = recipe.proc.replace(/\\n/g, '\n');
+      var detText = recipe.det.replace(/\\n/g, '\n');
+      var formatted = {
+        summary: procText,
+        tips: detText
+      };
+      showRecipe(formatted, 'matrix');
+      return;
+    }
+  }
+
+  // G() 매칭 실패 → AI 생성
   generateRecipeAPI();
+}
+
+/* 현재 베이스(STEP 2 선택) → G() curZone 매핑 */
+function baseToCurZone(){
+  if(ST.type === 'virgin') return 'low';
+  if(ST.type === 'colored'){
+    if(ST.subType === 'red') return 'low';
+    if(ST.subType === 'orange') return 'mid';
+    if(ST.subType === 'neutral-brown') return 'mid';
+  }
+  if(ST.type === 'bleached'){
+    if(ST.subType === 'yellow') return 'high16';
+    if(ST.subType === 'mat') return 'high16';
+    if(ST.subType === 'pale-yellow') return 'high20';
+  }
+  return 'low';
+}
+
+/* 분석 결과에서 목표 tarZone 추정 */
+function guessTargetZone(analysis){
+  var desc = (analysis.description || '').toLowerCase();
+  var name = (analysis.color_name_ko || '').toLowerCase();
+
+  // 파스텔/투명/맑은/실버/백모 → 18~20
+  if(name.indexOf('파스텔')>=0 || name.indexOf('실버')>=0 || name.indexOf('백모')>=0 ||
+     desc.indexOf('투명')>=0 || desc.indexOf('파스텔')>=0 || desc.indexOf('실버')>=0) return '18';
+
+  // 선명한/비비드 → 16~18
+  if(desc.indexOf('선명')>=0 || desc.indexOf('비비드')>=0) return '16';
+
+  // 스모키/어두운/다크/딥 → mid~14
+  if(desc.indexOf('스모키')>=0 || desc.indexOf('어두운')>=0 || desc.indexOf('다크')>=0 ||
+     desc.indexOf('딥')>=0 || desc.indexOf('깊이감')>=0) return 'mid';
+
+  // 기본: 색감이 보이는 최소 구간
+  return '16';
+}
+
+/* tarZone 퍼지 매칭 — 정확한 키가 없을 때 인접 구간 시도 */
+function tarZoneFallbacks(tz){
+  var map = {
+    '20': ['18','high','sky'],
+    '18': ['16','20','high'],
+    '16': ['18','14','mid'],
+    '14': ['mid','16'],
+    'mid': ['14','low','mid8'],
+    'mid8': ['mid','low'],
+    'low': ['mid','vlow'],
+    'vlow': ['low'],
+    'high': ['18','20'],
+    'sky': ['20','18','high']
+  };
+  return map[tz] || [];
 }
 
 function levelToZone(lv){
@@ -525,12 +604,14 @@ function levelToZone(lv){
 
 function analysisToColor(a){
   var name = (a.color_name_ko || '').toLowerCase();
-  if(name.indexOf('블루')>=0) return 'blue';
-  if(name.indexOf('애쉬')>=0) return 'ash';
+  // 라벤더애쉬 먼저 체크 (애쉬보다 앞에)
   if(name.indexOf('라벤더')>=0) return 'lavash';
+  // 레드바이올렛 먼저 (레드, 바이올렛보다 앞에)
+  if(name.indexOf('레드바이올렛')>=0 || name.indexOf('레드 바이올렛')>=0) return 'rv';
+  if(name.indexOf('블루')>=0) return 'blue';
+  if(name.indexOf('애쉬')>=0 || name.indexOf('그레이')>=0 || name.indexOf('실버')>=0) return 'ash';
   if(name.indexOf('바이올렛')>=0 || name.indexOf('보라')>=0) return 'violet';
   if(name.indexOf('핑크')>=0) return 'pink';
-  if(name.indexOf('레드바이올렛')>=0) return 'rv';
   if(name.indexOf('레드')>=0) return 'red';
   return null;
 }
@@ -740,11 +821,12 @@ function showRecipe(recipe, source){
     srcEl.innerHTML = '<span class="source-tag ai">AI 원리 기반 생성</span>';
   }
 
-  // 써머리 헤더
+  // 써머리 헤더 (proc 전체 또는 summary)
   var hdr = document.getElementById('recipeHeader');
-  hdr.innerHTML = '<div class="recipe-from-to">' + (recipe.summary || '') + '</div>';
+  var summaryHtml = (recipe.summary || '').replace(/\n/g, '<br>');
+  hdr.innerHTML = '<div class="recipe-from-to">' + summaryHtml + '</div>';
 
-  // 실무조언
+  // 실무조언 (det 또는 tips)
   var body = document.getElementById('recipeBody');
   var html = '';
   if(recipe.tips){
