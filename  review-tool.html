@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>레시피 검수 도구</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:'Noto Sans KR',sans-serif;background:#111;color:#e0e0e0;min-height:100vh}
+
+.top-bar{padding:20px 24px;border-bottom:1px solid #222;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;background:rgba(17,17,17,0.95);backdrop-filter:blur(8px)}
+.top-bar h1{font-size:18px;font-weight:800;color:#fff}
+.top-bar .sub{font-size:11px;color:#666;margin-top:2px}
+.api-row{display:flex;gap:8px;align-items:center}
+.api-row input{background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:8px 12px;color:#ccc;font-size:12px;width:320px;font-family:'JetBrains Mono',monospace}
+.api-row input::placeholder{color:#555}
+
+.main{max-width:1400px;margin:0 auto;padding:20px}
+
+/* 업로드 영역 */
+.upload-area{border:2px dashed #333;border-radius:16px;padding:48px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:24px}
+.upload-area:hover{border-color:#9E7FBF;background:rgba(158,127,191,0.04)}
+.upload-area .icon{font-size:40px;margin-bottom:12px}
+.upload-area .txt{font-size:14px;color:#888}
+.upload-area .txt b{color:#9E7FBF}
+
+/* 결과 카드 */
+.result-card{background:#1a1a1a;border:1px solid #262626;border-radius:16px;margin-bottom:20px;overflow:hidden}
+.result-header{display:flex;gap:16px;padding:20px;border-bottom:1px solid #222}
+.result-img{width:160px;height:160px;border-radius:12px;object-fit:cover;flex-shrink:0}
+.result-meta{flex:1;min-width:0}
+.result-filename{font-size:11px;color:#666;margin-bottom:8px;font-family:'JetBrains Mono',monospace}
+.result-status{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;margin-bottom:8px}
+.result-status.analyzing{background:rgba(158,127,191,0.15);color:#9E7FBF}
+.result-status.done{background:rgba(80,200,120,0.15);color:#50C878}
+.result-status.error{background:rgba(255,80,80,0.15);color:#FF5050}
+.result-status.case1{background:rgba(255,165,0,0.15);color:#FFA500}
+.result-status.case2{background:rgba(255,220,50,0.15);color:#FFD700}
+.result-status.case3{background:rgba(80,200,120,0.15);color:#50C878}
+
+.analysis-summary{margin-top:8px}
+.analysis-summary .color-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.analysis-summary .swatch{width:28px;height:28px;border-radius:8px;border:1px solid #333;flex-shrink:0}
+.analysis-summary .name{font-size:15px;font-weight:700;color:#fff}
+.analysis-summary .tone{font-size:11px;color:#888}
+.analysis-summary .elements{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.analysis-summary .el-tag{font-size:10px;padding:2px 7px;border-radius:5px;background:rgba(158,127,191,0.1);color:#9E7FBF;font-weight:600}
+.analysis-summary .direction{font-size:11px;color:#888;margin-top:6px}
+
+.result-body{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.result-col{padding:16px 20px;min-width:0}
+.result-col:first-child{border-right:1px solid #222}
+.col-title{font-size:11px;font-weight:700;color:#9E7FBF;letter-spacing:0.5px;margin-bottom:10px;text-transform:uppercase}
+
+/* JSON 뷰 */
+.json-view{background:#0d0d0d;border-radius:10px;padding:14px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;color:#aaa;white-space:pre-wrap;word-break:break-all;max-height:500px;overflow-y:auto;border:1px solid #1a1a1a}
+.json-view .key{color:#9E7FBF}
+.json-view .str{color:#50C878}
+.json-view .bool{color:#FFA500}
+.json-view .null{color:#666}
+
+/* 렌더링 미리보기 */
+.preview-box{background:#FAFAF8;border-radius:12px;padding:16px;color:#1A1814}
+.preview-box .p-summary{font-size:13px;font-weight:600;color:#1A1814;line-height:1.7;margin-bottom:4px}
+.preview-box .p-note{font-size:10px;color:#999;margin-bottom:12px}
+.preview-box .p-warning{background:#FFF8E7;border:1px solid #F0D58C;border-radius:8px;padding:10px;font-size:11px;color:#8B7355;line-height:1.6;margin-bottom:10px}
+.preview-box .p-tips{background:#F5F3FF;border-radius:8px;padding:12px}
+.preview-box .p-tips-title{font-size:12px;font-weight:700;color:#7B5EA7;margin-bottom:6px}
+.preview-box .p-tips-text{font-size:12px;color:#555;line-height:1.8;white-space:pre-line}
+.preview-box .p-virgin{background:rgba(158,127,191,0.06);border:1px solid rgba(158,127,191,0.15);border-radius:8px;padding:10px;margin-top:8px}
+.preview-box .p-virgin-title{font-size:11px;font-weight:700;color:#9E7FBF;margin-bottom:4px}
+.preview-box .p-virgin-text{font-size:11px;color:#666;line-height:1.7}
+
+.case-badge{display:inline-block;padding:4px 12px;border-radius:8px;font-size:12px;font-weight:700;margin-top:8px}
+
+/* 로딩 */
+.spinner-sm{width:16px;height:16px;border:2px solid #333;border-top-color:#9E7FBF;border-radius:50%;animation:spin .6s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+input[type=file]{display:none}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div>
+    <h1>🔍 레시피 검수 도구</h1>
+    <div class="sub">사진 여러 장 → STEP1 분석 + STEP3 레시피 자동 검수</div>
+  </div>
+  <div class="api-row">
+    <input type="text" id="apiUrl" placeholder="API URL (예: /api/recipe 또는 https://...)" value="/api/recipe"/>
+  </div>
+</div>
+
+<div class="main">
+  <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+    <div class="icon">📸</div>
+    <div class="txt">검수할 사진을 <b>여러 장 선택</b>해주세요<br>한 번에 최대 20장</div>
+  </div>
+  <input type="file" id="fileInput" accept="image/*" multiple onchange="handleFiles(this.files)"/>
+
+  <div id="results"></div>
+</div>
+
+<script>
+var API_URL;
+
+/* ── STEP 1 시스템 프롬프트 (analyzer.html과 동일) ── */
+var STEP1_SYSTEM = [
+  '너는 미용실 헤어 컬러리스트를 위한 모발 색감 분석 전문가야.',
+  '사진 속 모발의 색감을 분석하고, 동양인 모발에서 이 색감을 만들려면 어떤 조색 방향이 필요한지 판단해.',
+  '',
+  '■ 판단 순서 (반드시 이 순서):',
+  '1단계: elements 분석 — 사진에서 보이는 속성만 골라',
+  '2단계: recipe_direction 결정 — elements + 아래 트렌드 지식 기반으로',
+  '3단계: tone — 겉으로 보이는 느낌으로만 (cool/warm/neutral)',
+  '',
+  '■ 색감 속성(elements) — 보이는 것만 배열에:',
+  '"투명감" 빛이 통과하는 맑은 느낌 / "매트함" 광택 없이 뽀얀 질감 / "황금빛" 금빛이 은은하게 / "붉은기" 적색·구리빛·앰버빛 / "주황기" 주황빛 / "잿빛" 회색·재 같은 무채색 / "청보라" 파란기+보라기 / "보라기" 보라·퍼플 / "핑크기" 분홍빛 / "파스텔" 연하고 부드러운 / "비비드" 선명하고 채도 높은 / "깊이감" 밝고 어두운 부분의 입체감 / "윤기" 건강한 광택감',
+  '',
+  '■ 한국 트렌드 베이지 — 가장 중요한 판단 기준:',
+  '밀크티 베이지, 애쉬 베이지, 매트 베이지, 라벤더 베이지는 사진상 warm처럼 보이지만, 동양인 모발에서는 한색 계열(애쉬, 바이올렛 중심) 조합이 필수.',
+  '- 투명감+매트함+잿빛이 강한 베이지 → recipe_direction은 반드시 "한색 계열"',
+  '- 황금빛+투명감+붉은기 없음 → 시각적 warm이어도 recipe_direction은 "한색 계열"',
+  '- 붉은기·핑크기가 선명한 사진만 → 난색 계열',
+  '',
+  '■ 탈색 필수 판단 (중요):',
+  '어둡게 보여도 잿빛·투명감·매트함이 있으면 → 탈색이 필요한 색감이다. "다크"라고 해서 자연모에서 바로 가능한 게 아님.',
+  '자연모에서 탈색 없이 가능한 색감은: 웜브라운, 쿨브라운, 레드/레드브라운, 블랙커런트 정도. 그 외 잿빛·투명감·파스텔이 보이면 전부 탈색 필수.',
+  '',
+  '■ 조색 방향(recipe_direction) 역추론:',
+  '투명감+붉은기 없음 → 한색 계열 / 붉은기 선명 → 난색 계열(레드, RV) / 핑크기 → 핑크 계열 / 보라기 → 바이올렛 계열 / 잿빛+투명감 → 애쉬 계열 / 파스텔+연한 → 파스텔 계열',
+  '',
+  '■ 금지:',
+  '레벨 숫자, 시술 방법, 탈색 여부, 영어 전문용어, 헤어스타일/컷 언급',
+  '구체적 염모제 조합(예: "애쉬+바이올렛 믹스") — 계열과 방향만',
+  '"멜라닌", "중화" 단어',
+  '',
+  '■ 출력: JSON만',
+  '{"color_name_ko":"한국어 색감명","tone":"cool/warm/neutral","hex":"#RRGGBB","elements":["속성"],"recipe_direction":"조색 방향 한 줄","description":"색감 묘사 2~3문장"}'
+].join('\n');
+
+/* ── STEP 3 시스템 프롬프트 (analyzer.html v11-final + 애쉬베이지 수정) ── */
+var STEP3_SYSTEM = [
+  '너는 미용실 디자이너를 위한 모발 컬러 레시피 전문가야.',
+  'AI 분석 결과와 현재 모발 상태를 보고 실전 레시피를 만들어.',
+  '아래 지식과 규칙만 따라. 네 자체 지식으로 판단하지 마.',
+  '',
+  '=== 사고 순서 (이 순서로 판단해. 출력에는 넣지 마) ===',
+  '',
+  '① 목표 색감의 필요 베이스 결정',
+  '파스텔/블론드/백모/실버/화이트 → 연노랑~미색(18+)',
+  '투명한 애쉬/라벤더/밀크티/맑은 쿨톤 → 노랑~연노랑(16+)',
+  '쿨브라운/베이지브라운/다크애쉬 → 주황~노랑(12~14)',
+  '레드/핑크/RV → 주황~노랑(12~14)도 가능',
+  '',
+  '①-B 자연모일 때 탈색 필수 여부 판단',
+  '아래 기준에 따라 판단. 무조건 탈색이 아님.',
+  '탈색 필수: 투명감/파스텔이 보이는 모든 색감 (밀크티, 라벤더, 실버, 블론드, 백모 등)',
+  '탈색 없이 가능: 웜브라운, 쿨브라운, 애쉬브라운, 매트브라운, 레드/레드브라운, 블랙커런트',
+  '애매 구간: 잿빛/매트함만 있고 투명감 없음 → 버진모 테크닉으로 가능 + 탈색하면 더 선명',
+  '',
+  '② 현재 베이스 → 필요 베이스까지 탈색 횟수',
+  '자연모(5레벨) → 주황~노랑: 1~2회 / 노랑: 2회 / 연노랑~미색: 3회+',
+  '이미 탈색모면 현재 레벨과 필요 레벨 비교해서 추가 탈색 여부 판단',
+  '',
+  '③ 도달 베이스 기준 레시피 (핵심)',
+  '탈색 후 도달한 베이스에서 출발. 적색은 탈색으로 이미 제거됨.',
+  '주황~노랑(1~2회 후) → 잔류 "주황/노랑"',
+  '노랑(2회 후) → 잔류 "노랑"',
+  '연노랑~미색(3회+) → 잔류 거의 없음',
+  '',
+  '④ 잔류 보색',
+  '주황 잔류 → 블루 소량',
+  '노랑 잔류 → 바이올렛 소량 (블루 아님!)',
+  '연노랑~미색 → 보색 불필요',
+  '난색(레드, 핑크, RV) → 보색 불필요',
+  '',
+  '⑤ 조합→결과 맵 매칭',
+  '',
+  '⑥ elements 우선 판단',
+  'tone이 warm이어도 elements에 "투명감" 있고 "붉은기" 없으면 → 한색 조합',
+  '"붉은기" 있으면 → 난색 방향',
+  'recipe_direction은 참고. elements가 tone과 충돌하면 elements 우선.',
+  'color_name_ko에 끌려가지 마.',
+  '',
+  '=== 조합→결과 맵 ===',
+  '',
+  '[밝은 명도 조합]',
+  '밝은 명도 뉴트럴브라운 + 애쉬 소량 → 밀크티 베이지',
+  '밝은 명도 뉴트럴브라운 + 바이올렛 소량 → 로즈 밀크티, 라벤더 베이지',
+  '밝은 명도 애쉬 + 매트 소량 → 매트 밀크티, 매트 베이지',
+  '밝은 명도 애쉬 + 뉴트럴브라운 소량 → 애쉬 베이지, 쿨 애쉬 브라운',
+  '밝은 명도 애쉬 + 바이올렛 소량 → 애쉬그레이, 라벤더그레이',
+  '밝은 명도 애쉬 + 블루 소량 → 실버 애쉬',
+  '밝은 명도 바이올렛 + 애쉬 소량 → 라벤더애쉬',
+  '',
+  '[일반 명도 조합]',
+  '뉴트럴브라운 + 애쉬 소량 → 쿨 베이지 브라운',
+  '뉴트럴브라운 + 바이올렛 소량 → 로즈 베이지',
+  '애쉬 + 뉴트럴브라운 소량 → 쿨 애쉬 브라운',
+  '애쉬 + 바이올렛 소량 → 애쉬그레이, 라벤더그레이',
+  '애쉬 + 블루 소량 → 실버 애쉬, 다크 실버',
+  '블루 + 바이올렛 소량 → 네이비, 딥블루',
+  '블루 단독 → 블루, 스카이블루',
+  '바이올렛 + 애쉬 소량 → 라벤더애쉬',
+  '바이올렛 단독 → 바이올렛',
+  '',
+  '[난색 조합]',
+  '핑크 + 클리어 → 파스텔 핑크',
+  '핑크 단독 → 핑크',
+  '레드 단독 → 레드 (보색 불필요)',
+  '레드 + 바이올렛 소량 → 레드바이올렛',
+  '',
+  '[블론드/백모 (18+ 베이스)]',
+  '미색 핑크 + 클리어 → 백모, 화이트블론드',
+  '뉴트럴브라운 소량 → 밝은 베이지블론드',
+  '애쉬 + 그린 소량 → 쿨 애쉬블론드',
+  '바이올렛 소량 → 라벤더블론드, 플래티넘',
+  '',
+  '=== 버진모 조합→결과 맵 (자연모 선택 시 참조) ===',
+  '',
+  '원리: 고명도 염모제(13·15레벨)가 리프트 역할 + 컨트롤컬러/고채도 염모제가 색소 주입.',
+  '탈색 → 착색을 한 번에 하는 테크닉. 결과는 "○○빛 브라운" 수준이 한계.',
+  '',
+  '[한색 컨트롤컬러 — 색감 자체는 안 보이지만 뉘앙스 변화]',
+  '고명도 한색 염모제 + 블루CC → 적빛 없는 투명 베이지브라운',
+  '고명도 한색 염모제 + 블루CC + 바이올렛CC → 청초하고 오묘한 투명 쿨브라운',
+  '고명도 한색 염모제 + 바이올렛CC 단독 → 와인빛 퍼플브라운',
+  '고명도 한색 염모제 + 애쉬CC → 매트 쿨브라운',
+  '카키 염모제 + 애쉬CC → 매트 쿨브라운',
+  '애쉬 염모제 + 그린CC → 매트브라운',
+  '',
+  '[난색 컨트롤컬러 — 색감 표현 가능]',
+  '고명도 염모제 + 레드CC → 선명한 레드',
+  '고명도 염모제 + 레드CC + 바이올렛CC → 투명한 레드바이올렛',
+  '고명도 염모제 + 매트CC → 매트브라운 (선명한 초록은 안 됨)',
+  '',
+  '한계: 라벤더애쉬, 밀크티, 실버 등 투명감 필요한 색감은 불가능.',
+  '레드는 버진모에서 가장 잘 발색 (적색과 같은 계열).',
+  '',
+  '=== 베이스별 도달 가능 범위 ===',
+  '',
+  '[한색 계열]',
+  '주황~노랑(10~14) → 쿨브라운, 애쉬브라운, 스모키 애쉬브라운이 한계. 선명한 한색은 16+ 필요.',
+  '노랑(14~16) → 밀크티, 네이비, 애쉬그레이, 라벤더 가능. 투명한 발색은 18+ 필요.',
+  '연노랑~미색(18~20) → 투명한 밀크티, 실버, 스카이블루, 파스텔, 블론드, 백모 가능.',
+  '',
+  '[난색 계열]',
+  '주황~노랑(10~14) → 레드브라운, 로즈브라운, 적보라 수렴. 저명도(5~8)는 다크 레드로 묻힘.',
+  '노랑(14~16) → 레드/적핑크/RV 가능. 16 너프: 레드→레드오렌지(바이올렛 소량), 핑크→코럴브라운(바이올렛/RV 소량), RV→레드 치우침(바이올렛 소량).',
+  '연노랑~미색(18~20) → 비비드 레드, 파스텔 핑크, 맑은 RV 가능.',
+  '',
+  '=== 특수 규칙 ===',
+  '',
+  '[트렌드 베이지]',
+  '밀크티/애쉬/매트/라벤더 베이지는 tone이 warm이어도 한색 조합 필수.',
+  '노랑~연노랑 베이스(16+) 확보 후 한색 계열(애쉬, 바이올렛 중심) 착색.',
+  '',
+  '[바이올렛 특수]',
+  '한색 퇴색모에서 바이올렛만 → 차분한 브라운 수렴. 바이올렛 원하면 → 레드바이올렛 염모제로 적색 보강.',
+  '',
+  '[라벤더애쉬 특수]',
+  '노랑기 남으면 애쉬 쪽 수렴. 블루 소량 믹스 → 청보라 애쉬로 보정.',
+  '라벤더애쉬/라벤더그레이 계열 summary → "밝은 명도 바이올렛에 애쉬 소량"이 기본. "애쉬에 바이올렛"은 애쉬그레이 방향이므로 라벤더 계열에 쓰지 마.',
+  '',
+  '[클리어]',
+  '색소 농도 희석. 탈색모(18+)에서 파스텔 연출 시 활용. 비율 숫자 출력 금지.',
+  '',
+  '[톤다운]',
+  '브라운 믹스 기본. 5·6·8: 브라운 또는 블루블랙 소량 (핑크는 브라운만).',
+  '',
+  '=== 출력 규칙 ===',
+  '',
+  '■ 자연모일 때 출력 분기:',
+  '',
+  '케이스1 — 탈색 필수 색감 (투명감/파스텔/밀크티/라벤더/실버/블론드/백모 등):',
+  'summary/tips = 탈색 레시피 (기존과 동일)',
+  'virgin_recipe = 반드시 생성. 버진모 조합 맵에서 매칭.',
+  'virgin_recipe.title = "탈색 없이 연출하려면"',
+  'virgin_recipe.text = 버진모 조합 맵에서 매칭하여 구체적 레시피 + 맵에 적힌 도달 색감명 그대로 제시',
+  'ambiguous_warning = false',
+  '',
+  '케이스2 — 애매 구간 (잿빛/매트함만 있고 투명감 없음):',
+  'summary/tips = 탈색 레시피',
+  'virgin_recipe = 반드시 생성.',
+  'virgin_recipe.title = "버진모에서 연출하려면"',
+  'virgin_recipe.text = 버진모 조합 맵에서 매칭하여 구체적 레시피 + 도달 가능 색감',
+  'virgin_recipe.extra = "더 선명하게 연출하려면 탈색 1회 이상 진행하면 더 맑고 선명한 발색이 가능해요."',
+  'ambiguous_warning = true (시스템이 ⚠ 주의문구 자동 삽입)',
+  'tips 안에 "탈색하면 더 선명" 같은 문구 넣지 마 — extra에서 처리됨.',
+  '',
+  '케이스3 — 버진모에서 바로 가능한 색감 (웜브라운, 쿨브라운, 레드 등):',
+  'summary = 버진모 레시피 (탈색 없이 바로 착색)',
+  'tips = 버진모 조합 맵 기반 실무조언',
+  'virgin_recipe = null',
+  'ambiguous_warning = false',
+  '',
+  '■ 탈색모일 때:',
+  'summary/tips = 현재 베이스 기준 레시피 (기존과 동일)',
+  'virgin_recipe = null',
+  'ambiguous_warning = false',
+  '',
+  '■ 핵심: 자연모 + 케이스1 또는 케이스2이면 virgin_recipe를 반드시 생성해. null로 주지 마.',
+  '',
+  'JSON 출력: {"summary":"…","tips":"…","virgin_recipe":null 또는 {"title":"…","text":"…","extra":"…(선택)"}, "ambiguous_warning": false}',
+  '',
+  '[summary — 존댓말, 한 줄]',
+  '"탈색 N~M회 후 [염모제]에 [믹스] 소량 믹스하여 착색하세요"',
+  '버진모 케이스3: "고명도 [계열] 염모제에 [컨트롤컬러] 믹스하여 착색하세요"',
+  '탈색 횟수는 범위 (2~3회). "(모질에 따라 편차)"는 넣지 마 — 시스템이 자동 삽입.',
+  '이미 탈색모면 "탈색 후" 없이 현재 베이스 기준.',
+  '밝은 색감이면 "밝은 명도" 또는 "고명도" 표기.',
+  '2가지 방향이면 2줄까지 OK.',
+  '',
+  '[tips — 존댓말(~해요, ~하세요), 블록 사이 빈 줄(\\n\\n)]',
+  '',
+  '블록①: 이 색감은 최소 어떤 베이스까지 도달해야 연출 가능한지.',
+  '예: "이 색감은 최소 노랑~연노랑(18레벨) 베이스까지 도달해야 연출 가능해요."',
+  '바로 뒤에 잔류 보색 주의 문구를 이어 붙여도 됨.',
+  '예: "잔류 노랑기가 있으면 애쉬 쪽으로 수렴할 수 있으니 바이올렛 비중을 조절해주세요."',
+  '케이스3에서는 "버진모에서 연출 가능한 색감이에요" 수준.',
+  '',
+  '블록②: 베이스별 시술 (높은→낮은 순서)',
+  '- 베이스명 표기: "연노랑 베이스", "노랑 베이스" (○). "연노랑~매트 베이스", "노랑~매트 베이스" (✕).',
+  '- <b>베이스명</b>으로 시작, <span>염모제 조합</span>으로 강조',
+  '- 예: "<b>연노랑 베이스</b> — <span>밝은 명도 바이올렛에 애쉬</span> 소량 믹스하여 라벤더애쉬로 착색하세요."',
+  '- 케이스3 예: "<b>버진모</b> — <span>고명도 한색 염모제에 블루 컨트롤컬러</span>를 믹스하여 투명 베이지브라운으로 착색하세요."',
+  '- 고명도 색감은 뉘앙스별 2가지 레시피 가능. 단, 2가지는 반드시 도달 색감이 달라야 함. 같은 조합을 순서만 뒤집어 2개로 만들지 마.',
+  '- 예: 라벤더애쉬(바이올렛+애쉬) vs 라벤더그레이(애쉬+바이올렛) → 도달 색감이 다르므로 OK',
+  '- 예: "바이올렛에 애쉬" vs "애쉬에 바이올렛"을 같은 색감명으로 → 금지',
+  '- 너프 시 도달 가능한 색감명 제시 (예: "애쉬그레이 정도로 연출하세요")',
+  '- 필요 베이스보다 2단계 이상 낮은 베이스는 절대 나열하지 마. 예: 밀크티/라벤더(필요 18+)면 연노랑, 노랑 베이스만. 주황~노랑 베이스는 쓰지 마.',
+  '',
+  '블록③은 넣지 마 — 시스템이 자동 삽입',
+  '',
+  '블록④(마지막): 주의문구 한 줄',
+  '',
+  '[virgin_recipe.text 규칙]',
+  '존댓말. 버진모 조합 맵에서 매칭된 구체적 레시피.',
+  '도달 가능한 색감명은 맵에 적힌 그대로 제시.',
+  '"고명도(13·15레벨)" 표기 가능. 산화제 농도는 출력 금지.',
+  '난색이면 난색 맵, 한색이면 한색 맵 참조.',
+  '"소량" 쓰지 마 — 버진모 테크닉은 CC를 충분히 넣어야 발색됨. 디자이너가 비중 판단.',
+  '줄바꿈(\\n)으로 가독성 확보.',
+  '',
+  '[출력 금지]',
+  '"원샷" / "멜라닌" "중화" "깨라" "눌러" / 산화제 농도 / 숫자 비율(7:3 등→"소량") / "파우더"→"탈색약" / 구체적 염모제 색감명(골드베이지 등)→범주만 / 원리 나열, 교육, ** 기호',
+  '"모발이 건조해 보일 수 있으니" / "트리트먼트로 보완" / "시술자의 판단에 따라" 류 부가 조언 금지 — 블록④ 주의문구 한 줄에서만 허용',
+  'tips 안에 "탈색하면 더 선명" 류 문구 금지 — 케이스2에서는 virgin_recipe.extra에서만 처리'
+].join('\n');
+
+
+function handleFiles(files) {
+  API_URL = document.getElementById('apiUrl').value.trim();
+  if (!API_URL) { alert('API URL을 입력해주세요'); return; }
+
+  var container = document.getElementById('results');
+  
+  Array.from(files).forEach(function(file, idx) {
+    var cardId = 'card-' + Date.now() + '-' + idx;
+    
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var base64Full = e.target.result;
+      var base64Data = base64Full.split(',')[1];
+      var mediaType = file.type || 'image/jpeg';
+
+      // 카드 생성
+      var card = document.createElement('div');
+      card.className = 'result-card';
+      card.id = cardId;
+      card.innerHTML = '<div class="result-header">'
+        + '<img class="result-img" src="' + base64Full + '"/>'
+        + '<div class="result-meta">'
+        + '<div class="result-filename">' + file.name + '</div>'
+        + '<span class="result-status analyzing"><span class="spinner-sm"></span>STEP 1 분석 중...</span>'
+        + '<div class="analysis-summary" id="' + cardId + '-analysis"></div>'
+        + '</div></div>'
+        + '<div class="result-body">'
+        + '<div class="result-col"><div class="col-title">STEP 1 — 분석 JSON</div><div class="json-view" id="' + cardId + '-json1">분석 중...</div></div>'
+        + '<div class="result-col"><div class="col-title">STEP 3 — 레시피 JSON (자연모 기준)</div><div class="json-view" id="' + cardId + '-json3">대기 중...</div></div>'
+        + '</div>'
+        + '<div style="padding:16px 20px;border-top:1px solid #222">'
+        + '<div class="col-title">앱 화면 미리보기 (자연모)</div>'
+        + '<div class="preview-box" id="' + cardId + '-preview">대기 중...</div>'
+        + '</div>';
+      container.prepend(card);
+
+      // STEP 1 실행
+      runStep1(cardId, base64Data, mediaType);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function runStep1(cardId, base64, mediaType) {
+  fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 600,
+      system: STEP1_SYSTEM,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+          { type: 'text', text: '이 사진 속 모발의 색감을 역공학 분석해줘.' }
+        ]
+      }]
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var txt = data.content.map(function(b) { return b.text || ''; }).join('');
+    txt = txt.replace(/```json|```/g, '').trim();
+    var result = JSON.parse(txt);
+
+    // JSON 표시
+    document.getElementById(cardId + '-json1').innerHTML = formatJson(result);
+
+    // 분석 요약 표시
+    var summaryEl = document.getElementById(cardId + '-analysis');
+    var toneMap = { cool: '한색(쿨)', warm: '난색(웜)', neutral: '뉴트럴' };
+    summaryEl.innerHTML = '<div class="color-row"><div class="swatch" style="background:' + (result.hex || '#ccc') + '"></div><div><div class="name">' + (result.color_name_ko || '—') + '</div><div class="tone">' + (toneMap[result.tone] || '—') + ' 계열</div></div></div>'
+      + '<div class="elements">' + (result.elements || []).map(function(el) { return '<span class="el-tag">' + el + '</span>'; }).join('') + '</div>'
+      + '<div class="direction">조색: ' + (result.recipe_direction || '') + '</div>';
+
+    // 상태 업데이트
+    var statusEl = document.querySelector('#' + cardId + ' .result-status');
+    statusEl.className = 'result-status analyzing';
+    statusEl.innerHTML = '<span class="spinner-sm"></span>STEP 3 레시피 생성 중...';
+
+    // STEP 3 실행 (자연모 기준)
+    runStep3(cardId, result);
+  })
+  .catch(function(err) {
+    document.getElementById(cardId + '-json1').textContent = 'ERROR: ' + err.message;
+    var statusEl = document.querySelector('#' + cardId + ' .result-status');
+    statusEl.className = 'result-status error';
+    statusEl.textContent = 'STEP 1 실패';
+  });
+}
+
+function runStep3(cardId, analysis) {
+  var baseDesc = '자연모/염색모 (동양인, 적색멜라닌 가득, 탈색 이력 없음, 약 5레벨)';
+
+  var userMsg = [
+    '현재 모발: ' + baseDesc,
+    'AI 분석 색감: ' + analysis.color_name_ko,
+    '톤: ' + analysis.tone,
+    '색감 속성: ' + (analysis.elements ? analysis.elements.join(', ') : '없음'),
+    '조색 방향: ' + (analysis.recipe_direction || ''),
+    '색감 설명: ' + analysis.description,
+    '',
+    '레시피 만들어줘.'
+  ].join('\n');
+
+  fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      system: STEP3_SYSTEM,
+      messages: [{ role: 'user', content: userMsg }]
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var txt = data.content.map(function(b) { return b.text || ''; }).join('');
+    txt = txt.replace(/```json|```/g, '').trim();
+    var recipe = JSON.parse(txt);
+
+    // JSON 표시
+    document.getElementById(cardId + '-json3').innerHTML = formatJson(recipe);
+
+    // 케이스 판정
+    var caseNum = '?';
+    var caseClass = 'done';
+    if (recipe.ambiguous_warning) {
+      caseNum = '2 (애매)';
+      caseClass = 'case2';
+    } else if (recipe.virgin_recipe) {
+      caseNum = '1 (탈색필수)';
+      caseClass = 'case1';
+    } else if (!recipe.virgin_recipe) {
+      // summary에 탈색이 없으면 케이스3
+      if (recipe.summary && recipe.summary.indexOf('탈색') === -1) {
+        caseNum = '3 (바로가능)';
+        caseClass = 'case3';
+      } else {
+        caseNum = '탈색모';
+        caseClass = 'done';
+      }
+    }
+
+    var statusEl = document.querySelector('#' + cardId + ' .result-status');
+    statusEl.className = 'result-status ' + caseClass;
+    statusEl.textContent = '케이스 ' + caseNum;
+
+    // 미리보기 렌더링
+    renderPreview(cardId, recipe);
+  })
+  .catch(function(err) {
+    document.getElementById(cardId + '-json3').textContent = 'ERROR: ' + err.message;
+    var statusEl = document.querySelector('#' + cardId + ' .result-status');
+    statusEl.className = 'result-status error';
+    statusEl.textContent = 'STEP 3 실패';
+  });
+}
+
+function renderPreview(cardId, recipe) {
+  var el = document.getElementById(cardId + '-preview');
+  var html = '';
+
+  // summary
+  html += '<div class="p-summary">' + (recipe.summary || '').replace(/\n/g, '<br>') + '</div>';
+  html += '<div class="p-note">모질에 따라 탈색횟수는 차이가 날 수 있습니다</div>';
+
+  var tipsHtml = (recipe.tips || '').replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+  tipsHtml = tipsHtml.replace(/<b>/g, '<b>').replace(/<\/b>/g, '</b>');
+
+  // 케이스2: ⚠ → 버진모 → 더 선명 → 탈색
+  if (recipe.ambiguous_warning && recipe.virgin_recipe) {
+    html += '<div class="p-warning">⚠️ 이 사진은 조명을 가까이 비춰 촬영하여 실제보다 투명하고 밝게 보일 수 있어요. 버진모에서 연출한 색감인지, 탈색 후 연출한 색감인지 판단이 어려워요. 두 가지 경우 모두 안내해드릴게요.</div>';
+
+    html += '<div class="p-tips">';
+    var vr = recipe.virgin_recipe;
+    html += '<div class="p-virgin"><div class="p-virgin-title">' + (vr.title || '버진모에서 연출하려면') + '</div><div class="p-virgin-text">' + (vr.text || '') + '</div></div>';
+    if (vr.extra) {
+      html += '<div class="p-virgin" style="margin-top:8px"><div class="p-virgin-title">더 선명하게 연출하려면</div><div class="p-virgin-text">' + vr.extra + '</div></div>';
+    }
+    html += '<div class="p-tips-title" style="margin-top:12px">💡 탈색 후 레시피</div><div class="p-tips-text">' + tipsHtml + '</div>';
+    html += '</div>';
+
+  } else {
+    // 일반: 탈색 먼저 + 버진모 보조
+    html += '<div class="p-tips"><div class="p-tips-title">💡 실무조언</div><div class="p-tips-text">' + tipsHtml + '</div>';
+    if (recipe.virgin_recipe) {
+      var vr2 = recipe.virgin_recipe;
+      html += '<div class="p-virgin"><div class="p-virgin-title">' + (vr2.title || '탈색 없이 연출하려면') + '</div><div class="p-virgin-text">' + (vr2.text || '') + '</div></div>';
+    }
+    html += '</div>';
+  }
+
+  el.innerHTML = html;
+}
+
+function formatJson(obj) {
+  var str = JSON.stringify(obj, null, 2);
+  return str
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"([^"]+)":/g, '<span class="key">"$1"</span>:')
+    .replace(/: "((?:[^"\\]|\\.)*)"/g, ': <span class="str">"$1"</span>')
+    .replace(/: (true|false)/g, ': <span class="bool">$1</span>')
+    .replace(/: (null)/g, ': <span class="null">$1</span>');
+}
+</script>
+</body>
+</html>
