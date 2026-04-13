@@ -189,7 +189,7 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
               <div class="desc">주황기는 빠지고 노랑·매트(단무지)기</div>
             </button>
             <button class="base-btn sub-btn" data-sub="pale_yellow" onclick="selectSub(this)" style="min-width:100%">
-              <div class="label" style="display:flex;align-items:center;justify-content:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;background:#c6b9ac;border:1px solid rgba(0,0,0,0.1);flex-shrink:0"></span> 연노랑~미색</div>
+              <div class="label" style="display:flex;align-items:center;justify-content:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;background:#c6b9ac;border:1px solid rgba(0,0,0,0.1);flex-shrink:0"></span> 연노랑~아이보리</div>
               <div class="desc">거의 다 빠진 상태</div>
             </button>
           </div>
@@ -466,7 +466,7 @@ function generateRecipe(){
   var subLabels = {
     'orange_yellow': '탈색모 — 주황~노랑 잔류 (붉은기·주황기가 남아있는 상태, 약 14~16레벨)',
     'yellow_mat': '탈색모 — 노랑 잔류 (주황기는 빠지고 노랑기, 약 16레벨)',
-    'pale_yellow': '탈색모 — 연노랑~미색 (거의 다 빠진 상태, 약 18~20레벨)'
+    'pale_yellow': '탈색모 — 연노랑~아이보리 (거의 다 빠진 상태, 약 18~20레벨)'
   };
 
   if(ST.type === 'natural'){
@@ -525,6 +525,7 @@ function generateRecipe(){
     '',
     '주황 잔류 → 블루 소량 / 노랑 잔류 → 바이올렛 소량 (블루 쓰면 매트!)',
     '연노랑~아이보리 → 보색 불필요 / 난색 → 보색 불필요',
+    '★ 보색 컬러는 별도 단계가 아니다. 메인 염모제 조합에 소량 믹스하여 한 번에 시술한다.',
     '',
     '=== [7] 왜 탈색이 필요한가 ===',
     '',
@@ -561,6 +562,10 @@ function generateRecipe(){
     '- 고명도(13·15) → 염료 적어서 색이 거의 안 나올 수 있다',
     '- 중명도(9·11) → 염료 많아서 너무 진하게 나올 수 있다',
     '- 파스텔 발색 → 중명도 염모제 + 클리어로 염료 농도 희석',
+    '',
+    '■ 탈색모에서의 조합 자유도:',
+    '- 탈색모(특히 18레벨 이상)에서는 멜라닌이 거의 없으므로 염모제+염모제 조합도, 염모제+컨트롤컬러 조합도 모두 가능하다.',
+    '- 컨트롤컬러만이 유일한 선택지가 아님. 염모제끼리 믹스해도 색이 그대로 발색된다.',
     '',
     '=== [9] 염모제 계열 체계 ===',
     '',
@@ -610,12 +615,16 @@ function generateRecipe(){
     '+ 블루 컨트롤컬러 → 적빛 없는 투명 베이지브라운',
     '+ 블루+바이올렛 컨트롤컬러 → 청초하고 오묘한 투명 쿨브라운',
     '+ 애쉬 컨트롤컬러 → 매트 쿨브라운',
-    '+ 바이올렛 컨트롤컬러 → 와인빛 퍼플브라운',
+    '+ 바이올렛 컨트롤컬러 → 쿨브라운 (바이올렛도 한색이므로 와인빛이 아니라 쿨톤 브라운으로 수렴)',
     '카키 염모제 + 애쉬 컨트롤컬러 → 매트 쿨브라운',
+    '',
+    '★ 버진모에서 와인빛·퍼플브라운을 원하면 → 난색 방향(RV, 레드바이올렛)으로 가야 한다.',
+    '한색 바이올렛+한색 애쉬 조합은 → 쿨브라운 수렴이지, 와인빛이 아니다.',
     '',
     '■ 난색 조합 결과 (고명도 난색 염모제 +):',
     '+ 레드 컨트롤컬러 → 선명한 레드',
     '+ 레드+바이올렛 컨트롤컬러 → 투명한 레드바이올렛',
+    '+ 레드바이올렛 염모제 + 난색 컨트롤컬러(레드, 핑크) → 와인빛 퍼플브라운',
     '',
     '=== [11] 조합→결과 참고 맵 ===',
     '',
