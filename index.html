@@ -21,6 +21,52 @@
     .page-screen{display:none}
     #page-home{display:block}
     .modal-view-val{font-size:15px;font-weight:600;color:#1A1814;margin-left:auto;}
+
+    /* 추가제품 산화제 포함 체크박스 */
+    .extra-row-top {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .oxi-include-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+      padding: 4px 0 2px 2px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .oxi-include-chk {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      accent-color: #5B7F5E;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .oxi-include-text {
+      font-size: 12px;
+      color: #666;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .oxi-include-label:has(.oxi-include-chk:checked) .oxi-include-text {
+      color: #5B7F5E;
+      font-weight: 600;
+    }
+    .result-oxi-tag {
+      display: inline-block;
+      font-size: 10px;
+      color: #5B7F5E;
+      background: rgba(91,127,94,0.1);
+      border: 1px solid rgba(91,127,94,0.25);
+      padding: 1px 5px;
+      border-radius: 4px;
+      margin-left: 4px;
+      font-weight: 600;
+      vertical-align: middle;
+    }
   </style>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-82LSVB4T6K"></script>
 <script>
@@ -298,7 +344,7 @@
       <div class="custom-gram-row">
         <span class="custom-gram-label">직접 입력</span>
         <div class="custom-gram-input-wrap">
-          <input class="calc-input custom-gram" id="calc-custom-input" type="number" placeholder="" min="1" inputmode="decimal"/>
+          <input class="calc-input custom-gram" id="calc-custom-input" type="number" placeholder="g 단위" min="1" inputmode="decimal"/>
           <span class="gram-unit">g</span>
         </div>
       </div>
@@ -307,11 +353,22 @@
       </div>
     </div>
 
-    <!-- ② 염모제 입력 -->
+    <!-- ② 산화제 비율 -->
+    <div class="calc-card">
+      <div class="calc-card-title">산화제 비율</div>
+      <div class="oxi-btn-row">
+        <button class="oxi-btn active" data-oxi="1">1 : 1</button>
+        <button class="oxi-btn" data-oxi="1.5">1 : 1.5</button>
+        <button class="oxi-btn" data-oxi="2">1 : 2</button>
+        <button class="oxi-btn" data-oxi="3">1 : 3</button>
+      </div>
+    </div>
+
+    <!-- ③ 염모제 입력 (고정 3줄) -->
     <div class="calc-card">
       <div class="calc-card-title">
         염모제
-        <span class="calc-title-note">최대 3개</span>
+        <span class="calc-title-note">비율 입력 (예: 1:5:3)</span>
       </div>
       <div class="color-list-header">
         <span class="color-col-name">이름</span>
@@ -320,21 +377,35 @@
       <div id="color-list">
         <div class="color-row" data-idx="1">
           <div class="color-row-inner">
-            <input class="calc-input color-name" type="text" placeholder="염모제 1 이름"/>
+            <input class="calc-input color-name" type="text" placeholder="염모제 1"/>
             <div class="ratio-wrap">
               <span class="ratio-sep"></span>
               <input class="calc-input ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/>
             </div>
           </div>
         </div>
+        <div class="color-row" data-idx="2">
+          <div class="color-row-inner">
+            <input class="calc-input color-name" type="text" placeholder="염모제 2"/>
+            <div class="ratio-wrap">
+              <span class="ratio-sep">:</span>
+              <input class="calc-input ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/>
+            </div>
+          </div>
+        </div>
+        <div class="color-row" data-idx="3">
+          <div class="color-row-inner">
+            <input class="calc-input color-name" type="text" placeholder="염모제 3"/>
+            <div class="ratio-wrap">
+              <span class="ratio-sep">:</span>
+              <input class="calc-input ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/>
+            </div>
+          </div>
+        </div>
       </div>
-      <button class="calc-add-row-btn" id="add-color-btn">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        염모제 추가
-      </button>
     </div>
 
-    <!-- ③ 추가 제품 -->
+    <!-- ④ 추가 제품 -->
     <div class="calc-card">
       <button class="addons-toggle" id="addons-toggle-btn">+ 추가 제품</button>
        <div id="addons-body" style="display:none;">
@@ -347,8 +418,9 @@
            </div>
            <div class="addons-note-body" id="addons-note-text">
              컨트롤컬러, 클리어, 앰플/본드 등<br>
-             제품명과 비율(%)을 입력하면<br>
-             메인 염모제 기준으로 자동 계산됩니다
+             제품명과 비율(%)을 입력하세요<br>
+             <strong>'산화제 비율에 포함'</strong> 체크 시<br>
+             해당 제품의 양이 산화제 계산에 합산됩니다
            </div>
          </div>
 
@@ -360,17 +432,6 @@
            추가 (최대 3개)
          </button>
        </div>
-    </div>
-
-    <!-- ④ 산화제 비율 -->
-    <div class="calc-card">
-      <div class="calc-card-title">산화제 비율</div>
-      <div class="oxi-btn-row">
-        <button class="oxi-btn active" data-oxi="1">1 : 1</button>
-        <button class="oxi-btn" data-oxi="1.5">1 : 1.5</button>
-        <button class="oxi-btn" data-oxi="2">1 : 2</button>
-        <button class="oxi-btn" data-oxi="3">1 : 3</button>
-      </div>
     </div>
 
     <!-- ⑤ 반올림 옵션 -->

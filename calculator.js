@@ -1,29 +1,30 @@
 /* ══════════════════════════════════════
    SHIELD — calculator.js
-   염모제 레시피 계산기
+   염모제 레시피 계산기 (v2 — 바울 구조)
 ══════════════════════════════════════ */
 
 var CalcState = {
   totalGram:   120,
   roundMode:   1,      // 1 = 1g 반올림, 0.5 = 0.5g 반올림
-  oxiRatio:    1,      // 1,2,3 → 1:1, 1:2, 1:3
-  extras:      [],     // { id, name, pct, enabled }
+  oxiRatio:    1,      // 1, 1.5, 2, 3
+  extras:      [],     // { id, name, pct, enabled, includeInOxi }
   extraIdSeed: 0,
   addonsOpen:  false
 };
 
 /* ── 초기화 ── */
 function initCalc() {
-  /* 첫 번째 color-row input 이벤트 바인딩 */
+  /* 염모제 행 3개의 input 이벤트 바인딩 */
   document.querySelectorAll('#color-list .color-row input').forEach(function(el) {
     el.addEventListener('input', calcRender);
   });
-  /* gram-btn 두 번째(미디움) 기본 active 보정 */
+
+  /* gram-btn 기본 active */
   var btns = document.querySelectorAll('.gram-btn');
   btns.forEach(function(b) { b.classList.remove('active'); });
-  /* 60g → 미디움이 실제로는 60g이어야 하므로 60 active */
   var defaultBtn = document.querySelector('.gram-btn[data-gram="120"]');
   if (defaultBtn) defaultBtn.classList.add('active');
+
   calcBindEvents();
   calcRender();
 }
@@ -35,7 +36,7 @@ function calcBindEvents() {
     btn.addEventListener('click', function() {
       var g = parseInt(btn.dataset.gram);
       CalcState.totalGram = g;
-      document.getElementById('calc-custom-input').value = '';
+      document.getElementById('calc-custom-input').value = g;
       document.querySelectorAll('.gram-btn').forEach(function(b) { b.classList.remove('active'); });
       btn.classList.add('active');
       calcRender();
@@ -48,6 +49,9 @@ function calcBindEvents() {
     if (v > 0) {
       CalcState.totalGram = v;
       document.querySelectorAll('.gram-btn').forEach(function(b) { b.classList.remove('active'); });
+      /* 프리셋 값이면 active 표시 */
+      var matched = document.querySelector('.gram-btn[data-gram="' + Math.round(v) + '"]');
+      if (matched) matched.classList.add('active');
       calcRender();
     }
   });
@@ -72,60 +76,11 @@ function calcBindEvents() {
     });
   });
 
-  /* 염모제 추가 버튼 */
-  document.getElementById('add-color-btn').addEventListener('click', addColorRow);
-
   /* 추가 제품 토글 */
   document.getElementById('addons-toggle-btn').addEventListener('click', toggleAddons);
 
   /* 추가 제품 항목 추가 */
   document.getElementById('add-extra-btn').addEventListener('click', addExtraRow);
-
-  /* 기본 추가제품 없음 - 커스텀만 사용 */
-
-  /* 체크박스 없음 */
-
-}
-
-/* ── 염모제 행 추가 ── */
-function addColorRow() {
-  var list = document.getElementById('color-list');
-  var rows = list.querySelectorAll('.color-row');
-  if (rows.length >= 3) {
-    showToast('염모제는 최대 3개까지 입력할 수 있습니다');
-    return;
-  }
-  var idx = rows.length + 1;
-  var row = document.createElement('div');
-  row.className = 'color-row';
-  row.dataset.idx = idx;
-  row.innerHTML =
-    '<div class="color-row-inner">' +
-      '<input class="calc-input color-name" type="text" placeholder="염모제 ' + idx + ' 이름" />' +
-      '<div class="ratio-wrap">' +
-        '<span class="ratio-sep">' + (idx > 1 ? ':' : '') + '</span>' +
-        '<input class="calc-input ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal" />' +
-      '</div>' +
-      '<button class="remove-row-btn" onclick="removeColorRow(this)">×</button>' +
-    '</div>';
-  row.querySelectorAll('input').forEach(function(el) { el.addEventListener('input', calcRender); });
-  list.appendChild(row);
-  calcRender();
-}
-
-function removeColorRow(btn) {
-  btn.closest('.color-row').remove();
-  reindexColorRows();
-  calcRender();
-}
-
-function reindexColorRows() {
-  document.querySelectorAll('#color-list .color-row').forEach(function(row, i) {
-    var nameInput = row.querySelector('.color-name');
-    nameInput.placeholder = '염모제 ' + (i+1) + ' 이름';
-    var sep = row.querySelector('.ratio-sep');
-    if (sep) sep.textContent = i > 0 ? ':' : '';
-  });
 }
 
 /* ── 추가제품 토글 ── */
@@ -138,7 +93,7 @@ function toggleAddons() {
   calcRender();
 }
 
-/* ── 커스텀 추가제품 행 추가 (최대 2개) ── */
+/* ── 커스텀 추가제품 행 추가 (최대 3개) ── */
 function addExtraRow() {
   if (CalcState.extras.length >= 3) {
     showToast('추가 제품은 최대 3개까지 가능합니다');
@@ -146,19 +101,25 @@ function addExtraRow() {
   }
   CalcState.extraIdSeed++;
   var id = 'extra-' + CalcState.extraIdSeed;
-  CalcState.extras.push({ id: id, name: '', pct: '', enabled: true });
+  CalcState.extras.push({ id: id, name: '', pct: '', enabled: true, includeInOxi: false });
 
   var list = document.getElementById('extra-custom-list');
   var row = document.createElement('div');
   row.className = 'extra-row';
   row.id = 'row-' + id;
   row.innerHTML =
-    '<input class="calc-input extra-name" type="text" placeholder="제품명" data-id="' + id + '" />' +
-    '<div class="extra-pct-wrap">' +
-      '<input class="calc-input extra-pct" type="number" placeholder="%" min="0" max="999" inputmode="decimal" data-id="' + id + '" />' +
-      '<span class="pct-label">%</span>' +
+    '<div class="extra-row-top">' +
+      '<input class="calc-input extra-name" type="text" placeholder="제품명" data-id="' + id + '" />' +
+      '<div class="extra-pct-wrap">' +
+        '<input class="calc-input extra-pct" type="number" placeholder="%" min="0" max="999" inputmode="decimal" data-id="' + id + '" />' +
+        '<span class="pct-label">%</span>' +
+      '</div>' +
+      '<button class="remove-row-btn" onclick="removeExtraRow(\'' + id + '\')">×</button>' +
     '</div>' +
-    '<button class="remove-row-btn" onclick="removeExtraRow(\'' + id + '\')">×</button>';
+    '<label class="oxi-include-label" data-id="' + id + '">' +
+      '<input type="checkbox" class="oxi-include-chk" data-id="' + id + '" />' +
+      '<span class="oxi-include-text">산화제 비율에 포함</span>' +
+    '</label>';
 
   row.querySelector('.extra-name').addEventListener('input', function() {
     var item = CalcState.extras.find(function(e) { return e.id === id; });
@@ -168,6 +129,11 @@ function addExtraRow() {
   row.querySelector('.extra-pct').addEventListener('input', function() {
     var item = CalcState.extras.find(function(e) { return e.id === id; });
     if (item) item.pct = this.value;
+    calcRender();
+  });
+  row.querySelector('.oxi-include-chk').addEventListener('change', function() {
+    var item = CalcState.extras.find(function(e) { return e.id === id; });
+    if (item) item.includeInOxi = this.checked;
     calcRender();
   });
 
@@ -195,7 +161,7 @@ function calcRender() {
   /* 선택 총량 표시 */
   document.getElementById('selected-gram-display').textContent = total + 'g';
 
-  /* 염모제 rows 읽기 */
+  /* 염모제 rows 읽기 (고정 3줄) */
   var colorRows = document.querySelectorAll('#color-list .color-row');
   var colors = [];
   colorRows.forEach(function(row) {
@@ -222,21 +188,28 @@ function calcRender() {
 
   /* 추가제품 계산 */
   var extraItems = [];
-
-  /* 기본 추가제품 없음 */
-
-  /* 커스텀 추가제품 */
   CalcState.extras.forEach(function(e) {
     var pct = parseFloat(e.pct) || 0;
     if (pct > 0) {
-      extraItems.push({ name: e.name || '추가제품', pct: pct, gram: rnd(mainTotal * pct / 100) });
+      extraItems.push({
+        name: e.name || '추가제품',
+        pct: pct,
+        gram: rnd(mainTotal * pct / 100),
+        includeInOxi: e.includeInOxi
+      });
     }
   });
 
   var extraTotal   = extraItems.reduce(function(s, e) { return s + e.gram; }, 0);
-  var allColorTotal= mainTotal + extraTotal;
-  var oxiGram      = rnd(allColorTotal * CalcState.oxiRatio);
-  var grandTotal   = allColorTotal + oxiGram;
+
+  /* 산화제 계산: 메인 염모제 + 산화제 포함 체크된 추가제품 */
+  var oxiBase = mainTotal;
+  extraItems.forEach(function(e) {
+    if (e.includeInOxi) oxiBase += e.gram;
+  });
+  var oxiGram = rnd(oxiBase * CalcState.oxiRatio);
+
+  var grandTotal = mainTotal + extraTotal + oxiGram;
 
   /* ── 추가제품 안내 문구 실시간 업데이트 ── */
   var noteEl = document.getElementById('addons-note-text');
@@ -269,7 +242,7 @@ function calcRender() {
 
   var html = '';
 
-  /* 염모제 비율 표시 */
+  /* 염모제 섹션 */
   html += '<div class="result-section">';
   html += '<div class="result-sec-label">염모제</div>';
 
@@ -282,7 +255,6 @@ function calcRender() {
   } else {
     /* 비율 흐름 표시 */
     var ratioStr = colors.map(function(c) { return c.ratio; }).join(' : ');
-    var gramStr  = colors.map(function(c) { return c.gram + 'g'; }).join(' : ');
     html +=
       '<div class="result-ratio-flow">' +
         '<span class="result-ratio-label">' +
@@ -310,11 +282,12 @@ function calcRender() {
   if (extraItems.length > 0) {
     html += '<div class="result-section">';
     html += '<div class="result-sec-label">추가 제품</div>';
-  html += '<div class="result-extra-basis">메인 염모제 <strong>' + mainTotal + 'g</strong> 기준 · %당 <strong>' + rnd(mainTotal * 0.01) + 'g</strong></div>';
+    html += '<div class="result-extra-basis">메인 염모제 <strong>' + mainTotal + 'g</strong> 기준 · %당 <strong>' + rnd(mainTotal * 0.01) + 'g</strong></div>';
     extraItems.forEach(function(e) {
+      var oxiTag = e.includeInOxi ? ' <span class="result-oxi-tag">산화제 포함</span>' : '';
       html +=
         '<div class="result-main-row">' +
-          '<span class="result-name">' + esc(e.name) + ' <span class="result-pct">(' + e.pct + '%)</span></span>' +
+          '<span class="result-name">' + esc(e.name) + ' <span class="result-pct">(' + e.pct + '%)</span>' + oxiTag + '</span>' +
           '<span class="result-gram">' + e.gram + 'g</span>' +
         '</div>';
     });
@@ -326,10 +299,11 @@ function calcRender() {
     html += '</div>';
   }
 
-  /* 전체 염모제 + 산화제 */
+  /* 전체 합계 */
   html += '<div class="result-section result-section-total">';
 
-  /* 염모제 총 사용량 강조 박스 */
+  /* 염모제 총 사용량 */
+  var allColorTotal = mainTotal + extraTotal;
   html +=
     '<div class="result-color-total-box">' +
       '<span class="result-color-total-label">염모제 총 사용량</span>' +
@@ -337,20 +311,26 @@ function calcRender() {
     '</div>';
 
   /* 산화제 */
+  var oxiLabel = '산화제 (1 : ' + CalcState.oxiRatio + ')';
+  if (oxiBase !== mainTotal) {
+    oxiLabel += ' — 기준 ' + oxiBase + 'g';
+  }
   html +=
     '<div class="result-total-row" style="margin-top:8px;">' +
-      '<span>산화제 (1 : ' + CalcState.oxiRatio + ')</span>' +
+      '<span>' + oxiLabel + '</span>' +
       '<span class="result-total-gram">' + oxiGram + 'g</span>' +
     '</div>';
 
   html += '<div class="result-divider"></div>';
 
-  /* 염모제 + 산화제 총 사용량 */
+  /* 바울 합계: 염모제 + 산화제 + 추가 순서 */
   html +=
     '<div class="result-grand-row">' +
       '<div class="result-grand-label-wrap">' +
-        '<span class="result-grand-title">염모제 + 산화제</span>' +
-        '<span class="result-grand-sub">총 사용량</span>' +
+        '<span class="result-grand-title">바울 합계</span>' +
+        '<span class="result-grand-sub">염모제 ' + mainTotal + 'g + 산화제 ' + oxiGram + 'g' +
+          (extraTotal > 0 ? ' + 추가 ' + extraTotal + 'g' : '') +
+        '</span>' +
       '</div>' +
       '<span class="result-grand-gram">' + grandTotal + 'g</span>' +
     '</div>';
