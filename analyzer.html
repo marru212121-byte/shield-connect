@@ -10,68 +10,68 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{font-family:'Noto Sans KR',sans-serif;background:#FAFAF8;color:#1A1814;min-height:100dvh;overflow-x:hidden}
+html,body{font-family:'Noto Sans KR',sans-serif;background:#FAFAF7;color:#1C1917;min-height:100dvh;overflow-x:hidden}
 input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-family:inherit}
 
-.app{width:100%;max-width:430px;margin:0 auto;min-height:100dvh;background:#FAFAF8}
-@media(min-width:431px){.app{border-left:1px solid #eee;border-right:1px solid #eee}}
+.app{width:100%;max-width:430px;margin:0 auto;min-height:100dvh;background:#FAFAF7}
+@media(min-width:431px){.app{border-left:1px solid #e8e4df;border-right:1px solid #e8e4df}}
 
 /* 헤더 */
-.page-header{display:flex;align-items:center;gap:12px;padding:14px 16px;position:sticky;top:0;z-index:100;background:rgba(250,250,248,0.92);backdrop-filter:blur(12px);border-bottom:1px solid #eee}
-.back-btn{width:34px;height:34px;border-radius:12px;border:1.5px solid #eee;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
-.back-btn svg{color:#555}
-.page-header h2{font-size:16px;font-weight:800;color:#1A1814;margin:0}
-.page-header .sub{font-size:11px;color:#888;margin-top:2px}
+.page-header{display:flex;align-items:center;gap:12px;padding:14px 16px;position:sticky;top:0;z-index:100;background:rgba(250,250,247,0.92);backdrop-filter:blur(12px);border-bottom:1px solid #e8e4df}
+.back-btn{width:34px;height:34px;border-radius:12px;border:1.5px solid #e8e4df;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.back-btn svg{color:#A8A29E}
+.page-header h2{font-size:16px;font-weight:800;color:#1C1917;margin:0}
+.page-header .sub{font-size:11px;color:#A8A29E;margin-top:2px}
 
 /* 카드 */
-.card{background:#fff;border-radius:16px;border:1.5px solid #eee;padding:20px;margin:0 16px 12px}
-.card-title{font-size:13px;font-weight:700;color:#1A1814;margin-bottom:12px;display:flex;align-items:center;gap:6px}
-.card-title .badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;background:rgba(158,127,191,0.12);color:#9E7FBF}
+.card{background:#fff;border-radius:16px;border:1.5px solid #e8e4df;padding:20px;margin:0 16px 12px}
+.card-title{font-size:13px;font-weight:700;color:#1C1917;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.card-title .badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;background:#D4B89620;color:#8B7355}
 
 /* STEP 1: 사진 업로드 */
-.upload-zone{border:2px dashed #ddd;border-radius:14px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:#FAFAF8}
-.upload-zone:active{border-color:#9E7FBF;background:rgba(158,127,191,0.04)}
+.upload-zone{border:2px dashed #d5cfc7;border-radius:14px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:#FAF8F4}
+.upload-zone:active{border-color:#C4A97A;background:#D4B89608}
 .upload-zone.has-image{border:none;padding:0;background:none}
-.upload-zone .icon{font-size:32px;margin-bottom:8px;color:#bbb}
-.upload-zone .txt{font-size:13px;color:#888;line-height:1.6}
-.upload-zone .txt b{color:#9E7FBF;font-weight:600}
+.upload-zone .icon{margin-bottom:8px;color:#C4B5A0;display:flex;justify-content:center}
+.upload-zone .txt{font-size:13px;color:#A8A29E;line-height:1.6}
+.upload-zone .txt b{color:#8B7355;font-weight:600}
 .upload-preview{width:100%;border-radius:14px;display:block;object-fit:cover;max-height:280px}
-.upload-change{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;font-size:12px;color:#9E7FBF;font-weight:600;cursor:pointer;padding:8px}
+.upload-change{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;font-size:12px;color:#8B7355;font-weight:600;cursor:pointer;padding:8px}
 .upload-change:active{opacity:0.6}
 
 /* 분석 결과 */
-.analysis-box{background:linear-gradient(135deg,#f8f6fb,#f3f0f8);border-radius:14px;padding:16px;margin-top:12px;display:none}
+.analysis-box{background:linear-gradient(135deg,#FAF6F0,#F5EDE2);border-radius:14px;padding:16px;margin-top:12px;display:none}
 .analysis-box.show{display:block;animation:fadeUp .4s ease}
-.analysis-label{font-size:10px;font-weight:700;color:#9E7FBF;letter-spacing:0.5px;margin-bottom:8px}
+.analysis-label{font-size:10px;font-weight:700;color:#8B7355;letter-spacing:0.5px;margin-bottom:8px}
 .analysis-color-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .analysis-swatch{width:36px;height:36px;border-radius:10px;border:1.5px solid rgba(0,0,0,0.08);flex-shrink:0}
-.analysis-color-name{font-size:15px;font-weight:700;color:#1A1814}
-.analysis-color-level{font-size:12px;color:#888;margin-top:2px}
-.analysis-desc{font-size:13px;color:#555;line-height:1.7;margin-top:8px}
+.analysis-color-name{font-size:15px;font-weight:700;color:#1C1917}
+.analysis-color-level{font-size:12px;color:#A8A29E;margin-top:2px}
+.analysis-desc{font-size:13px;color:#6B5D4E;line-height:1.7;margin-top:8px}
 
 /* 분석 중 로딩 */
 .analyzing{text-align:center;padding:24px;display:none}
 .analyzing.show{display:block}
-.analyzing .spinner{width:28px;height:28px;border:3px solid #eee;border-top-color:#9E7FBF;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
-.analyzing .txt{font-size:13px;color:#888}
+.analyzing .spinner{width:28px;height:28px;border:3px solid #e8e4df;border-top-color:#C4A97A;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+.analyzing .txt{font-size:13px;color:#A8A29E}
 
 /* STEP 2: 베이스 선택 */
 .step2-wrap{display:none;animation:fadeUp .4s ease}
 .step2-wrap.show{display:block}
 .base-option-group{display:flex;flex-direction:column;gap:8px}
-.base-option-title{font-size:11px;font-weight:600;color:#888;margin-bottom:4px;margin-top:8px}
+.base-option-title{font-size:11px;font-weight:600;color:#A8A29E;margin-bottom:4px;margin-top:8px}
 .base-btn-row{display:flex;gap:8px;flex-wrap:wrap}
-.base-btn{flex:1;min-width:calc(50% - 4px);padding:14px 12px;border-radius:12px;border:1.5px solid #eee;background:#fff;cursor:pointer;text-align:center;transition:all .15s;font-family:inherit}
+.base-btn{flex:1;min-width:calc(50% - 4px);padding:14px 12px;border-radius:12px;border:1.5px solid #e8e4df;background:#fff;cursor:pointer;text-align:center;transition:all .15s;font-family:inherit}
 .base-btn:active{transform:scale(0.97)}
-.base-btn.selected{border-color:#9E7FBF;background:rgba(158,127,191,0.06);box-shadow:0 0 0 1px #9E7FBF}
-.base-btn .label{font-size:13px;font-weight:600;color:#1A1814}
-.base-btn .desc{font-size:10px;color:#999;margin-top:3px}
+.base-btn.selected{border-color:#C4A97A;background:#D4B89610;box-shadow:0 0 0 1px #C4A97A}
+.base-btn .label{font-size:13px;font-weight:600;color:#1C1917}
+.base-btn .desc{font-size:10px;color:#A8A29E;margin-top:3px}
 
 /* 탈색모 하위 */
 #bleachedSub{display:none}
 
 /* 레시피 요청 버튼 */
-.recipe-btn{width:calc(100% - 32px);margin:8px 16px 16px;padding:16px;border-radius:14px;border:none;background:#1A1814;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;display:none}
+.recipe-btn{width:calc(100% - 32px);margin:8px 16px 16px;padding:16px;border-radius:14px;border:none;background:#1C1917;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;display:none}
 .recipe-btn.show{display:block;animation:fadeUp .3s ease}
 .recipe-btn:active{transform:scale(0.98);opacity:0.9}
 .recipe-btn:disabled{opacity:0.4;cursor:not-allowed}
@@ -79,27 +79,27 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 /* STEP 3: 레시피 결과 */
 .recipe-wrap{display:none;animation:fadeUp .4s ease}
 .recipe-wrap.show{display:block}
-.recipe-header{background:linear-gradient(135deg,#f8f6fb,#eee8f5);border-radius:14px;padding:16px;margin-bottom:12px}
-.recipe-from-to{font-size:14px;font-weight:600;color:#1A1814;line-height:1.7}
-.recipe-from-to .highlight{color:#9E7FBF;font-weight:700}
-.recipe-body{background:#fff;border-radius:14px;border:1.5px solid #eee;padding:16px}
+.recipe-header{background:linear-gradient(135deg,#FAF6F0,#F0E6D8);border-radius:14px;padding:16px;margin-bottom:12px}
+.recipe-from-to{font-size:14px;font-weight:600;color:#1C1917;line-height:1.7}
+.recipe-from-to .highlight{color:#8B7355;font-weight:700}
+.recipe-body{background:#fff;border-radius:14px;border:1.5px solid #e8e4df;padding:16px}
 
-.recipe-tips{background:#F5F3FF;border-radius:10px;padding:14px}
-.recipe-tips-title{font-size:13px;font-weight:700;color:#7B5EA7;margin-bottom:6px}
-.recipe-tips-text{font-size:13px;color:#555;line-height:1.9;white-space:pre-line}
-.recipe-tips-text .base-label{font-size:14px;font-weight:700;color:#1A1814;display:block;margin-top:4px}
-.recipe-tips-text .mix-label{font-weight:600;color:#7B5EA7}
+.recipe-tips{background:#FBF7F1;border:1px solid #EDE6DA;border-radius:10px;padding:14px}
+.recipe-tips-title{font-size:13px;font-weight:700;color:#8B7355;margin-bottom:6px}
+.recipe-tips-text{font-size:13px;color:#6B5D4E;line-height:1.9;white-space:pre-line}
+.recipe-tips-text .base-label{font-size:14px;font-weight:700;color:#1C1917;display:block;margin-top:4px}
+.recipe-tips-text .mix-label{font-weight:600;color:#8B7355}
 .recipe-summary-note{font-size:12px;color:#8B7355;margin-top:8px;line-height:1.6;background:#FFF8E7;border-radius:8px;padding:10px 12px;font-weight:500}
-.recipe-virgin-box{background:rgba(158,127,191,0.06);border:1px solid rgba(158,127,191,0.15);border-radius:10px;padding:13px;margin-top:10px}
-.recipe-virgin-title{font-size:12px;font-weight:700;color:#9E7FBF;margin-bottom:6px}
-.recipe-virgin-text{font-size:12px;color:#666;line-height:1.8}
+.recipe-virgin-box{background:#FAF6F0;border:1px solid #EDE6DA;border-radius:10px;padding:13px;margin-top:10px}
+.recipe-virgin-title{font-size:12px;font-weight:700;color:#8B7355;margin-bottom:6px}
+.recipe-virgin-text{font-size:12px;color:#6B5D4E;line-height:1.8}
 
 /* source 표시 */
 .source-tag{display:inline-block;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;margin-bottom:8px}
-.source-tag.ai{background:rgba(158,127,191,0.12);color:#9E7FBF}
+.source-tag.ai{background:#D4B89620;color:#8B7355}
 
 /* 다시하기 버튼 */
-.reset-btn{width:calc(100% - 32px);margin:8px 16px 24px;padding:14px;border-radius:14px;border:1.5px solid #eee;background:#fff;color:#888;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;display:none}
+.reset-btn{width:calc(100% - 32px);margin:8px 16px 24px;padding:14px;border-radius:14px;border:1.5px solid #e8e4df;background:#fff;color:#A8A29E;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;display:none}
 .reset-btn.show{display:block}
 .reset-btn:active{transform:scale(0.98)}
 
@@ -129,7 +129,7 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
       <span class="badge">STEP 1</span>
     </div>
     <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-      <div class="icon">📸</div>
+      <div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
       <div class="txt">고객이 원하는 헤어 컬러 사진을<br><b>탭하여 업로드</b>해주세요</div>
     </div>
     <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleUpload(this)"/>
@@ -253,6 +253,10 @@ function handleUpload(input){
     zone.innerHTML = '<img class="upload-preview" src="'+base64Full+'" alt="업로드 사진"/>';
     zone.onclick = null;
 
+    // 기존 사진 변경 버튼 제거 후 새로 생성
+    var oldChange = document.querySelector('.upload-change');
+    if(oldChange) oldChange.remove();
+
     var changeEl = document.createElement('div');
     changeEl.className = 'upload-change';
     changeEl.textContent = '사진 변경';
@@ -280,6 +284,9 @@ function handleReupload(input){
     var base64Full = e.target.result;
     ST.imageBase64 = base64Full.split(',')[1];
     ST.imageMediaType = file.type || 'image/jpeg';
+    ST.analysis = null;
+    ST.type = null;
+    ST.subType = null;
 
     document.querySelector('.upload-preview').src = base64Full;
 
@@ -287,11 +294,19 @@ function handleReupload(input){
     document.getElementById('step2Wrap').classList.remove('show');
     document.getElementById('recipeWrap').classList.remove('show');
     document.getElementById('recipeBtn').style.display = 'none';
+    document.getElementById('recipeBtn').classList.remove('show');
     document.getElementById('resetBtn').classList.remove('show');
+
+    // 선택 상태 초기화
+    document.querySelectorAll('.selected').forEach(function(b){ b.classList.remove('selected'); });
+    document.getElementById('bleachedSub').style.display = 'none';
 
     analyzeImage(ST.imageBase64, ST.imageMediaType);
   };
   reader.readAsDataURL(file);
+
+  // 같은 파일 재선택 허용
+  input.value = '';
 }
 
 function analyzeImage(base64, mediaType){
@@ -391,7 +406,7 @@ function showAnalysis(result){
   if(result.elements && result.elements.length > 0){
     html += '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:10px">';
     result.elements.forEach(function(el){
-      html += '<span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;background:rgba(158,127,191,0.08);color:#9E7FBF">' + el + '</span>';
+      html += '<span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;background:#D4B89618;color:#8B7355">' + el + '</span>';
     });
     html += '</div>';
   }
@@ -822,7 +837,7 @@ function showRecipe(recipe){
 
   var hdr = document.getElementById('recipeHeader');
   var summaryHtml = (recipe.summary || '').replace(/\n/g, '<br>');
-  var noteHtml = (recipe.summary && recipe.summary.indexOf('탈색') !== -1) ? '<div class="recipe-summary-note">⚠️ 모질에 따라 탈색횟수는 편차가 있습니다. 잔류 색소를 확인하세요.</div>' : '';
+  var noteHtml = (recipe.summary && recipe.summary.indexOf('탈색') !== -1) ? '<div class="recipe-summary-note"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>모질에 따라 탈색횟수는 편차가 있습니다. 잔류 색소를 확인하세요.</div>' : '';
   hdr.innerHTML = '<div class="recipe-from-to">' + summaryHtml + '</div>' + noteHtml;
 
   var body = document.getElementById('recipeBody');
@@ -837,7 +852,7 @@ function showRecipe(recipe){
     // var isWarmColor = ST.analysis && ST.analysis.elements && (ST.analysis.elements.indexOf('붉은기') !== -1 || ST.analysis.elements.indexOf('핑크기') !== -1);
 
     // 모든 케이스: AI 추론 레시피 렌더링
-    html += '<div class="recipe-tips"><div class="recipe-tips-title">💡 실무조언</div><div class="recipe-tips-text">' + tipsHtml + '</div>';
+    html += '<div class="recipe-tips"><div class="recipe-tips-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>실무조언</div><div class="recipe-tips-text">' + tipsHtml + '</div>';
 
     // virgin_recipe 보조 박스
     if(ST.type === 'natural' && recipe.virgin_recipe){
@@ -874,7 +889,7 @@ function resetAll(){
 
   var zone = document.getElementById('uploadZone');
   zone.classList.remove('has-image');
-  zone.innerHTML = '<div class="icon">📸</div><div class="txt">고객이 원하는 헤어 컬러 사진을<br><b>탭하여 업로드</b>해주세요</div>';
+  zone.innerHTML = '<div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div><div class="txt">고객이 원하는 헤어 컬러 사진을<br><b>탭하여 업로드</b>해주세요</div>';
   zone.onclick = function(){ document.getElementById('fileInput').click(); };
 
   var changeEl = document.querySelector('.upload-change');
