@@ -89,7 +89,7 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 .recipe-tips-text{font-size:13px;color:#555;line-height:1.9;white-space:pre-line}
 .recipe-tips-text .base-label{font-size:14px;font-weight:700;color:#1A1814;display:block;margin-top:4px}
 .recipe-tips-text .mix-label{font-weight:600;color:#7B5EA7}
-.recipe-summary-note{font-size:11px;color:#999;margin-top:6px;line-height:1.5}
+.recipe-summary-note{font-size:12px;color:#8B7355;margin-top:8px;line-height:1.6;background:#FFF8E7;border-radius:8px;padding:10px 12px;font-weight:500}
 .recipe-virgin-box{background:rgba(158,127,191,0.06);border:1px solid rgba(158,127,191,0.15);border-radius:10px;padding:13px;margin-top:10px}
 .recipe-virgin-title{font-size:12px;font-weight:700;color:#9E7FBF;margin-bottom:6px}
 .recipe-virgin-text{font-size:12px;color:#666;line-height:1.8}
@@ -517,9 +517,9 @@ function generateRecipe(){
     '5: 적색(검붉은색) — 자연모',
     '8~10: 적갈색~주황',
     '12~14: 주황~주황노랑 — 탈색 1회',
-    '16: 노랑 — 탈색 2회',
-    '18: 연노랑 — 탈색 2~3회',
-    '20: 아이보리 — 탈색 3회+',
+    '16: 노랑 — 탈색 2회 이상',
+    '18: 연노랑 — 탈색 3회 이상',
+    '20: 아이보리 — 탈색 3회 이상',
     '',
     '=== [6] 잔류 색소와 보색 ===',
     '',
@@ -768,7 +768,7 @@ function showRecipe(recipe){
 
   var hdr = document.getElementById('recipeHeader');
   var summaryHtml = (recipe.summary || '').replace(/\n/g, '<br>');
-  var noteHtml = (recipe.summary && recipe.summary.indexOf('탈색') !== -1) ? '<div class="recipe-summary-note">모질에 따라 탈색횟수는 차이가 날 수 있습니다</div>' : '';
+  var noteHtml = (recipe.summary && recipe.summary.indexOf('탈색') !== -1) ? '<div class="recipe-summary-note">⚠️ 모질에 따라 탈색횟수는 편차가 있습니다. 잔류 색소를 확인하세요.</div>' : '';
   hdr.innerHTML = '<div class="recipe-from-to">' + summaryHtml + '</div>' + noteHtml;
 
   var body = document.getElementById('recipeBody');
