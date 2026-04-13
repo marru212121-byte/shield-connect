@@ -655,48 +655,58 @@ function generateRecipe(){
     '- 블론드/백모는 18+ 필수. 버진모 불가능.',
     '- 톤다운 시에도 언더톤과 목표 명도 고려하여 적절한 명도의 염모제 선택.',
     '',
-    '=== [13] 자연모일 때 출력 분기 ===',
+    '=== [13] 출력 형식 ===',
     '',
-    '■ 탈색 필수 (투명감+선명함 필요):',
-    'summary/tips = 탈색 레시피 중심.',
-    'virgin_recipe = {"title":"탈색 없이 최대한 연출하려면","text":"버진모 테크닉으로 도달 가능한 한색/난색 브라운 레시피"}',
-    'ambiguous_warning = false',
+    'JSON만: {"summary":"…","tips":"…","virgin_recipe":null 또는 {"title":"…","text":"…"}}',
     '',
-    '■ 애매 (투명감 없이 잿빛/매트함만):',
-    'summary/tips = 버진모 테크닉 중심.',
-    'virgin_recipe = {"title":"더 선명하게 연출하려면","text":"탈색 후 레시피"}',
-    'ambiguous_warning = true',
+    '탈색이 필요한지, 버진모에서 가능한지는 위 색 이론 원리로 네가 판단하라.',
+    '카테고리 분류하지 마라. 원리 기반으로 추론한 결과를 아래 틀에 맞춰 출력하라.',
     '',
-    '■ 버진모 가능 (웜브라운, 쿨브라운, 레드 등):',
-    'summary/tips = 버진모 테크닉. virgin_recipe = null. ambiguous_warning = false',
+    '[summary] 존댓말, 한 줄.',
+    '탈색 필수로 판단 시: "탈색 N회 후({도달 베이스명}) {계열} 염모제와 {계열} 염모제로 착색하세요."',
+    '버진모 가능으로 판단 시: "고명도 {계열} 염모제와 {계열} 컨트롤컬러로 착색하세요."',
     '',
-    '■ 탈색모: 현재 베이스 기준 레시피. virgin_recipe = null. ambiguous_warning = false.',
+    '=== [14] tips 블록 구조 — 상황별 ===',
     '',
-    '=== [14] 출력 형식 ===',
+    '■ 탈색 필수로 판단했을 때:',
     '',
-    'JSON만: {"summary":"…","tips":"…","virgin_recipe":null 또는 {"title":"…","text":"…"},"ambiguous_warning":false}',
+    '블록① <b>{탈색 N회 후(베이스명)}</b>',
+    '{조합이 만드는 결과 색감 1~2문장. 베이스명을 다시 반복하지 마라.}',
     '',
-    '[summary] 존댓말, 한 줄. 형식: "탈색 N회 후({도달 베이스명}) {계열} 염모제와 {계열} 염모제로 착색하세요." 또는 버진모 가능이면 탈색 없이 가능하다는 한 줄.',
+    '블록② <b>{한 단계 아래 레벨(베이스명)}</b>',
+    '{잔류 색소로 인해 어떤 염료가 보색에 소진(파워 상쇄)되어 어떤 색감 방향으로 수렴되는지 1문장}',
     '',
-    '[tips] 존댓말. 아래 3블록 구조를 반드시 지켜라. 블록 사이 \\n\\n.',
+    '블록③ 실무조언',
+    '{이 색감의 핵심 조건 + 버진모에서 왜 안 되는지 + 충분한 탈색이 핵심이라는 결론 2~3문장}',
     '',
-    '블록① 최적 베이스 + 조합 설명:',
-    '<b>{탈색 N회 후(베이스명)}</b>\\n{조합이 만드는 결과 색감 1~2문장. 베이스명을 다시 반복하지 마라.}',
+    'virgin_recipe = {"title":"탈색 없이 최대한 연출하려면","text":"버진모 테크닉으로 도달 가능한 색감명 + 레시피"}',
     '',
-    '블록② 리스크 경고 (한 단계 아래 베이스):',
-    '<b>{한 단계 아래 레벨(베이스명)}</b>\\n{잔류 색소로 인해 어떤 염료가 어떤 역할에 소진되어 어떤 색감 방향으로 수렴되는지 1문장}',
+    '■ 버진모 가능으로 판단했을 때:',
     '',
-    '블록③ 실무조언:',
-    '{이 색감의 핵심 조건(투명감, 파스텔, 선명함 등) + 버진모에서 왜 안 되는지 + 충분한 탈색이 핵심이라는 결론 2~3문장}',
+    '블록① <b>버진모 시술</b>',
+    '{고명도 염모제 + 컨트롤컬러 + 산화제(9% 또는 12%) 조합. 색감별 맞춤 레시피.}',
+    '',
+    '블록② <b>연모인 경우</b>',
+    '{일반 명도 염모제에 컨트롤컬러 조합으로 충분하다는 안내}',
+    '',
+    '블록③ 조명에 따라 버진모에서 연출한 색감인지, 탈색 후 연출한 색감인지 판단이 어려울 수 있어요.',
+    '{탈색 1회 후 주황~노랑 베이스에서의 업그레이드 레시피}',
+    '',
+    'virgin_recipe = null',
+    '',
+    '■ 탈색모: 현재 베이스 기준 레시피. virgin_recipe = null.',
+    '',
+    '=== 공통 규칙 ===',
     '',
     '★ 최적 베이스와 리스크 베이스는 색감에 따라 AI가 추론하라. 고정값이 아니다.',
     '★ 같은 내용을 블록 간에 반복하지 마라. 각 블록은 역할이 다르다.',
     '★ 블록①에서 베이스명은 헤더(<b>)에만 쓰고 설명 본문에서 다시 언급하지 마라.',
+    '★ 버진모 가능 판단 시 산화제(9% 또는 12%)를 반드시 포함하라.',
     '탈색 후 레시피에서 "[계열] 염모제" 표기 필수. 컨트롤컬러와 혼동 금지.',
     '수렴 방향은 "탁한 ~"이 아니라 구체적 색감 방향(예: "애쉬에 가까운 방향")으로 표현하라.',
     '[virgin_recipe.text] 존댓말. 도달 가능 색감명 제시. "소량" 쓰지 마. 고명도 염모제 언급 시 "13·15레벨" 또는 "밝은 명도"로 표기.',
     '',
-    '[출력 금지] "원샷"/"멜라닌"/"중화"/"깨라"/"눌러"/산화제 농도/숫자 비율→"소량"으로만/"파우더"→"탈색약"/구체적 상품명·넘버링→계열명으로만/원리 나열/교육/**기호/"모발이 건조해~"/"트리트먼트로 보완"/"시술자의 판단에 따라"/"CC"→"컨트롤컬러"/"탁한"/"탁해진"'
+    '[출력 금지] "원샷"/"멜라닌"/"중화"/"깨라"/"눌러"/숫자 비율→"소량"으로만/"파우더"→"탈색약"/구체적 상품명·넘버링→계열명으로만/원리 나열/교육/**기호/"모발이 건조해~"/"트리트먼트로 보완"/"시술자의 판단에 따라"/"CC"→"컨트롤컬러"/"탁한"/"탁해진"'
   ].join('\n');
 
 
@@ -747,7 +757,7 @@ function showRecipe(recipe){
 
   var hdr = document.getElementById('recipeHeader');
   var summaryHtml = (recipe.summary || '').replace(/\n/g, '<br>');
-  var noteHtml = (recipe.ambiguous_warning || (!recipe.virgin_recipe && recipe.summary && recipe.summary.indexOf('탈색') === -1)) ? '' : '<div class="recipe-summary-note">모질에 따라 탈색횟수는 차이가 날 수 있습니다</div>';
+  var noteHtml = (recipe.summary && recipe.summary.indexOf('탈색') !== -1) ? '<div class="recipe-summary-note">모질에 따라 탈색횟수는 차이가 날 수 있습니다</div>' : '';
   hdr.innerHTML = '<div class="recipe-from-to">' + summaryHtml + '</div>' + noteHtml;
 
   var body = document.getElementById('recipeBody');
@@ -758,83 +768,21 @@ function showRecipe(recipe){
     tipsHtml = tipsHtml.replace(/<b>/g, '<span class="base-label">').replace(/<\/b>/g, '</span>');
     tipsHtml = tipsHtml.replace(/<span>/g, '<span class="mix-label">').replace(/<\/span><\/span>/g, '</span>');
 
-    // 난색 판정
-    var isWarmColor = ST.analysis && ST.analysis.elements && (ST.analysis.elements.indexOf('붉은기') !== -1 || ST.analysis.elements.indexOf('핑크기') !== -1);
+    // 난색 판정 (불필요해졌지만 혹시 모를 용도로 보존)
+    // var isWarmColor = ST.analysis && ST.analysis.elements && (ST.analysis.elements.indexOf('붉은기') !== -1 || ST.analysis.elements.indexOf('핑크기') !== -1);
 
-    // 애매 구간
-    if(recipe.ambiguous_warning && ST.type === 'natural'){
-      if(isWarmColor){
-        hdr.innerHTML = '<div class="recipe-from-to">고명도 난색계열 염모제에 레드 컨트롤컬러를 믹스하여 착색하세요</div>';
-      } else {
-        hdr.innerHTML = '<div class="recipe-from-to">고명도(13·15레벨) 블루, 애쉬, 매트, 바이올렛 염모제에 컨트롤컬러를 믹스하여 착색하세요</div>';
-      }
-      html += '<div style="background:#FFF8E7;border:1px solid #F0D58C;border-radius:10px;padding:12px;margin-bottom:10px;font-size:12px;color:#8B7355;line-height:1.7">'
-        + '<span style="font-size:14px">⚠️</span> 이 사진은 조명을 가까이 비춰 촬영하여 실제보다 투명하고 밝게 보일 수 있어요. 버진모에서 연출한 색감인지, 탈색 후 연출한 색감인지 판단이 어려워요. 두 가지 경우 모두 안내해드릴게요.'
-        + '</div>';
-      html += '<div class="recipe-tips"><div class="recipe-tips-title">💡 실무조언</div><div class="recipe-tips-text">';
-      if(isWarmColor){
-        html += '고명도(13·15레벨) 난색계열(레드, 레드바이올렛, 퍼플) 염모제에 난색계열 컨트롤컬러(레드, 바이올렛, 핑크)와 9% 또는 12% 산화제를 사용하여 리프팅과 착색을 동시에 연출하는 방법이에요.';
-        html += '<br><br>조합에 따라 선명한 레드, 레드바이올렛, 레드브라운 등으로 연출돼요.';
-      } else {
-        html += '고명도(13·15레벨) 블루, 애쉬, 매트, 바이올렛 염모제에 컨트롤컬러(블루, 애쉬, 그린, 바이올렛)와 9% 또는 12% 산화제를 사용하여 리프팅과 착색을 동시에 연출하는 방법이에요.';
-        html += '<br><br>조합에 따라 매트 쿨브라운, 애쉬브라운 등 한색 뉘앙스의 브라운으로 연출돼요.';
-        html += '<br><br>연모인 경우 굳이 고명도 염모제를 사용하지 않아도 일반 명도 염모제에 컨트롤컬러 조합으로 충분해요.';
-      }
-      html += '</div>';
-      html += '<div class="recipe-virgin-box" style="margin-top:10px"><div class="recipe-virgin-title">탈색 후 연출하려면</div><div class="recipe-virgin-text">';
-      html += '탈색 1회 후 더욱 선명하고 맑게 연출할 수 있어요.';
-      if(isWarmColor){
-        html += '<br><br><span class="base-label">레드 방향</span><br>레드 <span class="mix-label">염모제</span> 단독';
-        html += '<br><br><span class="base-label">레드바이올렛 방향</span><br>레드바이올렛 <span class="mix-label">염모제</span>에 바이올렛 염모제 소량 믹스';
-      } else {
-        html += '<br><br><span class="base-label">애쉬 방향</span><br>애쉬 또는 블루 <span class="mix-label">염모제</span>에 뉴트럴브라운 소량 믹스';
-        html += '<br><br><span class="base-label">연브라운 베이지 방향</span><br>바이올렛 <span class="mix-label">염모제</span>에 뉴트럴브라운 소량 믹스';
-      }
+    // 모든 케이스: AI 추론 레시피 렌더링
+    html += '<div class="recipe-tips"><div class="recipe-tips-title">💡 실무조언</div><div class="recipe-tips-text">' + tipsHtml + '</div>';
+
+    // virgin_recipe 보조 박스
+    if(ST.type === 'natural' && recipe.virgin_recipe){
+      var vr2 = recipe.virgin_recipe;
+      html += '<div class="recipe-virgin-box"><div class="recipe-virgin-title">' + (vr2.title || '탈색 없이 최대한 연출하려면') + '</div><div class="recipe-virgin-text">';
+      html += vr2.text || '';
       html += '</div></div>';
-      html += '</div>';
-
-    } else if(ST.type === 'natural' && !recipe.virgin_recipe && recipe.summary && recipe.summary.indexOf('탈색') === -1){
-      if(isWarmColor){
-        hdr.innerHTML = '<div class="recipe-from-to">고명도 난색계열 염모제에 레드 컨트롤컬러를 믹스하여 착색하세요</div>';
-      } else {
-        hdr.innerHTML = '<div class="recipe-from-to">고명도(13·15레벨) 블루, 애쉬, 매트, 바이올렛 염모제에 컨트롤컬러를 믹스하여 착색하세요</div>';
-      }
-      html += '<div class="recipe-tips"><div class="recipe-tips-title">💡 실무조언</div><div class="recipe-tips-text">';
-      if(isWarmColor){
-        html += '고명도(13·15레벨) 난색계열(레드, 레드바이올렛, 퍼플) 염모제에 난색계열 컨트롤컬러(레드, 바이올렛, 핑크)와 9% 또는 12% 산화제를 사용하여 리프팅과 착색을 동시에 연출하는 방법이에요.';
-        html += '<br><br>조합에 따라 선명한 레드, 레드바이올렛, 레드브라운 등으로 연출돼요.';
-      } else {
-        html += '고명도(13·15레벨) 블루, 애쉬, 매트, 바이올렛 염모제에 컨트롤컬러(블루, 애쉬, 그린, 바이올렛)와 9% 또는 12% 산화제를 사용하여 리프팅과 착색을 동시에 연출하는 방법이에요.';
-        html += '<br><br>조합에 따라 매트 쿨브라운, 애쉬브라운 등 한색 뉘앙스의 브라운으로 연출돼요.';
-        html += '<br><br>연모인 경우 굳이 고명도 염모제를 사용하지 않아도 일반 명도 염모제에 컨트롤컬러 조합으로 충분해요.';
-      }
-      html += '</div>';
-      html += '<div class="recipe-virgin-box" style="margin-top:10px"><div class="recipe-virgin-title">탈색 후 연출하려면</div><div class="recipe-virgin-text">';
-      html += '탈색 1회 후 더욱 선명하고 맑게 연출할 수 있어요.';
-      if(isWarmColor){
-        html += '<br><br><span class="base-label">레드 방향</span><br>레드 <span class="mix-label">염모제</span> 단독';
-        html += '<br><br><span class="base-label">레드바이올렛 방향</span><br>레드바이올렛 <span class="mix-label">염모제</span>에 바이올렛 염모제 소량 믹스';
-      } else {
-        html += '<br><br><span class="base-label">애쉬 방향</span><br>애쉬 또는 블루 <span class="mix-label">염모제</span>에 뉴트럴브라운 소량 믹스';
-        html += '<br><br><span class="base-label">연브라운 베이지 방향</span><br>바이올렛 <span class="mix-label">염모제</span>에 뉴트럴브라운 소량 믹스';
-      }
-      html += '</div></div>';
-      html += '</div>';
-
-    } else {
-      // 일반: 탈색 레시피 (케이스1) + 버진모 보조 아래
-      html += '<div class="recipe-tips"><div class="recipe-tips-title">💡 실무조언</div><div class="recipe-tips-text">' + tipsHtml + '</div>';
-
-      // 자연모일 때 virgin_recipe (탈색 필수 사진 → 보조로 아래에)
-      if(ST.type === 'natural' && recipe.virgin_recipe){
-        var vr2 = recipe.virgin_recipe;
-        html += '<div class="recipe-virgin-box"><div class="recipe-virgin-title">' + (vr2.title || '탈색 없이 최대한 연출하려면') + '</div><div class="recipe-virgin-text">';
-        html += vr2.text || '';
-        html += '</div></div>';
-      }
-
-      html += '</div>';
     }
+
+    html += '</div>';
   }
   body.innerHTML = html;
 
