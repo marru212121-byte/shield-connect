@@ -581,7 +581,7 @@ function generateRecipe(){
     '',
     '[virgin_recipe.text] 존댓말. 버진모 맵에서 매칭. 도달 색감명 그대로. "고명도(13·15레벨)" 표기 가능. "소량" 쓰지 마. \\n으로 가독성.',
     '',
-    '[출력 금지] "원샷"/"멜라닌"/"중화"/"깨라"/"눌러"/산화제 농도/숫자 비율/"파우더"→"탈색약"/구체적 염모제 색감명→범주만/원리 나열/**기호/"모발이 건조해~"/"트리트먼트로 보완"/"시술자의 판단에 따라"/tips에 "탈색하면 더 선명" 금지(케이스2 extra에서만)'
+    '[출력 금지] "원샷"/"멜라닌"/"중화"/"깨라"/"눌러"/산화제 농도/숫자 비율/"파우더"→"탈색약"/구체적 염모제 색감명→범주만/원리 나열/**기호/"모발이 건조해~"/"트리트먼트로 보완"/"시술자의 판단에 따라"/tips에 "탈색하면 더 선명" 금지(케이스2 extra에서만)/"CC"→반드시 "컨트롤컬러"로 표기'
   ].join('\n');
 
 
@@ -642,55 +642,90 @@ function showRecipe(recipe){
     tipsHtml = tipsHtml.replace(/<b>/g, '<span class="base-label">').replace(/<\/b>/g, '</span>');
     tipsHtml = tipsHtml.replace(/<span>/g, '<span class="mix-label">').replace(/<\/span><\/span>/g, '</span>');
 
+    // 난색 판정: elements에 붉은기 또는 핑크기가 있으면 난색
+    var isWarmColor = ST.analysis && ST.analysis.elements && (ST.analysis.elements.indexOf('붉은기') !== -1 || ST.analysis.elements.indexOf('핑크기') !== -1);
+
     // 애매 구간: 전부 코드 고정 (AI 생성 불필요)
     if(recipe.ambiguous_warning && ST.type === 'natural'){
 
-      // summary 고정 덮어쓰기
-      hdr.innerHTML = '<div class="recipe-from-to">고명도(13·15레벨) 블루, 애쉬, 매트, 바이올렛 염모제에 컨트롤컬러를 믹스하여 착색하세요</div>';
+      // summary 고정 덮어쓰기 (한색/난색 분기)
+      if(isWarmColor){
+        hdr.innerHTML = '<div class="recipe-from-to">고명도 난색계열 염모제에 레드 컨트롤컬러를 믹스하여 착색하세요</div>';
+      } else {
+        hdr.innerHTML = '<div class="recipe-from-to">고명도(13·15레벨) 블루, 애쉬, 매트, 바이올렛 염모제에 컨트롤컬러를 믹스하여 착색하세요</div>';
+      }
 
-      // ⚠ 주의문구
+      // ⚠ 주의문구 (한색/난색 동일)
       html += '<div style="background:#FFF8E7;border:1px solid #F0D58C;border-radius:10px;padding:12px;margin-bottom:10px;font-size:12px;color:#8B7355;line-height:1.7">'
         + '<span style="font-size:14px">⚠️</span> 이 사진은 조명을 가까이 비춰 촬영하여 실제보다 투명하고 밝게 보일 수 있어요. 버진모에서 연출한 색감인지, 탈색 후 연출한 색감인지 판단이 어려워요. 두 가지 경우 모두 안내해드릴게요.'
         + '</div>';
 
-      // 실무조언 고정
+      // 실무조언 고정 (한색/난색 분기)
       html += '<div class="recipe-tips"><div class="recipe-tips-title">💡 실무조언</div><div class="recipe-tips-text">';
-      html += '고명도(13·15레벨) 블루, 애쉬, 매트, 바이올렛 염모제에 컨트롤컬러(블루, 애쉬, 그린, 바이올렛)를 조합하여 리프팅과 착색을 동시에 연출하는 방법이에요.';
-      html += '<br><br>조합에 따라 매트 쿨브라운, 애쉬브라운 등 한색 뉘앙스의 브라운으로 연출돼요.';
-      html += '<br><br>연모인 경우 굳이 고명도 염모제를 사용하지 않아도 일반 명도 염모제에 컨트롤컬러 조합으로 충분해요.';
+      if(isWarmColor){
+        html += '고명도(13·15레벨) 난색계열(레드, 레드바이올렛, 퍼플) 염모제에 난색계열 컨트롤컬러(레드, 바이올렛, 핑크)와 9% 또는 12% 산화제를 사용하여 리프팅과 착색을 동시에 연출하는 방법이에요.';
+        html += '<br><br>조합에 따라 선명한 레드, 레드바이올렛, 레드브라운 등으로 연출돼요.';
+      } else {
+        html += '고명도(13·15레벨) 블루, 애쉬, 매트, 바이올렛 염모제에 컨트롤컬러(블루, 애쉬, 그린, 바이올렛)와 9% 또는 12% 산화제를 사용하여 리프팅과 착색을 동시에 연출하는 방법이에요.';
+        html += '<br><br>조합에 따라 매트 쿨브라운, 애쉬브라운 등 한색 뉘앙스의 브라운으로 연출돼요.';
+        html += '<br><br>연모인 경우 굳이 고명도 염모제를 사용하지 않아도 일반 명도 염모제에 컨트롤컬러 조합으로 충분해요.';
+      }
       html += '</div>';
 
-      // 탈색 후 레시피 고정
+      // 탈색 후 레시피 고정 (한색/난색 분기)
       html += '<div class="recipe-virgin-box" style="margin-top:10px"><div class="recipe-virgin-title">탈색 후 연출하려면</div><div class="recipe-virgin-text">';
-      html += '탈색 1회 후 더욱 투명하면서 선명하게 연출할 수 있어요.';
-      html += '<br><br><span class="base-label">애쉬 방향</span>';
-      html += '<br>애쉬 또는 블루 <span class="mix-label">염모제</span>에 뉴트럴브라운 소량 믹스';
-      html += '<br><br><span class="base-label">연브라운 베이지 방향</span>';
-      html += '<br>바이올렛 <span class="mix-label">염모제</span>에 뉴트럴브라운 소량 믹스';
+      html += '탈색 1회 후 더욱 선명하고 맑게 연출할 수 있어요.';
+      if(isWarmColor){
+        html += '<br><br><span class="base-label">레드 방향</span>';
+        html += '<br>레드 <span class="mix-label">염모제</span> 단독';
+        html += '<br><br><span class="base-label">레드바이올렛 방향</span>';
+        html += '<br>레드바이올렛 <span class="mix-label">염모제</span>에 바이올렛 염모제 소량 믹스';
+      } else {
+        html += '<br><br><span class="base-label">애쉬 방향</span>';
+        html += '<br>애쉬 또는 블루 <span class="mix-label">염모제</span>에 뉴트럴브라운 소량 믹스';
+        html += '<br><br><span class="base-label">연브라운 베이지 방향</span>';
+        html += '<br>바이올렛 <span class="mix-label">염모제</span>에 뉴트럴브라운 소량 믹스';
+      }
       html += '</div></div>';
 
       html += '</div>';
 
     } else if(ST.type === 'natural' && !recipe.virgin_recipe && recipe.summary && recipe.summary.indexOf('탈색') === -1){
-      // 케이스3: 버진모 가능 — 케이스2와 동일한 고정 텍스트 (⚠ 없이)
+      // 케이스3: 버진모 가능 — 고정 텍스트 (⚠ 없이, 한색/난색 분기)
 
       // summary 고정 덮어쓰기
-      hdr.innerHTML = '<div class="recipe-from-to">고명도(13·15레벨) 블루, 애쉬, 매트, 바이올렛 염모제에 컨트롤컬러를 믹스하여 착색하세요</div>';
+      if(isWarmColor){
+        hdr.innerHTML = '<div class="recipe-from-to">고명도 난색계열 염모제에 레드 컨트롤컬러를 믹스하여 착색하세요</div>';
+      } else {
+        hdr.innerHTML = '<div class="recipe-from-to">고명도(13·15레벨) 블루, 애쉬, 매트, 바이올렛 염모제에 컨트롤컬러를 믹스하여 착색하세요</div>';
+      }
 
       // 실무조언 고정
       html += '<div class="recipe-tips"><div class="recipe-tips-title">💡 실무조언</div><div class="recipe-tips-text">';
-      html += '고명도(13·15레벨) 블루, 애쉬, 매트, 바이올렛 염모제에 컨트롤컬러(블루, 애쉬, 그린, 바이올렛)를 조합하여 리프팅과 착색을 동시에 연출하는 방법이에요.';
-      html += '<br><br>조합에 따라 매트 쿨브라운, 애쉬브라운 등 한색 뉘앙스의 브라운으로 연출돼요.';
-      html += '<br><br>연모인 경우 굳이 고명도 염모제를 사용하지 않아도 일반 명도 염모제에 컨트롤컬러 조합으로 충분해요.';
+      if(isWarmColor){
+        html += '고명도(13·15레벨) 난색계열(레드, 레드바이올렛, 퍼플) 염모제에 난색계열 컨트롤컬러(레드, 바이올렛, 핑크)와 9% 또는 12% 산화제를 사용하여 리프팅과 착색을 동시에 연출하는 방법이에요.';
+        html += '<br><br>조합에 따라 선명한 레드, 레드바이올렛, 레드브라운 등으로 연출돼요.';
+      } else {
+        html += '고명도(13·15레벨) 블루, 애쉬, 매트, 바이올렛 염모제에 컨트롤컬러(블루, 애쉬, 그린, 바이올렛)와 9% 또는 12% 산화제를 사용하여 리프팅과 착색을 동시에 연출하는 방법이에요.';
+        html += '<br><br>조합에 따라 매트 쿨브라운, 애쉬브라운 등 한색 뉘앙스의 브라운으로 연출돼요.';
+        html += '<br><br>연모인 경우 굳이 고명도 염모제를 사용하지 않아도 일반 명도 염모제에 컨트롤컬러 조합으로 충분해요.';
+      }
       html += '</div>';
 
       // 탈색 후 레시피 고정
       html += '<div class="recipe-virgin-box" style="margin-top:10px"><div class="recipe-virgin-title">탈색 후 연출하려면</div><div class="recipe-virgin-text">';
-      html += '탈색 1회 후 더욱 투명하면서 선명하게 연출할 수 있어요.';
-      html += '<br><br><span class="base-label">애쉬 방향</span>';
-      html += '<br>애쉬 또는 블루 <span class="mix-label">염모제</span>에 뉴트럴브라운 소량 믹스';
-      html += '<br><br><span class="base-label">연브라운 베이지 방향</span>';
-      html += '<br>바이올렛 <span class="mix-label">염모제</span>에 뉴트럴브라운 소량 믹스';
+      html += '탈색 1회 후 더욱 선명하고 맑게 연출할 수 있어요.';
+      if(isWarmColor){
+        html += '<br><br><span class="base-label">레드 방향</span>';
+        html += '<br>레드 <span class="mix-label">염모제</span> 단독';
+        html += '<br><br><span class="base-label">레드바이올렛 방향</span>';
+        html += '<br>레드바이올렛 <span class="mix-label">염모제</span>에 바이올렛 염모제 소량 믹스';
+      } else {
+        html += '<br><br><span class="base-label">애쉬 방향</span>';
+        html += '<br>애쉬 또는 블루 <span class="mix-label">염모제</span>에 뉴트럴브라운 소량 믹스';
+        html += '<br><br><span class="base-label">연브라운 베이지 방향</span>';
+        html += '<br>바이올렛 <span class="mix-label">염모제</span>에 뉴트럴브라운 소량 믹스';
+      }
       html += '</div></div>';
 
       html += '</div>';
