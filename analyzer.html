@@ -791,7 +791,7 @@ function generateRecipe(){
 
 function showRecipe(recipe){
   var btn = document.getElementById('recipeBtn');
-  btn.style.display = 'none';
+  btn.classList.remove('show');
 
   var srcEl = document.getElementById('recipeSource');
   srcEl.innerHTML = '<span class="source-tag ai">AI 원리 기반 생성</span>';
@@ -868,7 +868,7 @@ function resetAll(){
   document.getElementById('step2Wrap').classList.remove('show');
 
   var btn = document.getElementById('recipeBtn');
-  btn.style.display = 'none';
+  btn.style.display = '';
   btn.classList.remove('show');
   btn.disabled = true;
   btn.textContent = '레시피 생성';
