@@ -13,9 +13,89 @@ html,body{font-family:'Noto Sans KR','Outfit',sans-serif;background:var(--bg);co
 @media(min-width:431px){.app{border-left:1px solid var(--border);border-right:1px solid var(--border)}}
 
 .hdr{display:flex;align-items:center;gap:10px;padding:14px 16px;background:rgba(10,10,12,0.95);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
+.hdr .back-home{
+  width:32px;height:32px;border:none;background:rgba(255,255,255,0.06);
+  border-radius:8px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;transition:all .2s;color:rgba(255,255,255,0.6);
+}
+.hdr .back-home:active{transform:scale(0.92);background:rgba(255,255,255,0.1)}
+.hdr .back-home svg{width:18px;height:18px}
 .hdr h1{font-size:15px;font-weight:700;flex:1}
-.hdr .pill{font-size:10px;font-weight:600;padding:3px 10px;border-radius:99px;background:rgba(196,176,224,0.1);color:var(--accent)}
+.hdr .pill{font-size:10px;font-weight:600;padding:3px 10px;border-radius:99px;background:rgba(196,176,224,0.1);color:var(--accent);transition:all .3s}
+.hdr .pill.s2{background:rgba(140,180,232,0.12);color:#8cb4e8}
+.hdr .pill.s3{background:rgba(140,232,160,0.12);color:#8ce8a0}
 .hdr-notice{font-size:9px;color:var(--dim);line-height:1.5;padding:6px 16px 2px;background:var(--bg);text-align:center}
+
+/* ── 스텝 프로그레스 바 ── */
+.step-progress{display:flex;align-items:center;gap:0;padding:10px 16px 6px;background:var(--bg)}
+.step-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.1);transition:all .35s;flex-shrink:0}
+.step-dot.active{background:var(--accent);box-shadow:0 0 8px rgba(196,176,224,0.4)}
+.step-dot.done{background:rgba(140,232,160,0.5)}
+.step-line{flex:1;height:2px;background:rgba(255,255,255,0.06);margin:0 4px;transition:background .3s}
+.step-line.done{background:rgba(140,232,160,0.3)}
+.step-labels{display:flex;justify-content:space-between;padding:0 16px 4px;font-size:8px;color:var(--dim);font-weight:500}
+.step-labels span{transition:color .3s}
+.step-labels span.active{color:var(--accent);font-weight:700}
+
+/* ── 한색/난색 버튼 클릭 유도 ── */
+@keyframes cwPulse{
+  0%{box-shadow:0 0 0 0 rgba(196,176,224,0.3)}
+  70%{box-shadow:0 0 0 10px rgba(196,176,224,0)}
+  100%{box-shadow:0 0 0 0 rgba(196,176,224,0)}
+}
+@keyframes cwShimmer{
+  0%{background-position:200% 0}
+  100%{background-position:-200% 0}
+}
+.cw-btn.hint{
+  animation:cwPulse 2s infinite;
+  border-color:rgba(196,176,224,0.3);
+  position:relative;overflow:hidden;
+}
+.cw-btn.hint::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 0%,rgba(196,176,224,0.08) 50%,transparent 100%);
+  background-size:200% 100%;
+  animation:cwShimmer 3s infinite linear;
+}
+.cw-btn.on{animation:none}
+.cw-btn.on::after{display:none}
+.cw-prompt{text-align:center;font-size:11px;color:var(--accent);margin:-4px 0 6px;opacity:0.8;animation:fadeIn .5s}
+
+/* ── 실시간 결과 프리뷰 ── */
+.live-preview{
+  display:none;padding:10px 12px;border-radius:10px;
+  background:var(--card);border:1px solid var(--border);
+  animation:fadeIn .4s;margin-top:4px;
+}
+.live-preview.show{display:flex;align-items:center;gap:10px}
+.lp-swatch{width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,0.12);flex-shrink:0;transition:background .3s}
+.lp-info{flex:1;min-width:0}
+.lp-title{font-size:11px;font-weight:700;color:#fff;margin-bottom:2px}
+.lp-sub{font-size:9px;color:var(--sub);line-height:1.4}
+.lp-arrow{font-size:8px;color:var(--dim)}
+
+/* ── 하단 네비게이션 (홈과 일치) ── */
+.bottom-nav-mel{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:430px;
+  display:flex;align-items:stretch;
+  background:rgba(10,10,12,0.96);backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);
+  padding:6px 0 calc(6px + env(safe-area-inset-bottom));
+  z-index:200;
+}
+.nav-mel-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:6px 0 2px;border:none;background:none;
+  color:rgba(255,255,255,0.35);font-size:9px;font-weight:600;
+  cursor:pointer;transition:color .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.nav-mel-item:active{transform:scale(0.95)}
+.nav-mel-item svg{width:20px;height:20px}
+.nav-mel-item.active{color:var(--accent)}
+.app{padding-bottom:calc(52px + env(safe-area-inset-bottom))}
 
 .img-wrap{position:relative;width:100%;overflow:hidden;flex-shrink:0}
 .img-wrap img{width:100%;display:block}
@@ -156,8 +236,24 @@ html,body{font-family:'Noto Sans KR','Outfit',sans-serif;background:var(--bg);co
 <body>
 <div class="app">
   <div class="hdr">
+    <button class="back-home" onclick="location.href='./index.html'" title="홈으로">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
     <h1>멜라닌 컬러 가이드</h1>
     <span class="pill" id="stepPill">STEP 1</span>
+  </div>
+  <!-- 스텝 프로그레스 -->
+  <div class="step-progress" id="stepProgress">
+    <div class="step-dot active" id="sd1"></div>
+    <div class="step-line" id="sl1"></div>
+    <div class="step-dot" id="sd2"></div>
+    <div class="step-line" id="sl2"></div>
+    <div class="step-dot" id="sd3"></div>
+  </div>
+  <div class="step-labels" id="stepLabels">
+    <span class="active">퇴색모·레벨</span>
+    <span>색감·명도</span>
+    <span>시술가이드</span>
   </div>
   <div class="hdr-notice">표시된 색감명은 참고용이며 실제와 다를 수 있습니다. 본 가이드는 정밀한 색감 재현이라기보다, 잔류 언더톤 · 보색중화 · 시술 방향의 이해를 돕기 위한 도구입니다.</div>
 
@@ -176,12 +272,13 @@ html,body{font-family:'Noto Sans KR','Outfit',sans-serif;background:var(--bg);co
   <div class="ctrls">
     <div id="s1Ctrls">
       <div class="sec-title">시술 이력 선택</div>
+      <div class="cw-prompt" id="cwPrompt">먼저 퇴색 유형을 선택하세요</div>
       <div class="cw-row">
-        <div class="cw-btn" id="btnCool" onclick="pickCW('cool')">
+        <div class="cw-btn hint" id="btnCool" onclick="pickCW('cool')">
           <div class="tp">한색 계열 퇴색</div>
           <div class="sub">쿨브라운 / 매트 / 노랑 퇴색</div>
         </div>
-        <div class="cw-btn" id="btnWarm" onclick="pickCW('warm')">
+        <div class="cw-btn hint" id="btnWarm" onclick="pickCW('warm')">
           <div class="tp">난색 계열 퇴색 / 자연모</div>
           <div class="sub">붉은, 주황브라운 / 노랑 퇴색모</div>
         </div>
@@ -219,9 +316,34 @@ html,body{font-family:'Noto Sans KR','Outfit',sans-serif;background:var(--bg);co
       <div class="s3-det" id="s3Det"></div>
     </div>
 
+    <!-- 실시간 결과 프리뷰 -->
+    <div class="live-preview" id="livePreview">
+      <div class="lp-swatch" id="lpSwatch"></div>
+      <div class="lp-info">
+        <div class="lp-title" id="lpTitle">-</div>
+        <div class="lp-sub" id="lpSub">색감과 레벨을 선택하면 예상 결과가 표시됩니다</div>
+      </div>
+    </div>
+
     <button class="cta" id="cta" disabled>시술 이력과 레벨을 선택하세요</button>
   </div>
 </div>
+
+<!-- 하단 네비게이션 -->
+<nav class="bottom-nav-mel">
+  <button class="nav-mel-item" onclick="location.href='./index.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    홈
+  </button>
+  <button class="nav-mel-item active" onclick="resetAll()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg>
+    컬러가이드
+  </button>
+  <button class="nav-mel-item" onclick="location.href='./index.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
+    계산기
+  </button>
+</nav>
 
 <script>
 var LV=[20,18,16,14,12,10,8,6,5];
@@ -330,6 +452,12 @@ document.addEventListener('DOMContentLoaded',function(){
 
 function pickCW(type){
   S.cw=type;
+  /* 힌트 제거 */
+  document.getElementById('btnCool').classList.remove('hint');
+  document.getElementById('btnWarm').classList.remove('hint');
+  var prompt=document.getElementById('cwPrompt');
+  if(prompt) prompt.style.display='none';
+
   document.getElementById('btnCool').classList.toggle('on',type==='cool');
   document.getElementById('btnWarm').classList.toggle('on',type==='warm');
   document.getElementById('olLeft').style.opacity=type==='warm'?'1':'0';
@@ -399,9 +527,11 @@ function pickColor(k){
 function goStep2(){
   S.step=2;S.tarLv=null;S.color=null;
   document.getElementById('stepPill').textContent='STEP 2';
+  document.getElementById('stepPill').className='pill s2';
   document.getElementById('s1Ctrls').style.display='none';
   document.getElementById('s2Ctrls').style.display='block';
   document.getElementById('imgLabels').style.opacity='0';
+  updateStepProgress(2);
   buildColors();
   upd();
 }
@@ -441,9 +571,83 @@ function upd(){
       cta.textContent=S.color?'원하는 레벨을 탭하세요':'색감을 선택하세요';
     }
   }
+  updateLivePreview();
 }
 
 build();pickS1(6);
+
+/* ── 스텝 프로그레스 업데이트 ── */
+function updateStepProgress(step){
+  var sd1=document.getElementById('sd1'),sd2=document.getElementById('sd2'),sd3=document.getElementById('sd3');
+  var sl1=document.getElementById('sl1'),sl2=document.getElementById('sl2');
+  var labels=document.querySelectorAll('#stepLabels span');
+  sd1.className='step-dot '+(step>=1?'done':'');
+  sd2.className='step-dot '+(step>=2?(step>2?'done':'active'):'');
+  sd3.className='step-dot '+(step>=3?'active':'');
+  if(step===1){sd1.className='step-dot active';}
+  sl1.className='step-line '+(step>=2?'done':'');
+  sl2.className='step-line '+(step>=3?'done':'');
+  labels.forEach(function(l,i){l.className=(i===(step-1))?'active':'';});
+}
+
+/* ── 실시간 결과 프리뷰 (STEP2) ── */
+function updateLivePreview(){
+  var lp=document.getElementById('livePreview');
+  if(S.step!==2||!S.color){lp.classList.remove('show');return;}
+  var tarLv=S.tarLv;
+  /* 색감만 선택되고 레벨 미선택이면 중간 레벨(현재레벨)로 프리뷰 */
+  var previewLv=tarLv||S.lv;
+  if(!previewLv||!SW[S.color]){lp.classList.remove('show');return;}
+  var hslStr=SW[S.color].lv[previewLv];
+  if(!hslStr){lp.classList.remove('show');return;}
+  lp.classList.add('show');
+  document.getElementById('lpSwatch').style.background=hslStr;
+  var label=getLabelName(S.color,previewLv);
+  document.getElementById('lpTitle').textContent=label+' (Lv.'+previewLv+')';
+  var dirTxt='';
+  if(tarLv){
+    var d=toneDir(S.lv,tarLv);
+    if(d==='up') dirTxt='톤업 · 밝은 방향';
+    else if(d==='down') dirTxt='톤다운 · 어두운 방향';
+    else dirTxt='톤인톤 · 유사 명도';
+  } else {
+    dirTxt='아래에서 원하는 레벨을 탭하세요';
+  }
+  document.getElementById('lpSub').textContent=dirTxt;
+}
+
+/* ── 전체 리셋 ── */
+function resetAll(){
+  S={cw:null,lv:null,step:1,color:null,tarLv:null,s1Idx:null};
+  document.getElementById('stepPill').textContent='STEP 1';
+  document.getElementById('stepPill').className='pill';
+  document.getElementById('s1Ctrls').style.display='block';
+  document.getElementById('s2Ctrls').style.display='none';
+  document.getElementById('s3Panel').classList.remove('show');
+  document.getElementById('cta').style.display='block';
+  document.getElementById('imgLabels').style.opacity='1';
+  document.getElementById('livePreview').classList.remove('show');
+  /* 힌트 복원 */
+  document.getElementById('btnCool').classList.remove('on');
+  document.getElementById('btnCool').classList.add('hint');
+  document.getElementById('btnWarm').classList.remove('on');
+  document.getElementById('btnWarm').classList.add('hint');
+  var prompt=document.getElementById('cwPrompt');
+  if(prompt) prompt.style.display='block';
+  /* 오버레이 리셋 */
+  document.getElementById('olLeft').style.opacity='0';
+  document.getElementById('olRight').style.opacity='0';
+  /* 스와치 리셋 */
+  var sw=document.getElementById('swLayer');
+  sw.classList.remove('show','from-left','from-right');
+  /* 숫자 리셋 */
+  document.querySelectorAll('.zone .num').forEach(function(n){n.classList.remove('side-left','side-right');});
+  clearAllHL();
+  updateStepProgress(1);
+  stopAllCanvas();
+  upd();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
 
 /* 레벨에 해당하는 라벨명 가져오기 — labels 직접 조회 */
 function getLabelName(colorKey,lv){
@@ -2958,18 +3162,21 @@ function showStep3(){
   if(S.cw==='warm'){
     var proc=document.getElementById('s3Proc');
     if(S.color==='red'||S.color==='rv'||S.color==='pink'){
-      proc.textContent+='\n\n💡 난색 퇴색모 참고사항\n난색 퇴색모는 붉은기 잔류가 강하지만, '+SW[S.color].lb+' 시술에서는 오히려 도움이 됩니다.\n잔류 붉은기가 같은 계열이라 발색이 수월하고 유지력도 좋아요.\n16레벨에서는 주황노랑기가 남아 레드 쪽으로 치우칠 수 있으니 바이올렛 소량 믹스를 고려하세요.';
+      proc.textContent+='\n\n난색 퇴색모 참고사항\n난색 퇴색모는 붉은기 잔류가 강하지만, '+SW[S.color].lb+' 시술에서는 오히려 도움이 됩니다.\n잔류 붉은기가 같은 계열이라 발색이 수월하고 유지력도 좋아요.\n16레벨에서는 주황노랑기가 남아 레드 쪽으로 치우칠 수 있으니 바이올렛 소량 믹스를 고려하세요.';
     } else {
-      proc.textContent+='\n\n⚠ 난색 퇴색모 주의사항\n난색 퇴색모는 붉은기 잔류가 강해 원하는 색상으로 가기 쉽지않아요.\n탈색 후에도 레드기가 잘 안빠지거나, 보색 중화를해도 적빛브라운으로 수렴되는경우가있어요.\n난색기를 충분히 억제하며 한색 계열로 체인지하는 데 집중하세요.\n잔류 상태에 따라 그린 · 블루 · 애쉬 · 청보라 · 바이올렛 중 적절한 보색을 선택하는 것이 중요합니다.\n(애쉬카키, 블루애쉬, 보라애쉬 등 보색 기능이 강화된 염모제를 활용하시면 보다 안정적인 결과를 얻을 수 있습니다.)';
+      proc.textContent+='\n\n난색 퇴색모 주의사항\n난색 퇴색모는 붉은기 잔류가 강해 원하는 색상으로 가기 쉽지않아요.\n탈색 후에도 레드기가 잘 안빠지거나, 보색 중화를해도 적빛브라운으로 수렴되는경우가있어요.\n난색기를 충분히 억제하며 한색 계열로 체인지하는 데 집중하세요.\n잔류 상태에 따라 그린 · 블루 · 애쉬 · 청보라 · 바이올렛 중 적절한 보색을 선택하는 것이 중요합니다.\n(애쉬카키, 블루애쉬, 보라애쉬 등 보색 기능이 강화된 염모제를 활용하시면 보다 안정적인 결과를 얻을 수 있습니다.)';
     }
   }
 
   S.step=3;
   document.getElementById('stepPill').textContent='STEP 3';
+  document.getElementById('stepPill').className='pill s3';
   document.getElementById('s2Ctrls').style.display='none';
   document.getElementById('guideBox').classList.remove('show');
   p.classList.add('show');
   document.getElementById('cta').style.display='none';
+  document.getElementById('livePreview').classList.remove('show');
+  updateStepProgress(3);
 
   /* 캔버스 애니메이션 트리거 */
   setTimeout(function(){triggerCanvas(S.color,S.lv,S.tarLv);},200);
@@ -2979,9 +3186,11 @@ function showStep3(){
 document.getElementById('s3Back').onclick=function(){
   S.step=2;
   document.getElementById('stepPill').textContent='STEP 2';
+  document.getElementById('stepPill').className='pill s2';
   document.getElementById('s3Panel').classList.remove('show');
   document.getElementById('s2Ctrls').style.display='block';
   document.getElementById('cta').style.display='block';
+  updateStepProgress(2);
   stopAllCanvas();
   upd();
 };
