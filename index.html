@@ -36,6 +36,7 @@
     .bowl-remove-btn{background:none;border:none;color:#ccc;font-size:13px;cursor:pointer;margin-left:8px;padding:4px 6px}
     .bowl-color-row{display:flex;align-items:center;gap:6px;margin-bottom:5px}
     .bowl-color-name{flex:1;min-width:0;background:#f5f5f2;border:1.5px solid #e5e5e0;border-radius:8px;padding:8px 10px;font-size:14px;color:#1A1814}
+    .bowl-default-name{color:#bbb!important}
     .bowl-ratio-wrap{display:flex;align-items:center;gap:1px;flex-shrink:0}
     .bowl-ratio-sep{font-size:13px;color:#bbb;font-weight:600;width:8px;text-align:center}
     .bowl-ratio-input{width:44px;text-align:center;background:#fff;border:1.5px solid #d5d5d0;border-radius:7px;padding:8px 2px;font-size:14px;font-weight:600;color:#1A1814}
@@ -45,6 +46,7 @@
     .bowl-extra-row{margin-bottom:8px}
     .bowl-extra-row-top{display:flex;align-items:center;gap:5px}
     .bowl-extra-name{flex:1;min-width:0;background:#f5f5f2;border:1.5px solid #e5e5e0;border-radius:8px;padding:8px 10px;font-size:14px;color:#1A1814}
+    .bowl-extra-default-name{color:#bbb!important}
     .bowl-extra-pct-wrap{display:flex;align-items:center;gap:1px;flex-shrink:0}
     .bowl-extra-pct{width:44px;text-align:center;background:#fff;border:1.5px solid #d5d5d0;border-radius:7px;padding:8px 2px;font-size:14px;font-weight:600;color:#1A1814}
     .bowl-extra-pct-label{font-size:11px;color:#999}
@@ -380,16 +382,16 @@
             <span class="bowl-summary" id="dye-bowl-1-summary"></span>
           </div>
           <div class="bowl-color-list">
-            <div class="bowl-color-row"><input class="calc-input bowl-color-name" type="text" placeholder="염모제 1"/><div class="bowl-ratio-wrap"><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div><span class="bowl-color-gram">—</span></div>
-            <div class="bowl-color-row"><input class="calc-input bowl-color-name" type="text" placeholder="염모제 2"/><div class="bowl-ratio-wrap"><span class="bowl-ratio-sep">:</span><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div><span class="bowl-color-gram">—</span></div>
-            <div class="bowl-color-row"><input class="calc-input bowl-color-name" type="text" placeholder="염모제 3"/><div class="bowl-ratio-wrap"><span class="bowl-ratio-sep">:</span><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div><span class="bowl-color-gram">—</span></div>
+            <div class="bowl-color-row"><input class="calc-input bowl-color-name bowl-default-name" type="text" value="염모제 1" data-default="염모제 1"/><div class="bowl-ratio-wrap"><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div><span class="bowl-color-gram">—</span></div>
+            <div class="bowl-color-row"><input class="calc-input bowl-color-name bowl-default-name" type="text" value="염모제 2" data-default="염모제 2"/><div class="bowl-ratio-wrap"><span class="bowl-ratio-sep">:</span><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div><span class="bowl-color-gram">—</span></div>
+            <div class="bowl-color-row"><input class="calc-input bowl-color-name bowl-default-name" type="text" value="염모제 3" data-default="염모제 3"/><div class="bowl-ratio-wrap"><span class="bowl-ratio-sep">:</span><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div><span class="bowl-color-gram">—</span></div>
           </div>
           <div class="bowl-extras-section" id="dye-bowl-1-exsec" style="display:none;">
             <div class="bowl-extras-divider"></div>
             <div class="bowl-extras-label">추가제 (염모제 총량 기준 %)</div>
             <div class="bowl-extras-list" id="dye-bowl-1-exlist"></div>
           </div>
-          <button class="bowl-add-extra-btn" onclick="dyeAddExtra(1)">+ 추가</button>
+          <button class="bowl-add-extra-btn" onclick="dyeAddExtra(1)">+ (컨트롤컬러, 보조제 등) 추가</button>
           <div class="bowl-total-bar" id="dye-bowl-1-total"><div class="bowl-total-empty">염모제를 입력하면 실시간으로 계산됩니다</div></div>
         </div>
       </div>
@@ -434,16 +436,16 @@
             <div class="addons-note-body">강, 중, 약 / 산성펌, 중성펌제 등<br>혼합할 시 기입하여 사용하세요</div>
           </div>
           <div class="bowl-color-list">
-            <div class="bowl-color-row"><input class="calc-input bowl-color-name" type="text" placeholder="펌제 1"/><div class="bowl-ratio-wrap"><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div><span class="bowl-color-gram">—</span></div>
-            <div class="bowl-color-row"><input class="calc-input bowl-color-name" type="text" placeholder="펌제 2"/><div class="bowl-ratio-wrap"><span class="bowl-ratio-sep">:</span><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div><span class="bowl-color-gram">—</span></div>
-            <div class="bowl-color-row"><input class="calc-input bowl-color-name" type="text" placeholder="펌제 3"/><div class="bowl-ratio-wrap"><span class="bowl-ratio-sep">:</span><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div><span class="bowl-color-gram">—</span></div>
+            <div class="bowl-color-row"><input class="calc-input bowl-color-name bowl-default-name" type="text" value="펌제 1" data-default="펌제 1"/><div class="bowl-ratio-wrap"><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div><span class="bowl-color-gram">—</span></div>
+            <div class="bowl-color-row"><input class="calc-input bowl-color-name bowl-default-name" type="text" value="펌제 2" data-default="펌제 2"/><div class="bowl-ratio-wrap"><span class="bowl-ratio-sep">:</span><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div><span class="bowl-color-gram">—</span></div>
+            <div class="bowl-color-row"><input class="calc-input bowl-color-name bowl-default-name" type="text" value="펌제 3" data-default="펌제 3"/><div class="bowl-ratio-wrap"><span class="bowl-ratio-sep">:</span><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div><span class="bowl-color-gram">—</span></div>
           </div>
           <div class="bowl-extras-section" id="perm-bowl-1-exsec" style="display:none;">
             <div class="bowl-extras-divider"></div>
             <div class="bowl-extras-label">추가제 (펌제 총량 기준 %)</div>
             <div class="bowl-extras-list" id="perm-bowl-1-exlist"></div>
           </div>
-          <button class="bowl-add-extra-btn" onclick="permAddExtra(1)">+ 추가</button>
+          <button class="bowl-add-extra-btn" onclick="permAddExtra(1)">+ (크리닉, 앰플 등) 추가</button>
           <div class="bowl-total-bar" id="perm-bowl-1-total"><div class="bowl-total-empty">펌제를 입력하면 실시간으로 계산됩니다</div></div>
         </div>
       </div>
