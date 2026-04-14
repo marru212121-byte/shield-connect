@@ -22,61 +22,65 @@
     #page-home{display:block}
     .modal-view-val{font-size:15px;font-weight:600;color:#1A1814;margin-left:auto;}
 
-    /* ── 바울 카드 ── */
-    .bowl-card { background:#fff; border:1.5px solid #e5e5e0; border-radius:14px; padding:14px 12px 0; margin-bottom:10px; }
-    .bowl-header { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
-    .bowl-number { width:24px;height:24px;background:#1A1814;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0; }
-    .bowl-title { font-size:15px;font-weight:700;color:#1A1814; }
-    .bowl-summary { margin-left:auto;font-size:10px;color:#888;white-space:nowrap; }
-    .bowl-remove-btn { background:none;border:none;color:#ccc;font-size:13px;cursor:pointer;margin-left:8px;padding:4px 6px; }
+    /* 계산기 탭 */
+    .calc-tab-row{display:flex;gap:0;margin-bottom:12px;background:#fff;border-radius:10px;border:1.5px solid #e5e5e0;overflow:hidden}
+    .calc-tab{flex:1;padding:11px;text-align:center;font-size:13px;font-weight:600;color:#888;cursor:pointer;border:none;background:none;transition:all .15s;-webkit-tap-highlight-color:transparent}
+    .calc-tab.active{background:#1A1814;color:#fff}
 
-    .bowl-color-row { display:flex;align-items:center;gap:6px;margin-bottom:5px; }
-    .bowl-color-name { flex:1;min-width:0;background:#f5f5f2;border:1.5px solid #e5e5e0;border-radius:8px;padding:8px 10px;font-size:14px;color:#1A1814; }
-    .bowl-ratio-wrap { display:flex;align-items:center;gap:1px;flex-shrink:0; }
-    .bowl-ratio-sep { font-size:13px;color:#bbb;font-weight:600;width:8px;text-align:center; }
-    .bowl-ratio-input { width:44px;text-align:center;background:#fff;border:1.5px solid #d5d5d0;border-radius:7px;padding:8px 2px;font-size:14px;font-weight:600;color:#1A1814; }
-    .bowl-color-gram { font-size:12px;width:38px;text-align:right;font-weight:500;flex-shrink:0; }
+    /* 바울 카드 */
+    .bowl-card{background:#fff;border:1.5px solid #e5e5e0;border-radius:14px;padding:14px 12px 0;margin-bottom:10px}
+    .bowl-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+    .bowl-number{width:24px;height:24px;background:#1A1814;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+    .bowl-title{font-size:15px;font-weight:700;color:#1A1814}
+    .bowl-summary{margin-left:auto;font-size:10px;color:#888;white-space:nowrap}
+    .bowl-remove-btn{background:none;border:none;color:#ccc;font-size:13px;cursor:pointer;margin-left:8px;padding:4px 6px}
+    .bowl-color-row{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+    .bowl-color-name{flex:1;min-width:0;background:#f5f5f2;border:1.5px solid #e5e5e0;border-radius:8px;padding:8px 10px;font-size:14px;color:#1A1814}
+    .bowl-ratio-wrap{display:flex;align-items:center;gap:1px;flex-shrink:0}
+    .bowl-ratio-sep{font-size:13px;color:#bbb;font-weight:600;width:8px;text-align:center}
+    .bowl-ratio-input{width:44px;text-align:center;background:#fff;border:1.5px solid #d5d5d0;border-radius:7px;padding:8px 2px;font-size:14px;font-weight:600;color:#1A1814}
+    .bowl-color-gram{font-size:12px;width:38px;text-align:right;font-weight:500;flex-shrink:0}
+    .bowl-extras-divider{height:1px;background:#e5e5e0;margin:10px 0 8px}
+    .bowl-extras-label{font-size:10px;color:#888;margin-bottom:6px}
+    .bowl-extra-row{margin-bottom:8px}
+    .bowl-extra-row-top{display:flex;align-items:center;gap:5px}
+    .bowl-extra-name{flex:1;min-width:0;background:#f5f5f2;border:1.5px solid #e5e5e0;border-radius:8px;padding:8px 10px;font-size:14px;color:#1A1814}
+    .bowl-extra-pct-wrap{display:flex;align-items:center;gap:1px;flex-shrink:0}
+    .bowl-extra-pct{width:44px;text-align:center;background:#fff;border:1.5px solid #d5d5d0;border-radius:7px;padding:8px 2px;font-size:14px;font-weight:600;color:#1A1814}
+    .bowl-extra-pct-label{font-size:11px;color:#999}
+    .bowl-extra-gram{font-size:12px;width:38px;text-align:right;font-weight:500;color:#1A1814;flex-shrink:0}
+    .bowl-extra-remove{width:22px;height:22px;border:none;background:none;color:#ccc;font-size:16px;cursor:pointer;padding:0}
+    .bowl-add-extra-btn{width:100%;padding:7px;border:1.5px dashed #d5d5d0;border-radius:8px;background:none;font-size:11px;color:#999;cursor:pointer;margin-top:4px}
+    .bowl-add-btn{width:100%;padding:12px;border:1.5px dashed #d0d0cb;border-radius:12px;background:#fafaf8;font-size:13px;font-weight:600;color:#999;cursor:pointer;margin-bottom:12px;text-align:center}
 
-    /* 추가제 — 일반 배경 (보라X) */
-    .bowl-extras-divider { height:1px;background:#e5e5e0;margin:10px 0 8px; }
-    .bowl-extras-label { font-size:10px;color:#888;margin-bottom:6px; }
-    .bowl-extra-row { margin-bottom:5px; }
-    .bowl-extra-row-top { display:flex;align-items:center;gap:5px; }
-    .bowl-extra-name { flex:1;min-width:0;background:#f5f5f2;border:1.5px solid #e5e5e0;border-radius:8px;padding:8px 10px;font-size:14px;color:#1A1814; }
-    .bowl-extra-pct-wrap { display:flex;align-items:center;gap:1px;flex-shrink:0; }
-    .bowl-extra-pct { width:44px;text-align:center;background:#fff;border:1.5px solid #d5d5d0;border-radius:7px;padding:8px 2px;font-size:14px;font-weight:600;color:#1A1814; }
-    .bowl-extra-pct-label { font-size:11px;color:#999; }
-    .bowl-extra-gram { font-size:12px;width:38px;text-align:right;font-weight:500;color:#1A1814;flex-shrink:0; }
-    .bowl-extra-remove { width:22px;height:22px;border:none;background:none;color:#ccc;font-size:16px;cursor:pointer;padding:0; }
-
-    /* 산화제 포함 체크 */
-    .bowl-oxi-include-label { display:flex;align-items:center;gap:5px;margin:3px 0 0 2px;cursor:pointer;-webkit-tap-highlight-color:transparent; }
-    .bowl-oxi-include-chk { width:14px;height:14px;accent-color:#C0392B;margin:0; }
-    .bowl-oxi-include-text { font-size:10px;color:#aaa; }
-    .bowl-oxi-include-label:has(.bowl-oxi-include-chk:checked) .bowl-oxi-include-text { color:#C0392B;font-weight:600; }
-
-    .bowl-add-extra-btn { width:100%;padding:7px;border:1.5px dashed #d5d5d0;border-radius:8px;background:none;font-size:11px;color:#999;cursor:pointer;margin-top:4px; }
+    /* 산화제 포함 토글 */
+    .oxi-toggle{display:flex;align-items:center;gap:6px;margin:5px 0 0 0;padding:5px 10px;border:1.5px dashed #ddd;border-radius:20px;background:#fafafa;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .2s}
+    .oxi-toggle:active{transform:scale(0.97)}
+    .oxi-toggle .oxi-dot{width:16px;height:16px;border-radius:50%;border:2px solid #ccc;background:#fff;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+    .oxi-toggle .oxi-dot svg{opacity:0;transition:opacity .15s}
+    .oxi-toggle .oxi-text{font-size:11px;color:#999;transition:color .2s}
+    .oxi-toggle .oxi-arrow{margin-left:auto;font-size:10px;color:#ccc;transition:all .2s}
+    .oxi-toggle.active{border:1.5px solid rgba(192,57,43,0.3);background:rgba(192,57,43,0.04)}
+    .oxi-toggle.active .oxi-dot{border-color:#C0392B;background:#C0392B}
+    .oxi-toggle.active .oxi-dot svg{opacity:1}
+    .oxi-toggle.active .oxi-text{color:#C0392B;font-weight:600}
+    .oxi-toggle.active .oxi-arrow{color:#C0392B}
 
     /* 합계 바 */
-    .bowl-total-bar { margin:10px -12px 0;padding:12px;background:#fef8f7;border-radius:0 0 12px 12px;border-top:1.5px solid #f0d5d0; }
-    .bowl-total-empty { text-align:center;padding:6px 0;font-size:12px;color:#bbb; }
-    .bowl-res-label { font-size:10px;color:#888;margin-bottom:4px; }
-    .bowl-res-ratio { font-size:11px;color:#888;margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid #f0e0dd; }
-    .bowl-res-item { display:flex;justify-content:space-between;padding:3px 0;font-size:13px; }
-    .bowl-res-item .name { color:#1A1814;font-weight:500; }
-    .bowl-res-item .gram { color:#1A1814;font-weight:700; }
-    .bowl-res-divider { height:1px;background:#f0e0dd;margin:4px 0; }
-    /* 염모제(1제) 총량 — 여린 빨강 */
-    .bowl-res-main-total { display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:15px;font-weight:700;color:#D35B5B; }
-    /* 산화제 — 여린 빨강 */
-    .bowl-res-oxi { display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:14px;font-weight:600;color:#D35B5B; }
-    .bowl-res-oxi-tag { font-size:9px;color:#C0392B;background:rgba(192,57,43,0.08);border:1px solid rgba(192,57,43,0.15);padding:1px 4px;border-radius:3px;margin-left:4px;font-weight:600; }
-    /* 바울 합계 — 비비드 빨강 */
-    .bowl-res-grand { display:flex;justify-content:space-between;align-items:flex-end;padding:6px 0 0;margin-top:4px;border-top:2px solid #e8c0c0; }
-    .bowl-res-grand .label { font-size:13px;font-weight:700;color:#B71C1C; }
-    .bowl-res-grand .total { font-size:22px;font-weight:800;color:#B71C1C; }
-
-    .bowl-add-btn { width:100%;padding:12px;border:1.5px dashed #d0d0cb;border-radius:12px;background:#fafaf8;font-size:13px;font-weight:600;color:#999;cursor:pointer;margin-bottom:12px;text-align:center; }
+    .bowl-total-bar{margin:10px -12px 0;padding:12px;background:#fef8f7;border-radius:0 0 12px 12px;border-top:1.5px solid #f0d5d0}
+    .bowl-total-empty{text-align:center;padding:6px 0;font-size:12px;color:#bbb}
+    .bowl-res-label{font-size:10px;color:#888;margin-bottom:4px}
+    .bowl-res-ratio{font-size:11px;color:#888;margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid #f0e0dd}
+    .bowl-res-item{display:flex;justify-content:space-between;padding:3px 0;font-size:13px}
+    .bowl-res-item .name{color:#1A1814;font-weight:500}
+    .bowl-res-item .gram{color:#1A1814;font-weight:700}
+    .bowl-res-divider{height:1px;background:#f0e0dd;margin:4px 0}
+    .bowl-res-main-total{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:15px;font-weight:700;color:#D35B5B}
+    .bowl-res-oxi{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:14px;font-weight:600;color:#D35B5B}
+    .bowl-res-oxi-tag{font-size:9px;color:#C0392B;background:rgba(192,57,43,0.08);border:1px solid rgba(192,57,43,0.15);padding:1px 4px;border-radius:3px;margin-left:4px;font-weight:600}
+    .bowl-res-grand{display:flex;justify-content:space-between;align-items:flex-end;padding:6px 0 0;margin-top:4px;border-top:2px solid #e8c0c0}
+    .bowl-res-grand .label{font-size:13px;font-weight:700;color:#B71C1C}
+    .bowl-res-grand .total{font-size:22px;font-weight:800;color:#B71C1C}
   </style>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-82LSVB4T6K"></script>
 <script>
@@ -130,7 +134,7 @@
   <p class="section-label">주요 기능</p>
   <div class="menu-grid">
 
-    <!-- 염모제 비율 계산기 -->
+    <!-- 약제 비율 계산기 -->
     <a class="menu-card" href="#" onclick="navigate('calculator');return false;">
       <div class="menu-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
@@ -139,18 +143,7 @@
           <line x1="8" y1="14" x2="12" y2="14"/>
         </svg>
       </div>
-      <span class="menu-label">염모제<br>계산기</span>
-    </a>
-
-    <!-- 펌제 비율 계산기 -->
-    <a class="menu-card" href="#" onclick="navigate('perm-calc');return false;">
-      <div class="menu-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2C6 2 4 6 4 10c0 3 1.5 5.5 4 7v3h8v-3c2.5-1.5 4-4 4-7 0-4-2-8-8-8z"/>
-          <line x1="8" y1="20" x2="16" y2="20"/>
-        </svg>
-      </div>
-      <span class="menu-label">펌제<br>계산기</span>
+      <span class="menu-label">약제 비율<br>계산기</span>
     </a>
 
     <!-- 성분사전 -->
@@ -329,171 +322,137 @@
 </div><!-- /page-ingredient -->
 
 <!-- ════════════════════════════════
-     PAGE: CALCULATOR (염모제 계산기)
+     PAGE: CALCULATOR (약제 비율 계산기 — 염모제/펌제 통합)
 ════════════════════════════════ -->
 <div id="page-calculator" class="page-screen page" style="display:none;">
   <div class="page-header">
     <button class="back-btn" onclick="navigate('home')">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
     </button>
-    <div><h2>염모제 계산기</h2><div class="sub">현장용 레시피 계산 도구</div></div>
+    <div><h2>약제 비율 계산기</h2><div class="sub">현장용 레시피 계산 도구</div></div>
   </div>
   <div class="calc-wrap">
-    <!-- 상단 설정 -->
-    <div class="calc-card">
-      <div class="calc-card-title">총량</div>
-      <div class="gram-btn-row">
-        <button class="gram-btn" data-gram="40">숏<span>40g</span></button>
-        <button class="gram-btn" data-gram="60">미디움<span>60g</span></button>
-        <button class="gram-btn active" data-gram="120">롱<span>120g</span></button>
-        <button class="gram-btn" data-gram="240">울트라<span>240g</span></button>
-      </div>
-      <div class="custom-gram-row">
-        <span class="custom-gram-label">직접 입력</span>
-        <div class="custom-gram-input-wrap">
-          <input class="calc-input custom-gram" id="calc-custom-input" type="number" placeholder="g 단위" min="1" inputmode="decimal"/>
-          <span class="gram-unit">g</span>
-        </div>
-      </div>
-      <div class="calc-card-title" style="margin-top:12px;">산화제 비율</div>
-      <div class="oxi-btn-row">
-        <button class="oxi-btn active" data-oxi="1">1:1</button>
-        <button class="oxi-btn" data-oxi="1.5">1:1.5</button>
-        <button class="oxi-btn" data-oxi="2">1:2</button>
-        <button class="oxi-btn" data-oxi="3">1:3</button>
-      </div>
-      <div class="calc-inline-row" style="margin-top:8px;">
-        <span class="calc-inline-label">반올림</span>
-        <div class="round-btn-row">
-          <button class="round-btn" data-round="0.5">0.5g</button>
-          <button class="round-btn active" data-round="1">1g</button>
-        </div>
-      </div>
+    <!-- 탭 -->
+    <div class="calc-tab-row">
+      <button class="calc-tab active" id="calc-tab-dye" onclick="switchCalcTab('dye')">염모제</button>
+      <button class="calc-tab" id="calc-tab-perm" onclick="switchCalcTab('perm')">펌제</button>
     </div>
 
-    <!-- 바울 컨테이너 -->
-    <div id="dye-bowls-container">
-      <div class="bowl-card" id="dye-bowl-1">
-        <div class="bowl-header">
-          <div class="bowl-number">1</div>
-          <span class="bowl-title">바울 1</span>
-          <span class="bowl-summary" id="dye-bowl-1-summary"></span>
+    <!-- ══ 염모제 탭 ══ -->
+    <div id="calc-dye-tab">
+      <div class="calc-card">
+        <div class="calc-card-title">총량</div>
+        <div class="gram-btn-row">
+          <button class="gram-btn dye-gram-btn active" data-gram="40">숏<span>40g</span></button>
+          <button class="gram-btn dye-gram-btn" data-gram="60">미디움<span>60g</span></button>
+          <button class="gram-btn dye-gram-btn" data-gram="120">롱<span>120g</span></button>
+          <button class="gram-btn dye-gram-btn" data-gram="240">울트라<span>240g</span></button>
         </div>
-        <div class="bowl-color-list">
-          <div class="bowl-color-row">
-            <input class="calc-input bowl-color-name" type="text" placeholder="염모제 1"/>
-            <div class="bowl-ratio-wrap"><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div>
-            <span class="bowl-color-gram">—</span>
-          </div>
-          <div class="bowl-color-row">
-            <input class="calc-input bowl-color-name" type="text" placeholder="염모제 2"/>
-            <div class="bowl-ratio-wrap"><span class="bowl-ratio-sep">:</span><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div>
-            <span class="bowl-color-gram">—</span>
-          </div>
-          <div class="bowl-color-row">
-            <input class="calc-input bowl-color-name" type="text" placeholder="염모제 3"/>
-            <div class="bowl-ratio-wrap"><span class="bowl-ratio-sep">:</span><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div>
-            <span class="bowl-color-gram">—</span>
+        <div class="custom-gram-row">
+          <span class="custom-gram-label">직접 입력</span>
+          <div class="custom-gram-input-wrap">
+            <input class="calc-input custom-gram" id="dye-custom-input" type="number" value="40" min="1" inputmode="decimal"/>
+            <span class="gram-unit">g</span>
           </div>
         </div>
-        <div class="bowl-extras-section" style="display:none;">
-          <div class="bowl-extras-divider"></div>
-          <div class="bowl-extras-label">추가제 (염모제 총량 기준 %)</div>
-          <div class="bowl-extras-list"></div>
+        <div class="calc-card-title" style="margin-top:12px;">산화제 비율</div>
+        <div class="oxi-btn-row">
+          <button class="oxi-btn active" data-oxi="1">1:1</button>
+          <button class="oxi-btn" data-oxi="1.5">1:1.5</button>
+          <button class="oxi-btn" data-oxi="2">1:2</button>
+          <button class="oxi-btn" data-oxi="3">1:3</button>
         </div>
-        <button class="bowl-add-extra-btn" onclick="dyeAddExtra(1)">+ 추가</button>
-        <div class="bowl-total-bar" id="dye-bowl-1-total">
-          <div class="bowl-total-empty">염모제를 입력하면 실시간으로 계산됩니다</div>
+        <div class="calc-inline-row" style="margin-top:8px;">
+          <span class="calc-inline-label">반올림</span>
+          <div class="round-btn-row">
+            <button class="round-btn dye-round-btn" data-round="0.5">0.5g</button>
+            <button class="round-btn dye-round-btn active" data-round="1">1g</button>
+          </div>
         </div>
       </div>
+
+      <!-- 바울 컨테이너 -->
+      <div id="dye-bowls-container">
+        <div class="bowl-card" id="dye-bowl-1">
+          <div class="bowl-header">
+            <div class="bowl-number">1</div>
+            <span class="bowl-title">바울 1</span>
+            <span class="bowl-summary" id="dye-bowl-1-summary"></span>
+          </div>
+          <div class="bowl-color-list">
+            <div class="bowl-color-row"><input class="calc-input bowl-color-name" type="text" placeholder="염모제 1"/><div class="bowl-ratio-wrap"><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div><span class="bowl-color-gram">—</span></div>
+            <div class="bowl-color-row"><input class="calc-input bowl-color-name" type="text" placeholder="염모제 2"/><div class="bowl-ratio-wrap"><span class="bowl-ratio-sep">:</span><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div><span class="bowl-color-gram">—</span></div>
+            <div class="bowl-color-row"><input class="calc-input bowl-color-name" type="text" placeholder="염모제 3"/><div class="bowl-ratio-wrap"><span class="bowl-ratio-sep">:</span><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div><span class="bowl-color-gram">—</span></div>
+          </div>
+          <div class="bowl-extras-section" id="dye-bowl-1-exsec" style="display:none;">
+            <div class="bowl-extras-divider"></div>
+            <div class="bowl-extras-label">추가제 (염모제 총량 기준 %)</div>
+            <div class="bowl-extras-list" id="dye-bowl-1-exlist"></div>
+          </div>
+          <button class="bowl-add-extra-btn" onclick="dyeAddExtra(1)">+ 추가</button>
+          <div class="bowl-total-bar" id="dye-bowl-1-total"><div class="bowl-total-empty">염모제를 입력하면 실시간으로 계산됩니다</div></div>
+        </div>
+      </div>
+      <button class="bowl-add-btn" id="dye-add-bowl-btn" onclick="dyeAddBowl()">+ 바울 2 추가</button>
     </div>
-    <button class="bowl-add-btn" id="dye-add-bowl-btn" onclick="dyeAddBowl()">+ 바울 2 추가</button>
+
+    <!-- ══ 펌제 탭 ══ -->
+    <div id="calc-perm-tab" style="display:none;">
+      <div class="calc-card">
+        <div class="calc-card-title">총량</div>
+        <div class="gram-btn-row">
+          <button class="gram-btn perm-gram-btn active" data-gram="40">숏<span>40g</span></button>
+          <button class="gram-btn perm-gram-btn" data-gram="60">미디움<span>60g</span></button>
+          <button class="gram-btn perm-gram-btn" data-gram="120">롱<span>120g</span></button>
+          <button class="gram-btn perm-gram-btn" data-gram="240">울트라<span>240g</span></button>
+        </div>
+        <div class="custom-gram-row">
+          <span class="custom-gram-label">직접 입력</span>
+          <div class="custom-gram-input-wrap">
+            <input class="calc-input custom-gram" id="perm-custom-input" type="number" value="40" min="1" inputmode="decimal"/>
+            <span class="gram-unit">g</span>
+          </div>
+        </div>
+        <div class="calc-inline-row" style="margin-top:8px;">
+          <span class="calc-inline-label">반올림</span>
+          <div class="round-btn-row">
+            <button class="round-btn perm-round-btn" data-round="0.5">0.5g</button>
+            <button class="round-btn perm-round-btn active" data-round="1">1g</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="perm-bowls-container">
+        <div class="bowl-card" id="perm-bowl-1">
+          <div class="bowl-header">
+            <div class="bowl-number">1</div>
+            <span class="bowl-title">바울 1</span>
+            <span class="bowl-summary" id="perm-bowl-1-summary"></span>
+          </div>
+          <div class="addons-note-box" style="margin-bottom:10px;">
+            <div class="addons-note-top"><span class="addons-note-icon">💡</span><span class="addons-note-title">약제 입력 안내</span></div>
+            <div class="addons-note-body">강, 중, 약 / 산성펌, 중성펌제 등<br>혼합할 시 기입하여 사용하세요</div>
+          </div>
+          <div class="bowl-color-list">
+            <div class="bowl-color-row"><input class="calc-input bowl-color-name" type="text" placeholder="펌제 1"/><div class="bowl-ratio-wrap"><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div><span class="bowl-color-gram">—</span></div>
+            <div class="bowl-color-row"><input class="calc-input bowl-color-name" type="text" placeholder="펌제 2"/><div class="bowl-ratio-wrap"><span class="bowl-ratio-sep">:</span><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div><span class="bowl-color-gram">—</span></div>
+            <div class="bowl-color-row"><input class="calc-input bowl-color-name" type="text" placeholder="펌제 3"/><div class="bowl-ratio-wrap"><span class="bowl-ratio-sep">:</span><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div><span class="bowl-color-gram">—</span></div>
+          </div>
+          <div class="bowl-extras-section" id="perm-bowl-1-exsec" style="display:none;">
+            <div class="bowl-extras-divider"></div>
+            <div class="bowl-extras-label">추가제 (펌제 총량 기준 %)</div>
+            <div class="bowl-extras-list" id="perm-bowl-1-exlist"></div>
+          </div>
+          <button class="bowl-add-extra-btn" onclick="permAddExtra(1)">+ 추가</button>
+          <div class="bowl-total-bar" id="perm-bowl-1-total"><div class="bowl-total-empty">펌제를 입력하면 실시간으로 계산됩니다</div></div>
+        </div>
+      </div>
+      <button class="bowl-add-btn" id="perm-add-bowl-btn" onclick="permAddBowl()">+ 바울 2 추가</button>
+    </div>
+
   </div>
 </div>
 
-
-<!-- ════════════════════════════════
-     PAGE: PERM-CALC (펌제 비율 계산기)
-════════════════════════════════ -->
-<div id="page-perm-calc" class="page-screen page" style="display:none;">
-  <div class="page-header">
-    <button class="back-btn" onclick="navigate('home')">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-    </button>
-    <div><h2>펌제 계산기</h2><div class="sub">현장용 펌제 레시피 계산 도구</div></div>
-  </div>
-  <div class="calc-wrap">
-    <!-- 상단 설정 -->
-    <div class="calc-card">
-      <div class="calc-card-title">총량</div>
-      <div class="gram-btn-row">
-        <button class="gram-btn perm-gram-btn" data-gram="40">숏<span>40g</span></button>
-        <button class="gram-btn perm-gram-btn" data-gram="60">미디움<span>60g</span></button>
-        <button class="gram-btn perm-gram-btn active" data-gram="120">롱<span>120g</span></button>
-        <button class="gram-btn perm-gram-btn" data-gram="240">울트라<span>240g</span></button>
-      </div>
-      <div class="custom-gram-row">
-        <span class="custom-gram-label">직접 입력</span>
-        <div class="custom-gram-input-wrap">
-          <input class="calc-input custom-gram" id="perm-custom-input" type="number" placeholder="g 단위" min="1" inputmode="decimal"/>
-          <span class="gram-unit">g</span>
-        </div>
-      </div>
-      <div class="calc-inline-row" style="margin-top:8px;">
-        <span class="calc-inline-label">반올림</span>
-        <div class="round-btn-row">
-          <button class="perm-round-btn" data-round="0.5">0.5g</button>
-          <button class="perm-round-btn active" data-round="1">1g</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 바울 컨테이너 -->
-    <div id="perm-bowls-container">
-      <div class="bowl-card" id="perm-bowl-1">
-        <div class="bowl-header">
-          <div class="bowl-number">1</div>
-          <span class="bowl-title">바울 1</span>
-          <span class="bowl-summary" id="perm-bowl-1-summary"></span>
-        </div>
-        <div class="addons-note-box" style="margin-bottom:10px;">
-          <div class="addons-note-top">
-            <span class="addons-note-icon">💡</span>
-            <span class="addons-note-title">약제 입력 안내</span>
-          </div>
-          <div class="addons-note-body">강, 중, 약 / 산성펌, 중성펌제 등<br>혼합할 시 기입하여 사용하세요</div>
-        </div>
-        <div class="bowl-color-list">
-          <div class="bowl-color-row">
-            <input class="calc-input bowl-color-name" type="text" placeholder="펌제 1"/>
-            <div class="bowl-ratio-wrap"><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div>
-            <span class="bowl-color-gram">—</span>
-          </div>
-          <div class="bowl-color-row">
-            <input class="calc-input bowl-color-name" type="text" placeholder="펌제 2"/>
-            <div class="bowl-ratio-wrap"><span class="bowl-ratio-sep">:</span><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div>
-            <span class="bowl-color-gram">—</span>
-          </div>
-          <div class="bowl-color-row">
-            <input class="calc-input bowl-color-name" type="text" placeholder="펌제 3"/>
-            <div class="bowl-ratio-wrap"><span class="bowl-ratio-sep">:</span><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div>
-            <span class="bowl-color-gram">—</span>
-          </div>
-        </div>
-        <div class="bowl-extras-section" style="display:none;">
-          <div class="bowl-extras-divider"></div>
-          <div class="bowl-extras-label">추가제 (펌제 총량 기준 %)</div>
-          <div class="bowl-extras-list"></div>
-        </div>
-        <button class="bowl-add-extra-btn" onclick="permAddExtra(1)">+ 추가</button>
-        <div class="bowl-total-bar" id="perm-bowl-1-total">
-          <div class="bowl-total-empty">펌제를 입력하면 실시간으로 계산됩니다</div>
-        </div>
-      </div>
-    </div>
-    <button class="bowl-add-btn" id="perm-add-bowl-btn" onclick="permAddBowl()">+ 바울 2 추가</button>
-  </div>
-</div>
 
 <!-- ════════════════════════════════
      PAGE: TIMER (시술 타이머)
