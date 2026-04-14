@@ -182,9 +182,10 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
               <div class="label" style="display:flex;align-items:center;justify-content:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;background:#c17a3d;border:1px solid rgba(0,0,0,0.1);flex-shrink:0"></span> 주황~노랑 잔류</div>
               <div class="desc">붉은기·주황기가 남아있는 상태</div>
             </button>
-            <button class="base-btn sub-btn" data-sub="yellow_mat" onclick="selectSub(this)" style="min-width:100%">
-              <div class="label" style="display:flex;align-items:center;justify-content:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;background:#d9b586;border:1px solid rgba(0,0,0,0.1);flex-shrink:0"></span> 노랑~매트 잔류</div>
-              <div class="desc">주황기는 빠지고 노랑·매트(단무지)기</div>
+            <button class="base-btn sub-btn" data-sub="yellow" onclick="selectSub(this)" style="min-width:100%">
+              <div class="label" style="display:flex;align-items:center;justify-content:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;background:#d9b586;border:1px solid rgba(0,0,0,0.1);flex-shrink:0"></span> 노랑 잔류</div>
+              <div class="desc">주황기는 빠지고 노랑기가 남은 상태</div>
+              <div class="desc" style="margin-top:6px;padding:8px 10px;background:#FFF8E7;border-radius:8px;color:#8B7355;font-weight:500;text-align:left;line-height:1.5">노랑보다 매트(단무지)기가 남아있다면, 바이올렛 보색도 좋지만 시나몬계 브라운 염모제가 잔류 매트기와 어우러집니다.</div>
             </button>
             <button class="base-btn sub-btn" data-sub="pale_yellow" onclick="selectSub(this)" style="min-width:100%">
               <div class="label" style="display:flex;align-items:center;justify-content:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;background:#c6b9ac;border:1px solid rgba(0,0,0,0.1);flex-shrink:0"></span> 연노랑~아이보리</div>
@@ -430,9 +431,9 @@ function generateRecipe(){
 
   var baseDesc;
   var subLabels = {
-    'orange_yellow': '탈색모 — 주황~노랑 잔류 (붉은기·주황기가 남아있는 상태, 약 14~16레벨)',
-    'yellow_mat': '탈색모 — 노랑 잔류 (주황기는 빠지고 노랑기, 약 16레벨)',
-    'pale_yellow': '탈색모 — 연노랑~아이보리 (거의 다 빠진 상태, 약 18~20레벨)'
+    'orange_yellow': '탈색모 — 주황~노랑(14~16레벨). 주황기~노랑기가 잔류해있다.',
+    'yellow': '탈색모 — 노랑(16레벨). 주황기는 빠지고 노랑기가 잔류해있다.',
+    'pale_yellow': '탈색모 — 연노랑~아이보리(18~20레벨). 잔류 색소가 거의 없다. 염료가 그대로 발색된다.'
   };
 
   if(ST.type === 'natural'){
@@ -441,11 +442,29 @@ function generateRecipe(){
     baseDesc = subLabels[ST.subType] || ST.type;
   }
 
-  /* ── STEP 3 레시피 프롬프트 (v13 — 색 이론 역추론) ── */
+  /* ── STEP 3 레시피 프롬프트 (v14 — 자연모/탈색모 분기) ── */
+
+  // 최상단 명령 분기
+  var topInstruction;
+  if(ST.type === 'natural'){
+    topInstruction = [
+      '너는 15년차 동양인 모발 전문 컬러리스트야.',
+      'AI가 분석한 목표 색감을 보고, 동양인 모발에서 이 색감을 구현하려면 어떻게 해야 하는지 역추론해.',
+      '아래 컬러리스트 지식을 바탕으로 사고하되, 레시피는 네가 추론해서 만들어.'
+    ].join('\n');
+  } else {
+    topInstruction = [
+      '너는 15년차 동양인 모발 전문 컬러리스트야.',
+      '현재 모발은 이미 탈색된 상태다. ' + baseDesc,
+      '이 베이스에서 목표 색감을 구현하려면 어떤 조합이 필요한지 판단해.',
+      '현재 베이스로 부족하면 추가 탈색이 필요한 도달 베이스를 제시해.',
+      '도달 베이스는 다음 3단계 안에서만: 주황~노랑(14~16레벨) / 노랑(16레벨) / 연노랑~아이보리(18~20레벨).',
+      '아래 컬러리스트 지식을 바탕으로 사고하되, 레시피는 네가 추론해서 만들어.'
+    ].join('\n');
+  }
+
   var sysPrompt = [
-    '너는 15년차 동양인 모발 전문 컬러리스트야.',
-    'AI가 분석한 목표 색감을 보고, 동양인 모발에서 이 색감을 구현하려면 어떻게 해야 하는지 역추론해.',
-    '아래 컬러리스트 지식을 바탕으로 사고하되, 레시피는 네가 추론해서 만들어.',
+    topInstruction,
     '',
     '══════════════════════════════',
     'Part A. 색 이론 기초',
@@ -721,6 +740,8 @@ function generateRecipe(){
     '존댓말, 한 줄.',
     '탈색 필수: "탈색 N회 이상 후({도달 베이스명}) {계열} 염모제와 {계열} 염모제로 착색하세요." 횟수는 [6]번 기준.',
     '버진모 가능: "고명도 {계열} 염모제와 {계열} 컨트롤컬러로 착색하세요."',
+    '탈색모(바로 가능): "{계열} 염모제와 {계열} 염모제로 착색하세요."',
+    '탈색모(추가 탈색 필요): "추가 탈색 후 {도달 베이스명}({레벨})에서 {계열} 염모제와 {계열} 염모제로 착색하세요."',
     '',
     '=== [16] tips 블록 구조 ===',
     '',
@@ -768,7 +789,55 @@ function generateRecipe(){
     '',
     '── 탈색모 ──',
     '',
-    '현재 베이스 기준 레시피. virgin_recipe = null.',
+    'virgin_recipe = null. 탈색 횟수 안내 불필요. 버진모 관련 내용 불필요.',
+    '',
+    '■ 주황~노랑(14~16레벨) 베이스:',
+    '잔류 색소: 주황기~노랑기.',
+    '주황 잔류 → 블루가 보색. 한색 목표 시 주황기가 한색 염료를 소진 → 브라운 수렴 가능. 난색 목표 시 잔류 주황기 활용 가능.',
+    '',
+    '바로 가능할 때:',
+    '블록① <b>{현재 베이스명(레벨)}</b>',
+    '[계열] 염모제 + [계열] 염모제 + [계열] 컨트롤컬러로 착색하세요.',
+    '조합이 만드는 결과 색감 + 보색 설명 1~2문장.',
+    '',
+    '추가 탈색이 필요할 때:',
+    '블록① <b>{도달 베이스명(레벨)}</b>',
+    '탈색을 추가 진행하여 {베이스명}({레벨}) 베이스까지 도달해야 합니다.',
+    '[계열] 염모제 + [계열] 염모제 + [계열] 컨트롤컬러로 착색하세요.',
+    '조합 설명 + 보색 설명 1~2문장.',
+    '도달 베이스는 노랑(16레벨) 또는 연노랑~아이보리(18~20레벨)만 가능.',
+    '',
+    '블록② <b>{현재 베이스명(레벨)에서 그대로}</b>',
+    '현재 베이스에서 그대로 적용했을 때 잔류 색소와 염료의 충돌로 인한 수렴 방향 1문장.',
+    '조합을 바꿔서 도달 가능한 최선의 색감 제시. "이 베이스에서의 최선입니다."로 마무리.',
+    '',
+    '■ 노랑(16레벨) 베이스:',
+    '잔류 색소: 노랑기.',
+    '노랑 잔류 → 바이올렛이 보색. 블루 쓰면 노랑+파랑=초록, 매트하게 수렴.',
+    '',
+    '바로 가능할 때:',
+    '블록① <b>{현재 베이스명(레벨)}</b>',
+    '[계열] 염모제 + [계열] 염모제 + [계열] 컨트롤컬러로 착색하세요.',
+    '조합이 만드는 결과 색감 + 바이올렛 보색 설명 1~2문장.',
+    '',
+    '추가 탈색이 필요할 때:',
+    '블록① <b>{연노랑~아이보리(18~20레벨)}</b>',
+    '탈색을 추가 진행하여 연노랑~아이보리(18~20레벨) 베이스까지 도달해야 합니다.',
+    '[계열] 염모제 + [계열] 염모제 + [계열] 컨트롤컬러로 착색하세요.',
+    '조합 설명 1~2문장.',
+    '',
+    '블록② <b>{노랑(16레벨)에서 그대로}</b>',
+    '현재 베이스에서 그대로 적용했을 때 노랑기와 염료의 충돌로 인한 수렴 방향 1문장.',
+    '조합을 바꿔서 도달 가능한 최선의 색감 제시. "이 베이스에서의 최선입니다."로 마무리.',
+    '',
+    '■ 연노랑~아이보리(18~20레벨) 베이스:',
+    '잔류 색소 거의 없음. 보색 불필요. 염료가 그대로 발색.',
+    '[9]번 극고명도 베이스 원리 적용: 고명도(13·15) 염모제 = 염료 적어 적절. 중명도(9·11) = 과하게 들어감.',
+    '추가 탈색 없음. 블록① 하나만 출력.',
+    '',
+    '블록① <b>{연노랑~아이보리(18~20레벨)}</b>',
+    '[계열] 염모제 + [계열] 염모제 + [계열] 컨트롤컬러로 착색하세요.',
+    '조합이 만드는 결과 색감 설명 1~2문장. 극고명도 원리 기반.',
     '',
     '=== [17] 공통 규칙 ===',
     '',
@@ -792,6 +861,10 @@ function generateRecipe(){
   ].join('\n');
 
 
+  var userMsgEnd = (ST.type === 'natural')
+    ? '이 색감을 현재 모발에서 구현하려면 어떻게 해야 하는지 레시피를 만들어줘.'
+    : '이 베이스에서 이 색감을 구현하려면 어떤 조합이 필요한지 레시피를 만들어줘.';
+
   var userMsg = [
     '현재 모발: ' + baseDesc,
     'AI 분석 색감: ' + ST.analysis.color_name_ko,
@@ -801,7 +874,7 @@ function generateRecipe(){
     '조색 방향: ' + (ST.analysis.recipe_direction || ''),
     '색감 설명: ' + ST.analysis.description,
     '',
-    '이 색감을 현재 모발에서 구현하려면 어떻게 해야 하는지 레시피를 만들어줘.'
+    userMsgEnd
   ].join('\n');
 
   fetch(API_URL, {
