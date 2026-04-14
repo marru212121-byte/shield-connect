@@ -225,7 +225,10 @@ html,body{font-family:'Noto Sans KR','Outfit',sans-serif;background:var(--bg);co
 .step3-panel.show{display:flex}
 .s3-hd{display:flex;align-items:center;justify-content:space-between}
 .s3-ti{font-size:14px;font-weight:800}
-.s3-bk{font-size:11px;color:var(--accent);cursor:pointer;font-weight:600}
+.s3-nav{display:flex;gap:6px}
+.s3-bk{font-size:11px;color:var(--accent);cursor:pointer;font-weight:600;padding:5px 10px;border-radius:6px;background:rgba(196,176,224,0.06);border:1px solid rgba(196,176,224,0.15);transition:all .15s}
+.s3-bk:active{transform:scale(0.96);background:rgba(196,176,224,0.12)}
+.s3-bk.reset{color:var(--sub);background:rgba(255,255,255,0.04);border-color:var(--border)}
 .s3-proc{font-size:12px;color:#fff;line-height:1.7;padding:12px;border-radius:10px;background:var(--card);border:1px solid var(--border);white-space:pre-line}
 .s3-sub{font-size:11px;color:var(--accent);line-height:1.6;padding:8px 12px;border-radius:8px;background:rgba(196,176,224,0.06);margin-top:-4px}
 .s3-sub:empty{display:none}
@@ -308,7 +311,13 @@ html,body{font-family:'Noto Sans KR','Outfit',sans-serif;background:var(--bg);co
     </div>
 
     <div class="step3-panel" id="s3Panel">
-      <div class="s3-hd"><div class="s3-ti">시술 가이드</div><div class="s3-bk" id="s3Back">← 색감 선택</div></div>
+      <div class="s3-hd">
+        <div class="s3-ti">시술 가이드</div>
+        <div class="s3-nav">
+          <div class="s3-bk reset" id="s3Reset">처음부터</div>
+          <div class="s3-bk" id="s3Back">색감 다시선택</div>
+        </div>
+      </div>
       <div class="s3-proc" id="s3Proc"></div>
       <div class="s3-sub" id="s3Sub"></div>
       <div id="canvasWrap1" style="width:100%;margin:4px 0;border-radius:10px;overflow:hidden;display:none"></div>
@@ -370,10 +379,7 @@ var SW={
     labels:{20:'파스텔 핑크',18:'파스텔 핑크',16:'적핑크',14:'적핑크',12:'로즈브라운',10:'로즈브라운',8:'플럼브라운',6:'플럼브라운',5:'다크 레드'}},
   red:{lb:'레드',dot:'hsl(0,62%,52%)',hex:'#d04040',lv:{20:'hsl(0,68%,58%)',18:'hsl(0,62%,50%)',16:'hsl(0,56%,44%)',14:'hsl(2,50%,38%)',12:'hsl(2,46%,33%)',10:'hsl(3,42%,28%)',8:'hsl(3,36%,23%)',6:'hsl(3,28%,17%)',5:'hsl(3,20%,13%)'},
     tags:{16:'레드',8:'레드브라운',5:'다크 레드'},
-    labels:{20:'레드',18:'레드',16:'레드',14:'레드브라운',12:'레드브라운',10:'레드브라운',8:'레드브라운',6:'다크 레드',5:'다크 레드'}},
-  orange:{lb:'오렌지',dot:'hsl(20,62%,55%)',hex:'#d0804a',lv:{20:'hsl(20,68%,62%)',18:'hsl(20,62%,55%)',16:'hsl(20,55%,48%)',14:'hsl(18,45%,42%)',12:'hsl(18,34%,35%)',10:'hsl(16,25%,28%)',8:'hsl(15,18%,22%)',6:'hsl(14,12%,16%)',5:'hsl(13,9%,13%)'},
-    tags:{16:'페일 오렌지',10:'코랄브라운',5:'다크 브라운'},
-    labels:{20:'페일 오렌지',18:'페일 오렌지',16:'페일 오렌지',14:'코랄브라운',12:'코랄브라운',10:'코랄브라운',8:'다크 브라운',6:'다크 브라운',5:'다크 브라운'}}
+    labels:{20:'레드',18:'레드',16:'레드',14:'레드브라운',12:'레드브라운',10:'레드브라운',8:'레드브라운',6:'다크 레드',5:'다크 레드'}}
 };
 
 function swSide(){return S.cw==='warm'?'left':'right'}
@@ -3193,6 +3199,14 @@ document.getElementById('s3Back').onclick=function(){
   updateStepProgress(2);
   stopAllCanvas();
   upd();
+};
+
+/* ── STEP3 → STEP1 처음부터 ── */
+document.getElementById('s3Reset').onclick=function(){
+  stopAllCanvas();
+  document.getElementById('s3Panel').classList.remove('show');
+  document.getElementById('cta').style.display='block';
+  resetAll();
 };
 
 /* ════════════════════════════════════════
