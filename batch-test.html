@@ -57,6 +57,35 @@ h1{font-size:18px;font-weight:800;margin-bottom:4px}
 .recipe-tips-block b{color:#1C1917;font-weight:700;font-size:13px}
 .recipe-virgin{background:#FAF6F0;border:1px solid #EDE6DA;border-radius:8px;padding:10px;margin-top:8px;font-size:11px;color:#6B5D4E;line-height:1.7}
 .recipe-virgin strong{color:#8B7355;font-size:12px;font-weight:700;display:block;margin-bottom:4px}
+
+/* 룰 체크 결과 */
+.rule-check-wrap{margin-top:10px;border-top:1px solid #e8e4df;padding-top:10px}
+.rule-check-title{font-size:11px;font-weight:700;color:#1C1917;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.rule-check-pass{color:#155724;background:#D4EDDA;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px}
+.rule-check-fail{color:#721C24;background:#F8D7DA;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px}
+.rule-violation{font-size:11px;color:#721C24;line-height:1.6;padding:6px 8px;margin-bottom:4px;background:#FFF5F5;border-radius:6px;border-left:3px solid #E53E3E}
+.rule-violation .rule-id{font-weight:700;color:#C53030}
+.rule-all-pass{font-size:11px;color:#155724;padding:6px 8px;background:#F0FFF4;border-radius:6px}
+
+/* 탭 위반 카운트 */
+.tab-violations{display:inline-block;background:#E53E3E;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:4px}
+.tab-pass-badge{display:inline-block;background:#38A169;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:4px}
+
+/* 전체 요약 */
+.batch-summary{background:#fff;border-radius:16px;border:1.5px solid #e8e4df;padding:16px;margin-bottom:16px;display:none}
+.batch-summary.show{display:block}
+.batch-summary h3{font-size:14px;font-weight:800;margin-bottom:10px}
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.summary-cell{text-align:center;padding:10px 8px;border-radius:10px;background:#FAF8F4}
+.summary-cell .label{font-size:10px;color:#A8A29E;margin-bottom:4px}
+.summary-cell .value{font-size:18px;font-weight:800}
+.summary-cell .value.pass{color:#38A169}
+.summary-cell .value.fail{color:#E53E3E}
+.summary-cell .value.mixed{color:#D69E2E}
+.freq-violations{margin-top:12px}
+.freq-violations h4{font-size:12px;font-weight:700;color:#1C1917;margin-bottom:6px}
+.freq-item{font-size:11px;color:#6B5D4E;padding:4px 0;display:flex;justify-content:space-between;border-bottom:1px solid #f0ece6}
+.freq-item .cnt{font-weight:700;color:#E53E3E}
 </style>
 </head>
 <body>
@@ -72,6 +101,12 @@ h1{font-size:18px;font-weight:800;margin-bottom:4px}
 <div class="controls">
   <button id="runBtn" onclick="runBatch()" disabled>검수 시작</button>
   <span class="count" id="countLabel"></span>
+</div>
+
+<div class="batch-summary" id="batchSummary">
+  <h3>룰 체크 요약</h3>
+  <div class="summary-grid" id="summaryGrid"></div>
+  <div class="freq-violations" id="freqViolations"></div>
 </div>
 
 <div class="results" id="results"></div>
@@ -138,7 +173,341 @@ function fileToBase64(file){
   });
 }
 
-/* ── STEP 1 프롬프트 (analyzer.html과 동일) ── */
+/* ══════════════════════════════════
+   룰 체크 엔진
+   — JSON 출력만 보고 Part A~F 룰 위반을 자동 감지
+══════════════════════════════════ */
+
+// 모든 체크 결과를 모아두는 전역 저장소
+var allCheckResults = []; // [{cardIdx, cfgKey, cfgLabel, violations:[]}]
+
+function checkRules(recipe, cfg, analysis){
+  var violations = [];
+  var tips = (recipe.tips || '').toLowerCase();
+  var summary = (recipe.summary || '').toLowerCase();
+  var tipsRaw = recipe.tips || '';
+  var summaryRaw = recipe.summary || '';
+  var fullText = tipsRaw + ' ' + summaryRaw;
+  var fullLower = fullText.toLowerCase();
+
+  // 색감명 기반 판단 헬퍼
+  var colorName = (analysis.color_name_ko || '').toLowerCase();
+  var direction = (analysis.recipe_direction || '').toLowerCase();
+  var elements = analysis.elements || [];
+  var isBlonde = /블론드|백금|화이트/.test(colorName) || /블론드|백금|화이트/.test(direction);
+  var isWarmTarget = /레드|핑크|로즈|와인|체리|오렌지|구리/.test(colorName) || /난색/.test(direction);
+
+  // ═══ 1. 탈색모 구조 위반 ═══
+  if(cfg.type === 'bleached'){
+    // 1-1. 탈색모인데 virgin_recipe가 있다
+    if(recipe.virgin_recipe !== null && recipe.virgin_recipe !== undefined){
+      violations.push({id:'B-01', msg:'탈색모인데 virgin_recipe가 null이 아님'});
+    }
+    // 1-2. 탈색모인데 "탈색 N회" 횟수 안내
+    if(/탈색\s*\d+\s*회/.test(tipsRaw) && !/추가\s*탈색/.test(tipsRaw)){
+      // "추가 탈색"이 아닌 일반 탈색 횟수 안내
+      violations.push({id:'B-02', msg:'탈색모인데 "탈색 N회" 횟수 안내가 포함됨'});
+    }
+    // 1-3. 탈색모인데 "역추론" 단어
+    if(/역추론/.test(fullText)){
+      violations.push({id:'B-03', msg:'탈색모인데 "역추론" 단어가 출력됨'});
+    }
+    // 1-4. 탈색모인데 "버진모" 단어
+    if(/버진모/.test(fullText)){
+      violations.push({id:'B-04', msg:'탈색모인데 "버진모" 단어가 출력됨'});
+    }
+  }
+
+  // ═══ 2. 연노랑~아이보리(18~20) 베이스 위반 ═══
+  if(cfg.key === 'pale_yellow'){
+    // 2-1. 보색이 메인으로 들어감 (바이올렛/블루가 메인급 비중)
+    // "바이올렛 염모제" 또는 "블루 염모제"가 첫 번째 조합으로 나오면 메인
+    var firstMix = tipsRaw.split('\n')[0] || '';
+    // 블론드가 아닌데 보색 메인 — 블론드는 극고명도 원리 별도 체크
+    if(!isBlonde){
+      // 단, 라벤더/바이올렛 계열 색감은 바이올렛이 메인이 맞으므로 제외
+      var isVioletTarget = /라벤더|바이올렛|퍼플/.test(colorName);
+      if(!isVioletTarget && /바이올렛\s*(염모제|컨트롤컬러).*메인|메인.*바이올렛|^.*바이올렛\s*염모제\s*\+/m.test(tipsRaw)){
+        // 복잡한 패턴 대신 간단하게: 18~20에서 보색 "소량"이 아닌 메인 사용 체크
+      }
+    }
+
+    // 2-2. 블록②(추가 탈색)가 출력됨
+    if(/추가\s*탈색/.test(fullText) || /도달해야/.test(fullText)){
+      violations.push({id:'P-01', msg:'18~20 베이스인데 추가 탈색 언급 (블록① 하나만 출력해야 함)'});
+    }
+
+    // 2-3. 블론드인데 애쉬가 메인
+    if(isBlonde){
+      // 애쉬 염모제가 첫 번째로 나오면 메인
+      if(/애쉬\s*염모제/.test(tipsRaw) && !/뉴트럴브라운/.test(tipsRaw.split('애쉬')[0])){
+        // summary에서도 확인 — 애쉬가 첫 계열이면 메인
+        if(/애쉬\s*염모제/.test(summaryRaw.split('착색')[0] || '')){
+          violations.push({id:'P-02', msg:'블론드/백금발 목표인데 애쉬가 메인 → 회색이 되지 블론드가 아님'});
+        }
+      }
+    }
+
+    // 2-4. 블론드인데 클리어 없음
+    if(isBlonde && !/클리어/.test(fullText)){
+      violations.push({id:'P-03', msg:'블론드/백금발 목표인데 클리어(희석) 없음 → 극고명도 원리 위반'});
+    }
+  }
+
+  // ═══ 3. 노랑(16) 베이스 위반 ═══
+  if(cfg.key === 'yellow'){
+    // 3-1. 블루가 메인
+    if(/블루\s*염모제/.test(tipsRaw) || /블루애쉬\s*염모제/.test(tipsRaw)){
+      // 블루가 소량이 아니라 메인인지 체크
+      if(!/블루\s*(컨트롤컬러|소량)/.test(tipsRaw) && /블루/.test(summaryRaw)){
+        violations.push({id:'Y-01', msg:'16레벨(노랑)인데 블루가 메인 → 노랑+파랑=초록, 매트하게 빠짐. 바이올렛이 맞음'});
+      }
+    }
+    // 3-2. 도달 베이스가 14~16으로 내려감 (아래로는 못 감)
+    if(/14.*16.*레벨|주황.*노랑.*도달/.test(fullText) && /도달/.test(fullText)){
+      violations.push({id:'Y-02', msg:'16레벨에서 14~16으로 도달 베이스 하향 — 불가'});
+    }
+  }
+
+  // ═══ 4. 주황~노랑(14~16) 베이스 위반 ═══
+  if(cfg.key === 'orange_yellow'){
+    // 4-1. 도달 베이스 3단계 밖
+    // (14~16에서 갈 수 있는 곳: 16 또는 18~20)
+    // 현재로선 도달 베이스가 명시적으로 잘못된 레벨인지 텍스트로 체크하기 어려움 — skip
+
+    // 4-2. 뉴트럴브라운이 메인 (한색 목표인데)
+    if(!isWarmTarget && /뉴트럴브라운\s*염모제/.test(summaryRaw)){
+      violations.push({id:'O-01', msg:'14~16 베이스 한색 목표인데 뉴트럴브라운이 메인 → 한색 염모제가 메인이어야 함'});
+    }
+  }
+
+  // ═══ 5. 자연모 위반 ═══
+  if(cfg.type === 'natural'){
+    // 5-1. virgin_recipe null이면서 탈색 필수도 아닌 경우
+    var hasBleachInSummary = /탈색/.test(summaryRaw);
+    var hasVirgin = recipe.virgin_recipe && recipe.virgin_recipe.text;
+    if(!hasBleachInSummary && !hasVirgin){
+      // 탈색도 아니고 virgin_recipe도 없으면 구조 이상
+      violations.push({id:'N-01', msg:'자연모인데 탈색 언급도 없고 virgin_recipe도 없음 — 구조 이상'});
+    }
+    // 5-2. 버진모 가능인데 산화제 없음
+    if(!hasBleachInSummary && hasVirgin){
+      // 버진모 가능 판단인데 산화제 언급 없음
+      if(!/산화제|9%|12%/.test(fullText)){
+        violations.push({id:'N-02', msg:'버진모 가능 판단인데 산화제(9%/12%) 언급 없음'});
+      }
+    }
+    // 5-3. virgin_recipe에서 탈색 후 색감명 사용
+    if(recipe.virgin_recipe && recipe.virgin_recipe.text){
+      var vrText = recipe.virgin_recipe.text;
+      if(/라벤더\s*방향|실버\s*방향|블론드\s*방향|파스텔\s*방향/.test(vrText)){
+        violations.push({id:'N-03', msg:'virgin_recipe에서 "라벤더/실버/블론드 방향" 사용 — 버진모에서 불가능한 색감명'});
+      }
+    }
+    // 5-4. 난색 목표인데 탈색 필수 판단
+    if(isWarmTarget && hasBleachInSummary && !(/투명|파스텔|비비드/.test(colorName))){
+      violations.push({id:'N-04', msg:'난색(레드/핑크/로즈) 목표인데 탈색 필수 판단 — 난색은 버진모에서 가능'});
+    }
+  }
+
+  // ═══ 6. 공통 위반 (전 분기) ═══
+
+  // 6-1. 조합 4가지 이상 (염모제+컨트롤컬러 카운트)
+  var mixCount = (tipsRaw.match(/염모제|컨트롤컬러/g) || []).length;
+  // 블록이 여러 개면 각 블록에서 카운트해야 하므로, 첫 블록만 체크
+  var firstBlock = tipsRaw.split(/\n\n/)[0] || '';
+  var firstBlockMix = (firstBlock.match(/(염모제|컨트롤컬러)/g) || []).length;
+  if(firstBlockMix > 6){ // 3조합이면 최대 6개 (X 염모제 + Y 염모제 + Z 컨트롤컬러 = 반복 포함)
+    violations.push({id:'C-01', msg:'첫 블록에서 조합이 과도하게 많음 (최대 3가지: 염모제+염모제+컨트롤컬러)'});
+  }
+
+  // 6-2. "뉴트럴브라운 컨트롤컬러"
+  if(/뉴트럴브라운\s*컨트롤컬러/.test(fullText)){
+    violations.push({id:'C-02', msg:'"뉴트럴브라운 컨트롤컬러" 사용 — 뉴트럴브라운은 염모제 계열'});
+  }
+
+  // 6-3. 금지 단어
+  var banned = [
+    {word:'원샷', id:'C-03'},
+    {word:'멜라닌', id:'C-04'},
+    {word:'중화', id:'C-05'},
+    {word:'깨라', id:'C-06'},
+    {word:'눌러', id:'C-07'},
+    {word:'탁한', id:'C-08'},
+    {word:'탁해진', id:'C-09'},
+    {word:'파우더', id:'C-10'},
+    {word:'트리트먼트로 보완', id:'C-11'},
+    {word:'시술자의 판단에 따라', id:'C-12'},
+    {word:'모발이 건조해', id:'C-13'}
+  ];
+  banned.forEach(function(b){
+    if(fullLower.indexOf(b.word) !== -1){
+      violations.push({id:b.id, msg:'금지 단어 "'+b.word+'" 검출'});
+    }
+  });
+
+  // 6-4. "CC" 단독 사용 (컨트롤컬러 약어)
+  if(/\bCC\b/.test(fullText)){
+    violations.push({id:'C-14', msg:'"CC" 사용 → "컨트롤컬러"로 표기해야 함'});
+  }
+
+  // 6-5. ** 기호
+  if(/\*\*/.test(fullText)){
+    violations.push({id:'C-15', msg:'"**" 기호 검출 — 출력 금지'});
+  }
+
+  // 6-6. "탁한 ~" 수렴 방향 표현
+  if(/탁한\s/.test(tipsRaw)){
+    violations.push({id:'C-16', msg:'"탁한 ~" 수렴 방향 표현 → 구체적 색감 방향으로 써야 함'});
+  }
+
+  // 6-7. 숫자 비율 사용 (소량으로만 해야 함)
+  if(/\d+\s*:\s*\d+/.test(fullText) || /\d+%\s*:\s*\d+%/.test(fullText)){
+    violations.push({id:'C-17', msg:'숫자 비율 사용 → "소량"으로만 표기해야 함'});
+  }
+
+  // 6-8. 구체적 상품명/넘버링 (예: "웰라 콜레스톤 8/1" 같은 패턴)
+  if(/\d+\/\d+/.test(fullText)){
+    violations.push({id:'C-18', msg:'구체적 넘버링(예: 8/1) 검출 → 계열명으로만 표기'});
+  }
+
+  return violations;
+}
+
+/* ══════════════════════════════════
+   룰 체크 결과 렌더링
+══════════════════════════════════ */
+function renderRuleCheck(violations, panelEl){
+  var html = '<div class="rule-check-wrap">';
+  html += '<div class="rule-check-title">룰 체크 ';
+  if(violations.length === 0){
+    html += '<span class="rule-check-pass">PASS</span>';
+  } else {
+    html += '<span class="rule-check-fail">' + violations.length + '건 위반</span>';
+  }
+  html += '</div>';
+
+  if(violations.length === 0){
+    html += '<div class="rule-all-pass">룰 위반 없음</div>';
+  } else {
+    violations.forEach(function(v){
+      html += '<div class="rule-violation"><span class="rule-id">['+v.id+']</span> '+v.msg+'</div>';
+    });
+  }
+  html += '</div>';
+  panelEl.insertAdjacentHTML('beforeend', html);
+}
+
+function updateTabBadge(idx, j, violations){
+  var tabEl = document.getElementById('tab-'+idx+'-'+j);
+  // 기존 배지 제거
+  var old = tabEl.querySelector('.tab-violations,.tab-pass-badge');
+  if(old) old.remove();
+
+  if(violations.length > 0){
+    var badge = document.createElement('span');
+    badge.className = 'tab-violations';
+    badge.textContent = violations.length;
+    tabEl.appendChild(badge);
+  } else {
+    var badge = document.createElement('span');
+    badge.className = 'tab-pass-badge';
+    badge.textContent = 'OK';
+    tabEl.appendChild(badge);
+  }
+}
+
+/* ══════════════════════════════════
+   배치 요약 렌더링
+══════════════════════════════════ */
+function renderBatchSummary(){
+  var summaryEl = document.getElementById('batchSummary');
+  var gridEl = document.getElementById('summaryGrid');
+  var freqEl = document.getElementById('freqViolations');
+
+  var total = allCheckResults.length;
+  var passCount = 0;
+  var failCount = 0;
+  var totalViolations = 0;
+  var violationFreq = {}; // id → {msg, count}
+
+  allCheckResults.forEach(function(r){
+    if(r.violations.length === 0) passCount++;
+    else failCount++;
+    totalViolations += r.violations.length;
+    r.violations.forEach(function(v){
+      if(!violationFreq[v.id]) violationFreq[v.id] = {msg: v.msg, count:0};
+      violationFreq[v.id].count++;
+    });
+  });
+
+  gridEl.innerHTML = ''
+    + '<div class="summary-cell"><div class="label">총 레시피</div><div class="value">'+total+'</div></div>'
+    + '<div class="summary-cell"><div class="label">PASS</div><div class="value pass">'+passCount+'</div></div>'
+    + '<div class="summary-cell"><div class="label">위반</div><div class="value'+(failCount>0?' fail':'')+'">'+failCount+'</div></div>'
+    + '<div class="summary-cell"><div class="label">위반 건수</div><div class="value'+(totalViolations>0?' fail':'')+'">'+totalViolations+'</div></div>';
+
+  // 빈도순 정렬
+  var freqArr = Object.keys(violationFreq).map(function(id){
+    return {id:id, msg:violationFreq[id].msg, count:violationFreq[id].count};
+  }).sort(function(a,b){ return b.count - a.count; });
+
+  if(freqArr.length > 0){
+    var fhtml = '<h4>반복 위반 (빈도순) — 같은 위반이 반복되면 룰 자체 점검 필요</h4>';
+    freqArr.forEach(function(f){
+      fhtml += '<div class="freq-item"><span>['+f.id+'] '+f.msg+'</span><span class="cnt">'+f.count+'회</span></div>';
+    });
+    freqEl.innerHTML = fhtml;
+  } else {
+    freqEl.innerHTML = '';
+  }
+
+  summaryEl.classList.add('show');
+}
+
+/* ══════════════════════════════════
+   API 호출 + 재시도 로직 (2초→4초→6초, 최대 3회)
+══════════════════════════════════ */
+async function fetchWithRetry(body, maxRetries){
+  maxRetries = maxRetries || 3;
+  for(var attempt = 0; attempt < maxRetries; attempt++){
+    try {
+      var r = await fetch(API_URL, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(body)
+      });
+      var data = await r.json();
+      // API 에러 체크 (overloaded, rate limit 등)
+      if(data.error){
+        var errMsg = (data.error.message || data.error.type || 'API 오류');
+        if(attempt < maxRetries - 1){
+          var wait = (attempt + 1) * 2000; // 2초, 4초, 6초
+          await new Promise(function(res){ setTimeout(res, wait); });
+          continue;
+        }
+        throw new Error(errMsg);
+      }
+      // content 존재 체크
+      if(!data.content){
+        if(attempt < maxRetries - 1){
+          var wait = (attempt + 1) * 2000;
+          await new Promise(function(res){ setTimeout(res, wait); });
+          continue;
+        }
+        throw new Error('응답에 content가 없음');
+      }
+      return data;
+    } catch(e){
+      if(attempt < maxRetries - 1 && (e.message.indexOf('overloaded') !== -1 || e.message.indexOf('fetch') !== -1 || e.message.indexOf('network') !== -1)){
+        var wait = (attempt + 1) * 2000;
+        await new Promise(function(res){ setTimeout(res, wait); });
+        continue;
+      }
+      throw e;
+    }
+  }
+}
+
 var STEP1_PROMPT = [
   '너는 미용실 헤어 컬러리스트를 위한 모발 색감 분석 전문가야.',
   '사진 속 모발의 색감을 분석하고, 동양인 모발에서 이 색감을 만들려면 어떤 조색 방향이 필요한지 판단해.',
@@ -192,7 +561,7 @@ var KNOWLEDGE = [
   '','★ 탈색 횟수 판단 원리 — 잔류 색소가 활용되는가, 방해되는가:','','■ 1회 vs 2회 — 주황기·브라운이 방해되는가:','탈색 1회(주황~주황노랑 베이스)로 충분한 색감: 잔류 주황기·브라운이 색감의 일부로 활용되는 한색. 매트 애쉬, 올리브 애쉬, 애쉬 브라운, 카키 브라운 등. 한색 염모제가 주황기를 억제하면서 잔류 브라운과 어우러져 자연스럽게 수렴한다.','탈색 2회(노랑 베이스) 필요한 색감: 잔류 주황기·브라운이 색감을 오염시키는 한색. 애쉬 그레이, 라벤더 애쉬 등. 브라운기 없이 무채색이 투명하게 발색되어야 하므로 주황기를 완전히 제거해야 한다.','★ 같은 계열명이라도 투명감·파스텔이 동반되면 잔류 색소가 방해된다. 투명한 올리브, 파스텔 그린, 연한 카키 등은 브라운기가 제거되어야 하므로 2회 이상 필요하다. 판단 기준은 계열명이 아니라 "브라운기가 남아도 되는가"이다.',
   '','■ 2회 vs 3회 — 노랑기가 방해되는가:','탈색 2회(노랑 베이스)로 충분한 색감: 노랑기가 보색(바이올렛)으로 잡히면서 색감에 녹아드는 경우. 애쉬 그레이, 라벤더 애쉬, 네이비 등. 바이올렛이 노랑기를 상쇄하면서 색감이 성립한다.','탈색 3회 이상(연노랑~아이보리 베이스) 필요한 색감: 노랑기조차 색감을 오염시키는 경우. 파스텔 계열, 극도로 연한 색감, 실버, 밀크티 베이지, 아이보리 블론드 등. 노랑기가 조금만 남아도 색이 다른 방향으로 빠지거나 탁해진다. 깨끗한 베이스 위에 염모제 색이 그대로 발색되어야 한다.',
   '','══════════════════════════════','Part C. 염모제와 시술 도구','══════════════════════════════',
-  '','=== [9] 알칼리산화염모제 vs 컨트롤컬러 ===','','■ 알칼리산화염모제 (일반 염모제):','- 리프팅 + 착색을 동시에 한다','- 모발 내부(코르텍스)까지 침투','- 명도가 높을수록 리프팅력이 강하다','- 단, 염료가 잔류 색소를 중화하는 데 소진되어 버진모에서는 색 표현에 한계','','■ 컨트롤컬러 (직접염료):','- 리프팅 능력 없음. 색만 입힌다','- 모발 표면(큐티클) 쪽에 작용. 염료가 매우 많다','- 버진모에서: 고명도 염모제가 리프팅하고, 컨트롤컬러가 색을 입히는 역할','- 탈색모에서: 잔류 없는 베이스 위에 선명하게 발색','','■ 탈색모에서의 명도 선택:','- 고명도(13·15) → 염료 적어서 색이 거의 안 나올 수 있다','- 중명도(9·11) → 염료 많아서 너무 진하게 나올 수 있다','- 파스텔 발색 → 중명도 염모제 + 클리어로 염료 농도 희석','','■ 탈색모에서의 조합 자유도:','- 탈색모(특히 18레벨 이상)에서는 멜라닌이 거의 없으므로 염모제+염모제, 염모제+컨트롤컬러 모두 가능.','- 컨트롤컬러만이 유일한 선택지가 아니다.','','■ 극고명도 베이스(18레벨 이상)에서의 원리:','연노랑~아이보리 베이스에서는 잔류 색소가 거의 없어 염료가 그대로 발색된다.','따라서 색을 "넣는" 것이 아니라 "미세하게 조절하는" 접근이 필요하다.','- 고명도(13·15) 염모제는 자체적으로 염료가 적게 들어있다. 극고명도 베이스에서는 이 특성이 오히려 적절하다.','- 중명도(9·11) 염모제는 염료가 많아 극고명도 베이스에서 색이 과하게 들어간다.','- 백금발·화이트 블론드: 고명도(13·15) 뉴트럴브라운 염모제 + 연핑크 컨트롤컬러 극소량 + 클리어로 추가 희석. 고명도 염모제는 이미 염료가 적지만, 극고명도 베이스에서는 그마저도 과할 수 있으므로 클리어로 농도를 더 낮춘다. 10분 간격으로 발색을 체크하며 시술한다. 애쉬를 메인으로 쓰면 회색 방향으로 빠진다.','- 잿빛 블론드: 고명도 애쉬 염모제로 잿빛 뉘앙스만 얹는 수준.','- 파스텔 계열: 중명도 염모제 + 클리어로 염료 농도를 희석하여 연하게.',
+  '','=== [9] 알칼리산화염모제 vs 컨트롤컬러 ===','','■ 알칼리산화염모제 (일반 염모제):','- 리프팅 + 착색을 동시에 한다','- 모발 내부(코르텍스)까지 침투','- 명도가 높을수록 리프팅력이 강하다','- 단, 염료가 잔류 색소를 중화하는 데 소진되어 버진모에서는 색 표현에 한계','','■ 컨트롤컬러 (직접염료):','- 리프팅 능력 없음. 색만 입힌다','- 모발 표면(큐티클) 쪽에 작용. 염료가 매우 많다','- 버진모에서: 고명도 염모제가 리프팅하고, 컨트롤컬러가 색을 입히는 역할','- 탈색모에서: 잔류 없는 베이스 위에 선명하게 발색','','■ 탈색모에서의 명도 선택:','- 고명도(13·15) → 염료 적어서 색이 거의 안 나올 수 있다','- 중명도(9·11) → 염료 많아서 너무 진하게 나올 수 있다','- 파스텔 발색 → 중명도 염모제 + 클리어로 염료 농도 희석','','■ 탈색모에서의 조합 자유도:','- 탈색모(특히 18레벨 이상)에서는 멜라닌이 거의 없으므로 염모제+염모제, 염모제+컨트롤컬러 모두 가능.','- 컨트롤컬러만이 유일한 선택지가 아니다.','','■ 극고명도 베이스(18레벨 이상)에서의 원리:','연노랑~아이보리 베이스에서는 잔류 색소가 거의 없어 염료가 그대로 발색된다.','따라서 색을 "넣는" 것이 아니라 "미세하게 조절하는" 접근이 필요하다.','- 고명도(13·15) 염모제는 자체적으로 염료가 적게 들어있다. 극고명도 베이스에서는 이 특성이 오히려 적절하다.','- 중명도(9·11) 염모제는 염료가 많아 극고명도 베이스에서 색이 과하게 들어간다.','- 백금발·화이트 블론드: 고명도(13·15) 뉴트럴브라운 염모제 + 연핑크 컨트롤컬러 극소량 + 클리어로 추가 희석. 고명도 염모제는 이미 염료가 적지만, 극고명도 베이스에서는 그마저도 과할 수 있으므로 클리어로 농도를 더 낮춘다. 10분 간격으로 발색을 체크하며 시술한다. 애쉬를 메인으로 쓰면 회색 방향으로 빠진다.','- 잿빛 블론드: 고명도 애쉬 염모제로 잿빛 뉘앙스만 얹는 수준.','- 파스텔 계열: 중명도 염모제 + 클리어로 염료 농도를 희석하여 연하게.','','■ 베이지 계열의 원리:','베이지는 브라운보다 밝고 가벼운 색감이다. 뉴트럴브라운과 한색 계열이 함께 쓰여야 베이지가 성립한다.','어느 쪽이 메인이냐에 따라 뉘앙스가 달라진다: 뉴트럴브라운이 메인이면 밀크티 방향, 한색이 메인이면 애쉬/라벤더 방향.','둘 중 하나만 쓰면 베이지가 아니라 브라운 또는 그레이로 빠진다.',
   '','=== [10] 염모제 계열 체계 ===','','염모제는 [명도]-[계열] 구조.','','■ 계열:','뉴트럴브라운(NB): 자연스러운 갈색. 농도 조절·톤다운용','애쉬(A): 잿빛, 무채색 / 블루애쉬(BA): 파란빛, 한색 중 파워 강함','그린(G): 초록빛, 붉은기 억제 / 바이올렛(V): 보라빛','레드(R): 빨간빛, 발색 수월 / 레드바이올렛(RV): 자주빛 / 핑크(P): 분홍빛','옐로우(Y): 노랑빛 / 오렌지(O): 주황빛','카키(K): 올리브빛 / 애쉬카키(AK): 애쉬+카키 결합. 잿빛과 올리브빛을 동시에 가진다.','클리어: 색소 없음, 농도 희석용','','■ 명도: 5~7 저명도 / 9~11 중명도 / 13~15 고명도(리프팅력 있음)','','■ 컨트롤컬러 종류 (염모제와 별개):','한색: 블루, 애쉬, 그린, 바이올렛','난색: 레드, 핑크, 바이올렛','★ 뉴트럴브라운은 염모제 계열이다. 컨트롤컬러가 아니다.','','■ 바이올렛의 특수성 — 중성색:','바이올렛은 빨강+파랑의 2차색으로, 한색과 난색 모두에 걸쳐 있는 중성색이다.','- 적보라(RV 방향): 난색에 가까움. 버진모에서도 색감이 어느 정도 보인다.','- 청보라(블루바이올렛 방향): 한색에 가까움. 버진모에서는 브라운으로 수렴.','버진모에서 보라빛 → RV(적보라) 방향이 현실적. 청보라는 탈색 후에만 가능.','','■ RV(레드바이올렛)의 성격:','RV는 중성색(보라)+붉은기를 동시에 가진 계열이다.','순수 레드만으로는 선명한 빨강이 될 뿐, 로즈나 와인 방향이 나오지 않는다.','RV가 보라빛 베이스를 깔고, 여기에 컨트롤컬러로 최종 뉘앙스를 결정한다.','','■ 레시피 표기: "[계열] 염모제" 또는 "[계열] 컨트롤컬러"로 구분하여 표기.',
   '','══════════════════════════════','Part D. 버진모 테크닉','══════════════════════════════',
   '','=== [11] 버진모 테크닉 — 원리와 한계 ===','','■ 원리:','1. 고명도(13·15) 염모제 + 산화제(9%/12%) → 적색 멜라닌을 깬다 (리프팅)','2. 멜라닌이 깨지면서 노랑기가 드러남','3. 컨트롤컬러가 그 위에 색을 입힌다 (컨트롤컬러는 리프팅 못함)','4. 하지만 컨트롤컬러 염료도 노랑기 중화에 일부 소진됨','5. 결국 색감 표현에 쓰이는 염료가 부족 → 브라운으로 수렴','','■ 절대 한계:','버진모에서 도달 가능한 결과는 두 방향뿐:','1. 한색 방향 → 적빛 없는 쿨브라운, 베이지브라운','2. 난색 방향 → 레드브라운, 로즈브라운, 와인빛 브라운 등 (잔류 브라운 활용)','','★ 버진모 레시피에서 목표 색감의 이름을 따라가면 안 된다.','★ "라벤더 방향", "실버 방향" 같은 표현을 버진모에서 쓰지 마라.','','■ 한색 조합 결과 (고명도 한색 염모제 +):','★ 한색은 멜라닌 중화에 염료가 소진되어 브라운으로 수렴하지만, 컨트롤컬러에 따라 브라운의 뉘앙스가 달라진다.','','고명도 애쉬 염모제 기준:','+ 블루 컨트롤컬러 → 적빛 없는 애쉬브라운','+ 블루+바이올렛 컨트롤컬러 → 청초한 투명 쿨브라운','+ 애쉬 컨트롤컬러 → 애쉬브라운','','고명도 애쉬카키 염모제 기준 (시중의 애쉬카키 계열 염모제):','+ 애쉬 컨트롤컬러 → 애쉬 뉘앙스의 매트브라운','+ 그린 컨트롤컬러 → 매트브라운','','카키 염모제 + 애쉬 컨트롤컬러 → 매트애쉬브라운','+ 바이올렛 컨트롤컬러 → 쿨브라운 (와인빛 아님)','','★ 와인빛·퍼플브라운 → 난색 방향(RV)으로 가야 한다.','','■ 난색 조합 — 원리:','★ 난색은 적색 멜라닌과 충돌하지 않으므로 컨트롤컬러 뉘앙스가 그대로 살아남는다.','★ 고명도 염모제는 리프팅 + 큰 색감 방향을 잡는 역할이고, 최종 뉘앙스는 컨트롤컬러가 결정한다.','★ 버진모의 잔류 브라운(멜라닌)은 방해물이 아니라 색감의 일부로 활용된다. "브라운"을 염모제로 따로 만들 필요 없이, 모발 자체의 깊이감이 자연스럽게 살아남는다.','','■ RV와 바이올렛의 역할:','RV(레드바이올렛)는 중성색(보라)+붉은기를 동시에 가진 계열이다. 바이올렛도 중성색이다.','- 순수 레드만 쓰면 → 선명한 빨강. 로즈·와인 방향이 아니다.','- 바이올렛만 쓰면 → 와인/블랙커런트 방향. 따뜻한 로즈가 아니다.','- RV + 바이올렛 = 중성색 베이스 위에 적빛이 은은하게 얹히는 구조. 여기에 레드 소량으로 따뜻한 적빛을 보강하면 로즈 방향이 된다.','- 잔류 브라운이 "로즈브라운"의 브라운 역할을 한다.','','■ 난색 색감별 핵심 방향:','- 선명한 레드: 레드가 메인. 적색 멜라닌과 같은 계열이라 소진 없이 발색.','- 와인/블랙커런트: 바이올렛이 메인. 깊이감 있는 보라빛.','- 로즈: 바이올렛이 핵심이고 레드는 보조. RV의 중성색+붉은기 성격을 활용하고, 잔류 브라운이 깊이감 담당.','- 체리 와인: 레드+바이올렛 조합. 선명함과 깊이감 동시.',
@@ -263,9 +632,12 @@ function buildUserMsg(cfg, analysis){
 
 async function runBatch(){
   document.getElementById('runBtn').disabled = true;
+  allCheckResults = []; // 초기화
+  document.getElementById('batchSummary').classList.remove('show');
   for(var i=0; i<pendingFiles.length; i++){
     await processOne(pendingFiles[i], i);
   }
+  renderBatchSummary();
   document.getElementById('runBtn').disabled = false;
 }
 
@@ -282,18 +654,14 @@ async function processOne(file, idx){
   // STEP 1
   var analysis = null;
   try {
-    var r1 = await fetch(API_URL, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model:'claude-sonnet-4-20250514', max_tokens:600,
-        system: STEP1_PROMPT,
-        messages:[{role:'user',content:[
-          {type:'image',source:{type:'base64',media_type:info.mediaType,data:info.base64}},
-          {type:'text',text:'이 사진 속 모발의 색감을 역공학 분석해줘.'}
-        ]}]
-      })
+    var d1 = await fetchWithRetry({
+      model:'claude-sonnet-4-20250514', max_tokens:600,
+      system: STEP1_PROMPT,
+      messages:[{role:'user',content:[
+        {type:'image',source:{type:'base64',media_type:info.mediaType,data:info.base64}},
+        {type:'text',text:'이 사진 속 모발의 색감을 역공학 분석해줘.'}
+      ]}]
     });
-    var d1 = await r1.json();
     var t1 = d1.content.map(function(b){return b.text||'';}).join('');
     t1 = t1.replace(/```json|```/g,'').trim();
     analysis = JSON.parse(t1);
@@ -333,15 +701,11 @@ async function processOne(file, idx){
       var prompt = buildStep3Prompt(cfg);
       var umsg = buildUserMsg(cfg, analysis);
 
-      var r2 = await fetch(API_URL, {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          model:'claude-sonnet-4-20250514', max_tokens:1000,
-          system: prompt,
-          messages:[{role:'user',content:umsg}]
-        })
+      var d2 = await fetchWithRetry({
+        model:'claude-sonnet-4-20250514', max_tokens:1000,
+        system: prompt,
+        messages:[{role:'user',content:umsg}]
       });
-      var d2 = await r2.json();
       var t2 = d2.content.map(function(b){return b.text||'';}).join('');
       t2 = t2.replace(/```json|```/g,'').trim();
       var recipe = JSON.parse(t2);
@@ -358,6 +722,13 @@ async function processOne(file, idx){
 
       panelEl.innerHTML = content;
       tabStatusEl.textContent = '완료';
+
+      // ── 룰 체크 실행 ──
+      var violations = checkRules(recipe, cfg, analysis);
+      renderRuleCheck(violations, panelEl);
+      updateTabBadge(idx, j, violations);
+      allCheckResults.push({cardIdx:idx, cfgKey:cfg.key, cfgLabel:cfg.label, violations:violations});
+
     } catch(e){
       panelEl.innerHTML = '<div style="color:#c00;font-size:12px">레시피 실패: '+e.message+'</div>';
       tabStatusEl.textContent = '실패';
