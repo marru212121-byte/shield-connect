@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>염색 이론</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+:root{--bg:#050506;--card:#0e0e11;--border:rgba(255,255,255,0.04);--sub:#777;--dim:#3a3a3a;--accent:#c4b0e0}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{font-family:'Noto Sans KR','Outfit',sans-serif;background:var(--bg);color:#eee;min-height:100dvh;overflow-x:hidden;display:flex;justify-content:center}
+.app{width:100%;max-width:430px;min-height:100dvh;background:var(--bg);display:flex;flex-direction:column;padding-bottom:calc(56px + env(safe-area-inset-bottom))}
+@media(min-width:431px){.app{border-left:1px solid var(--border);border-right:1px solid var(--border)}}
+.hdr{display:flex;align-items:center;gap:10px;padding:14px 16px;background:rgba(5,5,6,0.95);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
+.hdr .bk{width:32px;height:32px;border:none;background:rgba(255,255,255,0.04);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:rgba(255,255,255,0.4)}
+.hdr .bk:active{transform:scale(0.92)}
+.hdr .bk svg{width:18px;height:18px}
+.hdr h1{font-size:15px;font-weight:700;flex:1}
+.cnt{display:flex;flex-direction:column;flex:1}
+@keyframes bounceUp{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+.intro-area{position:relative;width:100%;touch-action:none;user-select:none;-webkit-user-select:none}
+.intro-area canvas{display:block;width:100%}
+.drag-hint{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none;transition:opacity .5s}
+.drag-hint.hide{opacity:0}
+.dh-arrow{animation:bounceUp 1.2s ease-in-out infinite}
+.dh-arrow svg{width:26px;height:26px;color:var(--accent);opacity:0.6}
+.dh-text{font-size:11px;color:var(--accent);font-weight:600;opacity:0.7;text-align:center;line-height:1.5}
+
+.info-panel{padding:12px 16px;display:flex;flex-direction:column;gap:10px;min-height:200px}
+.ip-top{display:flex;align-items:baseline;gap:8px}
+.ip-lv{font-family:'Outfit',sans-serif;font-size:28px;font-weight:800;color:#fff}
+.ip-name{font-size:14px;font-weight:700;color:var(--accent)}
+.ip-desc{font-size:12px;color:var(--sub);line-height:1.7}
+
+.ip-comp{display:flex;align-items:center;gap:10px;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:12px;transition:all .3s}
+.ip-orb{width:32px;height:32px;border-radius:50%;flex-shrink:0;box-shadow:inset -3px -3px 5px rgba(0,0,0,0.35),inset 2px 2px 3px rgba(255,255,255,0.1)}
+.ip-comp-info{flex:1;font-size:11px;color:#ccc;line-height:1.6}
+.ip-comp-info b{font-weight:700}
+.ip-comp-info .warn{color:#e88c8c}
+.ip-comp-info .ok{color:#90e8a8}
+
+.ip-neutral{display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(232,140,140,0.04);border:1px solid rgba(232,140,140,0.08);border-radius:10px;transition:all .3s}
+.ip-neutral .n-orbs{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.ip-neutral .n-orb{width:22px;height:22px;border-radius:50%;box-shadow:inset -2px -2px 3px rgba(0,0,0,0.3),inset 1px 1px 2px rgba(255,255,255,0.08)}
+.ip-neutral .n-plus{font-size:10px;color:var(--dim);font-weight:700}
+.ip-neutral .n-eq{font-size:10px;color:var(--dim);font-weight:700;margin:0 2px}
+.ip-neutral .n-info{flex:1;font-size:10px;color:var(--sub);line-height:1.5;margin-left:6px}
+
+.ip-verdict{padding:10px 12px;border-radius:10px;font-size:11px;line-height:1.7;transition:all .3s}
+.ip-verdict.vd-w{background:rgba(232,140,140,0.05);border:1px solid rgba(232,140,140,0.1);color:#ccc}
+.ip-verdict.vd-o{background:rgba(140,232,160,0.05);border:1px solid rgba(140,232,160,0.1);color:#ccc}
+.ip-verdict b{font-weight:700}
+
+.menu-grid{display:flex;flex-direction:column;gap:8px;padding:8px 16px 20px;opacity:0;transform:translateY(12px);transition:all .5s;pointer-events:none}
+.menu-grid.show{opacity:1;transform:translateY(0);pointer-events:auto}
+.mg-label{font-size:10px;font-weight:700;color:var(--dim);letter-spacing:0.5px;margin-bottom:4px}
+.menu-card{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:14px;cursor:pointer;transition:all .2s;text-decoration:none;color:inherit;position:relative;overflow:hidden}
+.menu-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.04),transparent)}
+.menu-card:active{transform:scale(0.98);background:rgba(255,255,255,0.03)}
+.mc-orb{width:36px;height:36px;border-radius:50%;flex-shrink:0;box-shadow:inset -3px -3px 6px rgba(0,0,0,0.4),inset 2px 2px 4px rgba(255,255,255,0.1)}
+.mc-info{flex:1}
+.mc-title{font-size:13px;font-weight:700}
+.mc-sub{font-size:10px;color:var(--sub);margin-top:2px}
+.mc-arrow{color:var(--dim);font-size:14px}
+
+.bot-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;display:flex;background:rgba(5,5,6,0.96);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:6px 0 calc(6px + env(safe-area-inset-bottom));z-index:200}
+.bot-nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0 2px;border:none;background:none;color:rgba(255,255,255,0.3);font-size:9px;font-weight:600;cursor:pointer;font-family:inherit}
+.bot-nav button:active{transform:scale(0.95)}
+.bot-nav button svg{width:20px;height:20px}
+.bot-nav button.active{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="hdr">
+    <button class="bk" onclick="location.href='./index.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+    <h1>염색 이론</h1>
+  </div>
+  <div class="cnt">
+    <div class="intro-area" id="introArea">
+      <canvas id="cvs"></canvas>
+      <div class="drag-hint" id="dragHint">
+        <div class="dh-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg></div>
+        <div class="dh-text">위로 드래그하여<br>탈색 과정을 체험하세요</div>
+      </div>
+    </div>
+    <div class="info-panel" id="infoPanel">
+      <div class="ip-top">
+        <div class="ip-lv" id="ipLv">Lv.5</div>
+        <div class="ip-name" id="ipName">버진모</div>
+      </div>
+      <div class="ip-desc" id="ipDesc">동양인의 자연 모발. 유멜라닌(갈흑색)이 가득 차 있어 매우 어둡습니다.</div>
+      <div class="ip-comp" id="ipComp" style="display:none">
+        <div class="ip-orb" id="compOrb"></div>
+        <div class="ip-comp-info" id="compInfo"></div>
+      </div>
+      <div class="ip-neutral" id="ipNeutral" style="display:none">
+        <div class="n-orbs">
+          <div class="n-orb" id="nOrbA"></div>
+          <div class="n-plus">+</div>
+          <div class="n-orb" id="nOrbB"></div>
+          <div class="n-eq">=</div>
+          <div class="n-orb" id="nOrbR"></div>
+        </div>
+        <div class="n-info" id="nInfo"></div>
+      </div>
+      <div class="ip-verdict" id="ipVerdict"></div>
+    </div>
+    <div class="menu-grid" id="menuGrid">
+      <div class="mg-label">이론을 이해했다면</div>
+      <a class="menu-card" href="./color_theory.html"><div class="mc-orb" style="background:linear-gradient(135deg,#e24b4a,#378ADD,#7F77DD)"></div><div class="mc-info"><div class="mc-title">컬러 이론</div><div class="mc-sub">색상환 · 보색 · 잔류별 발색 예측</div></div><div class="mc-arrow">></div></a>
+      <a class="menu-card" href="./value_chroma.html"><div class="mc-orb" style="background:linear-gradient(135deg,#333,#e8d44d,#e24b4a)"></div><div class="mc-info"><div class="mc-title">명도 · 채도</div><div class="mc-sub">밝기와 선명도에 따른 베이스 판정</div></div><div class="mc-arrow">></div></a>
+      <a class="menu-card" href="./technique.html"><div class="mc-orb" style="background:linear-gradient(135deg,#3a2015,#636769,#378ADD)"></div><div class="mc-info"><div class="mc-title">시술 테크닉</div><div class="mc-sub">염모제 원리 · 버진모 한계 · 조합 맵</div></div><div class="mc-arrow">></div></a>
+    </div>
+  </div>
+</div>
+<nav class="bot-nav">
+  <button onclick="location.href='./index.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>홈</button>
+  <button class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>이론</button>
+  <button onclick="location.href='./melanin_level.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg>컬러가이드</button>
+</nav>
+<script>
+var LV=[
+  {lv:5,r:26,g:16,b:10,name:'버진모',
+   desc:'유멜라닌이 가득 차 매우 어둡습니다. 이 상태에서는 한색 염모제를 넣어도 색이 보이지 않습니다.',
+   comp:null,compHex:null,compName:null,compInfo:null,
+   neutA:null,neutB:null,neutR:null,neutInfo:null,
+   verdict:'vd-w',verdictText:'<b>Lv.5 버진모</b> — 적색 멜라닌이 가득한 상태. 한색 색감은 표현 불가능. 난색(레드, 핑크)만 다크 톤으로 가능합니다.'},
+  {lv:8,r:62,g:32,b:20,name:'레드 잔류',
+   desc:'탈색 1회. 유멜라닌이 깨지며 강한 레드~레드주황이 드러납니다. 이 붉은기가 한색 시술의 가장 큰 장벽.',
+   comp:'#1d9e75',compName:'그린',compInfo:'<b>레드의 보색 = 그린</b><br>그린으로 레드기를 중화할 수 있지만, 색 파워가 레드(95)가 가장 강해서 완전 중화가 어렵습니다.',
+   neutA:'#4a2218',neutB:'#1d9e75',neutR:'#302820',neutInfo:'레드 + 그린 = 탁한 다크BR. 중화는 되지만 탁해짐',
+   verdict:'vd-w',verdictText:'<b>보색중화하면?</b> 탁한 다크 브라운. <span class="warn">중화에 염료가 소진되어 색감 표현 불가.</span> 맑은 한색을 원한다면 더 탈색이 필요합니다.'},
+  {lv:10,r:90,g:48,b:28,name:'주황 잔류',
+   desc:'탈색 1~2회. 주황색 잔류가 메인. 블루(보색)를 넣으면 여기서 블루가 전부 소진됩니다.',
+   comp:'#378ADD',compName:'블루',compInfo:'<b>주황의 보색 = 블루</b><br>블루를 넣으면 주황과 정면 충돌. 블루가 보색중화에 전부 소진 → 스모키 애쉬BR이 한계.',
+   neutA:'#6b3520',neutB:'#378ADD',neutR:'#2c2a28',neutInfo:'주황 + 블루 = 스모키 애쉬BR. 블루 색감은 안 보임',
+   verdict:'vd-w',verdictText:'<b>보색중화하면?</b> 스모키 애쉬브라운. <span class="warn">블루가 전량 소진 → 블루 색감 0%.</span> 투명한 블루를 원하면 16레벨 이상 탈색 필수.'},
+  {lv:14,r:155,g:100,b:40,name:'주황노랑 잔류',
+   desc:'탈색 1~2회. 주황~노랑 경계 구간. 한색 색감이 비로소 보이기 시작하는 전환점입니다.',
+   comp:'#5b4fbf',compName:'청보라',compInfo:'<b>주황노랑의 보색 = 청보라</b><br>블루+바이올렛 기능을 동시에 하여 이 경계 구간에서 가장 효과적. 보라애쉬 염모제가 이 원리.',
+   neutA:'#a06830',neutB:'#5b4fbf',neutR:'#484048',neutInfo:'주황노랑 + 청보라 = 탁한 그레이BR. 라벤더는 안 보임',
+   verdict:'vd-w',verdictText:'<b>보색중화하면?</b> 탁한 그레이브라운. <span class="warn">색소가 중화에 상당 부분 소진.</span> 네이비/애쉬그레이 시작 가능하지만 투명감은 부족.'},
+  {lv:16,r:190,g:160,b:48,name:'노랑 잔류',
+   desc:'탈색 2회. 노랑이 메인 잔류. 바이올렛 보색중화의 핵심 구간. 여기서부터 한색이 진짜로 보입니다.',
+   comp:'#7F77DD',compName:'바이올렛',compInfo:'<b>노랑의 보색 = 바이올렛</b><br>노랑은 색 파워가 가장 약해(30) 보색중화가 비교적 쉽습니다. 바이올렛 소량이면 깨끗하게 정리됩니다.',
+   neutA:'#c8a838',neutB:'#7F77DD',neutR:'#787068',neutInfo:'노랑 + 바이올렛 = 베이지 방향. 소량이면 깨끗하게 정리',
+   verdict:'vd-o',verdictText:'<b>보색중화 후 착색 가능!</b> <span class="ok">네이비 블루, 애쉬그레이 연출 가능.</span> 노랑기만 잡으면 맑은 한색이 표현됩니다. 바이올렛 소량 믹스가 핵심.'},
+  {lv:18,r:215,g:205,b:85,name:'연노랑 잔류',
+   desc:'탈색 3회. 멜라닌이 거의 소실. 맑고 투명한 색감의 최소 베이스. 스카이블루, 실버애쉬, 바이올렛 가능.',
+   comp:'#d48da0',compName:'연핑크',compInfo:'<b>연노랑은 파워가 매우 약함</b><br>잔류가 약하므로 보색도 약하게(연핑크 극소량). 강한 보색을 쓰면 보색 색이 먹어들어감.',
+   neutA:'#e0d460',neutB:'#d48da0',neutR:'#d8c8b0',neutInfo:'연노랑 + 연핑크 극소량 = 백금발 방향. 미세하게 중화',
+   verdict:'vd-o',verdictText:'<b>거의 모든 색감 가능!</b> <span class="ok">스카이블루, 실버애쉬, 라벤더, 바이올렛.</span> 보색중화도 소량이면 충분. 넣는 색이 거의 그대로 발색됩니다.'},
+  {lv:20,r:230,g:222,b:170,name:'미색 (도화지)',
+   desc:'탈색 3회+. 잔류 색소가 거의 없는 최상의 도화지. 파스텔, 백금발 등 모든 색감을 투명하게 표현.',
+   comp:null,compName:null,compInfo:null,
+   neutA:null,neutB:null,neutR:null,neutInfo:null,
+   verdict:'vd-o',verdictText:'<b>완벽한 도화지.</b> <span class="ok">보색중화 불필요. 넣는 색 = 결과 색.</span> 파스텔 핑크, 비비드 레드, 백금발 등 원하는 모든 색감이 그대로 표현됩니다.'}
+];
+
+var progress=0,curIdx=-1,hintHid=false;
+var cv,ctx,CW,CH;
+
+function initCv(){
+  cv=document.getElementById('cvs');
+  CW=document.getElementById('introArea').clientWidth||400;
+  CH=Math.round(CW*1.15);
+  cv.width=CW*2;cv.height=CH*2;
+  cv.style.height=CH+'px';
+  ctx=cv.getContext('2d');ctx.scale(2,2);
+}
+
+function lerp(a,b,t){return a+(b-a)*t}
+function clamp(v,mn,mx){return Math.max(mn,Math.min(mx,v))}
+function getC(t){
+  var idx=t*(LV.length-1);var i=Math.floor(idx);var f=idx-i;
+  if(i>=LV.length-1)return LV[LV.length-1];
+  var a=LV[i],b=LV[i+1];
+  return{r:lerp(a.r,b.r,f),g:lerp(a.g,b.g,f),b:lerp(a.b,b.b,f)};
+}
+function rs(c){return'rgb('+Math.round(c.r)+','+Math.round(c.g)+','+Math.round(c.b)+')';}
+function ra(c,a){return'rgba('+Math.round(c.r)+','+Math.round(c.g)+','+Math.round(c.b)+','+a+')';}
+
+function orbGrad(ctx,x,y,r,cr,cg,cb){
+  var g=ctx.createRadialGradient(x-r*0.28,y-r*0.28,r*0.05,x,y,r);
+  g.addColorStop(0,'rgb('+Math.min(255,cr+55)+','+Math.min(255,cg+48)+','+Math.min(255,cb+38)+')');
+  g.addColorStop(0.5,'rgb('+cr+','+cg+','+cb+')');
+  g.addColorStop(1,'rgb('+Math.max(0,cr-28)+','+Math.max(0,cg-20)+','+Math.max(0,cb-14)+')');
+  return g;
+}
+
+function draw(t){
+  ctx.clearRect(0,0,CW,CH);
+  var cx=CW/2,R=Math.min(52,CW*0.13);
+  var botY=CH-R-35,topY=R+15;
+  var mainY=lerp(botY,topY,t);
+  var c=getC(t);
+
+  var glA=0.03+t*0.15;
+  var gl=ctx.createRadialGradient(cx,mainY,R*0.3,cx,mainY,R*4);
+  gl.addColorStop(0,ra(c,glA));gl.addColorStop(1,'transparent');
+  ctx.fillStyle=gl;ctx.fillRect(0,0,CW,CH);
+
+  var idx=Math.floor(t*(LV.length-1));
+  for(var i=0;i<=idx&&i<LV.length;i++){
+    var fr=1;if(i===idx){fr=t*(LV.length-1)-idx;}
+    if(fr<0.03)continue;
+    var d=LV[i];
+    var by=mainY+R+14+i*((botY-mainY-R-10)/LV.length);
+    if(by>CH-8)continue;
+    var spread=22+i*9;
+    var bx=i%2===0?cx-spread:cx+spread;
+    var br=5+i*1.3;
+
+    ctx.save();ctx.globalAlpha=fr*0.2;
+    ctx.strokeStyle=rs(d);ctx.lineWidth=1;
+    ctx.beginPath();
+    ctx.moveTo(cx,mainY+R);
+    ctx.quadraticCurveTo(cx+(bx-cx)*0.15,mainY+R+(by-mainY-R)*0.35,bx,by);
+    ctx.stroke();ctx.restore();
+
+    ctx.save();ctx.globalAlpha=fr;
+    ctx.beginPath();ctx.arc(bx,by,br,0,Math.PI*2);
+    ctx.fillStyle=orbGrad(ctx,bx,by,br,d.r,d.g,d.b);ctx.fill();
+
+    if(d.comp&&fr>0.5){
+      var compX=i%2===0?bx-br-14:bx+br+14;
+      var compR=br*0.65;
+      ctx.globalAlpha=fr*0.6;
+      var cc=hexToRgb(d.comp);
+      ctx.beginPath();ctx.arc(compX,by,compR,0,Math.PI*2);
+      ctx.fillStyle=orbGrad(ctx,compX,by,compR,cc.r,cc.g,cc.b);ctx.fill();
+    }
+
+    ctx.globalAlpha=fr*0.5;
+    ctx.fillStyle='#fff';ctx.font='600 7px Outfit,sans-serif';
+    ctx.textAlign=i%2===0?'right':'left';
+    ctx.fillText('Lv.'+d.lv,i%2===0?bx-br-20:bx+br+20,by+2);
+    ctx.restore();
+  }
+
+  if(t>0.01){
+    var tLen=Math.min(botY-mainY-R,t*(botY-topY));
+    ctx.save();ctx.globalAlpha=0.06+t*0.1;
+    var tg=ctx.createLinearGradient(cx,mainY+R,cx,mainY+R+tLen);
+    tg.addColorStop(0,rs(c));tg.addColorStop(1,'transparent');
+    ctx.strokeStyle=tg;ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(cx,mainY+R);ctx.lineTo(cx,mainY+R+tLen);ctx.stroke();
+    ctx.restore();
+  }
+
+  ctx.beginPath();ctx.arc(cx,mainY,R,0,Math.PI*2);
+  ctx.fillStyle=orbGrad(ctx,cx,mainY,R,Math.round(c.r),Math.round(c.g),Math.round(c.b));ctx.fill();
+
+  ctx.save();ctx.globalAlpha=0.2;
+  var sg=ctx.createRadialGradient(cx-R*0.35,mainY-R*0.35,0,cx-R*0.2,mainY-R*0.2,R*0.55);
+  sg.addColorStop(0,'rgba(255,255,255,0.5)');sg.addColorStop(1,'transparent');
+  ctx.beginPath();ctx.arc(cx,mainY,R,0,Math.PI*2);ctx.fillStyle=sg;ctx.fill();
+  ctx.restore();
+
+  ctx.fillStyle='rgba(255,255,255,'+(0.5+t*0.4)+')';
+  ctx.font='800 14px Outfit,sans-serif';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('Lv.'+Math.round(lerp(5,20,t)),cx,mainY);
+}
+
+function hexToRgb(hex){
+  var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return{r:r,g:g,b:b};
+}
+
+function updateInfo(t){
+  var idx=Math.floor(t*(LV.length-1));
+  idx=clamp(idx,0,LV.length-1);
+  if(idx===curIdx)return;
+  curIdx=idx;
+  var d=LV[idx];
+  document.getElementById('ipLv').textContent='Lv.'+d.lv;
+  document.getElementById('ipName').textContent=d.name;
+  document.getElementById('ipDesc').textContent=d.desc;
+
+  var compEl=document.getElementById('ipComp');
+  if(d.comp){
+    compEl.style.display='flex';
+    document.getElementById('compOrb').style.background=d.comp;
+    document.getElementById('compInfo').innerHTML='<b>보색: '+d.compName+'</b><br>'+d.compInfo;
+  } else {
+    compEl.style.display='none';
+  }
+
+  var neutEl=document.getElementById('ipNeutral');
+  if(d.neutA){
+    neutEl.style.display='flex';
+    document.getElementById('nOrbA').style.background=d.neutA;
+    document.getElementById('nOrbB').style.background=d.neutB;
+    document.getElementById('nOrbR').style.background=d.neutR;
+    document.getElementById('nInfo').textContent=d.neutInfo;
+  } else {
+    neutEl.style.display='none';
+  }
+
+  var vEl=document.getElementById('ipVerdict');
+  vEl.className='ip-verdict '+d.verdict;
+  vEl.innerHTML=d.verdictText;
+
+  if(idx>=LV.length-1){document.getElementById('menuGrid').classList.add('show');}
+}
+
+var dragging=false,startY=0,startP=0;
+function onD(e){
+  dragging=true;startY=e.clientY||(e.touches?e.touches[0].clientY:0);startP=progress;
+  if(!hintHid){hintHid=true;document.getElementById('dragHint').classList.add('hide');}
+}
+function onM(e){
+  if(!dragging)return;e.preventDefault();
+  var y=e.clientY||(e.touches?e.touches[0].clientY:0);
+  progress=clamp(startP+(startY-y)/(CH*0.65),0,1);
+  draw(progress);updateInfo(progress);
+}
+function onU(){dragging=false;}
+
+setTimeout(function(){
+  initCv();draw(0);updateInfo(0);
+  var a=document.getElementById('introArea');
+  a.addEventListener('pointerdown',function(e){onD(e);a.setPointerCapture(e.pointerId);});
+  a.addEventListener('pointermove',onM);
+  a.addEventListener('pointerup',onU);
+  a.addEventListener('pointercancel',onU);
+  window.addEventListener('resize',function(){initCv();draw(progress);});
+},50);
+</script>
+</body>
+</html>
