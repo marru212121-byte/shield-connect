@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>v17 배치 검수</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',sans-serif;background:#F5F4F0;color:#1C1917;padding:20px}
+h1{font-size:18px;font-weight:800;margin-bottom:4px}
+.sub{font-size:12px;color:#A8A29E;margin-bottom:16px}
+.upload-area{border:2px dashed #d5cfc7;border-radius:14px;padding:32px 20px;text-align:center;cursor:pointer;background:#FAF8F4;margin-bottom:16px;transition:all .2s}
+.upload-area:hover{border-color:#C4A97A;background:#D4B89608}
+.upload-area .txt{font-size:13px;color:#A8A29E;line-height:1.6}
+.upload-area .txt b{color:#8B7355;font-weight:600}
+.controls{display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+.controls select,.controls button{font-family:inherit;font-size:13px;padding:8px 14px;border-radius:10px;border:1.5px solid #e8e4df;background:#fff;cursor:pointer}
+.controls button{background:#1C1917;color:#fff;font-weight:600;border:none}
+.controls button:disabled{opacity:0.4;cursor:not-allowed}
+.controls .count{font-size:12px;color:#A8A29E}
+
+.results{display:flex;flex-direction:column;gap:16px}
+
+.result-card{background:#fff;border-radius:16px;border:1.5px solid #e8e4df;overflow:hidden}
+.result-top{display:flex;gap:0}
+.result-img-wrap{width:200px;min-height:200px;flex-shrink:0;overflow:hidden;background:#eee;position:relative}
+.result-img-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.result-num{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.6);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px}
+.result-status{position:absolute;top:8px;right:8px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px}
+.result-status.analyzing{background:#FFF3CD;color:#856404}
+.result-status.done{background:#D4EDDA;color:#155724}
+.result-status.error{background:#F8D7DA;color:#721C24}
+
+.result-analysis{flex:1;padding:14px;min-width:0}
+.result-color-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.result-swatch{width:32px;height:32px;border-radius:8px;border:1.5px solid rgba(0,0,0,0.08);flex-shrink:0}
+.result-color-name{font-size:15px;font-weight:700}
+.result-tone{font-size:11px;color:#A8A29E}
+.result-desc{font-size:12px;color:#6B5D4E;line-height:1.6;margin-bottom:8px}
+.result-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.result-tags span{font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;background:#D4B89618;color:#8B7355}
+.result-direction{font-size:11px;color:#555;line-height:1.5;padding:8px;border-radius:6px;background:rgba(26,24,20,0.04)}
+.result-direction b{color:#1A1814}
+
+.result-recipe{padding:14px;border-top:1px solid #e8e4df}
+.recipe-summary{font-size:13px;font-weight:600;color:#1C1917;line-height:1.6;margin-bottom:10px}
+.recipe-tips-block{background:#FBF7F1;border:1px solid #EDE6DA;border-radius:10px;padding:12px;font-size:12px;color:#6B5D4E;line-height:1.8;white-space:pre-line}
+.recipe-tips-block b{color:#1C1917;font-weight:700;font-size:13px}
+.recipe-virgin{background:#FAF6F0;border:1px solid #EDE6DA;border-radius:8px;padding:10px;margin-top:8px;font-size:11px;color:#6B5D4E;line-height:1.7}
+.recipe-virgin strong{color:#8B7355;font-size:12px;font-weight:700;display:block;margin-bottom:4px}
+</style>
+</head>
+<body>
+
+<h1>v17 배치 검수 도구</h1>
+<div class="sub">사진 여러 장 → 각각 STEP 1 분석 + STEP 3 레시피(자연모 기준) 자동 생성</div>
+
+<div class="upload-area" onclick="document.getElementById('batchInput').click()">
+  <div class="txt">검수할 사진을 <b>여러 장 선택</b>하세요<br>(한 번에 최대 10장)</div>
+</div>
+<input type="file" id="batchInput" accept="image/*" multiple style="display:none" onchange="handleBatchUpload(this)"/>
+
+<div class="controls">
+  <select id="baseSelect">
+    <option value="natural">자연모 / 염색모</option>
+    <option value="orange_yellow">탈색모 — 주황~노랑 잔류</option>
+    <option value="yellow_mat">탈색모 — 노랑 잔류</option>
+    <option value="pale_yellow">탈색모 — 연노랑~아이보리</option>
+  </select>
+  <button id="runBtn" onclick="runBatch()" disabled>검수 시작</button>
+  <span class="count" id="countLabel"></span>
+</div>
+
+<div class="results" id="results"></div>
+
+<script>
+var API_URL = '/api/recipe';
+var pendingFiles = [];
+
+function handleBatchUpload(input){
+  pendingFiles = Array.from(input.files).slice(0, 10);
+  document.getElementById('countLabel').textContent = pendingFiles.length + '장 선택됨';
+  document.getElementById('runBtn').disabled = false;
+
+  // 미리보기 카드 생성
+  var container = document.getElementById('results');
+  container.innerHTML = '';
+  pendingFiles.forEach(function(file, i){
+    var card = document.createElement('div');
+    card.className = 'result-card';
+    card.id = 'card-' + i;
+    var url = URL.createObjectURL(file);
+    card.innerHTML = '<div class="result-top">'
+      + '<div class="result-img-wrap"><img src="'+url+'" alt=""/><span class="result-num">#'+(i+1)+'</span><span class="result-status" id="status-'+i+'">대기</span></div>'
+      + '<div class="result-analysis" id="analysis-'+i+'"><div style="color:#A8A29E;font-size:12px;padding:20px">대기 중...</div></div>'
+      + '</div>'
+      + '<div class="result-recipe" id="recipe-'+i+'" style="display:none"></div>';
+    container.appendChild(card);
+  });
+}
+
+function getBaseDesc(){
+  var v = document.getElementById('baseSelect').value;
+  var map = {
+    'natural': '자연모/염색모 (동양인, 적색멜라닌 가득, 탈색 이력 없음, 약 5레벨)',
+    'orange_yellow': '탈색모 — 주황~노랑 잔류 (붉은기·주황기가 남아있는 상태, 약 14~16레벨)',
+    'yellow_mat': '탈색모 — 노랑 잔류 (주황기는 빠지고 노랑기, 약 16레벨)',
+    'pale_yellow': '탈색모 — 연노랑~아이보리 (거의 다 빠진 상태, 약 18~20레벨)'
+  };
+  return map[v] || map['natural'];
+}
+
+function getBaseType(){
+  return document.getElementById('baseSelect').value === 'natural' ? 'natural' : 'bleached';
+}
+
+async function runBatch(){
+  document.getElementById('runBtn').disabled = true;
+  for(var i=0; i<pendingFiles.length; i++){
+    await processOne(pendingFiles[i], i);
+  }
+  document.getElementById('runBtn').disabled = false;
+}
+
+function fileToBase64(file){
+  return new Promise(function(resolve, reject){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var full = e.target.result;
+      var data = full.split(',')[1];
+      resolve({base64: data, mediaType: file.type || 'image/jpeg', full: full});
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function processOne(file, idx){
+  var statusEl = document.getElementById('status-'+idx);
+  var analysisEl = document.getElementById('analysis-'+idx);
+  var recipeEl = document.getElementById('recipe-'+idx);
+
+  statusEl.textContent = '분석 중';
+  statusEl.className = 'result-status analyzing';
+  analysisEl.innerHTML = '<div style="color:#A8A29E;font-size:12px;padding:20px">색감 분석 중...</div>';
+
+  var info = await fileToBase64(file);
+
+  // STEP 1: 분석
+  var step1Prompt = [
+    '너는 미용실 헤어 컬러리스트를 위한 모발 색감 분석 전문가야.',
+    '사진 속 모발의 색감을 분석하고, 동양인 모발에서 이 색감을 만들려면 어떤 조색 방향이 필요한지 판단해.',
+    '',
+    '■ 판단 순서 (반드시 이 순서):',
+    '1단계: elements 분석 — 사진에서 보이는 속성만 골라',
+    '2단계: recipe_direction 결정 — elements + 아래 트렌드 지식 기반으로',
+    '3단계: tone — 겉으로 보이는 느낌으로만 (cool/warm/neutral)',
+    '',
+    '■ 색감 속성(elements) — 보이는 것만 배열에:',
+    '"투명감" 빛이 통과하는 맑은 느낌 / "매트함" 광택 없이 뽀얀 질감 / "황금빛" 금빛이 은은하게 / "붉은기" 적색·구리빛·앰버빛 / "주황기" 주황빛 / "잿빛" 회색·재 같은 무채색 / "청보라" 파란기+보라기 / "보라기" 보라·퍼플 / "핑크기" 분홍빛 / "파스텔" 연하고 부드러운 / "비비드" 선명하고 채도 높은 / "깊이감" 밝고 어두운 부분의 입체감 / "윤기" 건강한 광택감',
+    '',
+    '■ 한국 트렌드 베이지 — 가장 중요한 판단 기준:',
+    '밀크티 베이지, 애쉬 베이지, 매트 베이지, 라벤더 베이지는 사진상 warm처럼 보이지만, 동양인 모발에서는 한색 계열(애쉬, 바이올렛 중심) 조합이 필수.',
+    '- 투명감+매트함+잿빛이 강한 베이지 → recipe_direction은 반드시 "한색 계열"',
+    '- 황금빛+투명감+붉은기 없음 → 시각적 warm이어도 recipe_direction은 "한색 계열"',
+    '- 붉은기·핑크기가 선명한 사진만 → 난색 계열',
+    '',
+    '■ 탈색 필수 판단 (중요):',
+    '어둡게 보여도 잿빛·투명감·매트함이 있으면 → 탈색이 필요한 색감이다. "다크"라고 해서 자연모에서 바로 가능한 게 아님.',
+    '자연모에서 탈색 없이 가능한 색감은: 웜브라운, 쿨브라운, 레드/레드브라운, 블랙커런트 정도. 그 외 잿빛·투명감·파스텔이 보이면 전부 탈색 필수.',
+    '',
+    '■ 조색 방향(recipe_direction) 역추론:',
+    '투명감+붉은기 없음 → 한색 계열 / 붉은기 선명 → 난색 계열(레드, RV) / 핑크기 → 핑크 계열 / 보라기 → 바이올렛 계열 / 잿빛+투명감 → 애쉬 계열 / 파스텔+연한 → 파스텔 계열',
+    '',
+    '■ 금지:',
+    '레벨 숫자, 시술 방법, 탈색 여부, 영어 전문용어, 헤어스타일/컷 언급',
+    '구체적 염모제 조합(예: "애쉬+바이올렛 믹스") — 계열과 방향만',
+    '"멜라닌", "중화" 단어',
+    '',
+    '■ 출력: JSON만',
+    '{"color_name_ko":"한국어 색감명","tone":"cool/warm/neutral","hex":"#RRGGBB","elements":["속성"],"recipe_direction":"조색 방향 한 줄","description":"색감 묘사 2~3문장"}',
+    '★ color_name_ko는 최대 3단어. 명도 수식어(다크, 밝은)는 색감명에 넣지 말고 description에서 표현하라. 예: "올리브 애쉬 브라운", "실버 애쉬 그레이", "애쉬 베이지", "밀크 베이지", "라벤더 애쉬".'
+  ].join('\n');
+
+  var analysis = null;
+  try {
+    var r1 = await fetch(API_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:600,
+        system: step1Prompt,
+        messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:info.mediaType,data:info.base64}},
+          {type:'text',text:'이 사진 속 모발의 색감을 역공학 분석해줘.'}
+        ]}]
+      })
+    });
+    var d1 = await r1.json();
+    var t1 = d1.content.map(function(b){return b.text||'';}).join('');
+    t1 = t1.replace(/```json|```/g,'').trim();
+    analysis = JSON.parse(t1);
+  } catch(e){
+    statusEl.textContent = '분석 실패';
+    statusEl.className = 'result-status error';
+    analysisEl.innerHTML = '<div style="color:#c00;font-size:12px;padding:20px">STEP 1 분석 실패: '+e.message+'</div>';
+    return;
+  }
+
+  // 분석 결과 렌더링
+  var toneMap = {cool:'한색(쿨)',warm:'난색(웜)',neutral:'뉴트럴'};
+  var tagsHtml = '';
+  if(analysis.elements && analysis.elements.length>0){
+    analysis.elements.forEach(function(el){
+      tagsHtml += '<span>'+el+'</span>';
+    });
+  }
+  analysisEl.innerHTML = '<div class="result-color-row">'
+    + '<div class="result-swatch" style="background:'+(analysis.hex||'#ccc')+'"></div>'
+    + '<div><div class="result-color-name">'+(analysis.color_name_ko||'—')+'</div>'
+    + '<div class="result-tone">'+(toneMap[analysis.tone]||'—')+' 계열</div></div></div>'
+    + '<div class="result-desc">'+(analysis.description||'')+'</div>'
+    + '<div class="result-tags">'+tagsHtml+'</div>'
+    + '<div class="result-direction"><b>조색 방향</b> · '+(analysis.recipe_direction||'')+'</div>';
+
+  // STEP 3: 레시피
+  statusEl.textContent = '레시피 생성 중';
+
+  var baseDesc = getBaseDesc();
+  var step3Prompt = [
+    '너는 15년차 동양인 모발 전문 컬러리스트야.',
+    'AI가 분석한 목표 색감을 보고, 동양인 모발에서 이 색감을 구현하려면 어떻게 해야 하는지 역추론해.',
+    '아래 컬러리스트 지식을 바탕으로 사고하되, 레시피는 네가 추론해서 만들어.',
+    '',
+    '══════════════════════════════',
+    'Part A. 색 이론 기초',
+    '══════════════════════════════',
+    '',
+    '=== [1] 헤어 컬러의 기본 공식 ===',
+    '',
+    '헤어컬러 = 언더(사전상태 모발) + 틴트(염모제 염료)',
+    '★ 같은 염모제 조합이라도 언더(베이스)에 따라 결과가 완전히 다르다.',
+    '- 탈색 후 베이스(멜라닌 제거됨) → 염모제 색이 거의 그대로 발색',
+    '- 버진모(멜라닌 가득) → 염모제가 멜라닌과 충돌하여 브라운으로 수렴',
+    '',
+    '=== [2] 색의 3속성 ===',
+    '',
+    '색상(Hue): 빨강, 파랑, 노랑 등 색의 이름',
+    '명도(Value): 밝고 어두움. 레벨 1(검정)~20(아이보리)',
+    '채도(Chroma): 선명~탁함. 비비드 ↔ 덜(dull)',
+    '',
+    '=== [3] 1차색, 2차색, 보색 ===',
+    '',
+    '1차색: 빨강, 파랑, 노랑',
+    '2차색: 빨강+노랑=주황 / 빨강+파랑=보라 / 파랑+노랑=초록',
+    '보색 = 색상환 반대편. 보색끼리 만나면 그 색의 파워가 상쇄된다.',
+    '주황↔파랑(블루) / 노랑↔보라(바이올렛) / 빨강↔초록(그린)',
+    '',
+    '=== [4] 색의 파워 ===',
+    '',
+    '노랑(약) → 주황 → 빨강/초록 → 파랑 → 보라 → 검정(강)',
+    '- 노랑 잔류 → 바이올렛이 맞다 (보색 + 적절한 파워)',
+    '- 노랑에 블루 → 파워 과잉 → 노랑+파랑=초록, 매트하게 빠진다',
+    '- 주황 잔류 → 블루가 맞다 (보색 관계)',
+    '- 난색(레드, 핑크)은 적색 멜라닌과 같은 계열 → 충돌 없이 발색',
+    '',
+    '══════════════════════════════',
+    'Part B. 동양인 모발과 탈색',
+    '══════════════════════════════',
+    '',
+    '=== [5] 동양인 모발 — 레벨별 언더톤 (절대값) ===',
+    '',
+    '5: 적색(검붉은색)',
+    '8~10: 적갈색~주황',
+    '12~14: 주황~주황노랑',
+    '16: 노랑',
+    '18: 연노랑',
+    '20: 아이보리',
+    '',
+    '=== [6] 탈색 순서와 도달 레벨 ===',
+    '',
+    '동양인 자연모(5레벨, 적색 멜라닌 가득)에서 탈색 시:',
+    '적색 → 적갈색 → 주황 → 주황노랑 → 노랑 → 연노랑 → 아이보리 순서로 멜라닌이 빠진다.',
+    '',
+    '■ 탈색 횟수별 도달 레벨:',
+    '탈색 1회 → 적색 멜라닌이 깨지면서 주황~주황노랑(12~14레벨) 도달',
+    '탈색 2회 이상 → 주황기가 빠지고 노랑(16레벨) 도달',
+    '탈색 3회 이상 → 노랑기도 빠지면서 연노랑(18레벨)~아이보리(20레벨) 도달',
+    '',
+    '■ 일반 염색(탈색 없이)으로 도달 가능한 범위:',
+    '고명도(13·15) 염모제 + 산화제(9%/12%) → 리프팅으로 8~10레벨까지 도달 가능',
+    '하지만 멜라닌이 남아있어 색감 표현에 한계 → 브라운 수렴',
+    '난색(레드, 핑크)은 적색 멜라닌과 같은 계열이라 소진 없이 발색 가능',
+    '',
+    '=== [7] 잔류 색소와 보색 ===',
+    '',
+    '주황 잔류 → 블루 소량 / 노랑 잔류 → 바이올렛 소량 (블루 쓰면 매트하게 빠진다!)',
+    '연노랑~아이보리 → 보색 불필요 / 난색 → 보색 불필요',
+    '★ 보색 컬러는 별도 단계가 아니다. 메인 염모제 조합에 소량 믹스하여 한 번에 시술한다.',
+    '',
+    '=== [8] 왜 탈색이 필요한가 ===',
+    '',
+    '버진모에 한색 염모제를 올리면:',
+    '- 고명도 염모제가 적색 멜라닌을 어느 정도 깨면서 리프팅',
+    '- 깨진 자리에 노랑기가 드러남',
+    '- 염모제의 염료가 이 노랑기를 중화하는 데 소진됨',
+    '- 결국 색감 표현에 쓸 염료가 부족 → 적빛 없는 브라운으로 수렴',
+    '',
+    '난색(레드, 핑크)은 적색 멜라닌과 같은 계열이라 소진 없이 발색.',
+    '',
+    '결론:',
+    '- 선명함 + 투명함이 동시에 필요 → 탈색 필수',
+    '- 난색(레드 등) → 버진모에서도 비교적 선명하게 가능',
+    '',
+    '★ 사진의 명도가 낮아 보여도, 한색 계열에서 브라운기 없이 무채색(잿빛·회색·블루)이 투명하게 발색되어 있으면 → 탈색 후 입힌 색감이다. 동양인 버진모의 적색 멜라닌으로는 이런 무채색 투명 발색이 나올 수 없다. 단, 투명감 없이 스모키하기만 한 어두운 한색은 탈색 1회 후에도 표현 가능하다.',
+    '★ hex가 어두워도 색감명과 elements에 잿빛·투명감·무채색이 있으면 탈색 필수로 판단하라. 체감 명도가 낮다고 탈색 횟수를 줄이지 마라. 탈색 횟수는 "이 색감을 만들려면 어떤 베이스가 필요한가"로 판단하라.',
+    '',
+    '★ 탈색 횟수 판단 원리 — 잔류 색소가 활용되는가, 방해되는가:',
+    '탈색 1회(주황~주황노랑 베이스)로 충분한 색감: 잔류 주황기·브라운이 색감의 일부로 활용되는 한색. 매트 애쉬, 올리브 애쉬, 애쉬 브라운, 카키 브라운 등. 한색 염모제가 주황기를 억제하면서 잔류 브라운과 어우러져 자연스럽게 수렴한다.',
+    '탈색 2회 이상(노랑~연노랑 베이스) 필요한 색감: 잔류 주황기·브라운이 색감을 오염시키는 한색. 애쉬 그레이, 실버 애쉬, 라벤더 애쉬, 파스텔 계열 등. 브라운기 없이 무채색이 투명하게 발색되어야 하므로 주황기를 완전히 제거해야 한다.',
+    '★ 같은 계열명이라도 투명감·파스텔이 동반되면 잔류 색소가 방해된다. 투명한 올리브, 파스텔 그린, 연한 카키 등은 브라운기가 제거되어야 하므로 2회 이상 필요하다. 판단 기준은 계열명이 아니라 "브라운기가 남아도 되는가"이다.',
+    '',
+    '══════════════════════════════',
+    'Part C. 염모제와 시술 도구',
+    '══════════════════════════════',
+    '',
+    '=== [9] 알칼리산화염모제 vs 컨트롤컬러 ===',
+    '',
+    '■ 알칼리산화염모제 (일반 염모제):',
+    '- 리프팅 + 착색을 동시에 한다',
+    '- 모발 내부(코르텍스)까지 침투',
+    '- 명도가 높을수록 리프팅력이 강하다',
+    '- 단, 염료가 잔류 색소를 중화하는 데 소진되어 버진모에서는 색 표현에 한계',
+    '',
+    '■ 컨트롤컬러 (직접염료):',
+    '- 리프팅 능력 없음. 색만 입힌다',
+    '- 모발 표면(큐티클) 쪽에 작용. 염료가 매우 많다',
+    '- 버진모에서: 고명도 염모제가 리프팅하고, 컨트롤컬러가 색을 입히는 역할',
+    '- 탈색모에서: 잔류 없는 베이스 위에 선명하게 발색',
+    '',
+    '■ 탈색모에서의 명도 선택:',
+    '- 고명도(13·15) → 염료 적어서 색이 거의 안 나올 수 있다',
+    '- 중명도(9·11) → 염료 많아서 너무 진하게 나올 수 있다',
+    '- 파스텔 발색 → 중명도 염모제 + 클리어로 염료 농도 희석',
+    '',
+    '■ 탈색모에서의 조합 자유도:',
+    '- 탈색모(특히 18레벨 이상)에서는 멜라닌이 거의 없으므로 염모제+염모제, 염모제+컨트롤컬러 모두 가능.',
+    '- 컨트롤컬러만이 유일한 선택지가 아니다.',
+    '',
+    '=== [10] 염모제 계열 체계 ===',
+    '',
+    '염모제는 [명도]-[계열] 구조.',
+    '',
+    '■ 계열:',
+    '뉴트럴브라운(NB): 자연스러운 갈색. 농도 조절·톤다운용',
+    '애쉬(A): 잿빛, 무채색 / 블루애쉬(BA): 파란빛, 한색 중 파워 강함',
+    '그린(G): 초록빛, 붉은기 억제 / 바이올렛(V): 보라빛',
+    '레드(R): 빨간빛, 발색 수월 / 레드바이올렛(RV): 자주빛 / 핑크(P): 분홍빛',
+    '옐로우(Y): 노랑빛 / 오렌지(O): 주황빛',
+    '카키(K): 올리브빛 / 애쉬카키(AK): 애쉬+카키 결합. 잿빛과 올리브빛을 동시에 가진다.',
+    '클리어: 색소 없음, 농도 희석용',
+    '',
+    '■ 명도: 5~7 저명도 / 9~11 중명도 / 13~15 고명도(리프팅력 있음)',
+    '',
+    '■ 컨트롤컬러 종류 (염모제와 별개):',
+    '한색: 블루, 애쉬, 그린, 바이올렛',
+    '난색: 레드, 핑크, 바이올렛',
+    '★ 뉴트럴브라운은 염모제 계열이다. 컨트롤컬러가 아니다.',
+    '',
+    '■ 바이올렛의 특수성 — 중성색:',
+    '바이올렛은 빨강+파랑의 2차색으로, 한색과 난색 모두에 걸쳐 있는 중성색이다.',
+    '- 적보라(RV 방향): 난색에 가까움. 버진모에서도 색감이 어느 정도 보인다.',
+    '- 청보라(블루바이올렛 방향): 한색에 가까움. 버진모에서는 브라운으로 수렴.',
+    '버진모에서 보라빛 → RV(적보라) 방향이 현실적. 청보라는 탈색 후에만 가능.',
+    '',
+    '■ 레드바이올렛(RV)의 성격:',
+    'RV는 중성색(보라) + 붉은기를 동시에 가진 계열이다.',
+    '순수 레드만으로는 선명한 빨강이 될 뿐, 로즈나 와인 방향이 나오지 않는다.',
+    'RV가 보라빛 베이스를 깔고, 여기에 컨트롤컬러로 최종 뉘앙스를 결정한다.',
+    '',
+    '■ 레시피 표기: "[계열] 염모제" 또는 "[계열] 컨트롤컬러"로 구분하여 표기.',
+    '',
+    '══════════════════════════════',
+    'Part D. 버진모 테크닉',
+    '══════════════════════════════',
+    '',
+    '=== [11] 버진모 테크닉 — 원리와 한계 ===',
+    '',
+    '■ 원리:',
+    '1. 고명도(13·15) 염모제 + 산화제(9%/12%) → 적색 멜라닌을 깬다 (리프팅)',
+    '2. 멜라닌이 깨지면서 노랑기가 드러남',
+    '3. 컨트롤컬러가 그 위에 색을 입힌다 (컨트롤컬러는 리프팅 못함)',
+    '4. 하지만 컨트롤컬러 염료도 노랑기 중화에 일부 소진됨',
+    '5. 결국 색감 표현에 쓰이는 염료가 부족 → 브라운으로 수렴',
+    '',
+    '■ 절대 한계:',
+    '버진모에서 도달 가능한 결과는 두 방향뿐:',
+    '1. 한색 방향 → 적빛 없는 쿨브라운, 베이지브라운',
+    '2. 난색 방향 → 레드브라운, 로즈브라운, 와인빛 브라운 등 (잔류 브라운 활용)',
+    '',
+    '★ 버진모 레시피에서 목표 색감의 이름을 따라가면 안 된다.',
+    '★ "라벤더 방향", "실버 방향" 같은 표현을 버진모에서 쓰지 마라.',
+    '',
+    '■ 한색 조합 결과 (고명도 한색 염모제 +):',
+    '★ 한색은 멜라닌 중화에 염료가 소진되어 브라운으로 수렴하지만, 컨트롤컬러에 따라 브라운의 뉘앙스가 달라진다.',
+    '',
+    '고명도 애쉬 염모제 기준:',
+    '+ 블루 컨트롤컬러 → 적빛 없는 애쉬브라운',
+    '+ 블루+바이올렛 컨트롤컬러 → 청초한 투명 쿨브라운',
+    '+ 애쉬 컨트롤컬러 → 애쉬브라운',
+    '',
+    '고명도 애쉬카키 염모제 기준 (시중의 애쉬카키 계열 염모제):',
+    '+ 애쉬 컨트롤컬러 → 애쉬 뉘앙스의 매트브라운',
+    '+ 그린 컨트롤컬러 → 매트브라운',
+    '',
+    '카키 염모제 + 애쉬 컨트롤컬러 → 매트애쉬브라운',
+    '+ 바이올렛 컨트롤컬러 → 쿨브라운 (와인빛 아님)',
+    '',
+    '★ 와인빛·퍼플브라운 → 난색 방향(RV)으로 가야 한다.',
+    '',
+    '■ 난색 조합 — 원리:',
+    '★ 난색은 적색 멜라닌과 충돌하지 않으므로 컨트롤컬러 뉘앙스가 그대로 살아남는다.',
+    '★ 고명도 염모제는 리프팅 + 큰 색감 방향을 잡는 역할이고, 최종 뉘앙스는 컨트롤컬러가 결정한다.',
+    '★ 버진모의 잔류 브라운(멜라닌)은 방해물이 아니라 색감의 일부로 활용된다. "브라운"을 염모제로 따로 만들 필요 없이, 모발 자체의 깊이감이 자연스럽게 살아남는다.',
+    '',
+    '■ 난색에서 RV와 바이올렛의 역할:',
+    'RV(레드바이올렛)는 중성색(보라)+붉은기를 동시에 가진 계열이다. 바이올렛도 중성색이다.',
+    '- 순수 레드만 쓰면 → 선명한 빨강. 로즈·와인 방향이 아니다.',
+    '- 바이올렛만 쓰면 → 와인/블랙커런트 방향. 따뜻한 로즈가 아니다.',
+    '- RV + 바이올렛 = 중성색 베이스 위에 적빛이 은은하게 얹히는 구조. 여기에 레드 소량으로 따뜻한 적빛을 보강하면 로즈 방향이 된다.',
+    '- 잔류 브라운이 "로즈브라운"의 브라운 역할을 한다.',
+    '',
+    '■ 난색 색감별 핵심 방향:',
+    '- 선명한 레드: 레드가 메인. 적색 멜라닌과 같은 계열이라 소진 없이 발색.',
+    '- 와인/블랙커런트: 바이올렛이 메인. 깊이감 있는 보라빛.',
+    '- 로즈: 바이올렛이 핵심이고 레드는 보조. RV의 중성색+붉은기 성격을 활용하고, 잔류 브라운이 깊이감 담당.',
+    '- 체리 와인: 레드+바이올렛 조합. 선명함과 깊이감 동시.',
+    '',
+    '══════════════════════════════',
+    'Part E. 조합 참고 맵',
+    '══════════════════════════════',
+    '',
+    '=== [12] 조합→결과 참고 맵 ===',
+    '',
+    '아래는 참고용이다. 반드시 여기서 골라야 하는 게 아니라, 원리로 추론하되 참고.',
+    '',
+    '■ 연노랑~아이보리 베이스 (18~20):',
+    '뉴트럴브라운+애쉬 소량→밀크티 베이지 / 뉴트럴브라운+바이올렛 소량→라벤더 베이지',
+    '애쉬 염모제+그린 컨트롤컬러 소량→매트 베이지 / 애쉬+뉴트럴브라운 소량→애쉬 베이지',
+    '애쉬 단독→애쉬그레이 / 애쉬+블루 소량→실버 애쉬',
+    '바이올렛+애쉬 소량→라벤더애쉬 / 블루 단독→스카이블루',
+    '블루+바이올렛 소량→네이비 / 레드 단독→비비드 레드',
+    '핑크+클리어→파스텔 핑크',
+    '',
+    '■ 노랑 베이스 (16):',
+    '노랑 잔류 → 바이올렛으로 보색 필요.',
+    '애쉬+바이올렛 소량→애쉬그레이 / 바이올렛+애쉬 소량→라벤더(애쉬 수렴)',
+    '블루+바이올렛 소량→네이비',
+    '',
+    '■ 주황~주황노랑 베이스 (12~14):',
+    '한색으로 투명한 색감 불가. 레드→레드브라운 / 핑크→로즈브라운 / 블루→스모키 애쉬브라운 수렴',
+    '',
+    '=== [13] 주의사항 ===',
+    '',
+    '- 라벤더 계열: "바이올렛에 애쉬 소량"이 기본. "애쉬에 바이올렛"은 애쉬그레이 방향.',
+    '- 주황~노랑 베이스에서는 한색 염모제가 메인. 뉴트럴브라운 메인 금지.',
+    '- 밀크티/애쉬 베이지는 warm처럼 보여도 한색 조합 필수.',
+    '- 블론드/백모는 18+ 필수. 버진모 불가능.',
+    '- 톤다운 시에도 언더톤과 목표 명도 고려하여 적절한 명도의 염모제 선택.',
+    '',
+    '══════════════════════════════',
+    'Part F. 출력 규칙',
+    '══════════════════════════════',
+    '',
+    '=== [14] JSON 형식 ===',
+    '',
+    '{"summary":"…","tips":"…","virgin_recipe":null 또는 {"title":"…","text":"…"}}',
+    '',
+    '탈색이 필요한지, 버진모에서 가능한지는 위 색 이론 원리로 네가 판단하라.',
+    '카테고리 분류하지 마라. 원리 기반으로 추론한 결과를 아래 틀에 맞춰 출력하라.',
+    '',
+    '=== [15] summary 규칙 ===',
+    '',
+    '존댓말, 한 줄.',
+    '탈색 필수: "탈색 N회 이상 후({도달 베이스명}) {계열} 염모제와 {계열} 염모제로 착색하세요." 횟수는 [6]번 기준.',
+    '버진모 가능: "고명도 {계열} 염모제와 {계열} 컨트롤컬러로 착색하세요."',
+    '',
+    '=== [16] tips 블록 구조 ===',
+    '',
+    'tips는 존댓말. 블록 사이 \\n\\n.',
+    '',
+    '── 탈색 필수로 판단했을 때 ──',
+    '',
+    '블록① <b>{탈색 N회 이상 후(베이스명)}</b>',
+    '조합이 만드는 결과 색감 1~2문장. 베이스명을 본문에서 다시 반복하지 마라.',
+    '',
+    '블록② <b>{한 단계 아래 레벨(베이스명)}</b>',
+    '"한 단계 아래"는 [5]번 레벨 체계에서 바로 다음 단계. 예: 18→16, 16→12~14. 두 단계 이상 건너뛰지 마라.',
+    '파트A: 블록①의 레시피를 이 베이스에 그대로 적용하면 어떤 방향으로 빠지는지 1문장.',
+    '파트B: 이 베이스에서 조합을 바꾸면 어떤 색감까지 도달 가능한지 제시. "이 베이스에서의 최선입니다"로 마무리.',
+    '',
+    '(참고 예시 — 그대로 출력하지 마라, 사고 방식만 참조)',
+    '예) 라벤더 애쉬:',
+    '블록① 18레벨 — 바이올렛 염모제+애쉬 염모제로 라벤더 애쉬 연출.',
+    '블록② 16레벨 — "그대로 적용하면 바이올렛이 노랑기 보색에 소진되어 애쉬 방향으로 빠집니다. 바이올렛 컨트롤컬러 등으로 비율을 높여 애쉬 라벤더로 연출하는 것이 이 베이스에서의 최선입니다."',
+    '예) 실버 애쉬:',
+    '블록① 18레벨 — 애쉬 염모제+블루 염모제로 실버 애쉬 연출.',
+    '블록② 16레벨 — "그대로 적용하면 블루가 노랑기와 만나 매트 방향으로 빠질 수 있습니다. 블루를 바이올렛으로 바꿔 노랑기를 잡으면서 애쉬 그레이로 연출하는 것이 이 베이스에서의 최선입니다."',
+    '예) 비비드 레드:',
+    '블록① 16레벨 — 레드 염모제 단독으로 선명한 레드 연출.',
+    '블록② 12~14레벨 — "그대로 적용하면 주황기 잔류로 인해 순수한 레드가 아닌 레드오렌지 방향으로 빠집니다. 블루 컨트롤컬러를 소량 믹스하여 주황기를 잡으면서 레드브라운으로 연출하는 것이 이 베이스에서의 최선입니다."',
+    '',
+    '블록③ 실무조언',
+    '이 색감의 핵심 조건 + 버진모에서 왜 안 되는지 + 충분한 탈색이 핵심이라는 결론 2~3문장.',
+    '',
+    'virgin_recipe = {"title":"탈색 없이 최대한 연출하려면","text":"도달 가능 색감명 + 레시피"}',
+    '',
+    '── 버진모 가능으로 판단했을 때 ──',
+    '',
+    '블록① <b>버진모 시술</b>',
+    '고명도 염모제 + 컨트롤컬러 + 산화제(9% 또는 12%) 조합. 색감별 맞춤 레시피.',
+    '',
+    '블록② <b>연모인 경우</b>',
+    '일반 명도 염모제에 컨트롤컬러 조합으로 충분하다는 안내.',
+    '',
+    '블록③ 조명에 따라 버진모에서 연출한 색감인지, 탈색 후 연출한 색감인지 판단이 어려울 수 있어요.',
+    '탈색 1회 후 주황~노랑 베이스에서의 업그레이드 레시피.',
+    '',
+    'virgin_recipe = null',
+    '',
+    '── 탈색모 ──',
+    '',
+    '현재 베이스 기준 레시피. virgin_recipe = null.',
+    '',
+    '=== [17] 공통 규칙 ===',
+    '',
+    '★ 최적 베이스와 리스크 베이스는 색감에 따라 AI가 추론하라. 고정값이 아니다.',
+    '★ 같은 내용을 블록 간에 반복하지 마라.',
+    '★ 블록①에서 베이스명은 헤더(<b>)에만. 본문에서 다시 쓰지 마라.',
+    '★ 버진모 가능 판단 시 산화제(9% 또는 12%)를 반드시 포함.',
+    '★ 결과 색감명에 STEP 1 분석의 elements(매트함, 황금빛 등)를 가져다 쓰지 마라. 조합 계열에서 도출된 색감명을 써라.',
+    '★ 잔류 색소는 노랑기, 주황기, 적색 등 모발 색소 용어로 표현.',
+    '★ 뉴트럴브라운은 염모제 계열이다. "뉴트럴브라운 컨트롤컬러" 금지.',
+    '★ 탈색 후 레시피에서 "[계열] 염모제" 표기 필수. 컨트롤컬러와 혼동 금지.',
+    '★ 수렴 방향은 구체적 색감 방향(예: "애쉬에 가까운 방향")으로. "탁한 ~" 금지.',
+    '★ 레시피는 색감명과 recipe_direction을 중심으로 구성하라. elements는 참고만 하되, elements의 개별 속성을 염모제 조합에 추가 반영하려 하지 마라. 색감명과 recipe_direction에 없는 계열을 elements만 보고 넣지 마라.',
+    '★ 레시피 조합은 최대 3가지(염모제+염모제+컨트롤컬러)를 넘지 마라. 2가지로 충분하면 2가지만 제시하라.',
+    '★ virgin_recipe.text: 존댓말. 도달 가능 색감명 제시. "소량" 쓰지 마. 고명도 염모제 → "13·15레벨" 또는 "밝은 명도"로 표기.',
+    '',
+    '=== [18] 출력 금지 ===',
+    '',
+    '"원샷"/"멜라닌"/"중화"/"깨라"/"눌러"/"탁한"/"탁해진"/숫자 비율→"소량"으로만/"파우더"→"탈색약"/구체적 상품명·넘버링→계열명으로만/원리 나열/교육/**기호/"모발이 건조해~"/"트리트먼트로 보완"/"시술자의 판단에 따라"/"CC"→"컨트롤컬러"'
+  ].join('\n');
+
+  var userMsg = [
+    '현재 모발: ' + baseDesc,
+    'AI 분석 색감: ' + analysis.color_name_ko,
+    '톤: ' + analysis.tone,
+    'hex: ' + (analysis.hex || ''),
+    '색감 속성: ' + (analysis.elements ? analysis.elements.join(', ') : '없음'),
+    '조색 방향: ' + (analysis.recipe_direction || ''),
+    '색감 설명: ' + analysis.description,
+    '',
+    '이 색감을 현재 모발에서 구현하려면 어떻게 해야 하는지 레시피를 만들어줘.'
+  ].join('\n');
+
+  try {
+    var r2 = await fetch(API_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system: step3Prompt,
+        messages:[{role:'user',content:userMsg}]
+      })
+    });
+    var d2 = await r2.json();
+    var t2 = d2.content.map(function(b){return b.text||'';}).join('');
+    t2 = t2.replace(/```json|```/g,'').trim();
+    var recipe = JSON.parse(t2);
+
+    // 레시피 렌더링
+    var summaryHtml = (recipe.summary||'').replace(/\n/g,'<br>');
+    var tipsHtml = (recipe.tips||'').replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
+
+    var recipeContent = '<div class="recipe-summary">' + summaryHtml + '</div>';
+    recipeContent += '<div class="recipe-tips-block">' + tipsHtml + '</div>';
+
+    if(getBaseType()==='natural' && recipe.virgin_recipe){
+      recipeContent += '<div class="recipe-virgin"><strong>' + (recipe.virgin_recipe.title||'탈색 없이 최대한 연출하려면') + '</strong>' + (recipe.virgin_recipe.text||'') + '</div>';
+    }
+
+    recipeEl.innerHTML = recipeContent;
+    recipeEl.style.display = 'block';
+
+    statusEl.textContent = '완료';
+    statusEl.className = 'result-status done';
+  } catch(e){
+    statusEl.textContent = '레시피 실패';
+    statusEl.className = 'result-status error';
+    recipeEl.innerHTML = '<div style="color:#c00;font-size:12px">STEP 3 레시피 실패: '+e.message+'</div>';
+    recipeEl.style.display = 'block';
+  }
+}
+</script>
+</body>
+</html>
