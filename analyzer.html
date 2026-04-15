@@ -394,7 +394,7 @@ function generateRecipe(){
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1000,
+      max_tokens: 4096,
       system: sysPrompt,
       messages: [{ role: 'user', content: userMsg }]
     })
@@ -402,15 +402,19 @@ function generateRecipe(){
   .then(function(r){ return r.json(); })
   .then(function(data){
     try {
+      if(data.error){ console.error('API error:', data.error); showRecipeError(); return; }
       var txt = data.content.map(function(b){ return b.text||''; }).join('');
+      console.log('Recipe raw response:', txt.substring(0, 500));
       txt = txt.replace(/```json|```/g,'').trim();
       var recipe = JSON.parse(txt);
       showRecipe(recipe);
     } catch(e) {
+      console.error('Recipe parse error:', e, 'raw:', data);
       showRecipeError();
     }
   })
   .catch(function(err){
+    console.error('Recipe fetch error:', err);
     showRecipeError();
   });
 }
