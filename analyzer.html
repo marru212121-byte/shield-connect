@@ -402,20 +402,22 @@ function generateRecipe(){
   .then(function(r){ return r.json(); })
   .then(function(data){
     try {
-      if(data.error){ console.error('API error:', data.error); showRecipeError(); return; }
+      if(data.error){ showRecipeError('API 오류: ' + JSON.stringify(data.error)); return; }
+      if(!data.content){ showRecipeError('응답에 content가 없음: ' + JSON.stringify(data).substring(0,300)); return; }
       var txt = data.content.map(function(b){ return b.text||''; }).join('');
-      console.log('Recipe raw response:', txt.substring(0, 500));
+      if(!txt.trim()){ showRecipeError('응답 텍스트가 비어있음. stop_reason: ' + (data.stop_reason||'없음')); return; }
       txt = txt.replace(/```json|```/g,'').trim();
-      var recipe = JSON.parse(txt);
+      // JSON 객체 추출 (모델이 앞뒤에 텍스트를 붙일 경우 대비)
+      var jsonMatch = txt.match(/\{[\s\S]*\}/);
+      if(!jsonMatch){ showRecipeError('JSON을 찾을 수 없음. 응답 앞부분: ' + txt.substring(0,200)); return; }
+      var recipe = JSON.parse(jsonMatch[0]);
       showRecipe(recipe);
     } catch(e) {
-      console.error('Recipe parse error:', e, 'raw:', data);
-      showRecipeError();
+      showRecipeError('파싱 오류: ' + e.message + ' / 응답: ' + JSON.stringify(data).substring(0,300));
     }
   })
   .catch(function(err){
-    console.error('Recipe fetch error:', err);
-    showRecipeError();
+    showRecipeError('네트워크 오류: ' + err.message);
   });
 }
 
@@ -465,11 +467,13 @@ function showRecipe(recipe){
   }, 200);
 }
 
-function showRecipeError(){
+function showRecipeError(detail){
   var btn = document.getElementById('recipeBtn');
   btn.disabled = false;
   btn.textContent = '레시피 생성';
-  alert('레시피 생성에 실패했어요. 다시 시도해주세요.');
+  var msg = '레시피 생성에 실패했어요.';
+  if(detail) msg += '\n\n[디버그 정보]\n' + detail;
+  alert(msg);
 }
 
 /* ══════════════════════════════════
