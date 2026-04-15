@@ -256,21 +256,41 @@ function handleUpload(input){
   var file = input.files[0];
   if(!file) return;
 
+  var MAX_SIZE = 800;
+  var QUALITY = 0.8;
+
   var reader = new FileReader();
   reader.onload = function(e){
-    var base64Full = e.target.result;
-    var base64Data = base64Full.split(',')[1];
-    var mediaType = file.type || 'image/jpeg';
+    var img = new Image();
+    img.onload = function(){
+      // 리사이즈 필요 여부 판단
+      var w = img.width, h = img.height;
+      if(w > MAX_SIZE || h > MAX_SIZE){
+        if(w > h){ h = Math.round(h * MAX_SIZE / w); w = MAX_SIZE; }
+        else { w = Math.round(w * MAX_SIZE / h); h = MAX_SIZE; }
+      }
 
-    var zone = document.getElementById('uploadZone');
-    zone.classList.add('has-image');
-    zone.innerHTML = '<img class="upload-preview" src="'+base64Full+'" alt="업로드 사진"/>';
-    zone.onclick = null;
+      // canvas로 리사이즈 + JPEG 압축
+      var canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
 
-    ST.imageBase64 = base64Data;
-    ST.imageMediaType = mediaType;
+      var resizedFull = canvas.toDataURL('image/jpeg', QUALITY);
+      var resizedData = resizedFull.split(',')[1];
 
-    analyzeImage(base64Data, mediaType);
+      var zone = document.getElementById('uploadZone');
+      zone.classList.add('has-image');
+      zone.innerHTML = '<img class="upload-preview" src="'+resizedFull+'" alt="업로드 사진"/>';
+      zone.onclick = null;
+
+      ST.imageBase64 = resizedData;
+      ST.imageMediaType = 'image/jpeg';
+
+      analyzeImage(resizedData, 'image/jpeg');
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
