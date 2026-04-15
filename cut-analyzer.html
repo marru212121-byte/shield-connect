@@ -147,17 +147,19 @@ function doAnalyze(b64, mt){
     '  "key_techniques": ["핵심 키워드 태그 3~5개"],',
     '  "perm_info": {',
     '    "has_perm": true/false,',
-    '    "perm_type": "펌 유형 (없으면 null)",',
+    '    "perm_type": "펌 유형 (없으면 null). 예: 다운펌/쉐도우펌/가르마펌/히피펌/바디펌/S컬펌/물결펌/빌드펌/볼륨매직 등",',
     '    "perm_note": "펌이 형태에 미치는 영향 한줄 (없으면 null)"',
     '  },',
+    '',
+    '  ★ perm_info는 반드시 출력. 펌이 없으면 has_perm:false로.',
+    '  ★ 사진에서 웨이브/컬/볼륨 눌림 등이 보이면 펌 접목 여부를 판별해서 has_perm:true로.',
     '  "keywords": [',
     '    {"label":"층 시작점", "value":"예: 크라운 아래 2cm에서 시작, 아래로 갈수록 길어지는 구조"},',
     '    {"label":"무게감", "value":"예: 턱선 아래 3cm 지점에 무게감 집중"},',
     '    {"label":"볼륨 방향", "value":"예: 안쪽으로 감기는 C컬 실루엣, 뿌리 볼륨 살림"},',
     '    {"label":"질감", "value":"예: 모끝 가볍게 텍스처링, 블런트한 커팅라인"},',
     '    {"label":"앞머리", "value":"예: 시스루뱅, 이마 양쪽 1cm 안쪽 소량 삼각섹션, 사이드뱅과 자연스럽게 연결"},',
-    '    {"label":"무게선", "value":"예: 턱선에서 시작해 뒤로 갈수록 올라가는 라인"},',
-    '    {"label":"길이 범위", "value":"예: 앞머리 3cm / 사이드 15cm / 백 25cm"}',
+    '    {"label":"무게선", "value":"예: 턱선에서 시작해 뒤로 갈수록 올라가는 라인"}',
     '  ]',
     '}',
     '',
@@ -222,25 +224,30 @@ function render(r){
     h += '</div>';
   }
 
-  // 펌
-  if(r.perm_info && r.perm_info.has_perm){
-    h += '<div class="r-perm">';
-    h += '<b>펌 접목 · '+(r.perm_info.perm_type||'')+'</b>';
-    if(r.perm_info.perm_note) h += '<span>'+r.perm_info.perm_note+'</span>';
+  // 키워드 리스트 — 핵심
+  h += '<div class="r-keywords">';
+
+  // 펌 유무 (항상 표시)
+  if(r.perm_info){
+    h += '<div class="r-kw-item">';
+    h += '<div class="r-kw-label">펌 유무</div>';
+    if(r.perm_info.has_perm){
+      h += '<div class="r-kw-value" style="color:#7B3F9E">'+(r.perm_info.perm_type||'있음')+(r.perm_info.perm_note?' · '+r.perm_info.perm_note:'')+'</div>';
+    } else {
+      h += '<div class="r-kw-value">없음 (컷트만으로 구성된 스타일)</div>';
+    }
     h += '</div>';
   }
 
-  // 키워드 리스트 — 핵심
   if(r.keywords && r.keywords.length){
-    h += '<div class="r-keywords">';
     r.keywords.forEach(function(kw){
       h += '<div class="r-kw-item">';
       h += '<div class="r-kw-label">'+kw.label+'</div>';
       h += '<div class="r-kw-value">'+kw.value+'</div>';
       h += '</div>';
     });
-    h += '</div>';
   }
+  h += '</div>';
 
   h += '</div>';
   el.innerHTML = h;
