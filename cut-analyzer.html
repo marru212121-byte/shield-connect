@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
-<title>AI 컷트 분석기</title>
+<title>AI 스타일 분석기</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -37,30 +37,36 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 .analyzing .spinner{width:28px;height:28px;border:3px solid #e8e4df;border-top-color:#3D6B4A;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
 .analyzing .txt{font-size:13px;color:#A8A29E}
 
-/* 분석 결과 */
-.result{display:none;margin-top:14px;animation:fadeUp .4s ease}
-.result.show{display:block}
+/* 탭 메뉴 */
+.tab-bar{display:none;margin-top:14px;border-radius:10px;background:#f0ece6;padding:3px;gap:0}
+.tab-bar.show{display:flex}
+.tab-btn{flex:1;padding:9px 0;border:none;background:none;border-radius:8px;font-size:13px;font-weight:700;color:#A8A29E;cursor:pointer;font-family:inherit;transition:all .15s}
+.tab-btn.active{background:#fff;color:#1C1917;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
 
-.r-hero{background:linear-gradient(135deg,#F0F6F2,#E5F0E8);border-radius:14px;padding:16px}
-.r-label{font-size:10px;font-weight:700;color:#3D6B4A;letter-spacing:.5px;margin-bottom:6px}
+/* 결과 영역 */
+.result-area{display:none;margin-top:12px;animation:fadeUp .3s ease}
+.result-area.show{display:block}
+
+.r-hero{border-radius:14px;padding:16px}
+.r-hero.cut{background:linear-gradient(135deg,#F0F6F2,#E5F0E8)}
+.r-hero.dry{background:linear-gradient(135deg,#EEF2F8,#E3EAF4)}
+.r-label{font-size:10px;font-weight:700;letter-spacing:.5px;margin-bottom:6px}
+.r-label.cut{color:#3D6B4A}
+.r-label.dry{color:#4A5D8A}
 .r-title-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}
 .r-name{font-size:19px;font-weight:900;color:#1C1917}
 .r-gender{font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px}
 .r-sil{font-size:12px;color:#6B7B6F;line-height:1.6;margin-bottom:8px}
 .r-desc{font-size:13px;color:#4A5D50;line-height:1.75;margin-bottom:10px}
 .r-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
-.r-tag{font-size:11px;font-weight:600;padding:3px 9px;border-radius:6px;background:#3D6B4A15;color:#3D6B4A}
+.r-tag{font-size:11px;font-weight:600;padding:3px 9px;border-radius:6px}
+.r-tag.cut{background:#3D6B4A15;color:#3D6B4A}
+.r-tag.dry{background:#4A5D8A15;color:#4A5D8A}
 
-/* 펌 */
-.r-perm{padding:10px 12px;border-radius:10px;background:#F5F0FA;border:1px solid #E0D4ED;margin-bottom:10px}
-.r-perm b{font-size:10px;font-weight:700;color:#9B4CB5;display:block;margin-bottom:2px}
-.r-perm span{font-size:12px;color:#6B5B7B;line-height:1.5}
-
-/* 키워드 리스트 — 핵심 */
 .r-keywords{margin-top:12px}
 .r-kw-item{display:flex;gap:8px;padding:9px 0;border-bottom:1px solid #f0ece6}
 .r-kw-item:last-child{border-bottom:none}
-.r-kw-label{font-size:12px;font-weight:800;color:#1C1917;min-width:62px;flex-shrink:0;padding-top:1px}
+.r-kw-label{font-size:12px;font-weight:800;color:#1C1917;min-width:72px;flex-shrink:0;padding-top:1px}
 .r-kw-value{font-size:12.5px;color:#4A5D50;line-height:1.6}
 
 .reset-btn{width:calc(100% - 32px);margin:8px 16px 24px;padding:14px;border-radius:14px;border:1.5px solid #e8e4df;background:#fff;color:#A8A29E;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:none}
@@ -73,20 +79,28 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 <div class="app">
   <div class="page-header">
     <a class="back-btn" href="./index.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></a>
-    <div><h2>AI 컷트 분석기</h2><div class="sub">사진 업로드 → 컷트 구조 분석</div></div>
+    <div><h2>AI 스타일 분석기</h2><div class="sub">사진 업로드 → 컷트 & 드라이 분석</div></div>
   </div>
 
   <div class="card">
-    <div class="card-title">헤어스타일 사진 <span class="badge">STEP 1</span></div>
+    <div class="card-title">헤어스타일 사진 <span class="badge">분석</span></div>
     <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
       <div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div>
-      <div class="txt">원하는 헤어 컷트 사진을<br><b>탭하여 업로드</b>해주세요</div>
+      <div class="txt">원하는 헤어스타일 사진을<br><b>탭하여 업로드</b>해주세요</div>
     </div>
     <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleUpload(this)"/>
-    <div class="analyzing" id="analyzing"><div class="spinner"></div><div class="txt">컷트 구조를 분석하고 있어요...</div></div>
+    <div class="analyzing" id="analyzing"><div class="spinner"></div><div class="txt">스타일을 분석하고 있어요...</div></div>
 
-    <!-- 분석 결과: 이 카드 안에 전부 -->
-    <div class="result" id="result"></div>
+    <!-- 탭 -->
+    <div class="tab-bar" id="tabBar">
+      <button class="tab-btn active" id="tabCut" onclick="switchTab('cut')">컷트 분석</button>
+      <button class="tab-btn" id="tabDry" onclick="switchTab('dry')">드라이 분석</button>
+    </div>
+
+    <!-- 컷트 결과 -->
+    <div class="result-area" id="resultCut"></div>
+    <!-- 드라이 결과 -->
+    <div class="result-area" id="resultDry"></div>
   </div>
 
   <button class="reset-btn" id="resetBtn" onclick="resetAll()">처음부터 다시하기</button>
@@ -112,75 +126,98 @@ function handleUpload(input){
 
 function doAnalyze(b64, mt){
   var ld = document.getElementById('analyzing');
-  var result = document.getElementById('result');
-  result.classList.remove('show'); result.innerHTML=''; ld.classList.add('show');
+  document.getElementById('resultCut').classList.remove('show');
+  document.getElementById('resultDry').classList.remove('show');
+  document.getElementById('tabBar').classList.remove('show');
+  ld.classList.add('show');
 
   var sp = [
-    '너는 대한민국 살롱 현장 20년차 헤어 컷트 구조 분석 전문가이자 교육자.',
-    '사진 속 헤어스타일의 컷트 구조를 역공학 분석해.',
+    '너는 대한민국 살롱 현장 20년차 헤어 전문가이자 교육자.',
+    '사진 속 헤어스타일을 보고 2가지를 동시에 분석해:',
+    '1) 컷트 구조 분석 — 이 스타일의 커팅 구조를 역공학 분석',
+    '2) 드라이 분석 — 이 스타일을 완성하기 위한 드라이 방향 분석',
     '',
     '■ 성별 자동 판별 (남성/여성)',
     '■ 시술각은 숫자°형태',
-    '■ 금지: 컬러/염색, 스타일링 도구, 브랜드명',
+    '■ 금지: 컬러/염색, 제품 브랜드명',
     '■ 모든 용어는 한글로. 단, 디스커넥션/클리퍼/S컬/C컬 같은 업계 고유 용어만 영어 허용.',
-    '■ 실루엣은 쉽게 풀어서: "U자 라인"이면 → "뒷머리 아랫선이 둥글게 U자로 떨어지는 형태" 처럼.',
-    '■ 섹션 명칭은 쉬운 한글 표현 사용:',
-    '  크라운 → 정수리 뒷부분 / 옥시피탈 → 뒤통수 튀어나온 부분 / 네이프는 그대로 사용 / 프린지 → 앞머리 영역 / 탑 → 정수리',
+    '■ 실루엣은 쉽게 풀어서 설명.',
+    '■ 섹션 명칭은 쉬운 한글:',
+    '  크라운 → 정수리 뒷부분 / 옥시피탈 → 뒤통수 / 네이프는 그대로 / 프린지 → 앞머리 / 탑 → 정수리',
     '',
     '══ 남성 컷트 참고 ══',
-    '- 투블럭: 사이드/뒷목을 클리퍼로 밀고 정수리는 길이 유지. 디스커넥션 라인 위치 핵심.',
-    '- 다운펌/쉐도우펌/가르마펌 접목 시: 컷트 구조와 펌 영향 구분.',
+    '- 투블럭: 사이드/뒷목을 클리퍼로 밀고 정수리는 길이 유지.',
     '- 클리퍼 구간 mm 단위, 페이드 유형(로우/미드/하이/스킨/드롭) 구분.',
     '',
     '══ 여성 컷트 + 펌 접목 참고 ══',
     '- 펌 사진: 웨이브 아래 컷트 구조 역추정.',
     '- 레이어드+펌: 층 시작점이 웨이브 자연스러움에 핵심.',
     '',
+    '══ 남성 드라이/펌 참고 ══',
+    '- 다운펌: 볼륨 눌러 자연스럽게 떨어뜨리는 방향',
+    '- 쉐도우펌: 뿌리 눌림 + 중간부터 자연스러운 결',
+    '- 스왈로우펌: 안팎 번갈아 빠지는 결, 층마다 교차',
+    '- 가르마펌: 가르마 기준 양쪽 대칭, 뿌리 방향 세팅 핵심',
+    '- 베이비펌/뽀글이: 자연건조 or 디퓨저, 뿌리부터 컬, 볼륨 최대',
+    '- 거친 느낌: 자연건조 텍스처 강조, 손으로 흩뿌리듯',
+    '',
     '══ ★★★ 펌 판별 기준 (매우 중요) ★★★ ══',
-    '펌 유형을 함부로 단정하지 마라. 아래 기준으로 신중하게 판별:',
-    '- 히피펌: 뿌리부터 강하고 불규칙한 웨이브, 볼륨감이 전체적으로 큼, 70년대 히피 느낌',
-    '- 바디펌: 모끝 위주 큰 웨이브, 자연스러운 움직임, 볼륨보다는 흐름 중심',
-    '- 물결펌: 전체적으로 일정한 S자 물결 패턴',
-    '- S컬펌: 모끝에 S자 컬이 집중, 안팎으로 번갈아 빠지는 형태',
-    '- 빌드펌: 층 구조 위에 각 층마다 가벼운 웨이브를 얹어 움직임을 만드는 펌',
-    '- 레이어드 + 가벼운 웨이브 = 빌드펌이나 바디펌일 가능성이 높음. 히피펌이 아님.',
-    '- 확실하지 않으면 "웨이브 펌 (가벼운 S컬)" 같이 보수적으로 표현.',
-    '- 단순히 웨이브가 있다고 히피펌으로 단정하지 말 것.',
+    '펌 유형을 함부로 단정하지 마라. 신중하게 판별:',
+    '- 히피펌: 뿌리부터 강하고 불규칙한 웨이브, 전체적으로 큰 볼륨, 70년대 느낌',
+    '- 바디펌: 모끝 위주 큰 웨이브, 자연스러운 흐름',
+    '- 빌드펌: 층마다 가벼운 웨이브를 얹어 움직임',
+    '- S컬펌: 모끝 S자 컬, 안팎 번갈아',
+    '- 레이어드 + 가벼운 웨이브 = 빌드펌이나 바디펌 가능성 높음. 히피펌 아님.',
+    '- 확실하지 않으면 보수적으로 표현.',
     '',
     '★★★ 출력 형식 ★★★',
-    '분석 후 아래 JSON 형식으로만 출력. 마크다운 금지.',
-    '각 키워드 항목의 값은 1줄 이내, 핵심만 간결하게.',
+    'JSON만 출력. 마크다운 금지. 한 번에 컷트+드라이 모두 출력.',
+    '각 키워드 값은 1줄 이내, 핵심만 간결하게.',
     '',
     '{',
     '  "gender": "남성 또는 여성",',
-    '  "style_name": "스타일명 (한글)",',
-    '  "silhouette": "실루엣을 쉽게 풀어서 1~2문장",',
-    '  "description": "스타일 전체 특징 2~3문장",',
-    '  "key_techniques": ["핵심 키워드 태그 3~5개"],',
     '  "perm_info": {',
     '    "has_perm": true/false,',
-    '    "perm_type": "펌 유형 (없으면 null). 예: 다운펌/쉐도우펌/가르마펌/히피펌/바디펌/S컬펌/물결펌/빌드펌/볼륨매직 등",',
-    '    "perm_note": "펌이 형태에 미치는 영향 한줄 (없으면 null)"',
+    '    "perm_type": "펌 유형 (없으면 null)",',
+    '    "perm_note": "펌 영향 한줄 (없으면 null)"',
     '  },',
     '',
-    '  ★ perm_info는 반드시 출력. 펌이 없으면 has_perm:false로.',
-    '  ★ 사진에서 웨이브/컬/볼륨 눌림 등이 보이면 펌 접목 여부를 판별해서 has_perm:true로.',
-    '  "keywords": [',
-    '    {"label":"층 시작점", "value":"예: 정수리 뒷부분 아래 2cm에서 시작, 아래로 갈수록 길어지는 구조"},',
-    '    {"label":"무게감", "value":"예: 턱선 아래 3cm 지점에 무게감 집중"},',
-    '    {"label":"볼륨 방향", "value":"예: 안쪽으로 감기는 C컬 실루엣, 뿌리 볼륨 살림"},',
-    '    {"label":"질감", "value":"예: 모끝 가볍게 텍스처링, 블런트한 커팅라인"},',
-    '    {"label":"앞머리", "value":"예: 시스루뱅, 이마 양쪽 1cm 안쪽 소량 삼각섹션, 사이드뱅과 자연스럽게 연결"},',
-    '    {"label":"무게선", "value":"예: 턱선에서 시작해 뒤로 갈수록 올라가는 라인"}',
-    '  ]',
+    '  "cut": {',
+    '    "style_name": "컷트 스타일명 (한글)",',
+    '    "silhouette": "실루엣 쉽게 풀어서 1~2문장",',
+    '    "description": "컷트 특징 2~3문장",',
+    '    "key_techniques": ["핵심 키워드 3~5개"],',
+    '    "keywords": [',
+    '      {"label":"층 시작점", "value":"예: 정수리 뒷부분 아래 2cm에서 시작"},',
+    '      {"label":"무게감", "value":"예: 턱선 아래 3cm에 무게감 집중"},',
+    '      {"label":"볼륨 방향", "value":"예: 안쪽 C컬 실루엣"},',
+    '      {"label":"질감", "value":"예: 모끝 가볍게 텍스처링"},',
+    '      {"label":"앞머리", "value":"예: 시스루뱅, 소량 삼각섹션, 사이드뱅 연결"},',
+    '      {"label":"무게선", "value":"예: 턱선에서 뒤로 올라가는 라인"}',
+    '    ]',
+    '  },',
+    '',
+    '  "dry": {',
+    '    "style_name": "드라이 스타일명 (한글)",',
+    '    "description": "드라이 방향 특징 2~3문장",',
+    '    "key_techniques": ["핵심 키워드 3~5개"],',
+    '    "keywords": [',
+    '      {"label":"뿌리 볼륨", "value":"예: 정수리 뒷부분 뿌리 세워서 앞쪽으로 넘기며 볼륨"},',
+    '      {"label":"결 방향", "value":"예: 위층은 바깥 웨이브, 아래층은 안쪽 C컬"},',
+    '      {"label":"앞머리", "value":"예: 가르마 기준 양쪽 라운드로 자연스럽게"},',
+    '      {"label":"사이드", "value":"예: 볼 라인에서 안쪽으로 감기는 결"},',
+    '      {"label":"모끝 처리", "value":"예: 안쪽 C컬 마무리"},',
+    '      {"label":"뒤통수", "value":"예: 볼륨 살려 둥근 형태"},',
+    '      {"label":"드라이 포인트", "value":"예: 뿌리 볼륨이 핵심"}',
+    '    ]',
+    '  }',
     '}',
     '',
-    '★ keywords 배열의 label은 위 예시처럼 고정하되, 해당 사항이 없으면 생략 가능.',
-    '★ 남성 투블럭/페이드 시 아래 label 추가 가능:',
-    '  {"label":"클리퍼 구간", "value":"예: 사이드 3mm → 상단 9mm 로우페이드"},',
-    '  {"label":"디스커넥션", "value":"예: 측두점 높이에서 디스커넥션, 탑과 단차 형성"},',
-    '★ value는 반드시 1줄 이내. 핵심 키워드 중심으로 간결하게.',
-    '★ 장문 서술 금지. 디자이너가 한눈에 방향을 잡을 수 있게.'
+    '★ keywords의 label은 예시 기준이되, 해당 없으면 생략.',
+    '★ 남성 컷트 시 추가 가능: 클리퍼 구간 / 디스커넥션',
+    '★ 남성 드라이 시 추가 가능: 가르마 방향 / 정수리 방향 / 텍스처',
+    '★ value는 반드시 1줄 이내.',
+    '★ perm_info는 반드시 출력. 펌 없으면 has_perm:false.'
   ].join('\n');
 
   fetch(API_URL, {
@@ -188,11 +225,11 @@ function doAnalyze(b64, mt){
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({
       model:'claude-sonnet-4-20250514',
-      max_tokens:1500,
+      max_tokens:2000,
       system:sp,
       messages:[{role:'user', content:[
         {type:'image', source:{type:'base64', media_type:mt, data:b64}},
-        {type:'text', text:'이 헤어스타일의 컷트 구조를 분석해줘.'}
+        {type:'text', text:'이 헤어스타일의 컷트 구조와 드라이 방향을 분석해줘.'}
       ]}]
     })
   }).then(function(r){ return r.json() })
@@ -201,83 +238,137 @@ function doAnalyze(b64, mt){
     try {
       var txt = data.content.map(function(b){ return b.text||'' }).join('');
       txt = txt.replace(/```json|```/g,'').trim();
-      render(JSON.parse(txt));
+      var r = JSON.parse(txt);
+      renderCut(r);
+      renderDry(r);
+      document.getElementById('tabBar').classList.add('show');
+      switchTab('cut');
+      document.getElementById('resetBtn').classList.add('show');
     } catch(e) {
-      result.innerHTML='<div class="r-hero"><div class="r-label">분석 실패</div><div class="r-desc">사진을 다시 업로드해주세요.</div></div>';
-      result.classList.add('show');
+      document.getElementById('resultCut').innerHTML='<div class="r-hero cut"><div class="r-label cut">분석 실패</div><div class="r-desc">사진을 다시 업로드해주세요.</div></div>';
+      document.getElementById('resultCut').classList.add('show');
     }
   }).catch(function(){
     ld.classList.remove('show');
-    result.innerHTML='<div class="r-hero"><div class="r-label">연결 오류</div><div class="r-desc">네트워크를 확인 후 다시 시도해주세요.</div></div>';
-    result.classList.add('show');
+    document.getElementById('resultCut').innerHTML='<div class="r-hero cut"><div class="r-label cut">연결 오류</div><div class="r-desc">네트워크를 확인 후 다시 시도해주세요.</div></div>';
+    document.getElementById('resultCut').classList.add('show');
   });
 }
 
-function render(r){
-  var el = document.getElementById('result');
+/* ═══ 탭 전환 ═══ */
+function switchTab(tab){
+  document.getElementById('tabCut').classList.toggle('active', tab==='cut');
+  document.getElementById('tabDry').classList.toggle('active', tab==='dry');
+  document.getElementById('resultCut').classList.toggle('show', tab==='cut');
+  document.getElementById('resultDry').classList.toggle('show', tab==='dry');
+}
+
+/* ═══ 컷트 렌더 ═══ */
+function renderCut(r){
+  var el = document.getElementById('resultCut');
+  var c = r.cut; if(!c) return;
   var h = '';
 
-  // 히어로
-  h += '<div class="r-hero">';
-  h += '<div class="r-label">AI 컷트 구조 분석</div>';
+  h += '<div class="r-hero cut">';
+  h += '<div class="r-label cut">컷트 구조 분석</div>';
   h += '<div class="r-title-row">';
-  h += '<span class="r-name">'+(r.style_name||'')+'</span>';
+  h += '<span class="r-name">'+(c.style_name||'')+'</span>';
   if(r.gender){
     var m = r.gender==='남성';
     h += '<span class="r-gender" style="background:'+(m?'#5BA4D918':'#D95B8F18')+';color:'+(m?'#3A7CAA':'#D95B8F')+'">'+r.gender+'</span>';
   }
   h += '</div>';
-  if(r.silhouette) h += '<div class="r-sil">'+r.silhouette+'</div>';
-  h += '<div class="r-desc">'+(r.description||'')+'</div>';
+  if(c.silhouette) h += '<div class="r-sil">'+c.silhouette+'</div>';
+  h += '<div class="r-desc">'+(c.description||'')+'</div>';
 
-  if(r.key_techniques && r.key_techniques.length){
+  if(c.key_techniques && c.key_techniques.length){
     h += '<div class="r-tags">';
-    r.key_techniques.forEach(function(t){ h += '<span class="r-tag">'+t+'</span>' });
+    c.key_techniques.forEach(function(t){ h += '<span class="r-tag cut">'+t+'</span>' });
     h += '</div>';
   }
 
-  // 키워드 리스트 — 핵심
   h += '<div class="r-keywords">';
-
-  // 펌 유무 (항상 표시)
+  // 펌 유무
   if(r.perm_info){
     h += '<div class="r-kw-item">';
     h += '<div class="r-kw-label">펌 유무</div>';
     if(r.perm_info.has_perm){
       h += '<div class="r-kw-value" style="color:#7B3F9E">'+(r.perm_info.perm_type||'있음')+(r.perm_info.perm_note?' · '+r.perm_info.perm_note:'')+'</div>';
     } else {
-      h += '<div class="r-kw-value">없음 (컷트만으로 구성된 스타일)</div>';
+      h += '<div class="r-kw-value">없음 (컷트만으로 구성)</div>';
     }
     h += '</div>';
   }
-
-  if(r.keywords && r.keywords.length){
-    r.keywords.forEach(function(kw){
-      h += '<div class="r-kw-item">';
-      h += '<div class="r-kw-label">'+kw.label+'</div>';
-      h += '<div class="r-kw-value">'+kw.value+'</div>';
-      h += '</div>';
+  if(c.keywords && c.keywords.length){
+    c.keywords.forEach(function(kw){
+      h += '<div class="r-kw-item"><div class="r-kw-label">'+kw.label+'</div><div class="r-kw-value">'+kw.value+'</div></div>';
     });
   }
-  h += '</div>';
-
-  h += '</div>';
+  h += '</div></div>';
   el.innerHTML = h;
-  el.classList.add('show');
-  document.getElementById('resetBtn').classList.add('show');
 }
 
+/* ═══ 드라이 렌더 ═══ */
+function renderDry(r){
+  var el = document.getElementById('resultDry');
+  var d = r.dry; if(!d) return;
+  var h = '';
+
+  h += '<div class="r-hero dry">';
+  h += '<div class="r-label dry">드라이 분석</div>';
+  h += '<div class="r-title-row">';
+  h += '<span class="r-name">'+(d.style_name||'')+'</span>';
+  if(r.gender){
+    var m = r.gender==='남성';
+    h += '<span class="r-gender" style="background:'+(m?'#5BA4D918':'#D95B8F18')+';color:'+(m?'#3A7CAA':'#D95B8F')+'">'+r.gender+'</span>';
+  }
+  h += '</div>';
+  h += '<div class="r-desc">'+(d.description||'')+'</div>';
+
+  if(d.key_techniques && d.key_techniques.length){
+    h += '<div class="r-tags">';
+    d.key_techniques.forEach(function(t){ h += '<span class="r-tag dry">'+t+'</span>' });
+    h += '</div>';
+  }
+
+  h += '<div class="r-keywords">';
+  // 펌 유무
+  if(r.perm_info){
+    h += '<div class="r-kw-item">';
+    h += '<div class="r-kw-label">펌 유무</div>';
+    if(r.perm_info.has_perm){
+      h += '<div class="r-kw-value" style="color:#7B3F9E">'+(r.perm_info.perm_type||'있음')+(r.perm_info.perm_note?' · '+r.perm_info.perm_note:'')+'</div>';
+    } else {
+      h += '<div class="r-kw-value">없음 (드라이만으로 연출)</div>';
+    }
+    h += '</div>';
+  }
+  if(d.keywords && d.keywords.length){
+    d.keywords.forEach(function(kw){
+      h += '<div class="r-kw-item"><div class="r-kw-label">'+kw.label+'</div><div class="r-kw-value">'+kw.value+'</div></div>';
+    });
+  }
+  h += '</div></div>';
+  el.innerHTML = h;
+}
+
+/* ═══ 리셋 ═══ */
 function resetAll(){
   var zone = document.getElementById('uploadZone');
   zone.classList.remove('has-image');
-  zone.innerHTML = '<div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div><div class="txt">원하는 헤어 컷트 사진을<br><b>탭하여 업로드</b>해주세요</div>';
+  zone.innerHTML = '<div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div><div class="txt">원하는 헤어스타일 사진을<br><b>탭하여 업로드</b>해주세요</div>';
   zone.onclick = function(){ document.getElementById('fileInput').click() };
   var old = document.getElementById('fileInput'), nw = document.createElement('input');
   nw.type='file'; nw.id='fileInput'; nw.accept='image/*'; nw.style.display='none';
   nw.onchange = function(ev){ handleUpload(ev.target) };
   old.parentNode.replaceChild(nw, old);
-  document.getElementById('result').classList.remove('show');
-  document.getElementById('result').innerHTML = '';
+  document.getElementById('resultCut').classList.remove('show');
+  document.getElementById('resultCut').innerHTML='';
+  document.getElementById('resultDry').classList.remove('show');
+  document.getElementById('resultDry').innerHTML='';
+  document.getElementById('tabBar').classList.remove('show');
+  document.getElementById('tabCut').classList.add('active');
+  document.getElementById('tabDry').classList.remove('active');
   document.getElementById('analyzing').classList.remove('show');
   document.getElementById('resetBtn').classList.remove('show');
   window.scrollTo({top:0, behavior:'smooth'});
