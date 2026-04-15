@@ -13,15 +13,18 @@ html,body{font-family:'Noto Sans KR',sans-serif;background:#FAFAF7;color:#1C1917
 input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-family:inherit}
 .app{width:100%;max-width:430px;margin:0 auto;min-height:100dvh;background:#FAFAF7}
 @media(min-width:431px){.app{border-left:1px solid #e8e4df;border-right:1px solid #e8e4df}}
+
 .page-header{display:flex;align-items:center;gap:12px;padding:14px 16px;position:sticky;top:0;z-index:100;background:rgba(250,250,247,0.92);backdrop-filter:blur(12px);border-bottom:1px solid #e8e4df}
 .back-btn{width:34px;height:34px;border-radius:12px;border:1.5px solid #e8e4df;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;text-decoration:none}
 .back-btn svg{color:#A8A29E}
 .page-header h2{font-size:16px;font-weight:800;margin:0}
 .page-header .sub{font-size:11px;color:#A8A29E;margin-top:2px}
+
 .card{background:#fff;border-radius:16px;border:1.5px solid #e8e4df;padding:20px;margin:0 16px 12px}
 .card-title{font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px}
 .badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px}
 .badge-step{background:#3D6B4A18;color:#3D6B4A}
+
 .upload-zone{border:2px dashed #d5cfc7;border-radius:14px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:#FAF8F4}
 .upload-zone:active{border-color:#3D6B4A}
 .upload-zone.has-image{border:none;padding:0;background:none}
@@ -29,70 +32,62 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 .upload-zone .txt{font-size:13px;color:#A8A29E;line-height:1.6}
 .upload-zone .txt b{color:#3D6B4A;font-weight:600}
 .upload-preview{width:100%;border-radius:14px;display:block;object-fit:cover;max-height:280px}
+
 .analyzing{text-align:center;padding:24px;display:none}
 .analyzing.show{display:block}
 .analyzing .spinner{width:28px;height:28px;border:3px solid #e8e4df;border-top-color:#3D6B4A;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
 .analyzing .txt{font-size:13px;color:#A8A29E}
 
-/* ══ 분석 결과 영역 ══ */
-.analysis-result{display:none;animation:fadeUp .4s ease}
-.analysis-result.show{display:block}
+.analysis-box{display:none;margin-top:14px;animation:fadeUp .4s ease}
+.analysis-box.show{display:block}
 
-.result-hero{background:linear-gradient(135deg,#F0F6F2,#E5F0E8);border-radius:14px;padding:16px;margin-top:12px}
-.result-label{font-size:10px;font-weight:700;color:#3D6B4A;letter-spacing:.5px;margin-bottom:8px}
-.result-style-name{font-size:20px;font-weight:900;margin-bottom:4px;color:#1C1917}
-.result-silhouette{font-size:12px;color:#6B7B6F;margin-bottom:6px;line-height:1.5}
-.result-desc{font-size:13px;color:#4A5D50;line-height:1.7}
-.result-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
-.result-tag{font-size:11px;font-weight:600;padding:3px 9px;border-radius:6px;background:#3D6B4A15;color:#3D6B4A}
+.a-hero{background:linear-gradient(135deg,#F0F6F2,#E5F0E8);border-radius:14px;padding:16px;margin-bottom:12px}
+.a-label{font-size:10px;font-weight:700;color:#3D6B4A;letter-spacing:.5px;margin-bottom:6px}
+.a-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
+.a-name{font-size:19px;font-weight:900;color:#1C1917}
+.a-gender{font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px}
+.a-cat{font-size:11px;color:#888;margin-bottom:6px}
+.a-sil{font-size:12px;color:#6B7B6F;margin-bottom:6px;line-height:1.6}
+.a-desc{font-size:13px;color:#4A5D50;line-height:1.75}
+.a-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.a-tag{font-size:11px;font-weight:600;padding:3px 9px;border-radius:6px;background:#3D6B4A15;color:#3D6B4A}
 
-/* 요약 정보 바 */
-.result-summary-bar{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
-.summary-chip{flex:1;min-width:calc(50% - 3px);padding:8px 10px;border-radius:10px;background:rgba(26,24,20,.04);font-size:11px;line-height:1.5}
-.summary-chip .chip-label{font-weight:700;color:#1A1814;display:block;margin-bottom:2px;font-size:10px;letter-spacing:.3px}
-.summary-chip .chip-value{color:#555}
+.a-perm{margin-top:10px;padding:10px 12px;border-radius:10px;background:#F5F0FA;border:1px solid #E0D4ED}
+.a-perm-label{font-size:10px;font-weight:700;color:#9B4CB5;margin-bottom:3px}
+.a-perm-type{font-size:13px;font-weight:700;color:#7B3F9E;margin-bottom:2px}
+.a-perm-desc{font-size:12px;color:#6B5B7B;line-height:1.6}
 
-/* 섹션별 디테일 카드 */
-.section-detail-card{margin:0 16px 10px;background:#fff;border-radius:14px;border:1.5px solid #e8e4df;overflow:hidden;animation:fadeUp .4s ease}
-.section-detail-header{display:flex;align-items:center;gap:8px;padding:14px 16px 10px;cursor:pointer}
-.section-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.section-name{font-size:14px;font-weight:800;color:#1C1917;flex:1}
-.section-angle-badge{font-size:11px;font-weight:700;padding:2px 10px;border-radius:99px;background:#f0f0ec;color:#666}
-.section-chevron{width:20px;height:20px;color:#ccc;transition:transform .2s;flex-shrink:0}
-.section-detail-header.open .section-chevron{transform:rotate(180deg)}
+.a-chips{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.a-chip{flex:1;min-width:calc(50% - 3px);padding:8px 10px;border-radius:10px;background:rgba(26,24,20,.04);font-size:11px;line-height:1.5}
+.a-chip b{font-weight:700;color:#1A1814;display:block;margin-bottom:2px;font-size:10px;letter-spacing:.3px}
+.a-chip span{color:#555}
 
-.section-detail-body{padding:0 16px 14px;display:none}
-.section-detail-body.open{display:block;animation:fadeUp .3s ease}
+.a-order{margin-top:10px;padding:10px 12px;border-radius:8px;background:rgba(26,24,20,.04)}
+.a-order-label{font-size:10px;font-weight:700;color:#1A1814;margin-bottom:6px}
+.a-order-flow{display:flex;align-items:center;flex-wrap:wrap;gap:4px}
+.a-order-step{font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;background:#3D6B4A10;color:#3D6B4A}
+.a-order-arrow{font-size:11px;color:#ccc}
 
-/* 키워드 태그 행 */
-.kw-row{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
-.kw-tag{font-size:11px;font-weight:600;padding:4px 10px;border-radius:8px;line-height:1.3}
-.kw-tag.technique{background:#3D6B4A14;color:#3D6B4A}
-.kw-tag.angle{background:#5BA4D918;color:#3A7CAA}
-.kw-tag.slice{background:#C577D918;color:#9B4CB5}
-.kw-tag.guide{background:#E8943D18;color:#C47A2A}
+.a-divider{height:1px;background:#e8e4df;margin:14px 0}
 
-/* 디테일 텍스트 블록 */
-.detail-text-block{background:#F7FAF8;border-radius:10px;border:1px solid #E0EDE4;padding:12px;margin-bottom:8px}
-.detail-text-block:last-child{margin-bottom:0}
-.detail-label{font-size:10px;font-weight:700;color:#3D6B4A;letter-spacing:.3px;margin-bottom:5px;display:flex;align-items:center;gap:4px}
-.detail-label .ico{font-size:12px}
-.detail-text{font-size:13px;color:#4A5D50;line-height:1.8}
-.detail-text b{font-weight:700;color:#3D6B4A}
+.a-sec{margin-bottom:14px}
+.a-sec:last-child{margin-bottom:0}
+.a-sec-head{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.a-sec-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.a-sec-name{font-size:13px;font-weight:800;color:#1C1917}
+.a-sec-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;background:#f0f0ec;color:#666;margin-left:auto}
+.a-sec-kw{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.a-kw{font-size:10px;font-weight:600;padding:3px 8px;border-radius:6px;line-height:1.2}
+.a-kw-tech{background:#3D6B4A14;color:#3D6B4A}
+.a-kw-angle{background:#5BA4D918;color:#3A7CAA}
+.a-kw-slice{background:#C577D918;color:#9B4CB5}
+.a-kw-guide{background:#E8943D18;color:#C47A2A}
+.a-sec-detail{font-size:12.5px;color:#4A5D50;line-height:1.75;padding:10px 12px;background:#F7FAF8;border-radius:10px;border:1px solid #E0EDE4}
+.a-sec-detail b{font-weight:700;color:#3D6B4A}
 
-/* 하단 종합 블록 */
-.total-guide-card{margin:0 16px 10px;background:#fff;border-radius:14px;border:1.5px solid #e8e4df;padding:16px;animation:fadeUp .4s ease}
-.total-title{font-size:13px;font-weight:800;color:#1C1917;margin-bottom:10px;display:flex;align-items:center;gap:6px}
-.total-title .ico{font-size:14px}
-.total-block{background:#F7FAF8;border-radius:10px;border:1px solid #E0EDE4;padding:12px;margin-bottom:8px}
-.total-block:last-child{margin-bottom:0}
-.total-block-title{font-size:11px;font-weight:700;color:#3D6B4A;margin-bottom:5px}
-.total-block-text{font-size:13px;color:#4A5D50;line-height:1.8}
-
-/* 시술순서 플로우 */
-.order-flow{display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-top:6px}
-.order-step{font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;background:#3D6B4A10;color:#3D6B4A}
-.order-arrow{font-size:11px;color:#ccc}
+.a-total{padding:12px;background:#F7FAF8;border-radius:10px;border:1px solid #E0EDE4}
+.a-total-title{font-size:11px;font-weight:700;color:#3D6B4A;margin-bottom:4px}
+.a-total-text{font-size:12.5px;color:#4A5D50;line-height:1.75}
 
 .reset-btn{width:calc(100% - 32px);margin:8px 16px 24px;padding:14px;border-radius:14px;border:1.5px solid #e8e4df;background:#fff;color:#A8A29E;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:none}
 .reset-btn.show{display:block}
@@ -104,46 +99,34 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 <div class="app">
   <div class="page-header">
     <a class="back-btn" href="./index.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></a>
-    <div><h2>AI 컷트 분석기</h2><div class="sub">사진 업로드 → 컷트 구조 디테일 분석</div></div>
+    <div><h2>AI 컷트 분석기</h2><div class="sub">사진 업로드 → 컷트 구조 분석</div></div>
   </div>
 
-  <div class="card" id="step1Card">
-    <div class="card-title">원하는 헤어스타일 사진 <span class="badge badge-step">STEP 1</span></div>
+  <div class="card" id="mainCard">
+    <div class="card-title">헤어스타일 사진 <span class="badge badge-step">분석</span></div>
     <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
       <div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div>
-      <div class="txt">고객이 원하는 헤어 컷트 사진을<br><b>탭하여 업로드</b>해주세요</div>
+      <div class="txt">원하는 헤어 컷트 사진을<br><b>탭하여 업로드</b>해주세요</div>
     </div>
     <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleUpload(this)"/>
     <div class="analyzing" id="analyzing"><div class="spinner"></div><div class="txt">컷트 구조를 분석하고 있어요...</div></div>
-    <div class="analysis-result" id="analysisResult"></div>
+    <div class="analysis-box" id="analysisBox"></div>
   </div>
-
-  <!-- 섹션별 디테일 카드들 (동적 삽입) -->
-  <div id="sectionCards"></div>
-
-  <!-- 종합 가이드 (동적 삽입) -->
-  <div id="totalGuide"></div>
 
   <button class="reset-btn" id="resetBtn" onclick="resetAll()">처음부터 다시하기</button>
   <div style="height:40px"></div>
 </div>
 
 <script>
-var ST = {img64:null, imgType:null, analysis:null};
+var ST = {img64:null, imgType:null};
 var API_URL = '/api/recipe';
 
-var SECTIONS = {
-  top:      {name:'탑(Top)',       color:'#E85D5D'},
-  crown:    {name:'크라운(Crown)', color:'#E8943D'},
-  fringe:   {name:'프린지(Fringe)',color:'#5BA4D9'},
-  side:     {name:'사이드(Side)',   color:'#C577D9'},
-  nape:     {name:'네이프(Nape)',   color:'#4DB86A'},
-  back:     {name:'백(Back)',       color:'#D4B84A'},
-  occipital:{name:'옥시피탈(Occipital)',color:'#D97B4A'},
-  bang:     {name:'앞머리(Bang)',   color:'#D95B8F'}
+var SEC_COLORS = {
+  top:'#E85D5D', crown:'#E8943D', fringe:'#5BA4D9', side:'#C577D9',
+  nape:'#4DB86A', back:'#D4B84A', occipital:'#D97B4A', bang:'#D95B8F',
+  undercut:'#7B8CDE', sideburn:'#A0875A', parietal:'#6DBAB0'
 };
 
-/* ═══ UPLOAD + ANALYSIS ═══ */
 function handleUpload(input){
   var file = input.files[0]; if(!file) return;
   var reader = new FileReader();
@@ -161,68 +144,76 @@ function handleUpload(input){
 
 function doAnalyze(b64, mt){
   var ld = document.getElementById('analyzing');
-  var result = document.getElementById('analysisResult');
-  result.classList.remove('show'); ld.classList.add('show');
+  var box = document.getElementById('analysisBox');
+  box.classList.remove('show'); box.innerHTML=''; ld.classList.add('show');
 
   var sp = [
-    '너는 20년차 헤어 컷트 구조 분석 전문가이자 교육자. 사진 속 헤어스타일의 컷트 구조를 역공학 분석하여, 주니어~시니어 디자이너가 이 스타일을 재현할 때 방향을 잡을 수 있도록 상세하게 분석해.',
+    '너는 대한민국 살롱 현장 20년차 헤어 컷트 구조 분석 전문가이자 교육자.',
+    '사진 속 헤어스타일의 컷트 구조를 역공학 분석해.',
+    '주니어~시니어 디자이너가 이 스타일을 재현할 때 방향과 가이드를 잡을 수 있도록 상세하게.',
     '',
-    '■ 분석 가능 섹션: top, crown, fringe, side, nape, back, occipital, bang',
-    '■ angle은 반드시 숫자°형태. 예: "0°","45°","90°","135°"',
+    '■ 성별/스타일 자동 판별: 사진을 보고 남성/여성을 판별하고, 그에 맞는 구조로 분석.',
+    '■ 분석 가능 섹션: top, crown, fringe, side, nape, back, occipital, bang, undercut, sideburn, parietal',
+    '  - 사진에 해당하는 섹션만 선별 (불필요한 섹션 생략)',
+    '■ 시술각은 반드시 숫자°형태',
     '■ 금지: 컬러/염색, 스타일링 도구, 브랜드명',
     '',
-    '★★★ 중요: 각 섹션의 분석은 디자이너가 컷트 방향성과 가이드를 잡을 수 있을 만큼 구체적으로. ★★★',
+    '★★★ 중요 ★★★',
+    '1. 모든 용어는 한글로 표현. 단, 디스커넥션/클리퍼/S컬/C컬 같은 업계 고유 용어만 영어 허용.',
+    '2. 실루엣 설명 시 쉽게 풀어서: 예를 들어 "U자 라인"이면 → "뒷머리 아랫선이 둥글게 U자로 떨어지는 형태" 처럼 어디가 어떤 모양인지 구체적으로 설명.',
+    '3. 각 섹션의 분석은 디자이너가 컷트 방향성과 가이드를 잡을 수 있을 만큼 구체적으로.',
     '',
-    '각 섹션마다 아래 항목을 빠짐없이 분석:',
-    '- technique: 기본 테크닉명 (원렝스/그래주에이션/유니폼레이어/인크리스레이어 등)',
-    '- angle: 시술각 (숫자°)',
-    '- slice: 슬라이스 방향 (수평/수직/대각선/피봇 등)',
-    '- guide_length: 가이드 길이 (cm 또는 기준점 대비 설명)',
-    '- weight: 무게감 위치와 특성 (예: "턱선 아래 1cm에 무게감 집중", "귀 뒤쪽으로 볼륨 분산")',
-    '- starting_point: 층이 시작되는 지점 (예: "G.P에서 시작", "이어투이어 라인 1cm 아래")',
-    '- volume_direction: 볼륨 방향 (예: "안쪽으로 말리는 C컬 실루엣", "바깥으로 퍼지는 형태")',
-    '- connection: 인접 섹션과의 연결 방식 (예: "사이드 층과 자연스럽게 커넥션", "디스커넥션으로 단차 형성")',
-    '- detail: 시술 디테일 설명 3~4문장. 디자이너가 읽고 바로 감을 잡을 수 있게 구체적으로.',
+    '══ 남성 컷트 참고 ══',
+    '- 투블럭컷: 사이드/네이프를 클리퍼로 짧게 밀고 탑~크라운은 길이를 살리는 구조. 연결부(디스커넥션 라인) 위치가 핵심.',
+    '- 쉐도우펌/다운펌/가르마펌 접목 시: 컷트 구조 먼저 분석 → 펌이 형태에 미치는 영향 별도 기술.',
+    '- 클리퍼 구간: mm 단위 (예: "사이드 6mm에서 상단 12mm로 자연스럽게 연결")',
+    '- 페이드 유형: 로우/미드/하이/스킨/드롭 구분',
     '',
-    '앞머리 분석 시 특히 상세하게:',
-    '- 앞머리 유형 (시스루뱅/풀뱅/사이드뱅/커튼뱅/노뱅 등)',
-    '- 섹션 잡는 범위 (예: "이마 양쪽 1cm 안쪽에서 소량 삼각 섹션")',
-    '- 양감 정도 (예: "시스루로 양감 없이 가볍게", "풀뱅으로 두께감 있게")',
-    '- 사이드뱅 유무 및 사이드 층과의 연결성',
+    '══ 여성 컷트 + 펌 접목 참고 ══',
+    '- 펌이 들어간 사진: 웨이브/컬 아래의 컷트 구조를 역추정.',
+    '- 히피펌/바디펌/물결펌/S컬펌/빌드펌 등: 펌 유형 명시 후, 펌 전 컷트 구조 추정.',
+    '- 레이어드+펌: 어디서부터 층이 시작되어야 웨이브가 자연스럽게 떨어지는지.',
+    '- 허쉬컷/울프컷: 강한 디스커넥션과 레이어 위치를 명확히.',
+    '',
+    '각 섹션 분석 항목:',
+    '- technique: 테크닉명 (원렝스/그래주에이션/유니폼레이어/인크리스레이어/클리퍼/테이퍼링/페이드 등)',
+    '- angle: 시술각(숫자°) 또는 클리퍼 mm',
+    '- slice: 슬라이스 방향',
+    '- guide_length: 가이드 길이 (cm 또는 기준점 대비)',
+    '- detail: 종합 설명 4~6문장. 아래 내용을 자연스럽게 녹여서 한 덩어리로 서술:',
+    '  · 층이 어디서 시작되는지 (시작점)',
+    '  · 무게감이 어디에 몰리는지',
+    '  · 볼륨 방향 (안쪽/바깥쪽/눌림 등)',
+    '  · 인접 섹션과의 연결 방식',
+    '  · 앞머리가 있으면: 유형, 섹션 잡는 범위, 양감, 사이드뱅 유무와 사이드 층 연결성',
     '',
     'JSON만 출력 (마크다운 금지):',
     '{',
-    '  "style_name": "스타일명 (한국어)",',
-    '  "style_category": "카테고리 (보브/레이어드/숏컷/미디엄/롱 등)",',
-    '  "overall_silhouette": "전체 실루엣 한줄 (예: A라인 보브, 라운드 레이어드 등)",',
-    '  "description": "스타일 특징 요약 3~4문장. 전체적인 형태감, 무게감 분포, 움직임의 방향성을 포함.",',
-    '  "key_techniques": ["핵심 테크닉 키워드 배열"],',
-    '  "weight_line": "전체 무게선 위치와 흐름 설명 (예: 턱선에서 시작하여 백 쪽으로 올라가는 V라인)",',
-    '  "overall_length_range": "전체 길이 범위 (예: 앞 15cm ~ 뒤 25cm)",',
-    '  "cut_order": ["시술 추천 순서 배열"],',
+    '  "gender": "남성 또는 여성",',
+    '  "style_name": "스타일명 (한글)",',
+    '  "style_category": "분류",',
+    '  "silhouette": "실루엣을 쉽게 풀어서 설명. 어디가 어떤 형태인지 구체적으로. 1~2문장.",',
+    '  "description": "스타일 전체 특징 3~4문장. 형태감, 무게감 분포, 움직임 방향 포함.",',
+    '  "key_techniques": ["핵심 키워드"],',
+    '  "perm_info": {',
+    '    "has_perm": true/false,',
+    '    "perm_type": "펌 유형 (없으면 null)",',
+    '    "perm_influence": "펌이 컷트 형태에 미치는 영향 (없으면 null)"',
+    '  },',
+    '  "weight_line": "무게선 위치와 흐름 설명",',
+    '  "length_range": "전체 길이 범위",',
+    '  "cut_order": ["시술 순서"],',
     '  "sections": {',
     '    "섹션키": {',
-    '      "technique": "테크닉명",',
-    '      "angle": "숫자°",',
-    '      "slice": "슬라이스 방향",',
-    '      "guide_length": "가이드 길이",',
-    '      "weight": "무게감 위치/특성",',
-    '      "starting_point": "층 시작점",',
-    '      "volume_direction": "볼륨 방향",',
-    '      "connection": "인접 섹션 연결",',
-    '      "detail": "상세 시술 설명 3~4문장"',
+    '      "name": "섹션 한글명",',
+    '      "technique": "테크닉",',
+    '      "angle": "시술각",',
+    '      "slice": "슬라이스",',
+    '      "guide_length": "가이드",',
+    '      "detail": "종합 설명 4~6문장 (시작점, 무게감, 볼륨방향, 연결방식을 녹여서)"',
     '    }',
     '  },',
-    '  "bang_info": {',
-    '    "type": "앞머리 유형",',
-    '    "section_range": "섹션 잡는 범위",',
-    '    "volume": "양감 정도",',
-    '    "side_bang": "사이드뱅 유무 및 연결성",',
-    '    "detail": "앞머리 상세 설명 2~3문장"',
-    '  },',
-    '  "overall_connection": "전체 섹션 간 연결/디스커넥션 흐름 설명 2~3문장",',
-    '  "texture_note": "질감/텍스처 특성 (예: 모끝 가벼움, 블런트 느낌 등) 2~3문장",',
-    '  "designer_tip": "이 스타일 재현 시 핵심 포인트 2~3문장"',
+    '  "overall_note": "전체 섹션 연결 흐름 + 질감 특성 + 재현 핵심 포인트를 합쳐서 3~5문장으로."',
     '}'
   ].join('\n');
 
@@ -235,7 +226,7 @@ function doAnalyze(b64, mt){
       system:sp,
       messages:[{role:'user', content:[
         {type:'image', source:{type:'base64', media_type:mt, data:b64}},
-        {type:'text', text:'이 헤어스타일의 컷트 구조를 디자이너 관점에서 상세하게 분석해줘.'}
+        {type:'text', text:'이 헤어스타일의 컷트 구조를 분석해줘.'}
       ]}]
     })
   }).then(function(r){ return r.json() })
@@ -244,203 +235,136 @@ function doAnalyze(b64, mt){
     try {
       var txt = data.content.map(function(b){ return b.text||'' }).join('');
       txt = txt.replace(/```json|```/g,'').trim();
-      ST.analysis = JSON.parse(txt);
-      renderDetailedAnalysis(ST.analysis);
+      renderAnalysis(JSON.parse(txt));
     } catch(e) {
-      result.innerHTML = '<div class="result-hero"><div class="result-label">분석 실패</div><div class="result-desc">사진을 다시 업로드해주세요.</div></div>';
-      result.classList.add('show');
+      box.innerHTML='<div class="a-hero"><div class="a-label">분석 실패</div><div class="a-desc">사진을 다시 업로드해주세요.</div></div>';
+      box.classList.add('show');
     }
   }).catch(function(){
     ld.classList.remove('show');
-    result.innerHTML = '<div class="result-hero"><div class="result-label">연결 오류</div><div class="result-desc">네트워크를 확인 후 다시 시도해주세요.</div></div>';
-    result.classList.add('show');
+    box.innerHTML='<div class="a-hero"><div class="a-label">연결 오류</div><div class="a-desc">네트워크를 확인 후 다시 시도해주세요.</div></div>';
+    box.classList.add('show');
   });
 }
 
-/* ═══ 상세 분석 결과 렌더링 ═══ */
-function renderDetailedAnalysis(r) {
-  // ── 상단 히어로 영역 ──
-  var result = document.getElementById('analysisResult');
+function renderAnalysis(r){
+  var box = document.getElementById('analysisBox');
   var h = '';
-  h += '<div class="result-hero">';
-  h += '<div class="result-label">AI 컷트 구조 분석</div>';
-  h += '<div class="result-style-name">' + (r.style_name||'') + '</div>';
-  h += '<div class="result-silhouette">' + (r.overall_silhouette||'') + '</div>';
-  h += '<div class="result-desc">' + (r.description||'') + '</div>';
-  if(r.key_techniques && r.key_techniques.length){
-    h += '<div class="result-tags">';
-    r.key_techniques.forEach(function(t){ h += '<span class="result-tag">'+t+'</span>' });
-    h += '</div>';
-  }
-  // 요약 칩들
-  h += '<div class="result-summary-bar">';
-  if(r.weight_line){
-    h += '<div class="summary-chip"><span class="chip-label">무게선</span><span class="chip-value">'+r.weight_line+'</span></div>';
-  }
-  if(r.overall_length_range){
-    h += '<div class="summary-chip"><span class="chip-label">길이 범위</span><span class="chip-value">'+r.overall_length_range+'</span></div>';
+
+  // ── 히어로 ──
+  h += '<div class="a-hero">';
+  h += '<div class="a-label">AI 컷트 구조 분석</div>';
+  h += '<div class="a-row">';
+  h += '<span class="a-name">'+(r.style_name||'')+'</span>';
+  if(r.gender){
+    var isM = r.gender==='남성';
+    h += '<span class="a-gender" style="background:'+(isM?'#5BA4D918':'#D95B8F18')+';color:'+(isM?'#3A7CAA':'#D95B8F')+'">'+r.gender+'</span>';
   }
   h += '</div>';
+  if(r.style_category) h += '<div class="a-cat">'+r.style_category+'</div>';
+  if(r.silhouette) h += '<div class="a-sil">'+r.silhouette+'</div>';
+  h += '<div class="a-desc">'+(r.description||'')+'</div>';
 
-  // 시술 순서 플로우
+  if(r.key_techniques && r.key_techniques.length){
+    h += '<div class="a-tags">';
+    r.key_techniques.forEach(function(t){ h += '<span class="a-tag">'+t+'</span>' });
+    h += '</div>';
+  }
+
+  if(r.perm_info && r.perm_info.has_perm){
+    h += '<div class="a-perm">';
+    h += '<div class="a-perm-label">펌 접목</div>';
+    if(r.perm_info.perm_type) h += '<div class="a-perm-type">'+r.perm_info.perm_type+'</div>';
+    if(r.perm_info.perm_influence) h += '<div class="a-perm-desc">'+r.perm_info.perm_influence+'</div>';
+    h += '</div>';
+  }
+
+  if(r.weight_line || r.length_range){
+    h += '<div class="a-chips">';
+    if(r.weight_line) h += '<div class="a-chip"><b>무게선</b><span>'+r.weight_line+'</span></div>';
+    if(r.length_range) h += '<div class="a-chip"><b>길이 범위</b><span>'+r.length_range+'</span></div>';
+    h += '</div>';
+  }
+
   if(r.cut_order && r.cut_order.length){
-    h += '<div style="margin-top:10px;padding:10px 12px;border-radius:8px;background:rgba(26,24,20,.04)">';
-    h += '<div style="font-size:10px;font-weight:700;color:#1A1814;margin-bottom:6px">추천 시술 순서</div>';
-    h += '<div class="order-flow">';
-    r.cut_order.forEach(function(step, i){
-      if(i > 0) h += '<span class="order-arrow">→</span>';
-      h += '<span class="order-step">'+step+'</span>';
+    h += '<div class="a-order"><div class="a-order-label">추천 시술 순서</div><div class="a-order-flow">';
+    r.cut_order.forEach(function(s,i){
+      if(i>0) h += '<span class="a-order-arrow">→</span>';
+      h += '<span class="a-order-step">'+s+'</span>';
     });
     h += '</div></div>';
   }
   h += '</div>';
-  result.innerHTML = h;
-  result.classList.add('show');
 
-  // ── 앞머리 정보 카드 ──
-  var cardsHtml = '';
-  if(r.bang_info && r.bang_info.type && r.bang_info.type !== '노뱅' && r.bang_info.type !== '없음'){
-    var bi = r.bang_info;
-    cardsHtml += '<div class="section-detail-card" style="animation-delay:.1s">';
-    cardsHtml += '<div class="section-detail-header open" onclick="toggleSection(this)">';
-    cardsHtml += '<span class="section-dot" style="background:#D95B8F"></span>';
-    cardsHtml += '<span class="section-name">앞머리 · '+bi.type+'</span>';
-    cardsHtml += '<svg class="section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>';
-    cardsHtml += '</div>';
-    cardsHtml += '<div class="section-detail-body open">';
-    cardsHtml += '<div class="kw-row">';
-    cardsHtml += '<span class="kw-tag technique">'+bi.type+'</span>';
-    if(bi.volume) cardsHtml += '<span class="kw-tag guide">'+bi.volume+'</span>';
-    cardsHtml += '</div>';
-    if(bi.section_range){
-      cardsHtml += '<div class="detail-text-block"><div class="detail-label"><span class="ico">📐</span> 섹션 범위</div><div class="detail-text">'+bi.section_range+'</div></div>';
-    }
-    if(bi.side_bang){
-      cardsHtml += '<div class="detail-text-block"><div class="detail-label"><span class="ico">🔗</span> 사이드뱅 & 연결</div><div class="detail-text">'+bi.side_bang+'</div></div>';
-    }
-    if(bi.detail){
-      cardsHtml += '<div class="detail-text-block"><div class="detail-label"><span class="ico">✂️</span> 시술 디테일</div><div class="detail-text">'+bi.detail+'</div></div>';
-    }
-    cardsHtml += '</div></div>';
-  }
-
-  // ── 섹션별 디테일 카드 ──
+  // ── 섹션별 분석 (한 카드 안 인라인) ──
   if(r.sections){
-    var order = r.cut_order || Object.keys(r.sections);
-    // cut_order를 섹션 키로 매핑
-    var sectionKeys = Object.keys(r.sections);
-    var orderedKeys = [];
-    order.forEach(function(o){
-      var lc = o.toLowerCase().replace(/\s/g,'');
-      sectionKeys.forEach(function(sk){
-        if(sk.toLowerCase() === lc || (SECTIONS[sk] && SECTIONS[sk].name.replace(/\(.*\)/,'').toLowerCase().indexOf(lc) !== -1)){
-          if(orderedKeys.indexOf(sk)===-1) orderedKeys.push(sk);
-        }
+    var keys = Object.keys(r.sections);
+    if(r.cut_order && r.cut_order.length){
+      var ordered=[];
+      r.cut_order.forEach(function(o){
+        var lc=o.toLowerCase().replace(/\s/g,'');
+        keys.forEach(function(k){
+          if(k.toLowerCase()===lc && ordered.indexOf(k)===-1) ordered.push(k);
+        });
       });
-    });
-    // 남은 키 추가
-    sectionKeys.forEach(function(sk){ if(orderedKeys.indexOf(sk)===-1) orderedKeys.push(sk) });
+      keys.forEach(function(k){ if(ordered.indexOf(k)===-1) ordered.push(k) });
+      keys = ordered;
+    }
 
-    orderedKeys.forEach(function(key, idx){
-      var sec = SECTIONS[key] || {name:key, color:'#888'};
-      var d = r.sections[key];
-      if(!d) return;
-      var isFirst = (idx < 2); // 처음 2개는 열린 상태
+    keys.forEach(function(key){
+      var d = r.sections[key]; if(!d) return;
+      var color = SEC_COLORS[key] || '#888';
+      var name = d.name || key;
 
-      cardsHtml += '<div class="section-detail-card" style="animation-delay:'+(idx*0.08)+'s">';
-      cardsHtml += '<div class="section-detail-header'+(isFirst?' open':'')+'" onclick="toggleSection(this)">';
-      cardsHtml += '<span class="section-dot" style="background:'+sec.color+'"></span>';
-      cardsHtml += '<span class="section-name">'+sec.name+'</span>';
-      if(d.angle) cardsHtml += '<span class="section-angle-badge">'+d.angle+'</span>';
-      cardsHtml += '<svg class="section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>';
-      cardsHtml += '</div>';
+      h += '<div class="a-divider"></div>';
+      h += '<div class="a-sec">';
+      h += '<div class="a-sec-head">';
+      h += '<span class="a-sec-dot" style="background:'+color+'"></span>';
+      h += '<span class="a-sec-name">'+name+'</span>';
+      if(d.angle) h += '<span class="a-sec-badge">'+d.angle+'</span>';
+      h += '</div>';
 
-      cardsHtml += '<div class="section-detail-body'+(isFirst?' open':'')+'">';
+      h += '<div class="a-sec-kw">';
+      if(d.technique) h += '<span class="a-kw a-kw-tech">'+d.technique+'</span>';
+      if(d.angle) h += '<span class="a-kw a-kw-angle">'+d.angle+'</span>';
+      if(d.slice) h += '<span class="a-kw a-kw-slice">'+d.slice+'</span>';
+      if(d.guide_length) h += '<span class="a-kw a-kw-guide">'+d.guide_length+'</span>';
+      h += '</div>';
 
-      // 키워드 태그 행
-      cardsHtml += '<div class="kw-row">';
-      if(d.technique) cardsHtml += '<span class="kw-tag technique">'+d.technique+'</span>';
-      if(d.angle)     cardsHtml += '<span class="kw-tag angle">'+d.angle+'</span>';
-      if(d.slice)     cardsHtml += '<span class="kw-tag slice">'+d.slice+'</span>';
-      if(d.guide_length) cardsHtml += '<span class="kw-tag guide">'+d.guide_length+'</span>';
-      cardsHtml += '</div>';
-
-      // 층 시작점
-      if(d.starting_point){
-        cardsHtml += '<div class="detail-text-block"><div class="detail-label"><span class="ico">📍</span> 층 시작점</div><div class="detail-text">'+d.starting_point+'</div></div>';
-      }
-      // 무게감
-      if(d.weight){
-        cardsHtml += '<div class="detail-text-block"><div class="detail-label"><span class="ico">⚖️</span> 무게감</div><div class="detail-text">'+d.weight+'</div></div>';
-      }
-      // 볼륨 방향
-      if(d.volume_direction){
-        cardsHtml += '<div class="detail-text-block"><div class="detail-label"><span class="ico">💨</span> 볼륨 방향</div><div class="detail-text">'+d.volume_direction+'</div></div>';
-      }
-      // 섹션 연결
-      if(d.connection){
-        cardsHtml += '<div class="detail-text-block"><div class="detail-label"><span class="ico">🔗</span> 인접 섹션 연결</div><div class="detail-text">'+d.connection+'</div></div>';
-      }
-      // 시술 디테일
       if(d.detail){
-        cardsHtml += '<div class="detail-text-block"><div class="detail-label"><span class="ico">✂️</span> 시술 디테일</div><div class="detail-text">'+d.detail+'</div></div>';
+        h += '<div class="a-sec-detail">'+d.detail+'</div>';
       }
-
-      cardsHtml += '</div></div>';
+      h += '</div>';
     });
   }
 
-  document.getElementById('sectionCards').innerHTML = cardsHtml;
-
-  // ── 종합 가이드 영역 ──
-  var totalHtml = '';
-  if(r.overall_connection || r.texture_note || r.designer_tip){
-    totalHtml += '<div class="total-guide-card">';
-    totalHtml += '<div class="total-title"><span class="ico">📋</span> 종합 분석</div>';
-    if(r.overall_connection){
-      totalHtml += '<div class="total-block"><div class="total-block-title">섹션 간 연결 흐름</div><div class="total-block-text">'+r.overall_connection+'</div></div>';
-    }
-    if(r.texture_note){
-      totalHtml += '<div class="total-block"><div class="total-block-title">질감 · 텍스처</div><div class="total-block-text">'+r.texture_note+'</div></div>';
-    }
-    if(r.designer_tip){
-      totalHtml += '<div class="total-block"><div class="total-block-title">디자이너 핵심 포인트</div><div class="total-block-text">'+r.designer_tip+'</div></div>';
-    }
-    totalHtml += '</div>';
+  // ── 종합 ──
+  if(r.overall_note){
+    h += '<div class="a-divider"></div>';
+    h += '<div class="a-total">';
+    h += '<div class="a-total-title">종합 포인트</div>';
+    h += '<div class="a-total-text">'+r.overall_note+'</div>';
+    h += '</div>';
   }
 
-  document.getElementById('totalGuide').innerHTML = totalHtml;
+  box.innerHTML = h;
+  box.classList.add('show');
   document.getElementById('resetBtn').classList.add('show');
-
-  // 스크롤
-  setTimeout(function(){
-    document.getElementById('sectionCards').scrollIntoView({behavior:'smooth', block:'start'});
-  }, 300);
 }
 
-/* 섹션 아코디언 토글 */
-function toggleSection(header){
-  header.classList.toggle('open');
-  var body = header.nextElementSibling;
-  body.classList.toggle('open');
-}
-
-/* ═══ RESET ═══ */
 function resetAll(){
-  ST = {img64:null, imgType:null, analysis:null};
+  ST = {img64:null, imgType:null};
   var zone = document.getElementById('uploadZone');
   zone.classList.remove('has-image');
-  zone.innerHTML = '<div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div><div class="txt">고객이 원하는 헤어 컷트 사진을<br><b>탭하여 업로드</b>해주세요</div>';
+  zone.innerHTML = '<div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div><div class="txt">원하는 헤어 컷트 사진을<br><b>탭하여 업로드</b>해주세요</div>';
   zone.onclick = function(){ document.getElementById('fileInput').click() };
   var old = document.getElementById('fileInput'), nw = document.createElement('input');
   nw.type='file'; nw.id='fileInput'; nw.accept='image/*'; nw.style.display='none';
   nw.onchange = function(ev){ handleUpload(ev.target) };
   old.parentNode.replaceChild(nw, old);
-  document.getElementById('analysisResult').classList.remove('show');
-  document.getElementById('analysisResult').innerHTML = '';
+  document.getElementById('analysisBox').classList.remove('show');
+  document.getElementById('analysisBox').innerHTML = '';
   document.getElementById('analyzing').classList.remove('show');
-  document.getElementById('sectionCards').innerHTML = '';
-  document.getElementById('totalGuide').innerHTML = '';
   document.getElementById('resetBtn').classList.remove('show');
   window.scrollTo({top:0, behavior:'smooth'});
 }
