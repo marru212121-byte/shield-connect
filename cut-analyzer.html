@@ -153,6 +153,25 @@ function doAnalyze(b64, mt){
     '- 펌 사진: 웨이브 아래 컷트 구조 역추정.',
     '- 레이어드+펌: 층 시작점이 웨이브 자연스러움에 핵심.',
     '',
+    '══ ★★★ 앞머리 연결 vs 실제 레이어 구분 (매우 중요) ★★★ ══',
+    '이 둘은 완전히 다른 개념이므로 반드시 구분해서 분석:',
+    '',
+    '1) 앞머리(시스루뱅/커튼뱅) → 사이드뱅 연결:',
+    '   - 앞머리 섹션에서 소량 잡아 사이드로 자연스럽게 길어지며 이어지는 것',
+    '   - 이것은 "앞머리의 연장"이지 사이드 레이어의 시작이 아님',
+    '   - keywords의 "앞머리" 항목에서 다룰 것',
+    '',
+    '2) 실제 사이드/백 레이어 시작점:',
+    '   - 사이드나 백 모발 자체에서 층이 들어가기 시작하는 위치',
+    '   - 보통 턱선/광대/귀 아래/쇄골 등 기준',
+    '   - keywords의 "층 시작점" 항목에서 다룰 것',
+    '',
+    '예시) 시스루뱅 + 사이드뱅이 있고, 실제 사이드 레이어는 턱선 아래에서 시작:',
+    '  → 앞머리: "시스루뱅, 사이드뱅으로 이어지며 얼굴 라인을 감싸는 구조"',
+    '  → 층 시작점: "턱선 아래부터 층이 시작, 사이드뱅과는 별개의 레이어"',
+    '',
+    '★ 사이드뱅이 있다고 해서 사이드 레이어가 위에서 시작된다고 착각하지 말 것.',
+    '',
     '══ 남성 드라이/펌 참고 ══',
     '- 다운펌: 볼륨 눌러 자연스럽게 떨어뜨리는 방향',
     '- 쉐도우펌: 뿌리 눌림 + 중간부터 자연스러운 결',
@@ -188,7 +207,7 @@ function doAnalyze(b64, mt){
     '    "description": "컷트 특징 2~3문장",',
     '    "key_techniques": ["핵심 키워드 3~5개"],',
     '    "keywords": [',
-    '      {"label":"층 시작점", "value":"예: 정수리 뒷부분 아래 2cm에서 시작"},',
+    '      {"label":"층 시작점", "value":"예: 턱선부터 층이 시작되어 위로 갈수록 짧아지는 구조. 모발이 짧아지기 시작하는 위치를 기준으로 표현할 것 (턱선/광대/귀 아래/쇄골 등). 정수리에서 시작 같은 표현 금지."},',
     '      {"label":"무게감", "value":"예: 턱선 아래 3cm에 무게감 집중"},',
     '      {"label":"볼륨 방향", "value":"예: 안쪽 C컬 실루엣"},',
     '      {"label":"질감", "value":"예: 모끝 가볍게 텍스처링"},',
@@ -288,17 +307,6 @@ function renderCut(r){
   }
 
   h += '<div class="r-keywords">';
-  // 펌 유무
-  if(r.perm_info){
-    h += '<div class="r-kw-item">';
-    h += '<div class="r-kw-label">펌 유무</div>';
-    if(r.perm_info.has_perm){
-      h += '<div class="r-kw-value" style="color:#7B3F9E">'+(r.perm_info.perm_type||'있음')+(r.perm_info.perm_note?' · '+r.perm_info.perm_note:'')+'</div>';
-    } else {
-      h += '<div class="r-kw-value">없음 (컷트만으로 구성)</div>';
-    }
-    h += '</div>';
-  }
   if(c.keywords && c.keywords.length){
     c.keywords.forEach(function(kw){
       h += '<div class="r-kw-item"><div class="r-kw-label">'+kw.label+'</div><div class="r-kw-value">'+kw.value+'</div></div>';
