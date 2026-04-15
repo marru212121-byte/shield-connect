@@ -22,7 +22,6 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 .card-title{font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px}
 .badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px}
 .badge-step{background:#3D6B4A18;color:#3D6B4A}
-.badge-view{background:#4A6FA518;color:#4A6FA5}
 .upload-zone{border:2px dashed #d5cfc7;border-radius:14px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:#FAF8F4}
 .upload-zone:active{border-color:#3D6B4A}
 .upload-zone.has-image{border:none;padding:0;background:none}
@@ -44,22 +43,6 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 .analyzing.show{display:block}
 .analyzing .spinner{width:28px;height:28px;border:3px solid #e8e4df;border-top-color:#3D6B4A;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
 .analyzing .txt{font-size:13px;color:#A8A29E}
-.viewer-card{display:none;animation:fadeUp .4s ease}
-.viewer-card.show{display:block}
-.viewer-wrap{background:#F5F3EF;border-radius:14px;overflow:hidden;position:relative;border:1.5px solid #e8e4df}
-.viewer-wrap canvas{display:block;width:100%;height:380px;touch-action:none}
-.section-btns{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px}
-.sec-btn{font-size:11px;font-weight:600;padding:5px 10px;border-radius:8px;border:1.5px solid #e8e4df;background:#fff;cursor:pointer;transition:all .15s;font-family:inherit;display:flex;align-items:center;gap:4px}
-.sec-btn:active{transform:scale(.96)}
-.sec-btn.on{border-color:#3D6B4A;background:#3D6B4A10;color:#3D6B4A}
-.sec-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.sec-detail{margin-top:10px;background:#F7FAF8;border:1px solid #E0EDE4;border-radius:10px;padding:12px;display:none;animation:fadeUp .3s ease}
-.sec-detail.show{display:block}
-.sec-detail-title{font-size:13px;font-weight:700}
-.sec-detail-desc{font-size:12px;color:#6B7B6F;line-height:1.6;margin-top:4px}
-.sec-detail-tech{margin-top:8px;padding:8px 10px;background:#fff;border-radius:8px;border:1px solid #e8e4df}
-.sec-detail-tech-title{font-size:11px;font-weight:700;color:#3D6B4A;margin-bottom:4px}
-.sec-detail-tech-text{font-size:12px;color:#555;line-height:1.6}
 .step2-wrap{display:none;animation:fadeUp .4s ease}
 .step2-wrap.show{display:block}
 .base-option-title{font-size:11px;font-weight:600;color:#A8A29E;margin-bottom:4px;margin-top:8px}
@@ -69,7 +52,7 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 .base-btn.selected{border-color:#3D6B4A;background:#3D6B4A10;box-shadow:0 0 0 1px #3D6B4A}
 .base-btn .label{font-size:13px;font-weight:600}
 .base-btn .desc{font-size:10px;color:#A8A29E;margin-top:3px}
-.recipe-btn{width:calc(100% - 32px);margin:8px 16px 16px;padding:16px;border-radius:14px;border:none;background:#1C1917;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;display:none}
+.recipe-btn{width:calc(100% - 32px);margin:8px 16px 16px;padding:16px;border-radius:14px;border:none;background:#1C1917;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;display:none}
 .recipe-btn.show{display:block;animation:fadeUp .3s ease}
 .recipe-btn:active{transform:scale(.98);opacity:.9}
 .recipe-btn:disabled{opacity:.4;cursor:not-allowed}
@@ -77,15 +60,25 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 .recipe-wrap.show{display:block}
 .recipe-header{background:linear-gradient(135deg,#F0F6F2,#E0EDE4);border-radius:14px;padding:16px;margin-bottom:12px}
 .recipe-from-to{font-size:14px;font-weight:600;line-height:1.7}
-.recipe-body{background:#fff;border-radius:14px;border:1.5px solid #e8e4df;padding:16px}
-.recipe-tips{background:#F5FAF7;border:1px solid #D5E8DA;border-radius:10px;padding:14px}
-.recipe-tips-title{font-size:13px;font-weight:700;color:#3D6B4A;margin-bottom:6px}
-.recipe-tips-text{font-size:13px;color:#4A5D50;line-height:1.9;white-space:pre-line}
-.recipe-tips-text .sec-label{font-size:14px;font-weight:700;color:#1C1917;display:block;margin-top:6px}
 .source-tag{display:inline-block;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;margin-bottom:8px;background:#3D6B4A18;color:#3D6B4A}
+
+/* 섹션 가이드 블록 */
+.sec-guide-block{margin-bottom:16px;animation:fadeUp .4s ease}
+.sec-guide-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.sec-guide-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.sec-guide-name{font-size:14px;font-weight:800;color:#1C1917}
+.sec-guide-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;background:#f0f0ec;color:#888}
+.sec-guide-canvas{width:100%;border-radius:12px;border:1.5px solid #e8e4df;background:#F8F6F2;margin-bottom:8px}
+.sec-guide-text{font-size:13px;color:#4A5D50;line-height:1.8;padding:10px 12px;background:#F7FAF8;border-radius:10px;border:1px solid #E0EDE4}
+.sec-guide-text b{font-weight:700;color:#3D6B4A}
+
+/* 기타 블록 */
+.guide-block{margin-bottom:14px;padding:12px;background:#F7FAF8;border-radius:10px;border:1px solid #E0EDE4}
+.guide-block-title{font-size:13px;font-weight:700;color:#3D6B4A;margin-bottom:6px}
+.guide-block-text{font-size:13px;color:#4A5D50;line-height:1.8}
+
 .reset-btn{width:calc(100% - 32px);margin:8px 16px 24px;padding:14px;border-radius:14px;border:1.5px solid #e8e4df;background:#fff;color:#A8A29E;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:none}
 .reset-btn.show{display:block}
-.reset-btn:active{transform:scale(.98)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
@@ -108,44 +101,42 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
     <div class="analysis-box" id="analysisBox"></div>
   </div>
 
-  <div class="viewer-card" id="viewerCard">
-    <div class="card">
-      <div class="card-title">컷트 도해도 <span class="badge badge-view">DIAGRAM</span></div>
-      <div class="viewer-wrap"><canvas id="headCanvas" width="400" height="380"></canvas></div>
-      <div class="section-btns" id="sectionBtns"></div>
-      <div class="sec-detail" id="secDetail"></div>
-    </div>
-  </div>
-
   <div class="step2-wrap" id="step2Wrap">
     <div class="card">
       <div class="card-title">고객 모발 정보 <span class="badge badge-step">STEP 2</span></div>
       <div class="base-option-title">모질</div>
       <div class="base-btn-row">
-        <button class="base-btn" data-hair="straight" onclick="selectOpt(this,'hair')"><div class="label">직모</div><div class="desc">자연 직모</div></button>
-        <button class="base-btn" data-hair="wavy" onclick="selectOpt(this,'hair')"><div class="label">반곱슬</div><div class="desc">웨이브 있음</div></button>
+        <button class="base-btn" data-hair="straight" onclick="selOpt(this,'hair')"><div class="label">직모</div></button>
+        <button class="base-btn" data-hair="wavy" onclick="selOpt(this,'hair')"><div class="label">반곱슬</div></button>
+        <button class="base-btn" data-hair="curly" onclick="selOpt(this,'hair')"><div class="label">곱슬</div></button>
+        <button class="base-btn" data-hair="coarse" onclick="selOpt(this,'hair')"><div class="label">경모</div></button>
       </div>
-      <div class="base-btn-row" style="margin-top:8px">
-        <button class="base-btn" data-hair="curly" onclick="selectOpt(this,'hair')"><div class="label">곱슬</div><div class="desc">강한 컬</div></button>
-        <button class="base-btn" data-hair="coarse" onclick="selectOpt(this,'hair')"><div class="label">경모</div><div class="desc">굵고 뻣뻣함</div></button>
-      </div>
-      <div class="base-option-title" style="margin-top:16px">모량</div>
+      <div class="base-option-title" style="margin-top:14px">모량</div>
       <div class="base-btn-row">
-        <button class="base-btn" data-vol="thin" onclick="selectOpt(this,'vol')"><div class="label">소량</div></button>
-        <button class="base-btn" data-vol="medium" onclick="selectOpt(this,'vol')"><div class="label">보통</div></button>
-        <button class="base-btn" data-vol="thick" onclick="selectOpt(this,'vol')"><div class="label">다량</div></button>
+        <button class="base-btn" data-vol="thin" onclick="selOpt(this,'vol')"><div class="label">소량</div></button>
+        <button class="base-btn" data-vol="medium" onclick="selOpt(this,'vol')"><div class="label">보통</div></button>
+        <button class="base-btn" data-vol="thick" onclick="selOpt(this,'vol')"><div class="label">다량</div></button>
       </div>
-      <div class="base-option-title" style="margin-top:16px">현재 길이</div>
+      <div class="base-option-title" style="margin-top:14px">현재 길이</div>
       <div class="base-btn-row">
-        <button class="base-btn" data-len="short" onclick="selectOpt(this,'len')"><div class="label">숏</div><div class="desc">귀 위</div></button>
-        <button class="base-btn" data-len="medium" onclick="selectOpt(this,'len')"><div class="label">미디엄</div><div class="desc">어깨선</div></button>
-        <button class="base-btn" data-len="long" onclick="selectOpt(this,'len')"><div class="label">롱</div><div class="desc">어깨 아래</div></button>
+        <button class="base-btn" data-len="short" onclick="selOpt(this,'len')"><div class="label">숏</div></button>
+        <button class="base-btn" data-len="medium" onclick="selOpt(this,'len')"><div class="label">미디엄</div></button>
+        <button class="base-btn" data-len="long" onclick="selOpt(this,'len')"><div class="label">롱</div></button>
       </div>
     </div>
   </div>
 
   <button class="recipe-btn" id="recipeBtn" onclick="generateGuide()" disabled>컷트 가이드 생성</button>
-  <div class="recipe-wrap" id="recipeWrap"><div class="card"><div class="card-title">컷트 가이드 <span class="badge badge-step">STEP 3</span></div><div id="recipeSource"></div><div class="recipe-header" id="recipeHeader"></div><div class="recipe-body" id="recipeBody"></div></div></div>
+
+  <div class="recipe-wrap" id="recipeWrap">
+    <div class="card">
+      <div class="card-title">컷트 가이드 <span class="badge badge-step">STEP 3</span></div>
+      <div id="recipeSource"></div>
+      <div class="recipe-header" id="recipeHeader"></div>
+      <div id="recipeBody"></div>
+    </div>
+  </div>
+
   <button class="reset-btn" id="resetBtn" onclick="resetAll()">처음부터 다시하기</button>
   <div style="height:40px"></div>
 </div>
@@ -153,30 +144,18 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 <script>
 var ST={img64:null,imgType:null,analysis:null,hair:null,vol:null,len:null};
 var API_URL='/api/recipe';
-var hlSections=[],selSection=null;
 
 var SECTIONS={
-  top:{name:'탑(Top)',color:'#E85D5D',desc:'정수리~이마 라인. 볼륨과 방향 결정.'},
-  crown:{name:'크라운(Crown)',color:'#E8943D',desc:'정수리 뒤쪽 소용돌이. 모류의 시작점.'},
-  fringe:{name:'프린지(Fringe)',color:'#5BA4D9',desc:'앞머리 영역. 얼굴 비율과 인상 좌우.'},
-  side:{name:'사이드(Side)',color:'#C577D9',desc:'측두부. 얼굴 너비감 조절.'},
-  nape:{name:'네이프(Nape)',color:'#4DB86A',desc:'후두부 하단. 목선 라인 마감.'},
-  back:{name:'백(Back)',color:'#D4B84A',desc:'후두부 전체. 실루엣의 곡선.'},
-  occipital:{name:'옥시피탈(Occipital)',color:'#D97B4A',desc:'후두골 돌출부. 볼륨 분배 기준점.'}
+  top:{name:'탑',color:'#E85D5D',headAngle:290},
+  crown:{name:'크라운',color:'#E8943D',headAngle:325},
+  fringe:{name:'프린지',color:'#5BA4D9',headAngle:250},
+  side:{name:'사이드',color:'#C577D9',headAngle:225},
+  nape:{name:'네이프',color:'#4DB86A',headAngle:55},
+  back:{name:'백',color:'#D4B84A',headAngle:5},
+  occipital:{name:'옥시피탈',color:'#D97B4A',headAngle:30}
 };
 
-// 두상 위의 섹션 기준점 (측면 뷰 기준, 두상 중심에서의 각도)
-var SEC_ANCHORS={
-  fringe:{angle:250, label:'프린지'},
-  top:{angle:290, label:'탑'},
-  crown:{angle:320, label:'크라운'},
-  back:{angle:350, label:'백'},
-  occipital:{angle:20, label:'옥시피탈'},
-  nape:{angle:50, label:'네이프'},
-  side:{angle:230, label:'사이드'}
-};
-
-/* ═══ UPLOAD ═══ */
+/* ═══ UPLOAD + ANALYSIS ═══ */
 function handleUpload(input){
   var file=input.files[0];if(!file)return;
   var reader=new FileReader();
@@ -187,389 +166,357 @@ function handleUpload(input){
     zone.innerHTML='<img class="upload-preview" src="'+full+'" alt=""/>';
     zone.onclick=null;
     ST.img64=b64;ST.imgType=mt;
-    analyzeImage(b64,mt);
+    doAnalyze(b64,mt);
   };
   reader.readAsDataURL(file);
 }
 
-function analyzeImage(b64,mt){
+function doAnalyze(b64,mt){
   var ld=document.getElementById('analyzing'),box=document.getElementById('analysisBox');
   box.classList.remove('show');ld.classList.add('show');
-  var sysPrompt=[
-    '너는 미용실 헤어 디자이너를 위한 컷트 구조 분석 전문가야.',
-    '사진 속 헤어스타일의 컷트 구조를 역공학 분석해.',
-    '',
-    '■ 두상 섹션: top(탑),crown(크라운),fringe(프린지),side(사이드),nape(네이프),back(백),occipital(옥시피탈)',
-    '',
-    '■ 테크닉: 원렝스(0°)/그래주에이션(~45°)/유니폼레이어(90°)/인크리스레이어(90°초과)/디스커넥션/언더커팅/텍스처라이징/오버다이렉션/블런트컷',
-    '',
+  var sp=[
+    '너는 컷트 구조 분석 전문가. 사진 속 헤어스타일의 컷트 구조를 역공학 분석해.',
+    '■ 섹션: top,crown,fringe,side,nape,back,occipital',
+    '■ angle은 반드시 숫자°형태. 예: "0°","45°","90°","135°"',
     '■ 금지: 컬러/염색, 스타일링, 브랜드명',
-    '',
-    '■ 출력: JSON만. angle 필드는 반드시 숫자+"°" 형태로. 예: "0°","45°","90°","135°"',
-    '{"style_name":"스타일명","style_category":"bob/layered/short/pixie/wolf/hush/shag/long_layer/one_length/other","description":"특징 2~3문장","key_techniques":["테크닉1","테크닉2"],"silhouette":"실루엣 1문장","sections":{"top":{"technique":"테크닉명","angle":"시술각(숫자°)","detail":"설명"},"crown":{...},"fringe":{...},"side":{...},"nape":{...},"back":{...},"occipital":{...}},"cut_order":["순서"],"weight_line":"무게선 위치"}'
+    '■ JSON만 출력:',
+    '{"style_name":"스타일명","style_category":"카테고리","description":"특징 2~3문장","key_techniques":["테크닉"],"silhouette":"실루엣","sections":{"top":{"technique":"테크닉","angle":"숫자°","detail":"설명"},...},"cut_order":["순서"],"weight_line":"무게선"}'
   ].join('\n');
 
   fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,system:sysPrompt,
-      messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mt,data:b64}},{type:'text',text:'이 헤어스타일의 컷트 구조를 역공학 분석해줘.'}]}]})
-  })
-  .then(function(r){return r.json()})
-  .then(function(data){
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,system:sp,
+      messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mt,data:b64}},{type:'text',text:'이 헤어스타일의 컷트 구조를 분석해줘.'}]}]})
+  }).then(function(r){return r.json()}).then(function(data){
     ld.classList.remove('show');
-    try{
-      var txt=data.content.map(function(b){return b.text||''}).join('');
-      txt=txt.replace(/```json|```/g,'').trim();
-      ST.analysis=JSON.parse(txt);
-      showAnalysis(ST.analysis);
+    try{var txt=data.content.map(function(b){return b.text||''}).join('');txt=txt.replace(/```json|```/g,'').trim();
+      ST.analysis=JSON.parse(txt);showAnalysis(ST.analysis);
     }catch(e){box.innerHTML='<div class="analysis-label">분석 실패</div><div class="analysis-desc">사진을 다시 업로드해주세요.</div>';box.classList.add('show');}
-  })
-  .catch(function(){ld.classList.remove('show');box.innerHTML='<div class="analysis-label">연결 오류</div>';box.classList.add('show');});
+  }).catch(function(){ld.classList.remove('show');box.innerHTML='<div class="analysis-label">연결 오류</div>';box.classList.add('show');});
 }
 
 function showAnalysis(r){
   var box=document.getElementById('analysisBox');
-  var h='<div class="analysis-label">AI 컷트 분석 결과</div>';
-  h+='<div class="analysis-style-name">'+r.style_name+'</div>';
-  h+='<div class="analysis-style-sub">'+r.silhouette+'</div>';
-  h+='<div class="analysis-desc">'+r.description+'</div>';
+  var h='<div class="analysis-label">AI 컷트 분석 결과</div><div class="analysis-style-name">'+r.style_name+'</div><div class="analysis-style-sub">'+r.silhouette+'</div><div class="analysis-desc">'+r.description+'</div>';
   if(r.key_techniques&&r.key_techniques.length){h+='<div class="analysis-tags">';r.key_techniques.forEach(function(t){h+='<span class="analysis-tag">'+t+'</span>'});h+='</div>';}
   if(r.weight_line)h+='<div class="analysis-direction"><b>무게선</b> · '+r.weight_line+'</div>';
   if(r.cut_order&&r.cut_order.length)h+='<div class="analysis-direction"><b>시술 순서</b> · '+r.cut_order.join(' → ')+'</div>';
   box.innerHTML=h;box.classList.add('show');
-  hlSections=Object.keys(r.sections||{});
-  setupSectionBtns();
-  document.getElementById('viewerCard').classList.add('show');
-  renderDiagram();
-  setTimeout(function(){document.getElementById('step2Wrap').classList.add('show')},400);
-}
-
-function setupSectionBtns(){
-  var wrap=document.getElementById('sectionBtns'),h='';
-  hlSections.forEach(function(k){var s=SECTIONS[k];if(!s)return;
-    h+='<button class="sec-btn" data-sec="'+k+'" onclick="toggleSection(\''+k+'\')"><span class="sec-dot" style="background:'+s.color+'"></span>'+s.name.split('(')[0]+'</button>';
-  });
-  wrap.innerHTML=h;
-}
-
-function toggleSection(k){
-  var detail=document.getElementById('secDetail');
-  if(selSection===k){selSection=null;detail.classList.remove('show');document.querySelectorAll('.sec-btn').forEach(function(b){b.classList.remove('on')});renderDiagram();return;}
-  selSection=k;
-  document.querySelectorAll('.sec-btn').forEach(function(b){b.classList.toggle('on',b.dataset.sec===k)});
-  renderDiagram();
-  var s=SECTIONS[k],d=ST.analysis.sections[k];
-  if(!d||!s){detail.classList.remove('show');return}
-  detail.innerHTML='<div class="sec-detail-title">'+s.name+'</div><div class="sec-detail-desc">'+s.desc+'</div><div class="sec-detail-tech"><div class="sec-detail-tech-title">'+d.technique+' · '+d.angle+'</div><div class="sec-detail-tech-text">'+d.detail+'</div></div>';
-  detail.classList.add('show');
-}
-
-/* ══════════════════════════════════════
-   도해도 스타일 렌더러 (Canvas 2D)
-   — 두상 측면 + 모발 가닥 + 시술각
-══════════════════════════════════════ */
-function renderDiagram(){
-  var c=document.getElementById('headCanvas');if(!c)return;
-  var ctx=c.getContext('2d'),W=c.width,H=c.height;
-  ctx.clearRect(0,0,W,H);
-
-  // 배경 — 밝은 톤 (도해도 느낌)
-  ctx.fillStyle='#F5F3EF';ctx.fillRect(0,0,W,H);
-
-  var headCx=160, headCy=175, headRx=62, headRy=80;
-
-  // 두상 측면 윤곽 (피부색)
-  ctx.save();
-  drawHeadProfile(ctx,headCx,headCy,headRx,headRy);
-  ctx.restore();
-
-  // 천체축 (수직 기준선)
-  ctx.save();
-  ctx.setLineDash([4,4]);ctx.strokeStyle='rgba(0,0,0,0.15)';ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(headCx,headCy-120);ctx.lineTo(headCx,headCy+130);ctx.stroke();
-  // 수평선
-  ctx.beginPath();ctx.moveTo(headCx-100,headCy);ctx.lineTo(headCx+100,headCy);ctx.stroke();
-  ctx.setLineDash([]);
-  // 각도 레이블
-  ctx.font='600 9px "Noto Sans KR"';ctx.fillStyle='rgba(0,0,0,0.3)';ctx.textAlign='center';
-  ctx.fillText('180°',headCx,headCy-125);
-  ctx.fillText('0°',headCx,headCy+140);
-  ctx.textAlign='left';ctx.fillText('90°',headCx+105,headCy+3);
-  ctx.restore();
-
-  // 섹션별 모발 가닥 그리기
-  var secs=ST.analysis?ST.analysis.sections:{};
-  var secKeys=Object.keys(SEC_ANCHORS);
-
-  secKeys.forEach(function(k){
-    if(!secs[k])return;
-    var anchor=SEC_ANCHORS[k];
-    var secData=secs[k];
-    var isSelected=(selSection===k);
-    var isAny=(!selSection);
-    var show=isSelected||isAny;
-    if(!show)return;
-
-    // 두상 표면 위의 기준점 계산
-    var aRad=anchor.angle*Math.PI/180;
-    var px=headCx+Math.cos(aRad)*(headRx+2);
-    var py=headCy+Math.sin(aRad)*(headRy+2);
-
-    // 시술각 파싱
-    var cutAngle=0;
-    var m=secData.angle.match(/(\d+)/);
-    if(m)cutAngle=parseInt(m[1]);
-
-    // 모발 가닥 방향: 천체축 기준 0°=아래, 90°=수평, 180°=위
-    // 두상 표면의 법선 방향에서 시술각만큼 들어올림
-    var normalAngle=anchor.angle; // 두상 표면 법선
-    var strandLen=isSelected?75:50;
-    var numStrands=isSelected?5:3;
-    var spreadDeg=isSelected?12:8;
-
-    var secColor=SECTIONS[k]?SECTIONS[k].color:'#888';
-    var alpha=isSelected?0.85:(isAny?0.5:0.15);
-
-    // 모발 가닥 그리기
-    for(var i=0;i<numStrands;i++){
-      var offset=(i-(numStrands-1)/2)*spreadDeg;
-      var strandAngle=normalAngle+offset;
-      var sRad=strandAngle*Math.PI/180;
-
-      // 시작점 (두상 표면)
-      var sx=headCx+Math.cos(sRad)*(headRx-2);
-      var sy=headCy+Math.sin(sRad)*(headRy-2);
-
-      // 끝점 (시술각 방향으로 뻗음)
-      var liftRad=(normalAngle)*Math.PI/180;
-      var ex=sx+Math.cos(liftRad)*strandLen;
-      var ey=sy+Math.sin(liftRad)*strandLen;
-
-      ctx.save();
-      ctx.globalAlpha=alpha;
-      ctx.strokeStyle=secColor;
-      ctx.lineWidth=isSelected?2.5:1.8;
-      ctx.lineCap='round';
-
-      // 약간의 곡선으로 자연스러운 모발 표현
-      var cpx=sx+(ex-sx)*0.6+(Math.random()-0.5)*8;
-      var cpy=sy+(ey-sy)*0.6+(Math.random()-0.5)*8;
-
-      ctx.beginPath();
-      ctx.moveTo(sx,sy);
-      ctx.quadraticCurveTo(cpx,cpy,ex,ey);
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    // 선택된 섹션 — 시술각 호(arc) + 각도 표시
-    if(isSelected){
-      drawAngleArc(ctx,px,py,normalAngle,cutAngle,secColor,secData.angle);
-      // 커팅 라인 (가위 위치)
-      drawCutLine(ctx,px,py,normalAngle,strandLen*0.8,secColor);
-    }
-
-    // 섹션 라벨
-    var labelDist=isSelected?strandLen+18:strandLen+12;
-    var lRad=normalAngle*Math.PI/180;
-    var lx=headCx+Math.cos(lRad)*(headRx+labelDist);
-    var ly=headCy+Math.sin(lRad)*(headRy+labelDist);
-
-    ctx.save();
-    ctx.font=(isSelected?'700':'500')+' '+(isSelected?'11':'9')+'px "Noto Sans KR"';
-    ctx.fillStyle=isSelected?secColor:'rgba(0,0,0,0.4)';
-    ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(anchor.label,lx,ly);
-    if(isSelected&&secData.technique){
-      ctx.font='600 9px "Noto Sans KR"';
-      ctx.fillStyle='rgba(0,0,0,0.5)';
-      ctx.fillText(secData.technique,lx,ly+14);
-    }
-    ctx.restore();
-  });
-
-  // 범례 (우하단)
-  if(ST.analysis){
-    ctx.font='700 11px "Noto Sans KR"';ctx.fillStyle='#1C1917';ctx.textAlign='left';
-    ctx.fillText(ST.analysis.style_name||'',W-150,H-40);
-    ctx.font='500 9px "Noto Sans KR"';ctx.fillStyle='#999';
-    ctx.fillText('섹션을 탭하여 상세 보기',W-150,H-24);
-  }
-}
-
-/* 두상 프로필 (측면) */
-function drawHeadProfile(ctx,cx,cy,rx,ry){
-  // 피부색 두상
-  ctx.fillStyle='#F0DCC8';
-  ctx.strokeStyle='#C9A882';
-  ctx.lineWidth=1.5;
-
-  ctx.beginPath();
-  // 이마~정수리
-  ctx.moveTo(cx-30,cy+ry*0.6);
-  ctx.quadraticCurveTo(cx-rx-10,cy-ry*0.3, cx-rx*0.5,cy-ry);
-  // 정수리~크라운
-  ctx.quadraticCurveTo(cx,cy-ry-10, cx+rx*0.5,cy-ry*0.8);
-  // 크라운~옥시피탈
-  ctx.quadraticCurveTo(cx+rx+5,cy-ry*0.3, cx+rx,cy+ry*0.1);
-  // 옥시피탈~네이프
-  ctx.quadraticCurveTo(cx+rx-5,cy+ry*0.6, cx+rx*0.4,cy+ry*0.85);
-  // 네이프~목
-  ctx.quadraticCurveTo(cx+rx*0.2,cy+ry, cx+10,cy+ry+25);
-  // 목
-  ctx.lineTo(cx-15,cy+ry+25);
-  // 턱~코~이마
-  ctx.quadraticCurveTo(cx-35,cy+ry*0.8, cx-40,cy+ry*0.5);
-  ctx.quadraticCurveTo(cx-50,cy+ry*0.2, cx-30,cy+ry*0.6);
-  ctx.closePath();
-  ctx.fill();ctx.stroke();
-
-  // 귀
-  ctx.fillStyle='#EDD5BE';ctx.strokeStyle='#C9A882';
-  ctx.beginPath();
-  ctx.ellipse(cx-rx+8,cy+10,6,12,-0.15,0,Math.PI*2);
-  ctx.fill();ctx.stroke();
-
-  // 눈 (간단)
-  ctx.fillStyle='#8B7355';
-  ctx.beginPath();ctx.ellipse(cx-rx+2,cy-8,4,2.5,0,0,Math.PI*2);ctx.fill();
-
-  // 코 라인
-  ctx.strokeStyle='#C9A882';ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(cx-rx-3,cy+2);ctx.quadraticCurveTo(cx-rx-8,cy+15,cx-rx+2,cy+18);ctx.stroke();
-
-  // 입
-  ctx.beginPath();ctx.moveTo(cx-rx+5,cy+30);ctx.quadraticCurveTo(cx-rx-2,cy+32,cx-rx+8,cy+32);ctx.stroke();
-
-  // 섹션 분리선 (헤어라인 안쪽 점선)
-  ctx.setLineDash([3,3]);ctx.strokeStyle='rgba(0,0,0,0.1)';ctx.lineWidth=0.8;
-  // 이어 투 이어 라인
-  ctx.beginPath();
-  ctx.moveTo(cx-rx+15,cy-ry*0.1);
-  ctx.quadraticCurveTo(cx,cy-ry-5,cx+rx*0.5,cy-ry*0.6);
-  ctx.stroke();
-  ctx.setLineDash([]);
-}
-
-/* 시술각 호 */
-function drawAngleArc(ctx,px,py,normalAngle,cutAngle,color,label){
-  ctx.save();
-  var baseRad=(normalAngle-90)*Math.PI/180; // 두상 표면 접선 = 0° 기준
-  var arcRad=cutAngle*Math.PI/180;
-  var arcR=35;
-
-  // 0° 기준선 (두상 표면 접선 = 모발이 떨어지는 방향)
-  var tangentRad=normalAngle*Math.PI/180;
-  var zeroX=px+Math.cos(tangentRad+Math.PI/2)*arcR;
-  var zeroY=py+Math.sin(tangentRad+Math.PI/2)*arcR;
-
-  ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.setLineDash([2,2]);
-  ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(zeroX,zeroY);ctx.stroke();
-  ctx.setLineDash([]);
-
-  // 시술각 호
-  var startA=tangentRad+Math.PI/2;
-  var endA=startA-arcRad;
-
-  ctx.strokeStyle=color;ctx.lineWidth=2;
-  ctx.beginPath();
-  ctx.arc(px,py,arcR,Math.min(startA,endA),Math.max(startA,endA));
-  ctx.stroke();
-
-  // 각도 숫자
-  var midA=(startA+endA)/2;
-  var tx=px+Math.cos(midA)*(arcR+14);
-  var ty=py+Math.sin(midA)*(arcR+14);
-  ctx.font='800 12px "Noto Sans KR"';ctx.fillStyle=color;
-  ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.fillText(label,tx,ty);
-
-  ctx.restore();
-}
-
-/* 커팅 라인 (가위 위치) */
-function drawCutLine(ctx,px,py,normalAngle,dist,color){
-  ctx.save();
-  var nRad=normalAngle*Math.PI/180;
-  var cx=px+Math.cos(nRad)*dist;
-  var cy=py+Math.sin(nRad)*dist;
-  var perpRad=nRad+Math.PI/2;
-  var halfLen=18;
-
-  ctx.strokeStyle=color;ctx.lineWidth=2.5;
-  ctx.setLineDash([5,3]);
-  ctx.beginPath();
-  ctx.moveTo(cx+Math.cos(perpRad)*halfLen,cy+Math.sin(perpRad)*halfLen);
-  ctx.lineTo(cx-Math.cos(perpRad)*halfLen,cy-Math.sin(perpRad)*halfLen);
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  // 가위 아이콘 (✂)
-  ctx.font='14px sans-serif';ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.fillText('✂',cx+Math.cos(perpRad)*(halfLen+10),cy+Math.sin(perpRad)*(halfLen+10));
-  ctx.restore();
+  setTimeout(function(){document.getElementById('step2Wrap').classList.add('show')},300);
 }
 
 /* ═══ STEP 2 ═══ */
-function selectOpt(btn,type){
+function selOpt(btn,type){
   btn.parentNode.querySelectorAll('.base-btn').forEach(function(b){b.classList.remove('selected')});
-  btn.classList.add('selected');
-  ST[type]=btn.getAttribute('data-'+type);
-  checkReady();
-}
-function checkReady(){
+  btn.classList.add('selected');ST[type]=btn.getAttribute('data-'+type);
   var ok=ST.analysis&&ST.hair&&ST.vol&&ST.len;
-  var btn=document.getElementById('recipeBtn');
-  if(ok){btn.classList.add('show');btn.disabled=false}else btn.disabled=true;
+  var rb=document.getElementById('recipeBtn');
+  if(ok){rb.classList.add('show');rb.disabled=false}
 }
 
-/* ═══ STEP 3 ═══ */
+/* ═══ STEP 3: GUIDE WITH INLINE DIAGRAMS ═══ */
 function generateGuide(){
   var btn=document.getElementById('recipeBtn');btn.disabled=true;btn.textContent='가이드 생성 중...';
   var hm={straight:'직모',wavy:'반곱슬',curly:'곱슬',coarse:'경모'};
   var vm={thin:'소량',medium:'보통',thick:'다량'};
-  var lm={short:'숏(귀 위)',medium:'미디엄(어깨선)',long:'롱(어깨 아래)'};
-  var cd='모질: '+hm[ST.hair]+' / 모량: '+vm[ST.vol]+' / 현재 길이: '+lm[ST.len];
+  var lm={short:'숏',medium:'미디엄',long:'롱'};
+  var cd='모질:'+hm[ST.hair]+'/모량:'+vm[ST.vol]+'/길이:'+lm[ST.len];
 
   var sp=[
-    '너는 15년차 헤어 디자이너. 컷트 전문가.',
-    'AI 분석 결과와 고객 정보 기반 컷트 가이드를 만들어.',
+    '너는 15년차 컷트 전문 디자이너.',
+    '■ 기본형태: 원렝스(0°)/그래주에이션(~45°)/유니폼레이어(90°)/인크리스레이어(90°초과)',
+    '■ 모질: 직모=텍스처링필요 / 반곱슬=줄어듬고려 / 곱슬=틴닝최소 / 경모=채널커팅',
+    '■ 모량: 소량=틴닝금지 / 다량=채널커팅,언더커팅',
     '',
-    '■ 기본 형태: 원렝스(0°)/그래주에이션(~45°)/유니폼레이어(90°)/인크리스레이어(90°초과)',
-    '■ 모질별: 직모=라인선명,텍스처링필요 / 반곱슬=건조시줄어듬고려 / 곱슬=드라이컷,틴닝최소 / 경모=채널커팅,표면텍스처최소',
-    '■ 모량별: 소량=틴닝금지 / 다량=채널커팅,언더커팅활용',
+    '★★★ 중요: 출력은 반드시 아래 JSON 형식으로. guide가 아닌 sections_guide 배열로 출력하라. ★★★',
     '',
-    '출력 JSON: {"summary":"한줄요약(존댓말)","guide":"가이드전문"}',
-    'guide: \\n\\n으로 블록 구분. 블록①시술순서 블록②섹션별테크닉(<b>섹션명</b>+형태+각도+슬라이스+설명) 블록③연결/디스커넥션 블록④질감처리 블록⑤실무조언',
-    '★ 컬러/스타일링 금지. 구체적으로. 반복금지.'
+    '{"summary":"한줄요약(존댓말)",',
+    '"sections_guide":[',
+    '  {"section":"top","title":"탑(Top)","technique":"인크리스 레이어","angle":"135°","slice":"수직 슬라이스","guide_length":"크라운 기준 8cm","detail":"상세 시술 설명 2~3문장."},',
+    '  {"section":"crown",...},',
+    '  ... (분석된 모든 섹션 순서대로)',
+    '],',
+    '"connection":"섹션 간 연결/디스커넥션 설명 2~3문장",',
+    '"texture":"질감 처리 설명 2~3문장. 모질 반영.",',
+    '"advice":"실무 조언 2~3문장. 고객 모질/모량 맞춤."',
+    '}',
+    '',
+    '★ sections_guide의 순서는 실제 시술 순서대로.',
+    '★ 컬러/스타일링 금지. 구체적으로.'
   ].join('\n');
 
   var um=['목표: '+ST.analysis.style_name,'설명: '+ST.analysis.description,'실루엣: '+ST.analysis.silhouette,
-    '테크닉: '+(ST.analysis.key_techniques||[]).join(', '),'섹션: '+JSON.stringify(ST.analysis.sections),
-    '순서: '+(ST.analysis.cut_order||[]).join('→'),'','고객: '+cd,'','컷트 가이드를 만들어줘.'].join('\n');
+    '테크닉: '+(ST.analysis.key_techniques||[]).join(','),'섹션분석: '+JSON.stringify(ST.analysis.sections),
+    '순서: '+(ST.analysis.cut_order||[]).join('→'),'고객: '+cd,'','컷트 가이드를 만들어줘.'].join('\n');
 
   fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,system:sp,messages:[{role:'user',content:um}]})
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,system:sp,messages:[{role:'user',content:um}]})
   }).then(function(r){return r.json()}).then(function(data){
-    try{var txt=data.content.map(function(b){return b.text||''}).join('');txt=txt.replace(/```json|```/g,'').trim();showGuide(JSON.parse(txt));}catch(e){showGuideError()}
-  }).catch(function(){showGuideError()});
+    try{var txt=data.content.map(function(b){return b.text||''}).join('');txt=txt.replace(/```json|```/g,'').trim();
+      renderGuideWithDiagrams(JSON.parse(txt));
+    }catch(e){btn.disabled=false;btn.textContent='컷트 가이드 생성';alert('가이드 생성 실패. 다시 시도해주세요.');}
+  }).catch(function(){btn.disabled=false;btn.textContent='컷트 가이드 생성';alert('네트워크 오류.');});
 }
 
-function showGuide(g){
+function renderGuideWithDiagrams(g){
   document.getElementById('recipeBtn').classList.remove('show');
   document.getElementById('recipeSource').innerHTML='<span class="source-tag">AI 구조 분석 기반</span>';
-  document.getElementById('recipeHeader').innerHTML='<div class="recipe-from-to">'+(g.summary||'').replace(/\n/g,'<br>')+'</div>';
-  var gh=(g.guide||'').replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
-  gh=gh.replace(/<b>/g,'<span class="sec-label">').replace(/<\/b>/g,'</span>');
-  document.getElementById('recipeBody').innerHTML='<div class="recipe-tips"><div class="recipe-tips-title">컷트 가이드</div><div class="recipe-tips-text">'+gh+'</div></div>';
+  document.getElementById('recipeHeader').innerHTML='<div class="recipe-from-to">'+(g.summary||'')+'</div>';
+
+  var body=document.getElementById('recipeBody');
+  var html='';
+
+  // 섹션별 가이드 + 도해도
+  if(g.sections_guide&&g.sections_guide.length){
+    g.sections_guide.forEach(function(sg,idx){
+      var sec=SECTIONS[sg.section]||{name:sg.title||sg.section,color:'#888',headAngle:0};
+      var canvasId='diagCanvas_'+idx;
+
+      html+='<div class="sec-guide-block">';
+      html+='<div class="sec-guide-header">';
+      html+='<span class="sec-guide-dot" style="background:'+sec.color+'"></span>';
+      html+='<span class="sec-guide-name">'+sg.title+'</span>';
+      html+='<span class="sec-guide-badge">'+sg.angle+'</span>';
+      html+='</div>';
+      html+='<canvas class="sec-guide-canvas" id="'+canvasId+'" width="380" height="200"></canvas>';
+      html+='<div class="sec-guide-text">';
+      html+='<b>'+sg.technique+'</b> · '+sg.angle+' · '+sg.slice+'<br>';
+      if(sg.guide_length)html+='가이드 길이: '+sg.guide_length+'<br>';
+      html+=sg.detail;
+      html+='</div></div>';
+    });
+  }
+
+  // 연결/디스커넥션
+  if(g.connection){
+    html+='<div class="guide-block"><div class="guide-block-title">연결과 디스커넥션</div><div class="guide-block-text">'+g.connection+'</div></div>';
+  }
+  // 질감
+  if(g.texture){
+    html+='<div class="guide-block"><div class="guide-block-title">질감 처리</div><div class="guide-block-text">'+g.texture+'</div></div>';
+  }
+  // 실무조언
+  if(g.advice){
+    html+='<div class="guide-block"><div class="guide-block-title">실무 조언</div><div class="guide-block-text">'+g.advice+'</div></div>';
+  }
+
+  body.innerHTML=html;
   document.getElementById('recipeWrap').classList.add('show');
   document.getElementById('resetBtn').classList.add('show');
-  setTimeout(function(){document.getElementById('recipeWrap').scrollIntoView({behavior:'smooth',block:'start'})},200);
+
+  // 각 캔버스에 도해도 렌더링
+  setTimeout(function(){
+    if(g.sections_guide){
+      g.sections_guide.forEach(function(sg,idx){
+        drawSectionDiagram('diagCanvas_'+idx, sg.section, sg);
+      });
+    }
+    document.getElementById('recipeWrap').scrollIntoView({behavior:'smooth',block:'start'});
+  },100);
 }
-function showGuideError(){var btn=document.getElementById('recipeBtn');btn.disabled=false;btn.textContent='컷트 가이드 생성';alert('가이드 생성에 실패했어요.');}
+
+/* ══════════════════════════════════════════
+   개별 섹션 도해도 렌더러
+   — 두상 측면 + 해당 섹션 모발 가닥 + 시술각
+══════════════════════════════════════════ */
+function drawSectionDiagram(canvasId, sectionKey, data){
+  var c=document.getElementById(canvasId);if(!c)return;
+  var ctx=c.getContext('2d'),W=c.width,H=c.height;
+  var sec=SECTIONS[sectionKey]||{color:'#888',headAngle:0,name:sectionKey};
+
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#F8F6F2';ctx.fillRect(0,0,W,H);
+
+  var hx=105,hy=105,rx=48,ry=62;
+
+  // 두상 측면
+  drawMiniHead(ctx,hx,hy,rx,ry,sectionKey,sec.color);
+
+  // 천체축
+  ctx.save();ctx.setLineDash([3,3]);ctx.strokeStyle='rgba(0,0,0,0.1)';ctx.lineWidth=0.8;
+  ctx.beginPath();ctx.moveTo(hx,hy-85);ctx.lineTo(hx,hy+85);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(hx-70,hy);ctx.lineTo(hx+70,hy);ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.font='500 8px "Noto Sans KR"';ctx.fillStyle='rgba(0,0,0,0.2)';ctx.textAlign='center';
+  ctx.fillText('180°',hx,hy-88);ctx.fillText('0°',hx,hy+92);
+  ctx.textAlign='left';ctx.fillText('90°',hx+73,hy+3);
+  ctx.restore();
+
+  // 시술각 파싱
+  var cutAngle=0;
+  var m=(data.angle||'').match(/(\d+)/);
+  if(m)cutAngle=parseInt(m[1]);
+
+  // 해당 섹션의 모발 가닥
+  var headAngle=sec.headAngle;
+  var aRad=headAngle*Math.PI/180;
+  var anchorX=hx+Math.cos(aRad)*(rx+1);
+  var anchorY=hy+Math.sin(aRad)*(ry+1);
+
+  // 모발 가닥 5개 (부채꼴)
+  var numStrands=7;
+  var strandLen=70;
+  var spreadDeg=10;
+
+  for(var i=0;i<numStrands;i++){
+    var offset=(i-(numStrands-1)/2)*spreadDeg;
+    var sRad=(headAngle+offset)*Math.PI/180;
+    var sx=hx+Math.cos(sRad)*(rx-3);
+    var sy=hy+Math.sin(sRad)*(ry-3);
+    var ex=sx+Math.cos(sRad)*strandLen;
+    var ey=sy+Math.sin(sRad)*strandLen;
+
+    // 곡선 제어점
+    var cpx=sx+(ex-sx)*0.55+Math.sin(sRad)*6;
+    var cpy=sy+(ey-sy)*0.55-Math.cos(sRad)*6;
+
+    ctx.save();
+    ctx.globalAlpha=0.7;
+    ctx.strokeStyle=sec.color;
+    ctx.lineWidth=2;
+    ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(sx,sy);ctx.quadraticCurveTo(cpx,cpy,ex,ey);ctx.stroke();
+    ctx.restore();
+  }
+
+  // 커팅 라인 (가위 절단면)
+  var cutDist=strandLen*0.75;
+  var perpRad=aRad+Math.PI/2;
+  var cutCx=anchorX+Math.cos(aRad)*cutDist;
+  var cutCy=anchorY+Math.sin(aRad)*cutDist;
+  var cutHalf=28;
+
+  ctx.save();
+  ctx.strokeStyle=sec.color;ctx.lineWidth=2.5;ctx.setLineDash([5,4]);
+  ctx.beginPath();
+  ctx.moveTo(cutCx+Math.cos(perpRad)*cutHalf,cutCy+Math.sin(perpRad)*cutHalf);
+  ctx.lineTo(cutCx-Math.cos(perpRad)*cutHalf,cutCy-Math.sin(perpRad)*cutHalf);
+  ctx.stroke();ctx.setLineDash([]);
+  // 가위 아이콘
+  ctx.font='16px sans-serif';ctx.fillStyle=sec.color;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('✂',cutCx+Math.cos(perpRad)*(cutHalf+12),cutCy+Math.sin(perpRad)*(cutHalf+12));
+  ctx.restore();
+
+  // 시술각 호 (arc)
+  ctx.save();
+  var arcR=30;
+  // 0° 방향 (모발이 자연스럽게 떨어지는 방향 = 아래)
+  var zeroRad=Math.PI/2; // 아래
+  // 시술각 방향
+  var liftRad=zeroRad-cutAngle*Math.PI/180;
+
+  // 0° 기준선 (점선)
+  ctx.strokeStyle='rgba(0,0,0,0.15)';ctx.lineWidth=1;ctx.setLineDash([2,2]);
+  ctx.beginPath();ctx.moveTo(anchorX,anchorY);
+  ctx.lineTo(anchorX+Math.cos(zeroRad)*arcR*1.2,anchorY+Math.sin(zeroRad)*arcR*1.2);
+  ctx.stroke();ctx.setLineDash([]);
+
+  // 시술각 호
+  ctx.strokeStyle=sec.color;ctx.lineWidth=2;
+  ctx.beginPath();
+  if(cutAngle>0){
+    var sA=Math.min(zeroRad,liftRad);
+    var eA=Math.max(zeroRad,liftRad);
+    ctx.arc(anchorX,anchorY,arcR,sA,eA);
+    ctx.stroke();
+  }
+
+  // 각도 숫자
+  var midA=(zeroRad+liftRad)/2;
+  var tx=anchorX+Math.cos(midA)*(arcR+16);
+  var ty=anchorY+Math.sin(midA)*(arcR+16);
+  ctx.font='800 13px "Noto Sans KR"';ctx.fillStyle=sec.color;
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(data.angle,tx,ty);
+  ctx.restore();
+
+  // 우측 정보 패널
+  var infoX=210, infoY=28;
+  ctx.save();
+  ctx.font='800 14px "Noto Sans KR"';ctx.fillStyle='#1C1917';ctx.textAlign='left';
+  ctx.fillText(sec.name,infoX,infoY);
+
+  ctx.font='600 11px "Noto Sans KR"';ctx.fillStyle=sec.color;
+  ctx.fillText(data.technique||'',infoX,infoY+22);
+
+  ctx.font='500 10px "Noto Sans KR"';ctx.fillStyle='#888';
+  ctx.fillText('시술각: '+data.angle,infoX,infoY+42);
+  ctx.fillText('슬라이스: '+(data.slice||''),infoX,infoY+58);
+  if(data.guide_length)ctx.fillText('가이드: '+data.guide_length,infoX,infoY+74);
+
+  // 테크닉 도식 (간단한 아이콘)
+  var techY=infoY+100;
+  ctx.font='600 10px "Noto Sans KR"';ctx.fillStyle='#555';
+
+  var techName=(data.technique||'').replace(/\s/g,'');
+  if(techName.indexOf('원렝스')!==-1){
+    ctx.fillText('▬ 수평 라인 · 무게감 최대',infoX,techY);
+  }else if(techName.indexOf('그래주에이션')!==-1){
+    ctx.fillText('▲ 쌓이는 구조 · 볼륨 생성',infoX,techY);
+  }else if(techName.indexOf('유니폼')!==-1){
+    ctx.fillText('● 균일 길이 · 둥근 형태',infoX,techY);
+  }else if(techName.indexOf('인크리스')!==-1||techName.indexOf('레이어')!==-1){
+    ctx.fillText('↗ 움직임 · 무게감 제거',infoX,techY);
+  }else{
+    ctx.fillText('◆ '+data.technique,infoX,techY);
+  }
+
+  // 하단에 무게감 방향 화살표
+  ctx.strokeStyle='rgba(0,0,0,0.12)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(infoX,techY+16);ctx.lineTo(infoX+140,techY+16);ctx.stroke();
+  ctx.font='400 9px "Noto Sans KR"';ctx.fillStyle='#bbb';
+  ctx.fillText('무게감',infoX,techY+28);
+  // 무게감 위치 표시
+  var weightPos=0.8; // 기본: 하단
+  if(cutAngle>=90)weightPos=0.3;
+  else if(cutAngle>=45)weightPos=0.55;
+  ctx.fillStyle=sec.color;
+  ctx.beginPath();ctx.arc(infoX+140*weightPos,techY+16,4,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#bbb';
+  ctx.textAlign='left';ctx.fillText('하단',infoX+142,techY+28);
+  ctx.textAlign='right';ctx.fillText('상단',infoX-2,techY+28);
+
+  ctx.restore();
+}
+
+/* 미니 두상 프로필 */
+function drawMiniHead(ctx,cx,cy,rx,ry,highlightSection,hlColor){
+  ctx.save();
+  ctx.fillStyle='#F0DCC8';ctx.strokeStyle='#C9A882';ctx.lineWidth=1.2;
+  ctx.beginPath();
+  ctx.moveTo(cx-22,cy+ry*0.55);
+  ctx.quadraticCurveTo(cx-rx-8,cy-ry*0.3,cx-rx*0.5,cy-ry);
+  ctx.quadraticCurveTo(cx,cy-ry-8,cx+rx*0.5,cy-ry*0.8);
+  ctx.quadraticCurveTo(cx+rx+4,cy-ry*0.3,cx+rx,cy+ry*0.1);
+  ctx.quadraticCurveTo(cx+rx-4,cy+ry*0.55,cx+rx*0.35,cy+ry*0.82);
+  ctx.quadraticCurveTo(cx+rx*0.15,cy+ry,cx+8,cy+ry+18);
+  ctx.lineTo(cx-12,cy+ry+18);
+  ctx.quadraticCurveTo(cx-28,cy+ry*0.75,cx-32,cy+ry*0.45);
+  ctx.quadraticCurveTo(cx-40,cy+ry*0.15,cx-22,cy+ry*0.55);
+  ctx.closePath();ctx.fill();ctx.stroke();
+
+  // 귀
+  ctx.fillStyle='#EDD5BE';
+  ctx.beginPath();ctx.ellipse(cx-rx+6,cy+8,5,10,-0.15,0,Math.PI*2);ctx.fill();ctx.stroke();
+
+  // 눈
+  ctx.fillStyle='#8B7355';ctx.beginPath();ctx.ellipse(cx-rx+1,cy-6,3,2,0,0,Math.PI*2);ctx.fill();
+
+  // 하이라이트 영역
+  if(highlightSection&&SECTIONS[highlightSection]){
+    var ha=SECTIONS[highlightSection].headAngle;
+    var hr=ha*Math.PI/180;
+    var hpx=cx+Math.cos(hr)*(rx*0.6);
+    var hpy=cy+Math.sin(hr)*(ry*0.6);
+    ctx.fillStyle=hlColor+'30';
+    ctx.strokeStyle=hlColor;ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(hpx,hpy,14,0,Math.PI*2);ctx.fill();ctx.stroke();
+  }
+  ctx.restore();
+}
 
 /* ═══ RESET ═══ */
 function resetAll(){
-  ST={img64:null,imgType:null,analysis:null,hair:null,vol:null,len:null};hlSections=[];selSection=null;
+  ST={img64:null,imgType:null,analysis:null,hair:null,vol:null,len:null};
   var zone=document.getElementById('uploadZone');zone.classList.remove('has-image');
   zone.innerHTML='<div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div><div class="txt">고객이 원하는 헤어 컷트 사진을<br><b>탭하여 업로드</b>해주세요</div>';
   zone.onclick=function(){document.getElementById('fileInput').click()};
@@ -577,9 +524,7 @@ function resetAll(){
   nw.type='file';nw.id='fileInput';nw.accept='image/*';nw.style.display='none';nw.onchange=function(ev){handleUpload(ev.target)};
   old.parentNode.replaceChild(nw,old);
   document.getElementById('analysisBox').classList.remove('show');document.getElementById('analysisBox').innerHTML='';
-  document.getElementById('analyzing').classList.remove('show');document.getElementById('viewerCard').classList.remove('show');
-  document.getElementById('sectionBtns').innerHTML='';var sd=document.getElementById('secDetail');sd.innerHTML='';sd.classList.remove('show');
-  document.getElementById('step2Wrap').classList.remove('show');
+  document.getElementById('analyzing').classList.remove('show');document.getElementById('step2Wrap').classList.remove('show');
   var btn=document.getElementById('recipeBtn');btn.style.display='';btn.classList.remove('show');btn.disabled=true;btn.textContent='컷트 가이드 생성';
   document.getElementById('recipeWrap').classList.remove('show');document.getElementById('resetBtn').classList.remove('show');
   document.querySelectorAll('.selected').forEach(function(b){b.classList.remove('selected')});
