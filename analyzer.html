@@ -111,21 +111,17 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* 3D 조색 가이드 시각화 (Step 2 결과 카드 내부) */
-.rviz-wrap{margin-top:14px;padding-top:14px;border-top:1px dashed rgba(139,115,85,0.28)}
-.rviz-scene{width:100%;height:210px;position:relative;background:rgba(255,255,255,0.5);border-radius:12px;overflow:hidden;border:1px solid rgba(232,221,200,0.6)}
+.rviz-wrap{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(139,115,85,0.28)}
+.rviz-scene{width:100%;height:150px;position:relative;background:rgba(255,255,255,0.5);border-radius:10px;overflow:hidden;border:1px solid rgba(232,221,200,0.6)}
 .rviz-scene canvas{display:block}
-.rviz-stage{text-align:center;font-size:13.5px;font-weight:600;color:#1C1917;margin-top:12px;min-height:19px;line-height:1.4;transition:color .3s}
+.rviz-stage{text-align:center;font-size:13px;font-weight:600;color:#1C1917;margin-top:8px;min-height:18px;line-height:1.4;transition:color .3s}
 .rviz-stage.s-b{color:#8B6E48}
 .rviz-stage.s-n{color:#6B5CC2}
 .rviz-stage.s-f{color:#5B8A5A}
-.rviz-sub{text-align:center;font-size:11px;color:#8B7355;min-height:14px;margin-top:3px;line-height:1.3}
-.rviz-dots{display:flex;justify-content:center;gap:6px;margin-top:10px;flex-wrap:wrap}
-.rviz-dot{width:6px;height:6px;border-radius:50%;background:rgba(139,115,85,0.25);transition:background .3s,transform .3s}
-.rviz-dot.on{background:#1C1917;transform:scale(1.15)}
-.rviz-lbs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;padding:0 4px}
-.rviz-lb{text-align:center;font-size:11.5px;line-height:1.35}
-.rviz-lb-t{color:#1C1917;font-weight:600}
-.rviz-lb-s{color:#8B7355;font-size:10.5px;margin-top:2px}
+.rviz-sub{text-align:center;font-size:10.5px;color:#8B7355;min-height:13px;margin-top:2px;line-height:1.3}
+.rviz-dots{display:flex;justify-content:center;gap:5px;margin-top:7px;flex-wrap:wrap}
+.rviz-dot{width:5px;height:5px;border-radius:50%;background:rgba(139,115,85,0.25);transition:background .3s,transform .3s}
+.rviz-dot.on{background:#1C1917;transform:scale(1.2)}
 </style>
 </head>
 <body>
@@ -594,10 +590,6 @@ function showRecipe(recipe){
       + '<div class="rviz-stage" id="rvizStage">자연모</div>'
       + '<div class="rviz-sub" id="rvizSub">흑갈색 · 5레벨</div>'
       + '<div class="rviz-dots" id="rvizDots"></div>'
-      + '<div class="rviz-lbs">'
-        + '<div class="rviz-lb"><div class="rviz-lb-t">자연모 (기준)</div><div class="rviz-lb-s">흑갈색 · 5레벨</div></div>'
-        + '<div class="rviz-lb"><div class="rviz-lb-t">시술 경과</div><div class="rviz-lb-s" id="rvizTargetLbl">→ 최종 색</div></div>'
-      + '</div>'
     + '</div>';
 
   var body = document.getElementById('recipeBody');
@@ -801,7 +793,7 @@ function vizBuildStages(cfg){
       {name:'자연모',              sub:'흑갈색 · 5레벨',         cls:''},
       {name:'12레벨 리프트',        sub:'적갈~주황',             cls:'s-b'},
       {name:'리프트 완료 · 반응 대기', sub:'고명도 염모제+산화제',    cls:''},
-      {name:'최종 색 발현',         sub:cfg.colorName,           cls:'s-f'}
+      {name:'최종색 안착',          sub:'',                      cls:'s-f'}
     ];
   }
   var stages = [{name:'자연모', sub:'흑갈색 · 5레벨', cls:''}];
@@ -819,7 +811,7 @@ function vizBuildStages(cfg){
   }
   stages.push({name:'보색 수렴',       sub:'보색 구 하강·중화',  cls:'s-n'});
   stages.push({name:'잔류 언더톤 정리', sub:'중화 완료',         cls:'s-n'});
-  stages.push({name:'최종 색 발색',    sub:cfg.colorName,       cls:'s-f'});
+  stages.push({name:'최종색 안착',     sub:'',                  cls:'s-f'});
   return stages;
 }
 
@@ -882,10 +874,6 @@ function vizRecipeInit(recipe, analysis){
   var cfg = vizComputeConfig(recipe, analysis);
   var stages = vizBuildStages(cfg);
 
-  // 타겟 라벨 업데이트
-  var tLbl = document.getElementById('rvizTargetLbl');
-  if(tLbl) tLbl.textContent = '→ ' + (cfg.colorName || '최종 색');
-
   // 진행 닷 생성
   var dotsEl = document.getElementById('rvizDots');
   if(dotsEl){
@@ -896,7 +884,7 @@ function vizRecipeInit(recipe, analysis){
   var dots = dotsEl ? dotsEl.querySelectorAll('.rviz-dot') : [];
 
   // Three.js setup (try/catch — WebGL 실패 대응)
-  var W = container.clientWidth, H = 210;
+  var W = container.clientWidth, H = 150;
   var scene, cam, rnd;
   try {
     scene = new THREE.Scene();
@@ -917,9 +905,9 @@ function vizRecipeInit(recipe, analysis){
   var dl2 = new THREE.DirectionalLight(0xffffff, 0.28); dl2.position.set(-4,-2,3); scene.add(dl2);
   var dl3 = new THREE.DirectionalLight(0xffffff, 0.15); dl3.position.set(0,1,-6); scene.add(dl3);
 
-  var R = 1.55;
+  var R = 1.25;
   var geo = new THREE.SphereGeometry(R, 56, 40);
-  var LX = -3.0, RX = 3.0;
+  var LX = -2.5, RX = 2.5;
 
   // 좌측 자연모 (static)
   var leftMat = new THREE.MeshStandardMaterial({color:VIZ_COLOR.virgin, roughness:0.42, metalness:0.08});
@@ -933,19 +921,20 @@ function vizRecipeInit(recipe, analysis){
 
   // 보색 구 + 최종 구 (탈색 케이스만)
   var neu = null, tgt = null, neuMat = null, tgtMat = null;
+  var DROP_Y = 3.5;
   if(!cfg.isVirgin && cfg.neutralizerHex != null){
     neuMat = new THREE.MeshStandardMaterial({
       color:cfg.neutralizerHex, roughness:0.30, metalness:0.18, transparent:true, opacity:0
     });
     neu = new THREE.Mesh(geo, neuMat);
-    neu.position.set(RX, 5.2, 0);
+    neu.position.set(RX, DROP_Y, 0);
     scene.add(neu);
 
     tgtMat = new THREE.MeshStandardMaterial({
       color:cfg.targetHex, roughness:0.42, metalness:0.08, transparent:true, opacity:0
     });
     tgt = new THREE.Mesh(geo, tgtMat);
-    tgt.position.set(RX, 5.2, 0);
+    tgt.position.set(RX, DROP_Y, 0);
     scene.add(tgt);
   }
 
@@ -963,12 +952,12 @@ function vizRecipeInit(recipe, analysis){
     if(cw === 0) return;
     W = cw;
     var aspect = W/H;
-    var totalW = (RX - LX) + 2*R + 1.2;
+    var totalW = (RX - LX) + 2*R + 0.8;
     var fovRad = FOV * Math.PI / 180;
     var zw = (totalW/2) / (Math.tan(fovRad/2) * aspect);
-    var zh = (R + 3.2) / Math.tan(fovRad/2);
-    cam.position.set(0, 0.9, Math.max(zw, zh) + 0.3);
-    cam.lookAt(0, 0.3, 0);
+    var zh = (R + DROP_Y + 0.5) / Math.tan(fovRad/2);
+    cam.position.set(0, DROP_Y*0.25, Math.max(zw, zh) + 0.3);
+    cam.lookAt(0, 0.15, 0);
     cam.aspect = aspect;
     cam.updateProjectionMatrix();
     rnd.setSize(W, H);
@@ -1127,7 +1116,7 @@ function vizRecipeInit(recipe, analysis){
       var qE = ss(q);
       if(neu){
         neuMat.opacity = Math.min(1, q * 2.2);
-        neu.position.y = 5.2 - 5.2 * qE;
+        neu.position.y = DROP_Y - DROP_Y * qE;
       }
       col.setHex(lastBleachCol);
       setStage(N+1); // 보색 수렴
@@ -1163,7 +1152,7 @@ function vizRecipeInit(recipe, analysis){
       var q3E = ss(q3);
       if(tgt){
         tgtMat.opacity = Math.min(1, q3 * 2.2);
-        tgt.position.y = 5.2 - 5.2 * q3E;
+        tgt.position.y = DROP_Y - DROP_Y * q3E;
       }
       col.setHex(inter);
       setStage(N+3); // 최종 색 발색
