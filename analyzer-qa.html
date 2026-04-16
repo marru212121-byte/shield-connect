@@ -2,180 +2,104 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<meta name="mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
-<title>AI 컬러 레시피</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AI 컬러 레시피 — 검수 툴</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&display=swap');
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{font-family:'Noto Sans KR',sans-serif;background:#FAFAF7;color:#1C1917;min-height:100dvh;overflow-x:hidden}
-input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-family:inherit}
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:'Noto Sans KR',sans-serif;background:#FAFAF7;color:#1C1917;min-height:100vh}
+input,select,textarea,button{font-family:inherit;font-size:14px}
 
-.app{width:100%;max-width:430px;margin:0 auto;min-height:100dvh;background:#FAFAF7}
-@media(min-width:431px){.app{border-left:1px solid #e8e4df;border-right:1px solid #e8e4df}}
+.app{max-width:1400px;margin:0 auto;padding:16px}
 
-/* 헤더 */
-.page-header{display:flex;align-items:center;gap:12px;padding:14px 16px;position:sticky;top:0;z-index:100;background:rgba(250,250,247,0.92);backdrop-filter:blur(12px);border-bottom:1px solid #e8e4df}
-.back-btn{width:34px;height:34px;border-radius:12px;border:1.5px solid #e8e4df;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
-.back-btn svg{color:#A8A29E}
-.page-header h2{font-size:16px;font-weight:800;color:#1C1917;margin:0}
-.page-header .sub{font-size:11px;color:#A8A29E;margin-top:2px}
+.page-header{display:flex;align-items:center;gap:12px;padding:14px 16px;background:#fff;border:1.5px solid #e8e4df;border-radius:14px;margin-bottom:16px}
+.page-header h2{font-size:18px;font-weight:800}
+.page-header .sub{font-size:12px;color:#A8A29E;margin-top:2px}
+.page-header a{color:#8B7355;text-decoration:none;font-size:13px;margin-left:auto;font-weight:600}
 
-/* 카드 */
-.card{background:#fff;border-radius:16px;border:1.5px solid #e8e4df;padding:20px;margin:0 16px 12px}
-.card-title{font-size:13px;font-weight:700;color:#1C1917;margin-bottom:12px;display:flex;align-items:center;gap:6px}
-.card-title .badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;background:#D4B89620;color:#8B7355}
+.toolbar{background:#fff;border:1.5px solid #e8e4df;border-radius:14px;padding:16px;margin-bottom:16px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.toolbar .upload-label{display:inline-block;padding:10px 16px;background:#1C1917;color:#fff;border-radius:10px;cursor:pointer;font-weight:700;font-size:13px}
+.toolbar .upload-label:hover{opacity:0.9}
+.toolbar .run-btn{padding:10px 20px;background:#8B7355;color:#fff;border:none;border-radius:10px;cursor:pointer;font-weight:700;font-size:13px}
+.toolbar .run-btn:hover{opacity:0.9}
+.toolbar .run-btn:disabled{opacity:0.4;cursor:not-allowed}
+.toolbar .clear-btn{padding:10px 16px;background:#fff;color:#6B5D4E;border:1.5px solid #e8e4df;border-radius:10px;cursor:pointer;font-weight:600;font-size:13px}
+.toolbar .info{font-size:12px;color:#A8A29E;margin-left:auto}
 
-/* STEP 1: 사진 업로드 */
-.upload-zone{border:2px dashed #d5cfc7;border-radius:14px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:#FAF8F4}
-.upload-zone:active{border-color:#C4A97A;background:#D4B89608}
-.upload-zone.has-image{border:none;padding:0;background:none}
-.upload-zone .icon{margin-bottom:8px;color:#C4B5A0;display:flex;justify-content:center}
-.upload-zone .txt{font-size:13px;color:#A8A29E;line-height:1.6}
-.upload-zone .txt b{color:#8B7355;font-weight:600}
-.upload-preview{width:100%;border-radius:14px;display:block;object-fit:cover;max-height:280px}
+.summary-bar{background:#fff;border:1.5px solid #e8e4df;border-radius:14px;padding:14px 16px;margin-bottom:16px;display:none;font-size:13px}
+.summary-bar.show{display:block}
+.summary-bar .stat{display:inline-block;margin-right:16px;font-weight:600}
+.summary-bar .stat .num{color:#8B7355;font-size:16px;font-weight:800}
+.summary-bar .stat.match .num{color:#4A7C59}
+.summary-bar .stat.miss .num{color:#C0392B}
 
-/* 분석 결과 */
-.analysis-box{background:linear-gradient(135deg,#FAF6F0,#F5EDE2);border-radius:14px;padding:16px;margin-top:12px;display:none}
-.analysis-box.show{display:block;animation:fadeUp .4s ease}
-.analysis-label{font-size:10px;font-weight:700;color:#8B7355;letter-spacing:0.5px;margin-bottom:8px}
-.analysis-color-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.analysis-swatch{width:36px;height:36px;border-radius:10px;border:1.5px solid rgba(0,0,0,0.08);flex-shrink:0}
-.analysis-color-name{font-size:15px;font-weight:700;color:#1C1917}
-.analysis-color-level{font-size:12px;color:#A8A29E;margin-top:2px}
-.analysis-desc{font-size:13px;color:#6B5D4E;line-height:1.7;margin-top:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
 
-/* 분석 중 로딩 */
-.analyzing{text-align:center;padding:24px;display:none}
-.analyzing.show{display:block}
-.analyzing .spinner{width:28px;height:28px;border:3px solid #e8e4df;border-top-color:#C4A97A;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
-.analyzing .txt{font-size:13px;color:#A8A29E}
+.card{background:#fff;border:1.5px solid #e8e4df;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.card .img-wrap{width:100%;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#f5f1ec;position:relative}
+.card .img-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.card .img-wrap .remove-btn{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,0.6);color:#fff;border:none;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
 
-/* 레시피 요청 버튼 */
-.recipe-btn{width:calc(100% - 32px);margin:8px 16px 16px;padding:16px;border-radius:14px;border:none;background:#1C1917;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;display:none}
-.recipe-btn.show{display:block;animation:fadeUp .3s ease}
-.recipe-btn:active{transform:scale(0.98);opacity:0.9}
-.recipe-btn:disabled{opacity:0.4;cursor:not-allowed}
+.card .card-filename{font-size:11px;color:#A8A29E;word-break:break-all}
 
-/* STEP 3: 레시피 결과 */
-.recipe-wrap{display:none;animation:fadeUp .4s ease}
-.recipe-wrap.show{display:block}
-.recipe-header{background:linear-gradient(135deg,#FAF6F0,#F0E6D8);border-radius:14px;padding:16px;margin-bottom:12px}
-.recipe-from-to{font-size:14px;font-weight:600;color:#1C1917;line-height:1.7}
-.recipe-from-to .highlight{color:#8B7355;font-weight:700}
-.recipe-body{background:#fff;border-radius:14px;border:1.5px solid #e8e4df;padding:16px}
+.card .expected-select{width:100%;padding:8px 10px;border:1.5px solid #e8e4df;border-radius:8px;font-size:12px;background:#fff}
 
-.recipe-tips{background:#FBF7F1;border:1px solid #EDE6DA;border-radius:10px;padding:14px}
-.recipe-tips-title{font-size:13px;font-weight:700;color:#8B7355;margin-bottom:6px}
-.recipe-tips-text{font-size:13px;color:#6B5D4E;line-height:1.9;white-space:pre-line}
-.recipe-tips-text .base-label{font-size:14px;font-weight:700;color:#1C1917;display:block;margin-top:4px}
-.recipe-tips-text .mix-label{font-weight:600;color:#8B7355}
-.recipe-summary-note{font-size:12px;color:#8B7355;margin-top:8px;line-height:1.6;background:#FFF8E7;border-radius:8px;padding:10px 12px;font-weight:500}
-.recipe-virgin-box{background:#FAF6F0;border:1px solid #EDE6DA;border-radius:10px;padding:13px;margin-top:10px}
-.recipe-virgin-title{font-size:12px;font-weight:700;color:#8B7355;margin-bottom:6px}
-.recipe-virgin-text{font-size:12px;color:#6B5D4E;line-height:1.8}
+.card .status{font-size:11px;font-weight:700;padding:4px 8px;border-radius:6px;display:inline-block;align-self:flex-start}
+.card .status.pending{background:#f5f1ec;color:#A8A29E}
+.card .status.running{background:#FFF4E5;color:#D97706}
+.card .status.done{background:#E6F4EA;color:#4A7C59}
+.card .status.error{background:#FCE4E4;color:#C0392B}
 
-/* source 표시 */
-.source-tag{display:inline-block;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;margin-bottom:8px}
-.source-tag.ai{background:#D4B89620;color:#8B7355}
+.card .result-box{background:#FAF6F0;border-radius:8px;padding:10px;font-size:12px;line-height:1.7;display:none}
+.card .result-box.show{display:block}
+.card .result-box .row{display:flex;gap:6px;margin-bottom:4px}
+.card .result-box .row .label{font-weight:700;color:#8B7355;min-width:70px;flex-shrink:0}
+.card .result-box .row .value{flex:1;color:#1C1917;word-break:break-word}
+.card .result-box .swatch{display:inline-block;width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,0.08);margin-right:6px;vertical-align:-2px}
 
-/* 다시하기 버튼 */
-.reset-btn{width:calc(100% - 32px);margin:8px 16px 24px;padding:14px;border-radius:14px;border:1.5px solid #e8e4df;background:#fff;color:#A8A29E;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;display:none}
-.reset-btn.show{display:block}
-.reset-btn:active{transform:scale(0.98)}
+.card .match-badge{font-size:11px;font-weight:700;padding:4px 8px;border-radius:6px;display:inline-block}
+.card .match-badge.match{background:#E6F4EA;color:#4A7C59}
+.card .match-badge.miss{background:#FCE4E4;color:#C0392B}
+.card .match-badge.na{background:#f5f1ec;color:#A8A29E}
 
-/* 애니메이션 */
-@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-@keyframes spin{to{transform:rotate(360deg)}}
+.card .step2-preview{background:#fff;border:1px solid #EDE6DA;border-radius:8px;padding:10px;font-size:11px;line-height:1.7;max-height:200px;overflow-y:auto;display:none}
+.card .step2-preview.show{display:block}
+.card .step2-preview .summary{font-weight:700;color:#1C1917;margin-bottom:6px}
+.card .step2-preview .tips{color:#6B5D4E;white-space:pre-line}
+.card .step2-preview .tips b{color:#1C1917;display:block;margin-top:4px}
+
+.empty{text-align:center;padding:60px 20px;color:#A8A29E;font-size:13px}
 </style>
 </head>
 <body>
 <div class="app">
-
-  <!-- 헤더 -->
   <div class="page-header">
-    <a class="back-btn" href="./index.html">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-    </a>
     <div>
-      <h2>AI 컬러 레시피</h2>
-      <div class="sub">사진 분석 → 시술 레시피 자동 생성</div>
+      <h2>AI 컬러 레시피 — 검수 툴</h2>
+      <div class="sub">여러 사진을 한 번에 분석하고 예상 루트와 비교</div>
     </div>
+    <a href="./analyzer.html">← 일반 모드로</a>
   </div>
 
-  <!-- STEP 1: 레퍼런스 사진 -->
-  <div class="card" id="step1Card">
-    <div class="card-title">
-      원하는 컬러 사진
-      <span class="badge">STEP 1</span>
-    </div>
-    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-      <div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
-      <div class="txt">고객이 원하는 헤어 컬러 사진을<br><b>탭하여 업로드</b>해주세요</div>
-    </div>
-    <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleUpload(this)"/>
-
-    <!-- 분석 중 -->
-    <div class="analyzing" id="analyzing">
-      <div class="spinner"></div>
-      <div class="txt">색감을 분석하고 있어요...</div>
-    </div>
-
-    <!-- 분석 결과 -->
-    <div class="analysis-box" id="analysisBox">
-      <div class="analysis-label">AI 분석 결과</div>
-      <div class="analysis-color-row">
-        <div class="analysis-swatch" id="analysisSwatch"></div>
-        <div>
-          <div class="analysis-color-name" id="analysisName">—</div>
-          <div class="analysis-color-level" id="analysisLevel">—</div>
-        </div>
-      </div>
-      <div class="analysis-desc" id="analysisDesc"></div>
-      <div id="analysisTagWrap"></div>
-    </div>
+  <div class="toolbar">
+    <label class="upload-label">
+      사진 업로드 (최대 10장)
+      <input type="file" accept="image/*" multiple style="display:none" onchange="handleBatchUpload(this)"/>
+    </label>
+    <button class="run-btn" id="runBtn" onclick="runAll()" disabled>전체 검수 실행</button>
+    <button class="clear-btn" onclick="clearAll()">전체 삭제</button>
+    <div class="info" id="infoText">업로드된 사진 없음</div>
   </div>
 
-  <!-- 레시피 생성 버튼 -->
-  <button class="recipe-btn" id="recipeBtn" onclick="generateRecipe()" disabled>레시피 생성</button>
+  <div class="summary-bar" id="summaryBar"></div>
 
-  <!-- STEP 2: 레시피 결과 -->
-  <div class="recipe-wrap" id="recipeWrap">
-    <div class="card">
-      <div class="card-title">
-        시술 레시피
-        <span class="badge">STEP 2</span>
-      </div>
-      <div id="recipeSource"></div>
-      <div class="recipe-header" id="recipeHeader"></div>
-      <div class="recipe-body" id="recipeBody"></div>
-    </div>
+  <div class="grid" id="grid">
+    <div class="empty" id="emptyMsg">사진을 업로드하면 여기에 카드가 표시됩니다</div>
   </div>
-
-  <!-- 다시하기 -->
-  <button class="reset-btn" id="resetBtn" onclick="resetAll()">처음부터 다시하기</button>
-
-  <div style="height:40px"></div>
 </div>
 
 <script>
-/* ══════════════════════════════════
-   STATE — guide-data.js 의존성 제거
-══════════════════════════════════ */
-var ST = {
-  imageBase64: null,
-  imageMediaType: null,
-  analysis: null
-};
-
-var API_URL = '/api/recipe';
-
-/* ══════════════════════════════════════════════════════════
-   STEP 3 프롬프트 v15 — 4레이어 재구조화
-   [0] 역할+사고순서 → [D] 판단절차 → [K] 지식 → [O] 출력 → [G] 가드레일
-══════════════════════════════════════════════════════════ */
+/* PROMPTS — analyzer.html과 동기화 필요 */
 function buildTopInstruction(tp,bd){return['너는 15년차 동양인 모발 전문 컬러리스트야.','AI가 분석한 목표 색감을 보고, 동양인 모발에서 이 색감을 구현하려면 어떻게 해야 하는지 역추론해.','아래 컬러리스트 지식을 바탕으로 사고하되, 레시피는 네가 추론해서 만들어.','','■ 사고 순서 (반드시 이 순서로):','① 목표 색감 파악 — color_name_ko, tone, recipe_direction 읽기','② 탈색 필요 여부 — [D1] 판단 절차로 "버진모 가능 vs 탈색 필수" 결정','③ 필요 베이스 레벨 — [D2] 판단 절차로 "탈색 몇 회가 필요한가" 결정','④ 염모제 조합 추론 — [D3] 판단 절차 + [K] 지식 참조하여 조합 결정','⑤ 대안 베이스 추론 — [D4] 판단 절차. 단, 탈색 1회이거나 버진모 가능이면 이 단계를 건너뛴다.','⑥ 출력 — [O] 출력 규칙에 맞춰 JSON 조립. [G] 가드레일 체크 후 출력.'].join('\n');}
 var DECISION_NATURAL=['══════════════════════════════','[D] 판단 절차 — 자연모','══════════════════════════════','','=== [D1] 탈색 필요 여부 ===','','■ 핵심 질문: \"이 색감은 버진모(5레벨, 적색 멜라닌 가득)에서 가능한가?\"','','버진모에서 가능한 색감:','- 한색 방향 → 쿨브라운, 매트브라운, 애쉬브라운, 초코브라운 등 (브라운으로 수렴되는 결과가 곧 색감)','- 난색 방향 → 레드브라운, 로즈브라운, 와인빛 브라운, 블랙커런트 (적색 멜라닌과 같은 계열)','★ 애쉬브라운·초코브라운·쿨브라운 등 브라운 계열은 대부분 버진모 고산화제 리프팅으로 충분하다. [K13] 참조.','','탈색 필수인 색감:','- 투명감 + 선명함이 동시에 필요한 색감','- 잿빛·무채색이 투명하게 발색되어야 하는 색감 (브라운기 없이 무채색만 보이는 경우)','- 파스텔, 블론드, 베이지 등 가벼운 색감','- 올리브·카키 계열(애쉬카키/카키 염모제 필요) — 버진모의 적색 멜라닌이 올리브감을 방해한다. 탈색 1회 필수.','','★ 한색 계열에서 브라운기 없이 무채색(잿빛·회색·블루)이 투명하게 발색되어 있으면 → 탈색 후 입힌 색감이다.','동양인 버진모의 적색 멜라닌으로는 이런 무채색 투명 발색이 나올 수 없다.','★ 체감 명도가 낮다고 탈색 횟수를 줄이지 마라. 탈색 횟수는 \"이 색감을 만들려면 어떤 베이스가 필요한가\"로 판단하라.','','버진모에 한색 염모제를 올리면 왜 브라운으로 수렴하는가:','- 고명도 염모제가 적색 멜라닌을 어느 정도 깨면서 리프팅','- 깨진 자리에 노랑기가 드러남','- 염모제의 염료가 이 노랑기를 중화하는 데 소진됨','- 결국 색감 표현에 쓸 염료가 부족 → 적빛 없는 브라운으로 수렴','','난색(레드, 핑크)은 적색 멜라닌과 같은 계열이라 소진 없이 발색.','','→ 버진모 가능이면 [D3]으로. 탈색 필수이면 [D2]로.','','=== [D2] 필요 베이스 레벨 결정 ===','','■ 핵심 질문: "잔류 색소가 이 색감에서 활용되는가, 방해되는가?"','','■ 1회 vs 2회 — 주황기·브라운이 방해되는가:','탈색 1회(주황~노랑 14레벨 베이스)로 충분한 색감: 잔류 주황기·브라운이 색감의 일부로 활용되는 한색. 매트 애쉬, 올리브 애쉬, 애쉬 브라운, 카키 브라운 등.','탈색 2회(노랑 베이스) 필요한 색감: 잔류 주황기·브라운이 색감을 오염시키는 한색. 애쉬 그레이, 네이비 등.','★ 같은 계열명이라도 투명감·파스텔이 동반되면 잔류 색소가 방해된다. 판단 기준은 계열명이 아니라 "브라운기가 남아도 되는가"이다.','','■ 2회 vs 3회 — 노랑기가 방해되는가:','탈색 2회(노랑 베이스)로 충분한 색감: 노랑기가 보색(바이올렛)으로 잡히면서 색감에 녹아드는 경우. 애쉬 그레이, 네이비 등.','탈색 3회 이상 필요한 색감: 노랑기조차 색감을 오염시키는 경우. 파스텔, 실버, 밀크티 베이지, 라벤더 애쉬 등.','','→ 베이스 레벨이 결정되면 [D3]으로.','','=== [D3] 염모제 조합 추론 ===','','■ 추론 순서:','1. 보색 결정 → [K5] 보색 매칭표 참조.','2. 메인 염모제 계열 → color_name_ko와 recipe_direction 중심으로. [K9], [K11] 참조.','3. 뉘앙스 보조 → 컨트롤컬러 또는 보조 염모제로 미세 조절.','','★ 극고명도 색감(블론드, 백금발, 화이트 등)에서는 [K7] 극고명도 베이스 원리를 우선 적용하라.','블론드의 핵심은 염료 최소화이다. 애쉬를 메인으로 쓰면 회색이 되지 블론드가 아니다.','','→ 조합이 결정되면 [D4]로.','','=== [D4] 대안 베이스 수렴 추론 ===','','★ 탈색 1회이거나 버진모 가능이면 D4는 실행하지 마라. 탈색 2회 이상일 때만 실행.','','최적 베이스보다 한 단계 아래 레벨에서의 수렴 방향을 추론한다.','\"한 단계 아래\"는 [K3] 레벨 체계에서 바로 다음 단계. 예: 18→16, 16→14. 두 단계 이상 건너뛰지 마라.','파트A: 블록①의 레시피를 이 베이스에 그대로 적용하면 어떤 방향으로 빠지는지 1문장.','파트B: 이 베이스에서 조합을 바꾸면 어떤 색감까지 도달 가능한지 제시. \"이 베이스에서의 최선입니다\"로 마무리.','★ 최적 베이스와 리스크 베이스는 색감에 따라 네가 추론하라. 고정값이 아니다.'].join('\n');
 
@@ -187,71 +111,9 @@ var OUTPUT_NATURAL=['═══════════════════�
 var GUARDRAILS=['══════════════════════════════','[G] 가드레일 — 출력 전 체크리스트','══════════════════════════════','','=== [G1] 표기 ===','★ \"[계열] 염모제\" / \"[계열] 컨트롤컬러\" 구분 표기. 혼동 금지.','★ 출력에서 계열명은 반드시 한국어 풀네임으로 표기. 약어 금지. RV→\"레드바이올렛\" / AK→\"애쉬카키\" / BA→\"블루애쉬\" / NB→\"뉴트럴브라운\" / A→\"애쉬\" / V→\"바이올렛\" / R→\"레드\" / P→\"핑크\" / G→\"그린\" / K→\"카키\" / O→\"오렌지\" / Y→\"옐로우\".','★ 뉴트럴브라운(NB)은 염모제 계열이다. \"뉴트럴브라운 컨트롤컬러\" 금지.','★ 잔류 색소=노랑기/주황기/적색 용어. \"탁한 ~\" 금지→구체적 색감 방향으로.','★ 블록① 베이스명은 헤더(<b>)에만. 본문 반복 금지. 블록 간 같은 내용 반복 금지.','★ 버진모 판단 시 산화제(9%/12%) 필수 포함.','★ 고명도 염모제는 \"고명도(13·15레벨)\"로 표기. \"13레벨\" 또는 \"15레벨\" 단독 표기 금지.','★ virgin_recipe.text: 존댓말. \"소량\" 금지→\"13·15레벨\"/\"밝은 명도\"로 표기.','','=== [G2] 조합 제한 ===','★ 최대 3가지(염모제+염모제+컨트롤컬러). 2가지로 충분하면 2가지만.','','=== [G3] 입력 참조 ===','★ 색감명과 recipe_direction 중심. elements는 참고만. elements만 보고 계열 추가 금지.','★ 결과 색감명에 elements(매트함,황금빛 등) 가져다 쓰지 마라. 조합 계열에서 도출.','','=== [G4] 금지어 ===','\"원샷\"/\"멜라닌\"/\"중화\"/\"깨라\"/\"눌러\"/\"탁한\"/\"탁해진\"/숫자비율→\"소량\"으로만. \"1:1\"/\"2:1\" 등 구체적 비율 표기 금지./산화제 희석 비율 구체적 표기 금지(\"1:2로 희석\" 등). \"많이 희석\"/\"충분히 희석\" 등 정성적 표현만 사용./\"파우더\"→\"탈색약\"/상품명→계열명으로만/원리나열/교육/**기호/\"모발이 건조해~\"/\"트리트먼트로 보완\"/\"시술자의 판단에 따라\"/\"CC\"→\"컨트롤컬러\"/\"올리브 염모제\"→\"카키 염모제\" 또는 \"애쉬카키 염모제\"로/\"연핑크\"→\"핑크 컨트롤컬러 극소량\"으로','','=== [G5] 길이 제한 — 최우선 규칙 ===','★★★ 이 규칙은 다른 모든 규칙보다 우선한다. ★★★','★ 블록당 1~2문장만. 3문장 이상 절대 금지.','★ 블록①: 조합명 나열 + 결과 색감 1문장 끝.','★ 블록②: 대안 조합명 + 수렴 방향 1문장 끝.','★ 블록③: 실무 팁 1~2문장 끝.','★ virgin_recipe.text: 1~2문장.','★ 원리·이론·과정 설명 절대 금지. \"~되면서\", \"~소진되면서\", \"~잡히면서\" 식의 과정 서술 금지.','★ 너는 레시피만 전달하는 메모 역할이다. 교육하지 마라.'].join('\n');
 function buildStep3Prompt(tp,bd,st){return[buildTopInstruction('natural',bd),'',DECISION_NATURAL,'',KNOWLEDGE_V15,'',OUTPUT_NATURAL,'',GUARDRAILS].join('\n');}
 
-/* ══════════════════════════════════
-   STEP 1: 사진 업로드 + AI 분석
-   — 핵심 개선: 동양인 모발 역공학 판단
-══════════════════════════════════ */
-function handleUpload(input){
-  var file = input.files[0];
-  if(!file) return;
-
-  var MAX_SIZE = 1600;
-  var MAX_BYTES = 1000000;
-  var QUALITY_START = 0.9;
-  var QUALITY_MIN = 0.7;
-  var QUALITY_STEP = 0.05;
-
-  var reader = new FileReader();
-  reader.onload = function(e){
-    var img = new Image();
-    img.onload = function(){
-      // 리사이즈 필요 여부 판단
-      var w = img.width, h = img.height;
-      if(w > MAX_SIZE || h > MAX_SIZE){
-        if(w > h){ h = Math.round(h * MAX_SIZE / w); w = MAX_SIZE; }
-        else { w = Math.round(w * MAX_SIZE / h); h = MAX_SIZE; }
-      }
-
-      // canvas로 리사이즈 + JPEG 압축
-      var canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
-      var ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, w, h);
-
-      var quality = QUALITY_START;
-      var resizedFull = canvas.toDataURL('image/jpeg', quality);
-      while(resizedFull.length * 0.75 > MAX_BYTES && quality > QUALITY_MIN){
-        quality -= QUALITY_STEP;
-        quality = Math.round(quality * 100) / 100;
-        resizedFull = canvas.toDataURL('image/jpeg', quality);
-      }
-      var resizedData = resizedFull.split(',')[1];
-
-      var zone = document.getElementById('uploadZone');
-      zone.classList.add('has-image');
-      zone.innerHTML = '<img class="upload-preview" src="'+resizedFull+'" alt="업로드 사진"/>';
-      zone.onclick = null;
-
-      ST.imageBase64 = resizedData;
-      ST.imageMediaType = 'image/jpeg';
-
-      analyzeImage(resizedData, 'image/jpeg');
-    };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
-}
-
-function analyzeImage(base64, mediaType){
-  var loadEl = document.getElementById('analyzing');
-  var boxEl = document.getElementById('analysisBox');
-  boxEl.classList.remove('show');
-  loadEl.classList.add('show');
-
-  /* ── STEP 1 분석 프롬프트 (v11) ── */
-  var sysPrompt = [
-    '너는 미용실 헤어 컬러리스트를 위한 모발 색감 분석 전문가야.',
+function step1SysPrompt(){
+  return [
+'너는 미용실 헤어 컬러리스트를 위한 모발 색감 분석 전문가야.',
     '사진 속 모발의 색감을 분석하고, 동양인 모발에서 이 색감을 만들려면 어떤 조색 방향이 필요한지 판단해.',
     '',
     '■ 판단 순서 (반드시 이 순서):',
@@ -291,237 +153,269 @@ function analyzeImage(base64, mediaType){
     '{"color_name_ko":"한국어 색감명","tone":"cool/warm/neutral","hex":"#RRGGBB","elements":["속성"],"recipe_direction":"조색 방향 한 줄","description":"색감 묘사 2~3문장"}',
     '★ color_name_ko는 최대 3단어. 명도 수식어(다크, 밝은)는 색감명에 넣지 말고 description에서 표현하라. 예: "올리브 애쉬 브라운", "실버 애쉬 그레이", "애쉬 베이지", "밀크 베이지", "라벤더 애쉬".'
   ].join('\n');
+}
 
-  fetch(API_URL, {
+/* QA LOGIC */
+var API_URL = '/api/recipe';
+var MAX_ITEMS = 10;
+var items = [];
+var nextId = 1;
+
+function handleBatchUpload(input){
+  var files = Array.from(input.files || []);
+  if(!files.length) return;
+  var remaining = MAX_ITEMS - items.length;
+  if(remaining <= 0){ alert('최대 ' + MAX_ITEMS + '장까지 업로드 가능합니다.'); input.value = ''; return; }
+  if(files.length > remaining){ alert('최대 ' + MAX_ITEMS + '장까지 가능합니다. ' + remaining + '장만 추가됩니다.'); files = files.slice(0, remaining); }
+  var loaded = 0;
+  files.forEach(function(file){
+    resizeImage(file, function(base64, dataUrl){
+      items.push({ id: nextId++, filename: file.name, base64: base64, dataUrl: dataUrl, expectedRoute: '', status: 'pending', step1: null, step2: null, error: null });
+      loaded++;
+      if(loaded === files.length){ renderGrid(); updateToolbar(); }
+    });
+  });
+  input.value = '';
+}
+
+function resizeImage(file, cb){
+  var MAX_SIZE = 1600, MAX_BYTES = 1000000, QUALITY_START = 0.9, QUALITY_MIN = 0.7, QUALITY_STEP = 0.05;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var img = new Image();
+    img.onload = function(){
+      var w = img.width, h = img.height;
+      if(w > MAX_SIZE || h > MAX_SIZE){
+        if(w > h){ h = Math.round(h * MAX_SIZE / w); w = MAX_SIZE; }
+        else { w = Math.round(w * MAX_SIZE / h); h = MAX_SIZE; }
+      }
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      var q = QUALITY_START;
+      var data = canvas.toDataURL('image/jpeg', q);
+      while(data.length * 0.75 > MAX_BYTES && q > QUALITY_MIN){
+        q = Math.round((q - QUALITY_STEP) * 100) / 100;
+        data = canvas.toDataURL('image/jpeg', q);
+      }
+      cb(data.split(',')[1], data);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeItem(id){ items = items.filter(function(it){ return it.id !== id; }); renderGrid(); updateToolbar(); }
+function clearAll(){ if(!items.length) return; if(!confirm('전체 삭제하시겠어요?')) return; items = []; renderGrid(); updateToolbar(); document.getElementById('summaryBar').classList.remove('show'); }
+function setExpected(id, value){ var it = items.find(function(x){ return x.id === id; }); if(it) it.expectedRoute = value; updateSummary(); }
+
+function updateToolbar(){
+  var info = document.getElementById('infoText');
+  var runBtn = document.getElementById('runBtn');
+  if(!items.length){ info.textContent = '업로드된 사진 없음'; runBtn.disabled = true; }
+  else {
+    var pending = items.filter(function(it){ return it.status === 'pending'; }).length;
+    info.textContent = items.length + '장 / 대기 ' + pending + '장';
+    runBtn.disabled = (pending === 0);
+  }
+}
+
+async function runAll(){
+  var pending = items.filter(function(it){ return it.status === 'pending'; });
+  if(!pending.length) return;
+  var runBtn = document.getElementById('runBtn');
+  runBtn.disabled = true;
+  runBtn.textContent = '검수 중...';
+  for(var i = 0; i < pending.length; i++){ await runOne(pending[i]); }
+  runBtn.textContent = '전체 검수 실행';
+  updateToolbar();
+  updateSummary();
+}
+
+async function runOne(item){
+  item.status = 'running';
+  renderCard(item.id);
+  try {
+    var step1 = await callStep1(item.base64);
+    item.step1 = step1;
+    renderCard(item.id);
+    var step2 = await callStep2(step1);
+    item.step2 = step2;
+    item.status = 'done';
+  } catch(e) {
+    item.error = e.message || String(e);
+    item.status = 'error';
+  }
+  renderCard(item.id);
+}
+
+function callStep1(base64){
+  return fetch(API_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {'Content-Type':'application/json'},
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
       max_tokens: 600,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
-          { type: 'text', text: '이 사진 속 모발의 색감을 역공학 분석해줘.' }
-        ]
-      }],
-      system: sysPrompt
+      system: step1SysPrompt(),
+      messages: [{ role: 'user', content: [
+        {type:'image', source:{type:'base64', media_type:'image/jpeg', data:base64}},
+        {type:'text', text:'이 사진 속 모발의 색감을 역공학 분석해줘.'}
+      ]}]
     })
   })
   .then(function(r){ return r.json(); })
   .then(function(data){
-    loadEl.classList.remove('show');
-    try {
-      var txt = data.content.map(function(b){ return b.text||''; }).join('');
-      txt = txt.replace(/```json|```/g,'').trim();
-      var result = JSON.parse(txt);
-      ST.analysis = result;
-      showAnalysis(result);
-    } catch(e) {
-      boxEl.innerHTML = '<div class="analysis-label">분석 실패</div><div class="analysis-desc">사진을 다시 업로드해주세요. 모발이 잘 보이는 사진이면 더 정확해요.</div>';
-      boxEl.classList.add('show');
-    }
-  })
-  .catch(function(err){
-    loadEl.classList.remove('show');
-    boxEl.innerHTML = '<div class="analysis-label">연결 오류</div><div class="analysis-desc">네트워크를 확인해주세요.</div>';
-    boxEl.classList.add('show');
+    if(data.error) throw new Error('Step1 API: ' + JSON.stringify(data.error).substring(0,200));
+    if(!data.content) throw new Error('Step1: content 없음');
+    var txt = data.content.map(function(b){ return b.text||''; }).join('').replace(/```json|```/g,'').trim();
+    var m = txt.match(/\{[\s\S]*\}/);
+    if(!m) throw new Error('Step1: JSON 못찾음');
+    return JSON.parse(m[0]);
   });
 }
 
-function showAnalysis(result){
-  var box = document.getElementById('analysisBox');
-  document.getElementById('analysisSwatch').style.background = result.hex || '#ccc';
-  document.getElementById('analysisName').textContent = result.color_name_ko || '—';
-
-  // 톤 표시
-  var toneMap = {cool:'한색(쿨) 계열', warm:'난색(웜) 계열', neutral:'뉴트럴 계열'};
-  document.getElementById('analysisLevel').textContent = toneMap[result.tone] || '—';
-
-  document.getElementById('analysisDesc').textContent = result.description || '';
-
-  // elements 태그 + recipe_direction 표시
-  var tagWrap = document.getElementById('analysisTagWrap');
-  var html = '';
-
-  // elements 태그들
-  if(result.elements && result.elements.length > 0){
-    html += '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:10px">';
-    result.elements.forEach(function(el){
-      html += '<span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;background:#D4B89618;color:#8B7355">' + el + '</span>';
-    });
-    html += '</div>';
-  }
-
-  // recipe_direction
-  if(result.recipe_direction){
-    html += '<div style="margin-top:10px;padding:10px 12px;border-radius:8px;background:rgba(26,24,20,0.04);font-size:12px;color:#555;line-height:1.6">';
-    html += '<span style="font-weight:700;color:#1A1814">조색 방향</span> · ' + result.recipe_direction;
-    html += '</div>';
-  }
-
-  tagWrap.innerHTML = html;
-
-  box.classList.add('show');
-
-  setTimeout(function(){
-    var btn = document.getElementById('recipeBtn');
-    btn.classList.add('show');
-    btn.disabled = false;
-  }, 300);
-}
-
-/* ══════════════════════════════════
-   STEP 2: 레시피 생성 — 자연모 고정
-══════════════════════════════════ */
-function generateRecipe(){
-  var btn = document.getElementById('recipeBtn');
-  btn.disabled = true;
-  btn.textContent = '레시피 생성 중...';
-
+function callStep2(step1){
   var baseDesc = '자연모/염색모 (동양인, 적색멜라닌 가득, 탈색 이력 없음, 약 5레벨)';
-
-  /* ── STEP 2 레시피 프롬프트 (v15 — 4레이어 재구조화) ── */
   var sysPrompt = buildStep3Prompt('natural', baseDesc, null);
-
   var userMsg = [
     '현재 모발: ' + baseDesc,
-    'AI 분석 색감: ' + ST.analysis.color_name_ko,
-    '톤: ' + ST.analysis.tone,
-    'hex: ' + (ST.analysis.hex || ''),
-    '색감 속성: ' + (ST.analysis.elements ? ST.analysis.elements.join(', ') : '없음'),
-    '조색 방향: ' + (ST.analysis.recipe_direction || ''),
-    '색감 설명: ' + ST.analysis.description,
+    'AI 분석 색감: ' + step1.color_name_ko,
+    '톤: ' + step1.tone,
+    'hex: ' + (step1.hex || ''),
+    '색감 속성: ' + (step1.elements ? step1.elements.join(', ') : '없음'),
+    '조색 방향: ' + (step1.recipe_direction || ''),
+    '색감 설명: ' + step1.description,
     '',
     '이 색감을 현재 모발에서 구현하려면 어떻게 해야 하는지 레시피를 만들어줘.'
   ].join('\n');
-
-  fetch(API_URL, {
+  return fetch(API_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {'Content-Type':'application/json'},
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
       max_tokens: 2048,
       system: sysPrompt,
-      messages: [{ role: 'user', content: userMsg }]
+      messages: [{role:'user', content:userMsg}]
     })
   })
   .then(function(r){ return r.json(); })
   .then(function(data){
-    try {
-      if(data.error){ showRecipeError('API 오류: ' + JSON.stringify(data.error)); return; }
-      if(!data.content){ showRecipeError('응답에 content가 없음: ' + JSON.stringify(data).substring(0,300)); return; }
-      var txt = data.content.map(function(b){ return b.text||''; }).join('');
-      if(!txt.trim()){ showRecipeError('응답 텍스트가 비어있음. stop_reason: ' + (data.stop_reason||'없음')); return; }
-      txt = txt.replace(/```json|```/g,'').trim();
-      // JSON 객체 추출 (모델이 앞뒤에 텍스트를 붙일 경우 대비)
-      var jsonMatch = txt.match(/\{[\s\S]*\}/);
-      if(!jsonMatch){ showRecipeError('JSON을 찾을 수 없음. 응답 앞부분: ' + txt.substring(0,200)); return; }
-      var recipe = JSON.parse(jsonMatch[0]);
-      showRecipe(recipe);
-    } catch(e) {
-      showRecipeError('파싱 오류: ' + e.message + ' / 응답: ' + JSON.stringify(data).substring(0,300));
-    }
-  })
-  .catch(function(err){
-    showRecipeError('네트워크 오류: ' + err.message);
+    if(data.error) throw new Error('Step2 API: ' + JSON.stringify(data.error).substring(0,200));
+    if(!data.content) throw new Error('Step2: content 없음');
+    var txt = data.content.map(function(b){ return b.text||''; }).join('').replace(/```json|```/g,'').trim();
+    var m = txt.match(/\{[\s\S]*\}/);
+    if(!m) throw new Error('Step2: JSON 못찾음');
+    return JSON.parse(m[0]);
   });
 }
 
-function showRecipe(recipe){
-  var btn = document.getElementById('recipeBtn');
-  btn.classList.remove('show');
+function extractActualRoute(step2){
+  if(!step2 || !step2.summary) return '';
+  var s = step2.summary;
+  if(s.indexOf('탈색') === -1) return '버진모 가능';
+  var m = s.match(/탈색\s*(\d+)\s*회/);
+  if(!m) return '탈색 필수';
+  var n = parseInt(m[1], 10);
+  if(n === 1) return '탈색 1회';
+  if(n === 2) return '탈색 2회';
+  if(n >= 3) return '탈색 3회 이상';
+  return '탈색 필수';
+}
 
-  var srcEl = document.getElementById('recipeSource');
-  srcEl.innerHTML = '<span class="source-tag ai">AI 원리 기반 생성</span>';
+function checkMatch(item){
+  if(!item.expectedRoute) return 'na';
+  if(item.status !== 'done') return 'na';
+  var actual = extractActualRoute(item.step2);
+  return (actual === item.expectedRoute) ? 'match' : 'miss';
+}
 
-  var hdr = document.getElementById('recipeHeader');
-  var summaryHtml = (recipe.summary || '').replace(/\n/g, '<br>');
-  var noteHtml = (recipe.summary && recipe.summary.indexOf('탈색') !== -1) ? '<div class="recipe-summary-note"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>모질에 따라 탈색횟수는 편차가 있습니다. 잔류 색소를 확인하세요.</div>' : '';
-  hdr.innerHTML = '<div class="recipe-from-to">' + summaryHtml + '</div>' + noteHtml;
+function updateSummary(){
+  var bar = document.getElementById('summaryBar');
+  var tagged = items.filter(function(it){ return it.expectedRoute; });
+  var done = tagged.filter(function(it){ return it.status === 'done'; });
+  if(!done.length){ bar.classList.remove('show'); return; }
+  var match = done.filter(function(it){ return checkMatch(it) === 'match'; }).length;
+  var miss = done.length - match;
+  bar.innerHTML =
+    '<span class="stat">전체 태그됨 <span class="num">' + tagged.length + '</span></span>' +
+    '<span class="stat">검수 완료 <span class="num">' + done.length + '</span></span>' +
+    '<span class="stat match">일치 <span class="num">' + match + '</span></span>' +
+    '<span class="stat miss">불일치 <span class="num">' + miss + '</span></span>';
+  bar.classList.add('show');
+}
 
-  var body = document.getElementById('recipeBody');
-  var html = '';
-  if(recipe.tips){
-    var tipsText = recipe.tips;
-    var tipsHtml = tipsText.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
-    tipsHtml = tipsHtml.replace(/<b>/g, '<span class="base-label">').replace(/<\/b>/g, '</span>');
-    tipsHtml = tipsHtml.replace(/<span>/g, '<span class="mix-label">').replace(/<\/span><\/span>/g, '</span>');
+function renderGrid(){
+  var grid = document.getElementById('grid');
+  if(!items.length){ grid.innerHTML = '<div class="empty">사진을 업로드하면 여기에 카드가 표시됩니다</div>'; return; }
+  grid.innerHTML = items.map(function(it){ return cardHTML(it); }).join('');
+}
 
-    // 난색 판정 (불필요해졌지만 혹시 모를 용도로 보존)
-    // var isWarmColor = ST.analysis && ST.analysis.elements && (ST.analysis.elements.indexOf('붉은기') !== -1 || ST.analysis.elements.indexOf('핑크기') !== -1);
+function renderCard(id){
+  var item = items.find(function(it){ return it.id === id; });
+  if(!item) return;
+  var el = document.getElementById('card-' + id);
+  if(el){ el.outerHTML = cardHTML(item); } else { renderGrid(); }
+}
 
-    // 모든 케이스: AI 추론 레시피 렌더링
-    html += '<div class="recipe-tips"><div class="recipe-tips-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>실무조언</div><div class="recipe-tips-text">' + tipsHtml + '</div>';
-
-    // virgin_recipe 보조 박스
-    if(recipe.virgin_recipe){
-      var vr2 = recipe.virgin_recipe;
-      html += '<div class="recipe-virgin-box"><div class="recipe-virgin-title">' + (vr2.title || '탈색 없이 최대한 연출하려면') + '</div><div class="recipe-virgin-text">';
-      html += vr2.text || '';
-      html += '</div></div>';
-    }
-
-    html += '</div>';
+function cardHTML(item){
+  var statusText = {pending:'대기', running:'분석 중...', done:'완료', error:'오류'}[item.status] || '대기';
+  var resultHTML = '';
+  if(item.step1){
+    var elsHtml = (item.step1.elements || []).map(function(e){
+      return '<span style="display:inline-block;font-size:10px;padding:2px 6px;border-radius:4px;background:#D4B89620;color:#8B7355;margin:1px 2px 1px 0">'+e+'</span>';
+    }).join('');
+    resultHTML =
+      '<div class="result-box show">' +
+        '<div class="row"><span class="label">색감명</span><span class="value"><span class="swatch" style="background:'+(item.step1.hex||'#ccc')+'"></span>'+item.step1.color_name_ko+'</span></div>' +
+        '<div class="row"><span class="label">톤</span><span class="value">'+item.step1.tone+'</span></div>' +
+        '<div class="row"><span class="label">조색 방향</span><span class="value">'+(item.step1.recipe_direction||'—')+'</span></div>' +
+        '<div class="row"><span class="label">속성</span><span class="value">'+(elsHtml||'—')+'</span></div>' +
+      '</div>';
   }
-  body.innerHTML = html;
+  var step2HTML = '';
+  if(item.step2){
+    var tipsHtml = (item.step2.tips||'').replace(/\n/g,'<br>');
+    step2HTML =
+      '<div class="step2-preview show">' +
+        '<div class="summary">'+(item.step2.summary||'')+'</div>' +
+        '<div class="tips">'+tipsHtml+'</div>' +
+      '</div>';
+  }
+  var matchHTML = '';
+  if(item.status === 'done' && item.expectedRoute){
+    var m = checkMatch(item);
+    var actual = extractActualRoute(item.step2);
+    var label = (m === 'match') ? '✓ 일치 (' + actual + ')' : '✗ 불일치 (실제: ' + actual + ')';
+    matchHTML = '<span class="match-badge ' + m + '">' + label + '</span>';
+  }
+  var errorHTML = '';
+  if(item.error){ errorHTML = '<div style="font-size:11px;color:#C0392B;background:#FCE4E4;padding:8px;border-radius:6px;white-space:pre-wrap">'+item.error+'</div>'; }
 
-  document.getElementById('recipeWrap').classList.add('show');
-  document.getElementById('resetBtn').classList.add('show');
-
-  setTimeout(function(){
-    document.getElementById('recipeWrap').scrollIntoView({behavior:'smooth', block:'start'});
-  }, 200);
+  return '' +
+    '<div class="card" id="card-'+item.id+'">' +
+      '<div class="img-wrap">' +
+        '<img src="'+item.dataUrl+'" alt=""/>' +
+        '<button class="remove-btn" onclick="removeItem('+item.id+')">×</button>' +
+      '</div>' +
+      '<div class="card-filename">'+item.filename+'</div>' +
+      '<select class="expected-select" onchange="setExpected('+item.id+', this.value)">' +
+        '<option value="">예상 루트 (선택)</option>' +
+        '<option value="버진모 가능"'+(item.expectedRoute==='버진모 가능'?' selected':'')+'>버진모 가능</option>' +
+        '<option value="탈색 1회"'+(item.expectedRoute==='탈색 1회'?' selected':'')+'>탈색 1회</option>' +
+        '<option value="탈색 2회"'+(item.expectedRoute==='탈색 2회'?' selected':'')+'>탈색 2회</option>' +
+        '<option value="탈색 3회 이상"'+(item.expectedRoute==='탈색 3회 이상'?' selected':'')+'>탈색 3회 이상</option>' +
+      '</select>' +
+      '<div><span class="status '+item.status+'">'+statusText+'</span>'+
+        (matchHTML ? ' ' + matchHTML : '')+
+      '</div>' +
+      resultHTML +
+      step2HTML +
+      errorHTML +
+    '</div>';
 }
 
-function showRecipeError(detail){
-  var btn = document.getElementById('recipeBtn');
-  btn.disabled = false;
-  btn.textContent = '레시피 생성';
-  var msg = '레시피 생성에 실패했어요.';
-  if(detail) msg += '\n\n[디버그 정보]\n' + detail;
-  alert(msg);
-}
-
-/* ══════════════════════════════════
-   RESET
-══════════════════════════════════ */
-function resetAll(){
-  ST = { imageBase64:null, imageMediaType:null, analysis:null };
-
-  var zone = document.getElementById('uploadZone');
-  zone.classList.remove('has-image');
-  zone.innerHTML = '<div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div><div class="txt">고객이 원하는 헤어 컬러 사진을<br><b>탭하여 업로드</b>해주세요</div>';
-  zone.onclick = function(){ document.getElementById('fileInput').click(); };
-
-  var oldInput = document.getElementById('fileInput');
-  var newInput = document.createElement('input');
-  newInput.type = 'file';
-  newInput.id = 'fileInput';
-  newInput.accept = 'image/*';
-  newInput.style.display = 'none';
-  newInput.onchange = function(ev){ handleUpload(ev.target); };
-  oldInput.parentNode.replaceChild(newInput, oldInput);
-
-  document.getElementById('analysisBox').classList.remove('show');
-  document.getElementById('analysisBox').innerHTML = '<div class="analysis-label">AI 분석 결과</div><div class="analysis-color-row"><div class="analysis-swatch" id="analysisSwatch"></div><div><div class="analysis-color-name" id="analysisName">—</div><div class="analysis-color-level" id="analysisLevel">—</div></div></div><div class="analysis-desc" id="analysisDesc"></div><div id="analysisTagWrap"></div>';
-  document.getElementById('analyzing').classList.remove('show');
-
-  var btn = document.getElementById('recipeBtn');
-  btn.style.display = '';
-  btn.classList.remove('show');
-  btn.disabled = true;
-  btn.textContent = '레시피 생성';
-
-  document.getElementById('recipeWrap').classList.remove('show');
-  document.getElementById('resetBtn').classList.remove('show');
-
-  document.getElementById('recipeSource').innerHTML = '';
-  document.getElementById('recipeHeader').innerHTML = '';
-  document.getElementById('recipeBody').innerHTML = '';
-
-  window.scrollTo({top:0, behavior:'smooth'});
-}
+renderGrid();
+updateToolbar();
 </script>
 </body>
 </html>
