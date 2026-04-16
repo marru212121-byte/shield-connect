@@ -6,7 +6,7 @@
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
-<title>AI 컬러 레시피</title>
+<title>AI 조색·레시피 가이드</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&display=swap');
@@ -90,7 +90,8 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 .upload-guide-box .body{flex:1}
 .upload-guide-box .title{font-size:12px;font-weight:700;margin-bottom:6px;line-height:1.5}
 .upload-guide-box.tips .title{color:#6B5435}
-.upload-guide-box.notice .title{color:#5F4C38;font-size:15px;margin-bottom:10px;letter-spacing:-0.2px}
+.upload-guide-box.notice .title{color:#5F4C38;font-size:15px;margin-bottom:10px;letter-spacing:-0.2px;line-height:1.5}
+.upload-guide-box.notice .title + .title{margin-top:0;padding-top:10px;border-top:1px dashed rgba(139,115,85,0.28)}
 .upload-guide-box .list{font-size:11.5px;line-height:1.75;color:#6B5D4E}
 .upload-guide-box .list .item{display:flex;gap:6px;align-items:flex-start}
 .upload-guide-box .list .item::before{content:"·";font-weight:700;color:#A38456;flex-shrink:0}
@@ -129,12 +130,12 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 
   <!-- 헤더 -->
   <div class="page-header">
-    <a class="back-btn" href="./index.html">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    <a class="back-btn" href="./index.html" aria-label="홈으로">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     </a>
     <div>
-      <h2>AI 컬러 레시피</h2>
-      <div class="sub">사진 분석 → 시술 레시피 자동 생성</div>
+      <h2>AI 조색·레시피 가이드</h2>
+      <div class="sub">사진 분석 → 조색 방향 제안</div>
     </div>
   </div>
 
@@ -156,6 +157,7 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
         <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
         <div class="body">
           <div class="title">결과는 레시피·조색 가이드 참조용</div>
+          <div class="title">색감 면적이 넓게 보이는 뒷머리 중심의 사진일수록 정확해요</div>
           <div class="desc">AI는 사람 눈보다 미세한 색감까지 잡아내므로<br>연출된 색감과 자연 발생한 뉘앙스 구분이<br>어려울 수 있어요.<br><br>최종 판단은 시술자의 경험과 현 언더톤 상태를<br>우선시하세요.</div>
         </div>
       </div>
@@ -166,7 +168,6 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
           <div class="list">
             <div class="item">얼룩·반사·그림자 없는 깨끗한 사진</div>
             <div class="item">직접 촬영보다 저장된 원본 사진 권장 (조명·화이트밸런스 왜곡 방지)</div>
-            <div class="item">뒷모습·옆모습 등 모발이 넓게 보이는 각도</div>
             <div class="item">필터·보정이 적용되지 않은 원본</div>
             <div class="item">여러 조명 아래 같은 색감이면 더 정확</div>
           </div>

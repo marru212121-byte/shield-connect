@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
-<title>AI 스타일 분석기</title>
+<title>AI 스타일 가이드</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -14,7 +14,7 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 .app{width:100%;max-width:430px;margin:0 auto;min-height:100dvh;background:#FAFAF7}
 @media(min-width:431px){.app{border-left:1px solid #e8e4df;border-right:1px solid #e8e4df}}
 
-.page-header{display:flex;align-items:center;gap:12px;padding:14px 16px;position:sticky;top:0;z-index:100;background:rgba(250,250,247,0.92);backdrop-filter:blur(12px);border-bottom:1px solid #e8e4df}
+.page-header{display:flex;align-items:center;gap:12px;padding:14px 16px;padding-top:max(14px, calc(env(safe-area-inset-top, 0px) + 10px));position:sticky;top:0;z-index:100;background:rgba(250,250,247,0.92);backdrop-filter:blur(12px);border-bottom:1px solid #e8e4df}
 .back-btn{width:34px;height:34px;border-radius:12px;border:1.5px solid #e8e4df;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;text-decoration:none}
 .back-btn svg{color:#A8A29E}
 .page-header h2{font-size:16px;font-weight:800;margin:0}
@@ -36,6 +36,26 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 .analyzing.show{display:block}
 .analyzing .spinner{width:28px;height:28px;border:3px solid #e8e4df;border-top-color:#3D6B4A;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
 .analyzing .txt{font-size:13px;color:#A8A29E}
+
+/* 업로드 전 가이드 박스 (analyzer.html 톤 맞춤 — 녹색 계열로 변주) */
+.upload-guide{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.upload-guide.hide{display:none}
+.upload-guide-box{display:flex;gap:10px;align-items:flex-start;border-radius:10px;padding:12px 14px}
+.upload-guide-box.tips{background:#F3F7F4;border:1px solid #DCE8E0}
+.upload-guide-box.notice{background:#EDF3EF;border:1px solid #CFDFD4;padding:16px 16px}
+.upload-guide-box .icon{flex-shrink:0;margin-top:1px}
+.upload-guide-box.tips .icon{color:#4F7A5E}
+.upload-guide-box.notice .icon{color:#3D6B4A;margin-top:3px}
+.upload-guide-box .body{flex:1}
+.upload-guide-box .title{font-size:12px;font-weight:700;margin-bottom:6px;line-height:1.5}
+.upload-guide-box.tips .title{color:#385846}
+.upload-guide-box.notice .title{color:#2E4E3A;font-size:15px;margin-bottom:10px;letter-spacing:-0.2px;line-height:1.5}
+.upload-guide-box.notice .title + .title{margin-top:0;padding-top:10px;border-top:1px dashed rgba(61,107,74,0.28)}
+.upload-guide-box .list{font-size:11.5px;line-height:1.75;color:#4A5D50}
+.upload-guide-box .list .item{display:flex;gap:6px;align-items:flex-start}
+.upload-guide-box .list .item::before{content:"·";font-weight:700;color:#4F7A5E;flex-shrink:0}
+.upload-guide-box.notice .desc{font-size:13.5px;line-height:1.85;color:#2E4E3A;letter-spacing:-0.1px}
+.upload-guide-box .desc{font-size:11.5px;line-height:1.7;color:#4A5D50}
 
 /* 탭 메뉴 */
 .tab-bar{display:none;margin-top:14px;border-radius:10px;background:#f0ece6;padding:3px;gap:0}
@@ -78,8 +98,10 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 <body>
 <div class="app">
   <div class="page-header">
-    <a class="back-btn" href="./index.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></a>
-    <div><h2>AI 스타일 분석기</h2><div class="sub">사진 업로드 → 컷트 & 드라이 분석</div></div>
+    <a class="back-btn" href="./index.html" aria-label="홈으로">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </a>
+    <div><h2>AI 스타일 가이드</h2><div class="sub">사진 분석 → 컷트·드라이 구조 제안</div></div>
   </div>
 
   <div class="card">
@@ -89,6 +111,31 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
       <div class="txt">원하는 헤어스타일 사진을<br><b>탭하여 업로드</b>해주세요</div>
     </div>
     <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleUpload(this)"/>
+
+    <!-- 업로드 가이드 (업로드 전 표시) -->
+    <div class="upload-guide" id="uploadGuide">
+      <div class="upload-guide-box notice">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <div class="body">
+          <div class="title">결과는 컷·드라이 구조 가이드 참조용</div>
+          <div class="title">이미 핸드폰에 저장된 앞모습 사진이면 정확해요 (포트폴리오 사진 등)</div>
+          <div class="desc">AI가 실루엣과 컷트 구조를 역추정하지만,<br>실제 모질·두상·얼굴형에 따라<br>같은 구조도 다른 결과로 표현될 수 있어요.<br><br>최종 디자인 판단은 시술자의 경험을<br>우선시하세요.</div>
+        </div>
+      </div>
+      <div class="upload-guide-box tips">
+        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <div class="body">
+          <div class="title">정확한 분석을 위한 사진 가이드</div>
+          <div class="list">
+            <div class="item">옆모습·뒷모습이 함께 있으면 실루엣·무게선 판별에 유리</div>
+            <div class="item">필터·보정이 적용되지 않은 원본 사진</div>
+            <div class="item">움직이는 중이 아닌, 모발이 고정된 상태</div>
+            <div class="item">단일 인물, 역광·강한 그림자는 피하기</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="analyzing" id="analyzing"><div class="spinner"></div><div class="txt">스타일을 분석하고 있어요...</div></div>
 
     <!-- 탭 -->
@@ -110,20 +157,63 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 <script>
 var API_URL = '/api/recipe';
 
+/* ══════════════════════════════════
+   사진 업로드 + 리사이즈 + 압축
+   (analyzer.html과 동일 로직으로 통일)
+══════════════════════════════════ */
 function handleUpload(input){
-  var file = input.files[0]; if(!file) return;
+  var file = input.files[0];
+  if(!file) return;
+
+  var MAX_SIZE = 1600;
+  var MAX_BYTES = 1000000;
+  var QUALITY_START = 0.9;
+  var QUALITY_MIN = 0.7;
+  var QUALITY_STEP = 0.05;
+
   var reader = new FileReader();
   reader.onload = function(e){
-    var full=e.target.result, b64=full.split(',')[1], mt=file.type||'image/jpeg';
-    var zone = document.getElementById('uploadZone');
-    zone.classList.add('has-image');
-    zone.innerHTML = '<img class="upload-preview" src="'+full+'" alt=""/>';
-    zone.onclick = null;
-    doAnalyze(b64, mt);
+    var img = new Image();
+    img.onload = function(){
+      // 리사이즈 필요 여부 판단
+      var w = img.width, h = img.height;
+      if(w > MAX_SIZE || h > MAX_SIZE){
+        if(w > h){ h = Math.round(h * MAX_SIZE / w); w = MAX_SIZE; }
+        else { w = Math.round(w * MAX_SIZE / h); h = MAX_SIZE; }
+      }
+
+      // canvas로 리사이즈 + JPEG 압축
+      var canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+
+      var quality = QUALITY_START;
+      var resizedFull = canvas.toDataURL('image/jpeg', quality);
+      while(resizedFull.length * 0.75 > MAX_BYTES && quality > QUALITY_MIN){
+        quality -= QUALITY_STEP;
+        quality = Math.round(quality * 100) / 100;
+        resizedFull = canvas.toDataURL('image/jpeg', quality);
+      }
+      var resizedData = resizedFull.split(',')[1];
+
+      var zone = document.getElementById('uploadZone');
+      zone.classList.add('has-image');
+      zone.innerHTML = '<img class="upload-preview" src="'+resizedFull+'" alt=""/>';
+      zone.onclick = null;
+      document.getElementById('uploadGuide').classList.add('hide');
+
+      doAnalyze(resizedData, 'image/jpeg');
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
 
+/* ══════════════════════════════════
+   분석 (재시도 로직 포함 — analyzer.html 통일)
+══════════════════════════════════ */
 function doAnalyze(b64, mt){
   var ld = document.getElementById('analyzing');
   document.getElementById('resultCut').classList.remove('show');
@@ -176,8 +266,62 @@ function doAnalyze(b64, mt){
     '예) 턱선 아래부터 / 쇄골 높이에서 / 어깨선 위 5cm / 귀 아래부터',
     '틀린 예) "크라운부터" "정수리부터" "머리 꼭대기부터" ← 이런 표현 금지.',
     '',
-    '★★★ 출력 형식 ★★★',
-    'JSON만 출력. 마크다운 금지. 한 번에 컷트+드라이 모두 출력.',
+    '══ 한국 살롱 트렌드 명명 참고 (style_name·keywords 결정에 활용) ══',
+    '★ 사진의 시각적 특징이 해당 명명과 확실히 맞을 때만 사용. 억지 매핑 금지.',
+    '★ 서양 전문용어(Shag, Mullet, Bowl Cut 등)는 한국 대응명으로 출력.',
+    '★ 확실하지 않으면 보수적으로 "중장 레이어드 컷" 같은 일반명으로.',
+    '',
+    '■ 여성 — 중장·긴 길이',
+    '- 허쉬컷: 얼굴 주변 C컬·J컬 레이어 + 풍성한 볼륨감, 턱선~가슴 길이',
+    '- 울프컷: 탑(정수리) 볼륨 + 뒷목이 깃털처럼 얇아지는 멀릿 실루엣',
+    '- 레이어드컷: 뚜렷한 층 구조가 주인공, 움직임·경량감 강조',
+    '- 페이스프레이밍 / 얼굴라인컷: 얼굴 앞쪽만 짧은 C컬 레이어',
+    '- 애즈컷: 얼굴형 따라 부드럽게 이어지는 층, 극적이지 않음',
+    '',
+    '■ 여성 — 단발·중단',
+    '- 태슬컷: 단발 끝이 다듬어지지 않은 거친 질감, 술처럼 풀린 마감',
+    '- C컬 단발 / 안말음 단발: 끝이 안쪽으로 말린 어깨·쇄골 단발',
+    '- 블런트보브 / 일자단발: 일직선 무게선의 깔끔한 단발',
+    '- 스왈로우컷: 뒷면이 V자·제비꼬리로 떨어지는 단발',
+    '- 미스트컷 / 구름컷: 가볍고 흐릿한 층감이 뭉쳐있는 스타일',
+    '',
+    '■ 남성',
+    '- 가르마컷 / 가르마펌: 가르마 중심 대칭 스타일',
+    '- 리프컷: 나뭇잎처럼 결이 흐르는 미들 길이',
+    '- 쉐도우컷: 페이드 없이 사이드가 자연스럽게 어두워지는 컷',
+    '- 크롭컷: 짧고 거친 텍스처의 탑',
+    '- 댄디컷: 단정한 사이드 + 적당한 탑 볼륨',
+    '- 투블럭 변형: 크롭 투블럭 / 포마드 투블럭 / 가르마 투블럭',
+    '',
+    '■ 앞머리 유형 (성별 공통)',
+    '- 시스루뱅: 투명하게 비치는 얇은 앞머리',
+    '- 처피뱅: 거친 질감 + 두꺼운 앞머리, 끝이 날것',
+    '- 커튼뱅: 가운데 가르마 + 양옆으로 떨어지는 사이드뱅',
+    '- 블런트뱅 / 일자뱅: 일자로 떨어지는 두꺼운 앞머리',
+    '- 베이비뱅: 이마 높이의 극단적 짧은 앞머리',
+    '- 사이드뱅: 한쪽으로 흐르는 앞머리',
+    '- 노뱅: 앞머리 없이 얼굴 트임',
+    '',
+    '■ 드라이 방향·결 용어',
+    '- 안말음 C컬 / 겉말음 C컬: 모끝 방향 명시',
+    '- S컬 드라이: 안팎 번갈아 웨이브',
+    '- 뿌리 볼륨 / 루트 볼륨: 두피 쪽 세우기',
+    '- 내추럴 웨이브: 약한 자연스러운 결',
+    '- 러프 드라이: 손으로 흩뿌린 듯 거친 마감',
+    '',
+    '■ 실루엣·무게선 용어',
+    '- A라인 / U라인 / V라인: 무게선 모양',
+    '- 턱선컷 / 쇄골컷 / 어깨컷: 길이 기준점',
+    '',
+    '■ 혼동 방지 (오인 잦은 조합)',
+    '- 허쉬컷 vs 울프컷: 얼굴 주변 볼륨 주인공 → 허쉬 / 탑+멀릿 실루엣 → 울프',
+    '- 단발 끝 날것 질감 → 태슬컷 / 끝 정돈 → 블런트보브·C컬 단발',
+    '- 레이어드 + 얼굴라인 강조 → 페이스프레이밍 / 전체 볼륨감 → 허쉬컷',
+    '',
+    '■ 출력 — 절대 규칙:',
+    '★★★ 응답은 오직 JSON 객체 하나. 그 외 텍스트·설명·사고 과정 금지. ★★★',
+    '- 첫 글자는 {, 마지막 글자는 }.',
+    '- ```json 같은 코드 블록 금지. 인사·전제·결론 멘트 금지.',
     '각 키워드 값은 1줄 이내, 핵심만 간결하게.',
     '',
     '{',
@@ -217,38 +361,69 @@ function doAnalyze(b64, mt){
     '★ keywords의 label은 예시 기준이되, 해당 없으면 생략하고 사진에 맞는 항목을 자유롭게 추가.',
     '★ 남성 컷트 시 추가 가능: 클리퍼 구간 / 디스커넥션',
     '★ 남성 드라이 시 추가 가능: 가르마 방향 / 텍스처',
-    '★ keywords의 value만 1줄 이내. description과 silhouette은 충분히 서술할 것.'
+    '★ keywords의 value만 1줄 이내. description과 silhouette은 아래 길이 규칙 준수.',
+    '',
+    '══ ★★★ 출력 길이 규칙 (엄격) ★★★ ══',
+    '★ silhouette: 정확히 1~2문장. 3문장 이상 절대 금지.',
+    '★ cut.description: 정확히 3~4문장. 5문장 이상 절대 금지.',
+    '★ dry.description: 정확히 3~4문장. 5문장 이상 절대 금지.',
+    '★ keywords.value: 1줄, 최대 25자 내외.',
+    '★ 원리·이론·설명·교육 멘트 금지. "~때문에", "~하기 위해", "~하려면" 같은 설명조 금지.',
+    '★ 보이는 것만 서술. 추측·해석·대안 제시 금지.',
+    '★ 너는 분석 메모를 전달하는 역할이다. 친절한 설명·수다·부연 전부 금지.'
   ].join('\n');
+
+  tryAnalyze(sp, b64, mt, ld, 0);
+}
+
+function tryAnalyze(sp, b64, mt, ld, attempt){
+  var MAX_ATTEMPTS = 3;
 
   fetch(API_URL, {
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({
-      model:'claude-sonnet-4-20250514',
-      max_tokens:2000,
+      model:'claude-sonnet-4-6',
+      max_tokens:2048,
       system:sp,
       messages:[{role:'user', content:[
         {type:'image', source:{type:'base64', media_type:mt, data:b64}},
-        {type:'text', text:'이 헤어스타일의 컷트 구조와 드라이 방향을 분석해줘.'}
+        {type:'text', text:'이 헤어스타일의 컷트 구조와 드라이 방향을 분석해줘. JSON 객체 하나만 출력해.'}
       ]}]
     })
   }).then(function(r){ return r.json() })
   .then(function(data){
-    ld.classList.remove('show');
     try {
+      if(data.error) throw new Error('api error');
+      if(!data.content) throw new Error('no content');
       var txt = data.content.map(function(b){ return b.text||'' }).join('');
+      if(!txt.trim()) throw new Error('empty text');
       txt = txt.replace(/```json|```/g,'').trim();
-      var r = JSON.parse(txt);
+      var jsonMatch = txt.match(/\{[\s\S]*\}/);
+      if(!jsonMatch) throw new Error('no json');
+      var r = JSON.parse(jsonMatch[0]);
+      if(!r.cut || !r.dry) throw new Error('missing fields');
+
+      ld.classList.remove('show');
       renderCut(r);
       renderDry(r);
       document.getElementById('tabBar').classList.add('show');
       switchTab('cut');
       document.getElementById('resetBtn').classList.add('show');
     } catch(e) {
-      document.getElementById('resultCut').innerHTML='<div class="r-hero cut"><div class="r-label cut">분석 실패</div><div class="r-desc">사진을 다시 업로드해주세요.</div></div>';
+      if(attempt + 1 < MAX_ATTEMPTS){
+        setTimeout(function(){ tryAnalyze(sp, b64, mt, ld, attempt+1); }, 500);
+        return;
+      }
+      ld.classList.remove('show');
+      document.getElementById('resultCut').innerHTML='<div class="r-hero cut"><div class="r-label cut">분석 실패</div><div class="r-desc">사진을 다시 업로드해주세요. 헤어스타일이 잘 보이는 사진이면 더 정확해요.</div></div>';
       document.getElementById('resultCut').classList.add('show');
     }
-  }).catch(function(){
+  }).catch(function(err){
+    if(attempt + 1 < MAX_ATTEMPTS){
+      setTimeout(function(){ tryAnalyze(sp, b64, mt, ld, attempt+1); }, 500);
+      return;
+    }
     ld.classList.remove('show');
     document.getElementById('resultCut').innerHTML='<div class="r-hero cut"><div class="r-label cut">연결 오류</div><div class="r-desc">네트워크를 확인 후 다시 시도해주세요.</div></div>';
     document.getElementById('resultCut').classList.add('show');
@@ -340,6 +515,7 @@ function resetAll(){
   nw.type='file'; nw.id='fileInput'; nw.accept='image/*'; nw.style.display='none';
   nw.onchange = function(ev){ handleUpload(ev.target) };
   old.parentNode.replaceChild(nw, old);
+  document.getElementById('uploadGuide').classList.remove('hide');
   document.getElementById('resultCut').classList.remove('show');
   document.getElementById('resultCut').innerHTML='';
   document.getElementById('resultDry').classList.remove('show');
