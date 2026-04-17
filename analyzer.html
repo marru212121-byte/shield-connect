@@ -372,7 +372,13 @@ function tryAnalyzeImage(sysPrompt, base64, mediaType, loadEl, boxEl, attempt){
           { type: 'text', text: '이 사진 속 모발의 색감을 역공학 분석해줘. JSON 객체 하나만 출력해.' }
         ]
       }],
-      system: sysPrompt
+      system: [
+        {
+          type: 'text',
+          text: sysPrompt,
+          cache_control: { type: 'ephemeral' }
+        }
+      ]
     })
   })
   .then(function(r){ return r.json(); })
@@ -493,7 +499,13 @@ function tryGenerateRecipe(sysPrompt, userMsg, attempt){
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
       max_tokens: 2048,
-      system: sysPrompt,
+      system: [
+        {
+          type: 'text',
+          text: sysPrompt,
+          cache_control: { type: 'ephemeral' }
+        }
+      ],
       messages: [{ role: 'user', content: userMsg }]
     })
   })
