@@ -223,15 +223,19 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
    STATE — guide-data.js 의존성 제거
 ══════════════════════════════════ */
 var ST = {
+  imageBase64: null,
+  imageMediaType: null,
   analysis: null
 };
 
 var API_URL = '/api/recipe';
 
 /* ══════════════════════════════════════════════════════════
-   프롬프트 v16 — 2-call 역추론 구조
+   프롬프트 v17 — 2-call 역추론 구조 (사진 계속 본다)
    STEP 1 (사진) → 분석 JSON
-   STEP 2 (분석 텍스트만, 사진 없음) → 레시피 JSON
+   STEP 2 (사진 + 분석 JSON) → 레시피 JSON
+   레시피 AI는 사진에서 색감 구현 경로를 역추론하고
+   analysis는 관찰 확정본으로 참조한다.
    ══════════════════════════════════════════════════════════ */
 
 /* ── 분석 호출 — 레시피 파트와 무관, 순수 관찰만 ── */
@@ -242,6 +246,7 @@ var ANALYSIS_PROMPT_BODY = [
   '',
   '너는 미용실 헤어 컬러리스트를 위한 모발 색감 관찰 전문가다.',
   '사진 속 모발의 색감을 관찰하여 보이는 대로 기술한다.',
+  '★ 전체적인 색감을 먼저 파악하고, 그 다음에 부분 뉘앙스를 본다. 한 부위의 미세 뉘앙스에 과잉 가중 금지.',
   '판단·조색 방향·시술 방법·레시피는 이 파트에서 절대 하지 마라.',
   '',
   '■ 관찰 서술 (color_name_ko) — 관찰 서술 형식만 사용:',
@@ -315,21 +320,26 @@ function buildTopInstruction(){
   return [
     '너는 15년차 동양인 모발 전문 컬러리스트야.',
     '',
-    '분석 파트가 이미 사진 관찰을 완료했다. 너는 사진을 보지 않는다.',
-    '너의 입력은 analysis 객체(color_name_ko, description, elements, tone, hex) 다섯 필드다.',
-    '이 analysis를 "구현해야 할 목표 최종 색감"으로 받고,',
-    '"이 색감을 동양인 모발에서 만들려면 어떤 탈색·염모제 조합이 필요한가"를 역추론해라.',
+    '네 앞에는 두 가지가 있다:',
+    '1) 고객이 원하는 최종 색감 사진',
+    '2) 분석 파트가 이 사진에서 추출한 관찰 확정본 (analysis JSON)',
+    '',
+    '너의 일: 사진을 직접 보면서, "이 최종 색감을 동양인 모발에서 만들려면 어떤 탈색·염모제 조합이 필요한가"를 역추론한다.',
+    '역추론이란 결과(사진 속 완성된 색감)에서 공정(탈색 회차 + 염모제 조합)으로 거꾸로 추적하는 작업이다.',
     '',
     '════════════════════════════════════════',
-    '■ 입력 원칙 (최우선)',
+    '■ 입력 사용 원칙 (최우선)',
     '════════════════════════════════════════',
-    '★ color_name_ko = 목표 색감 이름. 주도 색감 + 뉘앙스 + 강도 수식어가 담겨 있다.',
-    '★ description = 목표 색감의 질감·분포·인상 서술.',
-    '★ elements = 목표 색감의 시각 속성 배열.',
-    '★ tone = 목표 색감의 한색/난색 방향. 이것이 계열 선택의 1차 게이트다.',
-    '★ hex = 목표 색감의 대표 색상값.',
-    '★ 위 다섯 필드가 전부다. 사진은 없다. 관찰이 끝난 결과물만으로 역추론하라.',
-    '★ 관찰에 없는 정보를 상상으로 추가하지 마라.',
+    '★ 사진 = 역추론 대상. 최종 결과물이 거기 있다. 전체 색감을 먼저 보고, 부분 뉘앙스는 그 다음에 본다.',
+    '★ analysis = 이미 확정된 관찰 요약. 사진 판독의 기준선.',
+    '  - color_name_ko: 주도 색감 + 뉘앙스 + 강도 수식어 (예: "베이지 브라운 베이스 + 잿빛 뉘앙스")',
+    '  - description: 질감·분포·인상 서술',
+    '  - elements: 뉘앙스 태그. 참고만. 이것만으로 계열·베이스 레벨 올리지 마라.',
+    '  - tone: 한색/난색. 계열 선택의 1차 게이트.',
+    '  - hex: 대표 색상값.',
+    '',
+    '★ 사진과 analysis는 서로 보강한다 — 분석이 놓친 부분은 사진에서 보충하고, 사진의 조명 노이즈는 analysis의 확정 서술로 걸러낸다.',
+    '★ analysis는 이미 한 번 필터링을 거친 관찰이다. 사진에서 analysis와 어긋나는 미세 뉘앙스가 보여도 그걸 근거로 계열을 추가하지 마라. [C-7] 참조.',
     '',
     '════════════════════════════════════════',
     '■ 출력 규칙 (절대 규칙 — 최우선)',
@@ -342,16 +352,18 @@ function buildTopInstruction(){
     '- 첫 글자는 {, 마지막 글자는 }여야 한다.',
     '',
     '■ 내부 사고 순서 (머릿속으로만, 절대 출력하지 마라):',
-    '1) 목표 색감 파악: color_name_ko의 "주도 색감"과 "뉘앙스 강도" 분리',
-    '2) 조색 방향 결정: tone과 [C] 지식으로 한색/난색 + 필요 계열 판단 → recipe_direction 생성',
-    '3) 탈색 필요 여부: [D1] "이 색감은 버진모에서 가능한가" 판단',
-    '4) 필요 베이스 레벨: [D2] 탈색 회차 결정',
-    '5) 염모제 조합: [D3] + [P] 팔레트에서만 재료 선택',
-    '6) 대안 베이스: [D4] (탈색 1회·버진모 가능이면 스킵)',
-    '7) [G] 가드레일 체크, 특히 [P] 팔레트 외 재료 호출 여부 재확인',
-    '8) [O] 출력 규칙에 맞춰 JSON 조립',
+    '1) 사진 전체 색감 파악: 주도 색감·명도 인상·전반 tone을 먼저 본다.',
+    '2) analysis와 대조: color_name_ko의 주도 색감과 사진 전체 인상이 일치하는지 확인.',
+    '3) 뉘앙스 강도 확인: 사진의 미세 보라기·로즈빛은 [C-7] 자연반응 범주인지 강도 판단.',
+    '4) 조색 방향 결정: tone과 [C] 지식으로 한색/난색 + 필요 계열 판단 → recipe_direction 생성.',
+    '5) 탈색 필요 여부: [D1] "이 색감은 버진모에서 가능한가" 판단.',
+    '6) 필요 베이스 레벨: [D2] 탈색 회차 결정. ★ elements 태그 하나만으로 베이스 승격 금지.',
+    '7) 염모제 조합: [D3] + [P] 팔레트에서만 재료 선택. 슬롯 형식: 염모제 메인 + 염모제 보조 + 컨트롤컬러.',
+    '8) 대안 베이스: [D4] (탈색 1회·버진모 가능이면 스킵).',
+    '9) [G] 가드레일 체크, 팔레트 외 재료·과잉 슬롯 확인.',
+    '10) [O] 출력 규칙에 맞춰 JSON 조립.',
     '',
-    '★ 위 8단계는 내부 추론 절차일 뿐, 출력물이 아니다. 출력은 오직 JSON.'
+    '★ 위 10단계는 내부 추론 절차일 뿐, 출력물이 아니다. 출력은 오직 JSON.'
   ].join('\n');
 }
 
@@ -916,6 +928,8 @@ var GUARDRAILS = [
   '★ color_name_ko와 description 중심. elements는 참고만. elements만 보고 계열 추가 금지.',
   '★ 결과 색감명에 elements(매트함, 황금빛 등) 가져다 쓰지 마라. 조합 계열에서 도출.',
   '★ color_name_ko의 강도 수식어("소량", "뉘앙스", "미세")를 놓치지 마라. 뉘앙스 수준이면 C-7 자연반응 범주.',
+  '★★ elements 태그 하나만으로 베이스 레벨을 승격하지 마라. "파스텔" 태그가 있어도 color_name_ko 주도 색감에 "브라운"이 살아있으면 14레벨 영역이다. 16+는 description이 "매우 밝은 미색" 수준일 때만.',
+  '★★ 베이스 레벨 판정은 color_name_ko의 주도 색감("베이지 브라운"=14, "미색"=18+)과 description의 명도 표현("중간 명도"=14, "매우 밝은"=16~18)으로만 한다.',
   '',
   '=== [G4] 금지어 ===',
   '"원샷"/"멜라닌"/"중화"/"깨라"/"눌러"/"탁한"/"탁해진"/숫자비율→"소량"으로만/"1:1"/"2:1" 등 구체 비율 금지/산화제 희석 비율 구체 표기 금지("1:2로 희석" 등). "많이 희석"/"충분히 희석" 등 정성적 표현만/"파우더"→"탈색약"/상품명→계열명으로만/원리나열/교육/**기호/"모발이 건조해~"/"트리트먼트로 보완"/"시술자의 판단에 따라"/"CC"→"컨트롤컬러"/"연핑크"→"핑크 컨트롤컬러 극소량"으로/탈색모 착색 레시피에서 "저명도 ○○"/"중명도 ○○"/"9·11레벨 ○○" 세분화 금지→"○○ 염모제"로만(버진모의 "고명도(13·15레벨)" 표기는 예외).',
@@ -1016,7 +1030,10 @@ function handleUpload(input){
       zone.onclick = null;
       document.getElementById('uploadGuide').classList.add('hide');
 
-      // 분석에만 사용. 레시피는 사진을 보지 않음.
+      // 사진을 ST에 저장 — 분석과 레시피 호출 둘 다 사진을 본다 (역추론)
+      ST.imageBase64 = resizedData;
+      ST.imageMediaType = 'image/jpeg';
+
       analyzeImage(resizedData, 'image/jpeg');
     };
     img.src = e.target.result;
@@ -1130,11 +1147,15 @@ function showAnalysis(result){
 }
 
 /* ══════════════════════════════════
-   STEP 2: 레시피 생성 — 역추론 (사진 없음)
+   STEP 2: 레시피 생성 — 사진 + 분석 기반 역추론
 ══════════════════════════════════ */
 function generateRecipe(){
   if(!ST.analysis){
     showRecipeError('분석 결과가 없습니다. 사진을 다시 업로드해주세요.');
+    return;
+  }
+  if(!ST.imageBase64){
+    showRecipeError('사진이 없습니다. 사진을 다시 업로드해주세요.');
     return;
   }
   var btn = document.getElementById('recipeBtn');
@@ -1143,16 +1164,18 @@ function generateRecipe(){
 
   var sysPrompt = buildRecipePrompt();
   var userMsg = [
-    '다음은 사진 분석 결과다. 이 색감을 동양인 모발에서 구현하기 위한 레시피를 역추론해서 JSON 하나로 출력해라.',
+    '이 사진 속 최종 색감을 동양인 모발에서 구현하기 위한 레시피를 역추론해서 JSON 하나로 출력해라.',
+    '',
+    '아래는 분석 파트가 같은 사진에서 추출한 관찰 확정본이다. 사진과 함께 참조하라:',
     '',
     'analysis:',
     JSON.stringify(ST.analysis, null, 2)
   ].join('\n');
 
-  tryGenerateRecipe(sysPrompt, userMsg, 0);
+  tryGenerateRecipe(sysPrompt, userMsg, ST.imageBase64, ST.imageMediaType, 0);
 }
 
-function tryGenerateRecipe(sysPrompt, userMsg, attempt){
+function tryGenerateRecipe(sysPrompt, userMsg, base64, mediaType, attempt){
   var MAX_ATTEMPTS = 3;
   var btn = document.getElementById('recipeBtn');
   if(attempt > 0){
@@ -1174,7 +1197,10 @@ function tryGenerateRecipe(sysPrompt, userMsg, attempt){
       ],
       messages: [{
         role: 'user',
-        content: userMsg
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+          { type: 'text', text: userMsg }
+        ]
       }]
     })
   })
@@ -1183,7 +1209,7 @@ function tryGenerateRecipe(sysPrompt, userMsg, attempt){
     try {
       if(data.error){
         if(attempt + 1 < MAX_ATTEMPTS){
-          setTimeout(function(){ tryGenerateRecipe(sysPrompt, userMsg, attempt+1); }, 500);
+          setTimeout(function(){ tryGenerateRecipe(sysPrompt, userMsg, base64, mediaType, attempt+1); }, 500);
           return;
         }
         showRecipeError('API 오류: ' + JSON.stringify(data.error));
@@ -1191,7 +1217,7 @@ function tryGenerateRecipe(sysPrompt, userMsg, attempt){
       }
       if(!data.content){
         if(attempt + 1 < MAX_ATTEMPTS){
-          setTimeout(function(){ tryGenerateRecipe(sysPrompt, userMsg, attempt+1); }, 500);
+          setTimeout(function(){ tryGenerateRecipe(sysPrompt, userMsg, base64, mediaType, attempt+1); }, 500);
           return;
         }
         showRecipeError('응답에 content가 없음: ' + JSON.stringify(data).substring(0,300));
@@ -1200,7 +1226,7 @@ function tryGenerateRecipe(sysPrompt, userMsg, attempt){
       var txt = data.content.map(function(b){ return b.text||''; }).join('');
       if(!txt.trim()){
         if(attempt + 1 < MAX_ATTEMPTS){
-          setTimeout(function(){ tryGenerateRecipe(sysPrompt, userMsg, attempt+1); }, 500);
+          setTimeout(function(){ tryGenerateRecipe(sysPrompt, userMsg, base64, mediaType, attempt+1); }, 500);
           return;
         }
         showRecipeError('응답 텍스트가 비어있음. stop_reason: ' + (data.stop_reason||'없음'));
@@ -1210,7 +1236,7 @@ function tryGenerateRecipe(sysPrompt, userMsg, attempt){
       var jsonMatch = txt.match(/\{[\s\S]*\}/);
       if(!jsonMatch){
         if(attempt + 1 < MAX_ATTEMPTS){
-          setTimeout(function(){ tryGenerateRecipe(sysPrompt, userMsg, attempt+1); }, 500);
+          setTimeout(function(){ tryGenerateRecipe(sysPrompt, userMsg, base64, mediaType, attempt+1); }, 500);
           return;
         }
         showRecipeError('JSON을 찾을 수 없음. 응답 앞부분: ' + txt.substring(0,200));
@@ -1221,7 +1247,7 @@ function tryGenerateRecipe(sysPrompt, userMsg, attempt){
         recipe = JSON.parse(jsonMatch[0]);
       } catch(parseErr) {
         if(attempt + 1 < MAX_ATTEMPTS){
-          setTimeout(function(){ tryGenerateRecipe(sysPrompt, userMsg, attempt+1); }, 500);
+          setTimeout(function(){ tryGenerateRecipe(sysPrompt, userMsg, base64, mediaType, attempt+1); }, 500);
           return;
         }
         showRecipeError('파싱 오류: ' + parseErr.message + ' / 응답: ' + jsonMatch[0].substring(0,300));
@@ -1229,7 +1255,7 @@ function tryGenerateRecipe(sysPrompt, userMsg, attempt){
       }
       if(!recipe.recipe_direction || !recipe.summary || !recipe.tips){
         if(attempt + 1 < MAX_ATTEMPTS){
-          setTimeout(function(){ tryGenerateRecipe(sysPrompt, userMsg, attempt+1); }, 500);
+          setTimeout(function(){ tryGenerateRecipe(sysPrompt, userMsg, base64, mediaType, attempt+1); }, 500);
           return;
         }
         showRecipeError('필수 필드 누락 (recipe_direction/summary/tips).');
@@ -1238,7 +1264,7 @@ function tryGenerateRecipe(sysPrompt, userMsg, attempt){
       showRecipe(recipe);
     } catch(e) {
       if(attempt + 1 < MAX_ATTEMPTS){
-        setTimeout(function(){ tryGenerateRecipe(sysPrompt, userMsg, attempt+1); }, 500);
+        setTimeout(function(){ tryGenerateRecipe(sysPrompt, userMsg, base64, mediaType, attempt+1); }, 500);
         return;
       }
       showRecipeError('파싱 오류: ' + e.message + ' / 응답: ' + JSON.stringify(data).substring(0,300));
@@ -1246,7 +1272,7 @@ function tryGenerateRecipe(sysPrompt, userMsg, attempt){
   })
   .catch(function(err){
     if(attempt + 1 < MAX_ATTEMPTS){
-      setTimeout(function(){ tryGenerateRecipe(sysPrompt, userMsg, attempt+1); }, 500);
+      setTimeout(function(){ tryGenerateRecipe(sysPrompt, userMsg, base64, mediaType, attempt+1); }, 500);
       return;
     }
     showRecipeError('네트워크 오류: ' + err.message);
@@ -1331,7 +1357,7 @@ function showRecipeError(detail){
 ══════════════════════════════════ */
 function resetAll(){
   try { vizRecipeCleanup(); } catch(e){}
-  ST = { analysis: null };
+  ST = { imageBase64: null, imageMediaType: null, analysis: null };
 
   var zone = document.getElementById('uploadZone');
   zone.classList.remove('has-image');
