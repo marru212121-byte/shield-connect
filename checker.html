@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>AI 조색 레시피 검수툴</title>
+<title>AI 조색 레시피 검수툴 (2-step)</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;background:#F7F5F0;color:#2B2420;padding:20px;min-height:100vh}
@@ -31,6 +31,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sa
 .card{background:#fff;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(0,0,0,0.04);min-width:0}
 .card .thumb{width:100%;aspect-ratio:1/1;background:#F0EDE8;object-fit:cover}
 .card .body{padding:12px 14px;display:flex;flex-direction:column;gap:10px;flex:1}
+
+.step-indicator{display:flex;gap:6px;font-size:10px;color:#8A7F76}
+.step-indicator .s{flex:1;padding:3px 6px;background:#F0EDE8;border-radius:4px;text-align:center}
+.step-indicator .s.running{background:#FFF4D6;color:#8A6E3A;animation:pulse 1.2s ease-in-out infinite}
+.step-indicator .s.done{background:#E8F3E8;color:#3A7A3A}
+.step-indicator .s.err{background:#F9E5E5;color:#A83E3E}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
 
 .loading-txt{color:#8A7F76;font-size:12px;padding:10px 0;text-align:center}
 .err-txt{color:#A83E3E;font-size:12px;padding:10px;background:#F9E5E5;border-radius:6px}
@@ -72,7 +79,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sa
 
 <div class="header">
   <h1>AI 조색 레시피 검수툴</h1>
-  <div class="sub">최대 5장 배치 실행 · 본앱 프롬프트 공유</div>
+  <div class="sub">2-step · 최대 5장 배치 · 본앱 프롬프트 공유</div>
   <span class="status" id="promptStatus">프롬프트 로딩...</span>
   <button class="btn" id="runBtn" disabled>전체 실행</button>
   <button class="btn sec" id="exportBtn" disabled>CSV 내보내기</button>
@@ -88,65 +95,59 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sa
 <div class="grid" id="grid"></div>
 
 <script>
-/* ══════════════════════════════════════════
-   프롬프트 공유 — analyzer.html iframe에서 추출
-   ══════════════════════════════════════════ */
 var PROMPT_READY = false;
-var PROMPT_FN = null;
+var BUILD_ANALYSIS = null;
+var BUILD_RECIPE = null;
 var ANALYZER_WIN = null;
+var FALLBACK_TRIED = false;
 
 (function initFrame(){
   var iframe = document.getElementById('analyzerFrame');
-  // iframe src는 "/" — 홈이 analyzer.html이라 가정. 아니면 수정.
   iframe.src = '/';
-  iframe.onload = function(){
-    try {
-      ANALYZER_WIN = iframe.contentWindow;
-      if(typeof ANALYZER_WIN.buildUnifiedPrompt === 'function'){
-        PROMPT_FN = ANALYZER_WIN.buildUnifiedPrompt;
-        PROMPT_READY = true;
-        document.getElementById('promptStatus').textContent = '프롬프트 준비됨';
-        document.getElementById('promptStatus').className = 'status ready';
-        updateRunBtn();
-      } else {
-        fallbackFrame();
-      }
-    } catch(e){
-      fallbackFrame();
-    }
-  };
+  iframe.onload = checkFrame;
   iframe.onerror = fallbackFrame;
-  
   setTimeout(function(){
     if(!PROMPT_READY) fallbackFrame();
   }, 5000);
 })();
 
-function fallbackFrame(){
-  // "/"가 analyzer가 아닐 경우 대체 경로 시도
+function checkFrame(){
   var iframe = document.getElementById('analyzerFrame');
-  if(iframe.src.endsWith('/analyzer.html')) {
-    document.getElementById('promptStatus').textContent = '프롬프트 로드 실패 — analyzer.html 경로 확인';
+  try {
+    ANALYZER_WIN = iframe.contentWindow;
+    if(typeof ANALYZER_WIN.buildAnalysisPrompt === 'function' &&
+       typeof ANALYZER_WIN.buildRecipePrompt === 'function'){
+      BUILD_ANALYSIS = ANALYZER_WIN.buildAnalysisPrompt;
+      BUILD_RECIPE = ANALYZER_WIN.buildRecipePrompt;
+      PROMPT_READY = true;
+      document.getElementById('promptStatus').textContent = '프롬프트 준비됨 (2-step)';
+      document.getElementById('promptStatus').className = 'status ready';
+      updateRunBtn();
+    } else {
+      fallbackFrame();
+    }
+  } catch(e){
+    fallbackFrame();
+  }
+}
+
+function fallbackFrame(){
+  var iframe = document.getElementById('analyzerFrame');
+  if(FALLBACK_TRIED || iframe.src.endsWith('/analyzer.html')) {
+    document.getElementById('promptStatus').textContent = '프롬프트 로드 실패 - analyzer.html 경로 확인';
     document.getElementById('promptStatus').className = 'status err';
     return;
   }
+  FALLBACK_TRIED = true;
   iframe.src = '/analyzer.html';
 }
 
-/* ══════════════════════════════════════════
-   파일 업로드 & 드래그
-   ══════════════════════════════════════════ */
-var ITEMS = []; // {id, file, base64, mediaType, state, analysis, recipe, judge, memo, error}
-
+var ITEMS = [];
 var dropZone = document.getElementById('dropZone');
 var fileInput = document.getElementById('fileInput');
 
 fileInput.addEventListener('change', function(e){ addFiles(e.target.files) });
-
-dropZone.addEventListener('dragover', function(e){
-  e.preventDefault();
-  dropZone.classList.add('hover');
-});
+dropZone.addEventListener('dragover', function(e){ e.preventDefault(); dropZone.classList.add('hover'); });
 dropZone.addEventListener('dragleave', function(){ dropZone.classList.remove('hover') });
 dropZone.addEventListener('drop', function(e){
   e.preventDefault();
@@ -167,8 +168,11 @@ function addFiles(files){
       ITEMS.push({
         id: id, file: f, base64: base64, mediaType: f.type,
         dataUrl: dataUrl,
-        state: 'ready', analysis: null, recipe: null,
-        judge: null, memo: '', error: null, rawShow: false, rawResponse: null
+        stepAnalysis: 'pending',
+        stepRecipe: 'pending',
+        analysis: null, recipe: null,
+        judge: null, memo: '', error: null,
+        rawShow: false
       });
       render();
       updateRunBtn();
@@ -177,78 +181,118 @@ function addFiles(files){
   });
   if(ITEMS.length >= 5) {
     dropZone.classList.add('has');
-    dropZone.querySelector('.txt').textContent = '업로드 완료 · 5/5';
+    dropZone.querySelector('.txt').textContent = '업로드 완료 - 5/5';
   }
 }
 
 function updateRunBtn(){
   var btn = document.getElementById('runBtn');
-  var anyReady = ITEMS.some(function(it){ return it.state === 'ready' });
-  btn.disabled = !PROMPT_READY || !anyReady;
+  var anyReady = ITEMS.some(function(it){
+    return it.stepAnalysis !== 'done' || it.stepRecipe !== 'done';
+  });
+  btn.disabled = !PROMPT_READY || !anyReady || ITEMS.length === 0;
 }
 
-/* ══════════════════════════════════════════
-   API 호출 — analyzer와 동일 엔드포인트
-   ══════════════════════════════════════════ */
 var API_URL = '/api/recipe';
 
-async function runOne(item){
-  if(!PROMPT_READY) return;
-  item.state = 'running';
-  item.error = null;
+async function apiCall(sysPrompt, userMessages, maxTokens){
+  var res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: maxTokens || 2048,
+      messages: userMessages,
+      system: [{ type: 'text', text: sysPrompt, cache_control: { type: 'ephemeral' } }]
+    })
+  });
+  return await res.json();
+}
+
+function parseJsonFromResponse(data){
+  if(!data.content) throw new Error('응답에 content 없음');
+  var txt = data.content.map(function(b){ return b.text||'' }).join('');
+  txt = txt.replace(/```json|```/g, '').trim();
+  var m = txt.match(/\{[\s\S]*\}/);
+  if(!m) throw new Error('JSON 추출 실패');
+  return JSON.parse(m[0]);
+}
+
+async function runAnalysis(item){
+  item.stepAnalysis = 'running';
   render();
-  
-  var sysPrompt = PROMPT_FN();
-  
   try {
-    var res = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 2048,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: item.mediaType, data: item.base64 } },
-            { type: 'text', text: '이 사진 속 모발의 색감을 역공학 분석하고 조색 레시피까지 만들어줘. {"analysis":{...},"recipe":{...}} 통합 JSON 하나만 출력해. 사고 과정·설명·인사 금지.' }
-          ]
-        }],
-        system: [{ type: 'text', text: sysPrompt, cache_control: { type: 'ephemeral' } }]
-      })
-    });
-    var data = await res.json();
-    item.rawResponse = data;
-    
-    if(!data.content) throw new Error('응답에 content 없음');
-    var txt = data.content.map(function(b){ return b.text||'' }).join('');
-    txt = txt.replace(/```json|```/g, '').trim();
-    var m = txt.match(/\{[\s\S]*\}/);
-    if(!m) throw new Error('JSON 추출 실패');
-    var parsed = JSON.parse(m[0]);
-    if(!parsed.analysis || !parsed.recipe) throw new Error('통합 구조 누락');
-    
-    item.analysis = parsed.analysis;
-    item.recipe = parsed.recipe;
-    item.state = 'done';
+    var sysPrompt = BUILD_ANALYSIS();
+    var data = await apiCall(sysPrompt, [{
+      role: 'user',
+      content: [
+        { type: 'image', source: { type: 'base64', media_type: item.mediaType, data: item.base64 } },
+        { type: 'text', text: '이 사진 속 모발의 색감을 관찰하여 analysis JSON 하나만 출력해. 사고 과정·설명·인사 금지.' }
+      ]
+    }], 1024);
+    var a = parseJsonFromResponse(data);
+    if(!a.color_name_ko || !a.tone) throw new Error('분석 필수 필드 누락');
+    item.analysis = a;
+    item.stepAnalysis = 'done';
+    render();
+    return true;
   } catch(e){
-    item.state = 'error';
-    item.error = e.message || String(e);
+    item.stepAnalysis = 'error';
+    item.error = '[분석] ' + (e.message || String(e));
+    render();
+    return false;
   }
+}
+
+async function runRecipe(item){
+  item.stepRecipe = 'running';
   render();
-  updateExportBtn();
+  try {
+    var sysPrompt = BUILD_RECIPE();
+    var data = await apiCall(sysPrompt, [{
+      role: 'user',
+      content: [
+        { type: 'image', source: { type: 'base64', media_type: item.mediaType, data: item.base64 } },
+        { type: 'text', text: '이 사진과 아래 분석 결과를 기반으로 조색 레시피를 역추론해. recipe JSON 하나만 출력해. 사고 과정·설명·인사 금지.\n\n<analysis>\n' + JSON.stringify(item.analysis) + '\n</analysis>' }
+      ]
+    }], 2048);
+    var r = parseJsonFromResponse(data);
+    if(!r.recipe_direction || !r.summary || !r.tips) throw new Error('레시피 필수 필드 누락');
+    item.recipe = r;
+    item.stepRecipe = 'done';
+    render();
+    updateExportBtn();
+    return true;
+  } catch(e){
+    item.stepRecipe = 'error';
+    item.error = '[레시피] ' + (e.message || String(e));
+    render();
+    return false;
+  }
+}
+
+async function runOne(item){
+  if(item.stepAnalysis !== 'done'){
+    var ok = await runAnalysis(item);
+    if(!ok) return;
+  }
+  if(item.stepRecipe !== 'done'){
+    await runRecipe(item);
+  }
 }
 
 document.getElementById('runBtn').addEventListener('click', function(){
-  var targets = ITEMS.filter(function(it){ return it.state === 'ready' || it.state === 'error' });
-  targets.forEach(function(it){ it.state = 'queued' });
+  var targets = ITEMS.filter(function(it){
+    return it.stepAnalysis !== 'done' || it.stepRecipe !== 'done';
+  });
+  targets.forEach(function(it){
+    if(it.stepAnalysis === 'error') it.stepAnalysis = 'pending';
+    if(it.stepRecipe === 'error') it.stepRecipe = 'pending';
+  });
   render();
-  targets.forEach(function(it){ runOne(it) }); // 병렬
+  targets.forEach(function(it){ runOne(it) });
 });
 
-/* ══════════════════════════════════════════
-   렌더링
-   ══════════════════════════════════════════ */
 var grid = document.getElementById('grid');
 
 function render(){
@@ -256,6 +300,14 @@ function render(){
   ITEMS.forEach(function(item){
     grid.appendChild(renderCard(item));
   });
+}
+
+function stepClass(s){
+  return s === 'running' ? 'running' : s === 'done' ? 'done' : s === 'error' ? 'err' : '';
+}
+function stepLabel(step, s){
+  var map = {pending:'대기', running:'실행중', done:'완료', error:'실패'};
+  return step + ' ' + map[s];
 }
 
 function renderCard(item){
@@ -270,16 +322,29 @@ function renderCard(item){
   var body = document.createElement('div');
   body.className = 'body';
   
-  if(item.state === 'ready'){
-    body.innerHTML = '<div class="loading-txt">대기 중</div>';
-  } else if(item.state === 'queued' || item.state === 'running'){
-    body.innerHTML = '<div class="loading-txt">분석 중...</div>';
-  } else if(item.state === 'error'){
-    body.innerHTML = '<div class="err-txt">실패: ' + escapeHtml(item.error) + '</div>' +
-      '<button class="btn sec" onclick="retryItem(\'' + item.id + '\')">재시도</button>';
-  } else if(item.state === 'done'){
+  var stepBar = document.createElement('div');
+  stepBar.className = 'step-indicator';
+  stepBar.innerHTML = 
+    '<div class="s ' + stepClass(item.stepAnalysis) + '">' + stepLabel('① 분석', item.stepAnalysis) + '</div>' +
+    '<div class="s ' + stepClass(item.stepRecipe) + '">' + stepLabel('② 레시피', item.stepRecipe) + '</div>';
+  body.appendChild(stepBar);
+  
+  if(item.stepAnalysis === 'error' || item.stepRecipe === 'error'){
+    var err = document.createElement('div');
+    err.className = 'err-txt';
+    err.textContent = item.error || '오류';
+    body.appendChild(err);
+  }
+  
+  if(item.stepAnalysis === 'done'){
     body.appendChild(renderAnalysis(item));
+  }
+  
+  if(item.stepRecipe === 'done'){
     body.appendChild(renderRecipe(item));
+  }
+  
+  if(item.stepAnalysis === 'done' || item.stepRecipe === 'done'){
     body.appendChild(renderJudge(item));
     body.appendChild(renderMemo(item));
     body.appendChild(renderRaw(item));
@@ -351,17 +416,11 @@ function renderRaw(item){
   };
   var pre = document.createElement('div');
   pre.className = 'raw' + (item.rawShow ? ' show' : '');
-  pre.textContent = JSON.stringify({analysis:item.analysis, recipe:item.recipe}, null, 2);
+  pre.textContent = JSON.stringify({analysis: item.analysis, recipe: item.recipe}, null, 2);
   wrap.appendChild(link);
   wrap.appendChild(pre);
   return wrap;
 }
-
-function retryItem(id){
-  var item = ITEMS.find(function(i){ return i.id === id });
-  if(item){ item.state = 'ready'; runOne(item) }
-}
-window.retryItem = retryItem;
 
 function escapeHtml(s){
   return String(s||'').replace(/[&<>"']/g, function(c){
@@ -369,17 +428,14 @@ function escapeHtml(s){
   });
 }
 
-/* ══════════════════════════════════════════
-   CSV 내보내기
-   ══════════════════════════════════════════ */
 function updateExportBtn(){
-  document.getElementById('exportBtn').disabled = !ITEMS.some(function(it){ return it.state === 'done' });
+  document.getElementById('exportBtn').disabled = !ITEMS.some(function(it){ return it.stepRecipe === 'done' });
 }
 
 document.getElementById('exportBtn').addEventListener('click', function(){
   var rows = [['파일명','주도색감','tone','hex','elements','description','recipe_direction','summary','tips','virgin_recipe','판정','메모']];
   ITEMS.forEach(function(it){
-    if(it.state !== 'done') return;
+    if(it.stepRecipe !== 'done') return;
     var a = it.analysis || {}, r = it.recipe || {};
     rows.push([
       it.file.name,

@@ -291,61 +291,24 @@ var ANALYSIS_PROMPT_BODY = [
   '★ 헤어스타일/컷 언급, 영어 전문용어'
 ].join('\n');
 
-function buildUnifiedPrompt(){
+function buildAnalysisPrompt(){
   return [
-    '너는 미용실 헤어 컬러리스트를 위한 AI 어시스턴트다.',
-    '사진 한 장을 받아 두 파트를 한 번에 수행한다:',
-    '',
-    '1) 분석 파트 — 사진 관찰 → analysis 객체 생성',
-    '2) 레시피 파트 — 사진 + 직전에 만든 analysis를 함께 보고 recipe 객체 역추론',
-    '',
     '════════════════════════════════════════',
     '■ 최종 출력 (절대 규칙)',
     '════════════════════════════════════════',
     '★★★ 응답은 오직 하나의 JSON 객체. 코드블록·설명·사고과정·인사 절대 금지. ★★★',
     '',
     '{',
-    '  "analysis": {',
-    '    "color_name_ko": "관찰 서술",',
-    '    "tone": "cool" 또는 "warm" 또는 "neutral",',
-    '    "hex": "#RRGGBB",',
-    '    "elements": ["속성1", "속성2"],',
-    '    "description": "색감 묘사 2~3문장"',
-    '  },',
-    '  "recipe": {',
-    '    "recipe_direction": "조색 방향 한 줄",',
-    '    "summary": "한 줄 요약",',
-    '    "tips": "블록별 실무조언",',
-    '    "virgin_recipe": null 또는 {"title":"…","text":"…"}',
-    '  }',
+    '  "color_name_ko": "관찰 서술",',
+    '  "tone": "cool" 또는 "warm" 또는 "neutral",',
+    '  "hex": "#RRGGBB",',
+    '  "elements": ["속성1", "속성2"],',
+    '  "description": "색감 묘사 2~3문장"',
     '}',
     '',
-    '★ 첫 글자 {, 마지막 }. 두 파트의 결과를 analysis·recipe 필드에 담는다.',
-    '★ 각 파트 지시 내부의 "JSON 하나만 출력" 문구는 위 통합 JSON 구조로 대체된다.',
+    '★ 첫 글자 {, 마지막 }.',
     '',
-    ANALYSIS_PROMPT_BODY,
-    '',
-    '═════════════════════════════════════════',
-    '■ 레시피 파트 지시',
-    '═════════════════════════════════════════',
-    '',
-    buildTopInstruction(),
-    '',
-    PALETTE,
-    '',
-    KNOWLEDGE,
-    '',
-    DECISION,
-    '',
-    OUTPUT_SPEC,
-    '',
-    GUARDRAILS,
-    '',
-    '════════════════════════════════════════',
-    '■ 재확인: 최종 출력은 통합 JSON 하나',
-    '════════════════════════════════════════',
-    '{"analysis":{...분석 결과...},"recipe":{...레시피 결과...}}',
-    '첫 글자 {, 마지막 }. 코드블록 금지.'
+    ANALYSIS_PROMPT_BODY
   ].join('\n');
 }function buildTopInstruction(){
   return [
@@ -413,7 +376,7 @@ var KNOWLEDGE = [
   '',
   '=== [K1] 동양인 멜라닌 특성 ===',
   '- 유멜라닌(검정·갈색) 먼저 분해 → 페오멜라닌(적색) 저항성 있음 → 탈색 시 붉은기가 먼저 올라옴.',
-  '- 탈색 회차 → 도달 레벨: 1회 = 14(주황~노랑) / 2회 = 16(노랑) / 3회 이상 = 18~20(연노랑~아이보리).',
+  '- 탈색 회차 → 도달 레벨: 1회 = 14(노랑기와 살짝 주황기) / 2회 = 16(노랑기) / 3회 이상 = 18~20(노랑기~아이보리).',
   '- 탈색 없이 고명도 염모제+산화제만으로 최대 12~13레벨까지 리프팅. 그러나 멜라닌 잔류로 브라운 수렴.',
   '- 난색(레드, 핑크, RV)은 적색 멜라닌과 같은 계열 → 충돌 없이 발색.',
   '- 유리한 색감: 레드브라운·로즈브라운·와인빛. 까다로운 색감: 밝은 애쉬·베이지·플래티넘(적색 멜라닌 충분히 깨야 함).',
@@ -429,6 +392,12 @@ var KNOWLEDGE = [
   '★ 버진모 한색 한계: 블루·바이올렛·애쉬 → 쿨/매트브라운이 최선. 라벤더·실버·백금발 방향 불가. "목표 색감명" 따라가지 마라.',
   '★ 버진모 난색: 적색 멜라닌과 공존 → 레드/로즈/와인빛 브라운 자연 발색.',
   '',
+  '★ 버진모 재료 선택 원리 (한색 vs 난색 분기):',
+  '- 한색 방향(쿨/매트/스모키브라운): 애쉬 염모제 + 블루 CC 기본 쌍. 블루 CC가 적색 멜라닌 억제 담당.',
+  '- 한색 버진모에 회갈빛브라운 금지 — 보색 파워 없어 적색 멜라닌 억제 못 함 → 탁한 브라운 수렴.',
+  '- 난색 방향(레드·로즈·와인브라운): 적색 멜라닌과 협업이므로 RV·레드·핑크 + 회갈빛브라운 조합 가능.',
+  '- 버진모에선 베이지·투명감·파스텔 뉘앙스 포기. 수렴 방향만 확보.',
+  '',
   '★ 저공정 3경로 (브라운 활용형 타겟 전용) — 투명도 순:',
   '- 이미 염색모 (12~13레벨 브라운~주황 잔류): 기존 베이스에 일반 염모제+CC로 착색. 가장 투명.',
   '- 리프팅 후 2단계 착색 (버진모 출발): 1차 고명도 염모제로 12~13레벨 리프트 → 2차 일반 염모제+CC 착색. 중간.',
@@ -443,8 +412,8 @@ var KNOWLEDGE = [
   '잔류 강 → 보색도 강. 잔류 약 → 보색도 약.',
   '',
   '★ forward 원리 (베이스 → 결과):',
-  '- 14레벨(주황~노랑): 블루 계열 지배적으로 작동 → 스모키 방향 세게.',
-  '- 16레벨(노랑): 바이올렛이 정답. 블루 단독 금지(매트하게 꺾임).',
+  '- 14레벨(노랑기와 살짝 주황기): 블루 계열 지배적으로 작동 → 스모키 방향 세게.',
+  '- 16레벨(노랑기): 바이올렛이 정답. 블루 단독 금지(매트하게 꺾임).',
   '',
   '★ reverse 원리 (결과 → 최소 필요 베이스) — 역추론 핵심:',
   '- 투명감 있는 한색(블루/네이비/라벤더/실버/파스텔) = 최소 16레벨',
@@ -459,6 +428,22 @@ var KNOWLEDGE = [
   '- 결과물에 투명감·선명함·맑음이 살아있음 = 중화 최소화된 베이스 = 잔류 적은 고탈색.',
   '- 결과물이 탁함·수렴된 브라운·무거움 = 중화 많이 들어간 저탈색 베이스.',
   '- 즉 "투명 네이비"는 14에서 불가. 중화량이 많아서 탁한 스모키로 귀결.',
+  '',
+  '★ 보색중화 선택 원리 (상쇄 + 투입 이중 역할):',
+  '- 보색중화에 쓰는 재료는 "잔류 상쇄" + "자기 계열 투입"을 동시 수행.',
+  '- 같은 잔류에 쓸 수 있는 재료가 여럿일 때 → 투입 계열이 타겟 수렴 방향 결정.',
+  '',
+  '- 주황 잔류(14레벨):',
+  '  · 블루 CC를 더해 보색중화 → 쿨톤·스모키·네이비 방향',
+  '  · 그린/카키빛애쉬를 더해 보색중화 → 매트·올리브 방향',
+  '',
+  '- 노랑 잔류(16레벨):',
+  '  · 바이올렛을 더해 보색중화 → 채도 유지, 라벤더·실버·한색 채도 방향',
+  '  · 회갈빛브라운을 더해 보색중화 → 베이지·밀크·쿨브라운 수렴',
+  '',
+  '- 노랑기~아이보리 잔류(18~20레벨): 잔류 약해 보색중화 영향 미미. 색감 메인 바로 발색.',
+  '',
+  '★ 회갈빛브라운 메커니즘 명시: 순수 색상환 보색 아님([P] "보색 파워 없음"). 그러나 브라운 염료가 노랑을 덮는 효과로 보색중화 역할 수행. 단 한색 버진모엔 효과 없음([K2] 참조 — 적색 멜라닌 억제 불가).',
   '',
   '★ 변질 경로 (보색 없이 재료 단독 투입 시):',
   '- 노랑 잔존 + 블루 단독 → 카키·그린 방향 변질',
@@ -498,9 +483,11 @@ var KNOWLEDGE = [
   '★ 극은은한 핑크 뉘앙스(핑크 베이지·백금발 방향)엔 핑크 염모제 금지(펑크 핑크로 빠짐). 핑크 컨트롤컬러 극소량 + 클리어로만.',
   '',
   '=== [K8] 베이지 원리 ===',
+  '★ 회갈빛브라운은 주로 탈색 2~3회 이상 베이스에서 베이지 뉘앙스 보충용. 버진모·탈색 1회에선 제한적.',
   '★ 메인 = 색감 계열(애쉬·바이올렛·핑크 등). 회갈빛브라운 = 베이지 뉘앙스 잡는 보조.',
   '★ 회갈빛브라운 단독 = 브라운으로 빠짐 (베이지 아님).',
-  '★ 밀크티 베이지만 예외: 회갈빛브라운 메인 + 애쉬 보조 (브라운 자체가 색감).',
+  '★ 밀크티 베이지만 예외: 회갈빛브라운 메인 + 애쉬 보조 (브라운 자체가 색감). 18~20 베이스 필요.',
+  '★ 한색 버진모에 회갈빛브라운 금지 ([K2] 참조).',
   '',
   '=== [K9] 컨트롤컬러·클리어 ===',
   '- 컨트롤컬러는 리프팅 못 한다. 코르텍스 침투 X, 큐티클 표면 착색. 염료 농도 높음. 샴푸로 퇴색.',
@@ -547,7 +534,7 @@ var OUTPUT_SPEC = [
   'JSON:',
   '{',
   '  "recipe_direction": "한 줄 요약 — 조색 방향",',
-  '  "summary": "한 줄 요약 — 존댓말. 예: 탈색 2회 이상 후(노랑 16레벨) 애쉬 염모제와 회갈빛브라운 염모제로 착색하세요.",',
+  '  "summary": "한 줄 요약 — 존댓말. 예: 탈색 2회 이상 후(16레벨 · 노랑기 잔류) 애쉬 염모제와 회갈빛브라운 염모제로 착색하세요.",',
   '  "tips": "블록별 실무조언 (아래 구조)",',
   '  "virgin_recipe": null 또는 {"title":"…","text":"…"}',
   '}',
@@ -565,7 +552,7 @@ var OUTPUT_SPEC = [
   '',
   '── 분기 B: 적색 활용형 타겟 ──',
   '(레드·로즈·와인·쿨/매트브라운 — 적색 멜라닌과 공존)',
-  '블록① <b>{탈색 1회 이상 후(14레벨 · 주황~노랑 잔류)}</b> 조합 + 결과 1~2문장.',
+  '블록① <b>{탈색 1회 이상 후(14레벨 · 노랑기와 살짝 주황기 잔류)}</b> 조합 + 결과 1~2문장.',
   '블록② <b>버진모 시술</b>\\n고명도(13·15) 염모제 + CC + 산화제 9%/12%. 투명도만 차이, 동일 방향.',
   '블록③ 실무조언 1~2문장.',
   'virgin_recipe = null',
@@ -584,7 +571,7 @@ var OUTPUT_SPEC = [
   'virgin_recipe = null',
   '',
   '■ 라벨 표기 원칙:',
-  '- 베이스명에 잔류 언더톤 병기: "14레벨 · 주황~노랑 잔류" / "16레벨 · 노랑 잔류" / "18~20레벨 · 연노랑~아이보리"',
+  '- 베이스명에 잔류 언더톤 병기: "14레벨 · 노랑기와 살짝 주황기 잔류" / "16레벨 · 노랑기 잔류" / "18~20레벨 · 노랑기~아이보리 잔류"',
   '- 버진모 시술(산화제 9%/12%): "고명도(13·15레벨) ○○ 염모제"',
   '- 저공정 3경로 (1)(2): "○○ 염모제" (고명도 표기 금지. 리프트 후·염색모라 일반 명도)',
   '- 저공정 3경로 (3): "고명도(13·15레벨) ○○ 염모제"',
@@ -605,14 +592,43 @@ var GUARDRAILS = [
   '5) 블록당 1~2문장. 원리·이론·과정 서술 금지. 너는 레시피 메모 역할.',
   '6) tone=cool이면 RV·R·P를 메인으로 넣지 마라. color_name_ko에 "와인/로즈/레드/핑크" 명시된 경우만 난색 메인.',
   '7) elements 태그 하나로 베이스 레벨 승격 금지. 주도 색감과 명도 서술로만 판정.',
-  '8) 금지어: "원샷", 구체 비율("1:1", "1:2"), 상품명, "탁한/탁해진", "CC"(→컨트롤컬러), "연핑크"(→핑크 컨트롤컬러 극소량).',
+  '8) 금지어: "원샷", 구체 비율("1:1", "1:2"), 상품명, "탁한/탁해진", "CC"(→컨트롤컬러), "연핑크"(→핑크 컨트롤컬러 극소량), "중화재/중화제"(→"보색중화").',
   '9) "화이트/흰색/순백/아이스 플래티넘/백금발" 포함 시 [K6] 백모 고정 3조합(A/B/C) 중 택일. "애쉬 + 블루" 금지.',
   '10) 버진모 판단 시 산화제(9%/12%) 필수 포함. 탈색모 착색에 고명도 염모제 쓰지 마라 (리프팅 이미 끝남).'
 ].join('\n');
 
 function buildRecipePrompt(){
-  // 호환 보존용 — 현재 코드는 buildUnifiedPrompt만 사용
-  return buildUnifiedPrompt();
+  return [
+    '════════════════════════════════════════',
+    '■ 최종 출력 (절대 규칙)',
+    '════════════════════════════════════════',
+    '★★★ 응답은 오직 하나의 JSON 객체 (recipe만). 코드블록·설명·사고과정·인사 절대 금지. ★★★',
+    '',
+    '{',
+    '  "recipe_direction": "조색 방향 한 줄",',
+    '  "summary": "한 줄 요약",',
+    '  "tips": "블록별 실무조언",',
+    '  "virgin_recipe": null 또는 {"title":"…","text":"…"}',
+    '}',
+    '',
+    '★ 첫 글자 {, 마지막 }.',
+    '',
+    '═════════════════════════════════════════',
+    '■ 레시피 파트 지시',
+    '═════════════════════════════════════════',
+    '',
+    buildTopInstruction(),
+    '',
+    PALETTE,
+    '',
+    KNOWLEDGE,
+    '',
+    DECISION,
+    '',
+    OUTPUT_SPEC,
+    '',
+    GUARDRAILS
+  ].join('\n');
 }
 
 
@@ -676,9 +692,9 @@ function analyzeImage(base64, mediaType){
   var boxEl = document.getElementById('analysisBox');
   boxEl.classList.remove('show');
   loadEl.classList.add('show');
-  loadEl.querySelector('.txt').textContent = '색감을 분석하고 레시피를 준비하고 있어요...';
+  loadEl.querySelector('.txt').textContent = '색감을 분석하고 있어요...';
 
-  var sysPrompt = buildUnifiedPrompt();
+  var sysPrompt = buildAnalysisPrompt();
   tryAnalyzeImage(sysPrompt, base64, mediaType, loadEl, boxEl, 0);
 }
 
@@ -689,12 +705,12 @@ function tryAnalyzeImage(sysPrompt, base64, mediaType, loadEl, boxEl, attempt){
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
-      max_tokens: 2048,
+      max_tokens: 1024,
       messages: [{
         role: 'user',
         content: [
           { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
-          { type: 'text', text: '이 사진 속 모발의 색감을 역공학 분석하고 조색 레시피까지 만들어줘. {"analysis":{...},"recipe":{...}} 통합 JSON 하나만 출력해. 사고 과정·설명·인사 금지.' }
+          { type: 'text', text: '이 사진 속 모발의 색감을 관찰하여 analysis JSON 하나만 출력해. 사고 과정·설명·인사 금지.' }
         ]
       }],
       system: [
@@ -715,15 +731,12 @@ function tryAnalyzeImage(sysPrompt, base64, mediaType, loadEl, boxEl, attempt){
       txt = txt.replace(/```json|```/g,'').trim();
       var jsonMatch = txt.match(/\{[\s\S]*\}/);
       if(!jsonMatch) throw new Error('no json');
-      var result = JSON.parse(jsonMatch[0]);
+      var a = JSON.parse(jsonMatch[0]);
 
-      if(!result.analysis || !result.recipe) throw new Error('통합 구조 누락');
-      var a = result.analysis, r = result.recipe;
       if(!a.color_name_ko || !a.tone) throw new Error('분석 필수 필드 누락');
-      if(!r.recipe_direction || !r.summary || !r.tips) throw new Error('레시피 필수 필드 누락');
 
       ST.analysis = a;
-      ST.recipe = r;
+      ST.recipe = null; // STEP 2에서 생성됨
 
       loadEl.classList.remove('show');
       showAnalysis(ST.analysis);
@@ -781,17 +794,83 @@ function showAnalysis(result){
 }
 
 /* ══════════════════════════════════
-   STEP 2: 레시피 생성 — 사진 + 분석 기반 역추론
+   STEP 2: 레시피 생성 — 사진 재전송 + analysis 기반 역추론
 ══════════════════════════════════ */
 function generateRecipe(){
-  if(!ST.recipe){
-    showRecipeError('레시피 데이터가 없습니다. 사진을 다시 업로드해주세요.');
+  if(!ST.analysis || !ST.imageBase64){
+    showRecipeError('분석 데이터 또는 사진이 없습니다. 사진을 다시 업로드해주세요.');
     return;
   }
   var btn = document.getElementById('recipeBtn');
   btn.disabled = true;
-  btn.textContent = '레시피 확인';
-  showRecipe(ST.recipe);
+  btn.textContent = '레시피 생성 중...';
+
+  var sysPrompt = buildRecipePrompt();
+  tryGenerateRecipe(sysPrompt, ST.imageBase64, ST.imageMediaType, ST.analysis, 0);
+}
+
+function tryGenerateRecipe(sysPrompt, base64, mediaType, analysis, attempt){
+  var MAX_ATTEMPTS = 3;
+  fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 2048,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+          { type: 'text', text: '이 사진과 아래 분석 결과를 기반으로 조색 레시피를 역추론해. recipe JSON 하나만 출력해. 사고 과정·설명·인사 금지.\n\n<analysis>\n' + JSON.stringify(analysis) + '\n</analysis>' }
+        ]
+      }],
+      system: [
+        {
+          type: 'text',
+          text: sysPrompt,
+          cache_control: { type: 'ephemeral' }
+        }
+      ]
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    try {
+      if(!data.content) throw new Error('no content');
+      var txt = data.content.map(function(b){ return b.text||''; }).join('');
+      if(!txt.trim()) throw new Error('empty text');
+      txt = txt.replace(/```json|```/g,'').trim();
+      var jsonMatch = txt.match(/\{[\s\S]*\}/);
+      if(!jsonMatch) throw new Error('no json');
+      var r = JSON.parse(jsonMatch[0]);
+
+      if(!r.recipe_direction || !r.summary || !r.tips) throw new Error('레시피 필수 필드 누락');
+
+      ST.recipe = r;
+      var btn = document.getElementById('recipeBtn');
+      btn.textContent = '레시피 확인';
+      showRecipe(ST.recipe);
+    } catch(e) {
+      if(attempt + 1 < MAX_ATTEMPTS){
+        setTimeout(function(){ tryGenerateRecipe(sysPrompt, base64, mediaType, analysis, attempt+1); }, 500);
+        return;
+      }
+      var btn = document.getElementById('recipeBtn');
+      btn.disabled = false;
+      btn.textContent = '조색·레시피 가이드 보기';
+      showRecipeError('레시피 생성 실패. 다시 시도해주세요.');
+    }
+  })
+  .catch(function(err){
+    if(attempt + 1 < MAX_ATTEMPTS){
+      setTimeout(function(){ tryGenerateRecipe(sysPrompt, base64, mediaType, analysis, attempt+1); }, 500);
+      return;
+    }
+    var btn = document.getElementById('recipeBtn');
+    btn.disabled = false;
+    btn.textContent = '조색·레시피 가이드 보기';
+    showRecipeError('연결 오류. 네트워크를 확인해주세요.');
+  });
 }
 
 
@@ -1019,9 +1098,9 @@ function vizBuildStages(cfg){
   }
   var stages = [{name:'자연모', sub:'흑갈색 · 5레벨', cls:''}];
   var bleachSubs = {
-    1: '주황~노랑 · 14레벨',
-    2: '노랑 · 16레벨',
-    3: '연노랑~아이보리 · 18레벨'
+    1: '노랑기와 살짝 주황기 · 14레벨',
+    2: '노랑기 · 16레벨',
+    3: '노랑기~아이보리 · 18레벨'
   };
   for(var i = 1; i <= cfg.bleachCount; i++){
     stages.push({
