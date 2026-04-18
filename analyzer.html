@@ -225,17 +225,18 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 var ST = {
   imageBase64: null,
   imageMediaType: null,
-  analysis: null
+  analysis: null,
+  recipe: null
 };
 
 var API_URL = '/api/recipe';
 
 /* ══════════════════════════════════════════════════════════
-   프롬프트 v17-slim — AI 자율성 최대화 버전
+   프롬프트 v17-slim-unified — AI 자율성 + 통합 호출
    - 팔레트 + 동양인 특화 지식 + C-7 핵심만 강제
    - 일반 색채학·염모 이론은 Claude 지식에 위임
    - 가드레일은 절대 금기만
-   풀버전 대비 ~3배 축소 (~740줄 → ~240줄)
+   - 사진 업로드 1회 호출로 분석 + 레시피 통합 생성 (토큰 절약)
    ══════════════════════════════════════════════════════════ */
 
 /* ── 분석 호출 — 레시피 파트와 무관, 순수 관찰만 ── */
@@ -290,33 +291,63 @@ var ANALYSIS_PROMPT_BODY = [
   '★ 헤어스타일/컷 언급, 영어 전문용어'
 ].join('\n');
 
-function buildAnalysisPrompt(){
+function buildUnifiedPrompt(){
   return [
-    '너는 미용실 헤어 컬러리스트를 위한 모발 색감 관찰 전문가야.',
-    '사진 한 장을 받아 색감을 관찰하여 JSON 하나만 출력한다.',
+    '너는 미용실 헤어 컬러리스트를 위한 AI 어시스턴트다.',
+    '사진 한 장을 받아 두 파트를 한 번에 수행한다:',
+    '',
+    '1) 분석 파트 — 사진 관찰 → analysis 객체 생성',
+    '2) 레시피 파트 — 사진 + 직전에 만든 analysis를 함께 보고 recipe 객체 역추론',
     '',
     '════════════════════════════════════════',
-    '■ 출력 형식 (절대 규칙)',
+    '■ 최종 출력 (절대 규칙)',
     '════════════════════════════════════════',
-    '★★★ 응답은 오직 하나의 JSON 객체. 그 외 텍스트·코드블록·사고 과정·설명·인사 절대 금지. ★★★',
+    '★★★ 응답은 오직 하나의 JSON 객체. 코드블록·설명·사고과정·인사 절대 금지. ★★★',
     '',
     '{',
-    '  "color_name_ko": "관찰 서술",',
-    '  "tone": "cool" 또는 "warm" 또는 "neutral",',
-    '  "hex": "#RRGGBB",',
-    '  "elements": ["속성1", "속성2"],',
-    '  "description": "색감 묘사 2~3문장"',
+    '  "analysis": {',
+    '    "color_name_ko": "관찰 서술",',
+    '    "tone": "cool" 또는 "warm" 또는 "neutral",',
+    '    "hex": "#RRGGBB",',
+    '    "elements": ["속성1", "속성2"],',
+    '    "description": "색감 묘사 2~3문장"',
+    '  },',
+    '  "recipe": {',
+    '    "recipe_direction": "조색 방향 한 줄",',
+    '    "summary": "한 줄 요약",',
+    '    "tips": "블록별 실무조언",',
+    '    "virgin_recipe": null 또는 {"title":"…","text":"…"}',
+    '  }',
     '}',
     '',
-    '★ 첫 글자 {, 마지막 글자 }. 코드블록(```json) 금지.',
+    '★ 첫 글자 {, 마지막 }. 두 파트의 결과를 analysis·recipe 필드에 담는다.',
+    '★ 각 파트 지시 내부의 "JSON 하나만 출력" 문구는 위 통합 JSON 구조로 대체된다.',
     '',
-    ANALYSIS_PROMPT_BODY
+    ANALYSIS_PROMPT_BODY,
+    '',
+    '═════════════════════════════════════════',
+    '■ 레시피 파트 지시',
+    '═════════════════════════════════════════',
+    '',
+    buildTopInstruction(),
+    '',
+    PALETTE,
+    '',
+    KNOWLEDGE,
+    '',
+    DECISION,
+    '',
+    OUTPUT_SPEC,
+    '',
+    GUARDRAILS,
+    '',
+    '════════════════════════════════════════',
+    '■ 재확인: 최종 출력은 통합 JSON 하나',
+    '════════════════════════════════════════',
+    '{"analysis":{...분석 결과...},"recipe":{...레시피 결과...}}',
+    '첫 글자 {, 마지막 }. 코드블록 금지.'
   ].join('\n');
-}
-
-/* ── 레시피 호출 — 역추론. 사진 없음. 분석 JSON만 입력 ── */
-
-function buildTopInstruction(){
+}function buildTopInstruction(){
   return [
     '너는 15년차 동양인 모발 전문 컬러리스트다.',
     '',
@@ -549,19 +580,8 @@ var GUARDRAILS = [
 ].join('\n');
 
 function buildRecipePrompt(){
-  return [
-    buildTopInstruction(),
-    '',
-    PALETTE,
-    '',
-    KNOWLEDGE,
-    '',
-    DECISION,
-    '',
-    OUTPUT_SPEC,
-    '',
-    GUARDRAILS
-  ].join('\n');
+  // 호환 보존용 — 현재 코드는 buildUnifiedPrompt만 사용
+  return buildUnifiedPrompt();
 }
 
 
@@ -625,9 +645,9 @@ function analyzeImage(base64, mediaType){
   var boxEl = document.getElementById('analysisBox');
   boxEl.classList.remove('show');
   loadEl.classList.add('show');
-  loadEl.querySelector('.txt').textContent = '색감을 분석하고 있어요...';
+  loadEl.querySelector('.txt').textContent = '색감을 분석하고 레시피를 준비하고 있어요...';
 
-  var sysPrompt = buildAnalysisPrompt();
+  var sysPrompt = buildUnifiedPrompt();
   tryAnalyzeImage(sysPrompt, base64, mediaType, loadEl, boxEl, 0);
 }
 
@@ -638,12 +658,12 @@ function tryAnalyzeImage(sysPrompt, base64, mediaType, loadEl, boxEl, attempt){
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
+      max_tokens: 2048,
       messages: [{
         role: 'user',
         content: [
           { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
-          { type: 'text', text: '이 사진 속 모발의 색감을 관찰하여 JSON 하나만 출력해.' }
+          { type: 'text', text: '이 사진 속 모발의 색감을 역공학 분석하고 조색 레시피까지 만들어줘. {"analysis":{...},"recipe":{...}} 통합 JSON 하나만 출력해. 사고 과정·설명·인사 금지.' }
         ]
       }],
       system: [
@@ -664,11 +684,15 @@ function tryAnalyzeImage(sysPrompt, base64, mediaType, loadEl, boxEl, attempt){
       txt = txt.replace(/```json|```/g,'').trim();
       var jsonMatch = txt.match(/\{[\s\S]*\}/);
       if(!jsonMatch) throw new Error('no json');
-      var a = JSON.parse(jsonMatch[0]);
+      var result = JSON.parse(jsonMatch[0]);
 
+      if(!result.analysis || !result.recipe) throw new Error('통합 구조 누락');
+      var a = result.analysis, r = result.recipe;
       if(!a.color_name_ko || !a.tone) throw new Error('분석 필수 필드 누락');
+      if(!r.recipe_direction || !r.summary || !r.tips) throw new Error('레시피 필수 필드 누락');
 
       ST.analysis = a;
+      ST.recipe = r;
 
       loadEl.classList.remove('show');
       showAnalysis(ST.analysis);
@@ -729,133 +753,14 @@ function showAnalysis(result){
    STEP 2: 레시피 생성 — 사진 + 분석 기반 역추론
 ══════════════════════════════════ */
 function generateRecipe(){
-  if(!ST.analysis){
-    showRecipeError('분석 결과가 없습니다. 사진을 다시 업로드해주세요.');
-    return;
-  }
-  if(!ST.imageBase64){
-    showRecipeError('사진이 없습니다. 사진을 다시 업로드해주세요.');
+  if(!ST.recipe){
+    showRecipeError('레시피 데이터가 없습니다. 사진을 다시 업로드해주세요.');
     return;
   }
   var btn = document.getElementById('recipeBtn');
   btn.disabled = true;
-  btn.textContent = '레시피 생성 중...';
-
-  var sysPrompt = buildRecipePrompt();
-  var userMsg = [
-    '이 사진 속 최종 색감을 동양인 모발에서 구현하기 위한 레시피를 역추론해서 JSON 하나로 출력해라.',
-    '',
-    '아래는 분석 파트가 같은 사진에서 추출한 관찰 확정본이다. 사진과 함께 참조하라:',
-    '',
-    'analysis:',
-    JSON.stringify(ST.analysis, null, 2)
-  ].join('\n');
-
-  tryGenerateRecipe(sysPrompt, userMsg, ST.imageBase64, ST.imageMediaType, 0);
-}
-
-function tryGenerateRecipe(sysPrompt, userMsg, base64, mediaType, attempt){
-  var MAX_ATTEMPTS = 3;
-  var btn = document.getElementById('recipeBtn');
-  if(attempt > 0){
-    btn.textContent = '레시피 재생성 중... (' + (attempt+1) + '/' + MAX_ATTEMPTS + ')';
-  }
-
-  fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 2048,
-      system: [
-        {
-          type: 'text',
-          text: sysPrompt,
-          cache_control: { type: 'ephemeral' }
-        }
-      ],
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
-          { type: 'text', text: userMsg }
-        ]
-      }]
-    })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(data){
-    try {
-      if(data.error){
-        if(attempt + 1 < MAX_ATTEMPTS){
-          setTimeout(function(){ tryGenerateRecipe(sysPrompt, userMsg, base64, mediaType, attempt+1); }, 500);
-          return;
-        }
-        showRecipeError('API 오류: ' + JSON.stringify(data.error));
-        return;
-      }
-      if(!data.content){
-        if(attempt + 1 < MAX_ATTEMPTS){
-          setTimeout(function(){ tryGenerateRecipe(sysPrompt, userMsg, base64, mediaType, attempt+1); }, 500);
-          return;
-        }
-        showRecipeError('응답에 content가 없음: ' + JSON.stringify(data).substring(0,300));
-        return;
-      }
-      var txt = data.content.map(function(b){ return b.text||''; }).join('');
-      if(!txt.trim()){
-        if(attempt + 1 < MAX_ATTEMPTS){
-          setTimeout(function(){ tryGenerateRecipe(sysPrompt, userMsg, base64, mediaType, attempt+1); }, 500);
-          return;
-        }
-        showRecipeError('응답 텍스트가 비어있음. stop_reason: ' + (data.stop_reason||'없음'));
-        return;
-      }
-      txt = txt.replace(/```json|```/g,'').trim();
-      var jsonMatch = txt.match(/\{[\s\S]*\}/);
-      if(!jsonMatch){
-        if(attempt + 1 < MAX_ATTEMPTS){
-          setTimeout(function(){ tryGenerateRecipe(sysPrompt, userMsg, base64, mediaType, attempt+1); }, 500);
-          return;
-        }
-        showRecipeError('JSON을 찾을 수 없음. 응답 앞부분: ' + txt.substring(0,200));
-        return;
-      }
-      var recipe;
-      try {
-        recipe = JSON.parse(jsonMatch[0]);
-      } catch(parseErr) {
-        if(attempt + 1 < MAX_ATTEMPTS){
-          setTimeout(function(){ tryGenerateRecipe(sysPrompt, userMsg, base64, mediaType, attempt+1); }, 500);
-          return;
-        }
-        showRecipeError('파싱 오류: ' + parseErr.message + ' / 응답: ' + jsonMatch[0].substring(0,300));
-        return;
-      }
-      if(!recipe.recipe_direction || !recipe.summary || !recipe.tips){
-        if(attempt + 1 < MAX_ATTEMPTS){
-          setTimeout(function(){ tryGenerateRecipe(sysPrompt, userMsg, base64, mediaType, attempt+1); }, 500);
-          return;
-        }
-        showRecipeError('필수 필드 누락 (recipe_direction/summary/tips).');
-        return;
-      }
-      showRecipe(recipe);
-    } catch(e) {
-      if(attempt + 1 < MAX_ATTEMPTS){
-        setTimeout(function(){ tryGenerateRecipe(sysPrompt, userMsg, base64, mediaType, attempt+1); }, 500);
-        return;
-      }
-      showRecipeError('파싱 오류: ' + e.message + ' / 응답: ' + JSON.stringify(data).substring(0,300));
-    }
-  })
-  .catch(function(err){
-    if(attempt + 1 < MAX_ATTEMPTS){
-      setTimeout(function(){ tryGenerateRecipe(sysPrompt, userMsg, base64, mediaType, attempt+1); }, 500);
-      return;
-    }
-    showRecipeError('네트워크 오류: ' + err.message);
-  });
+  btn.textContent = '레시피 확인';
+  showRecipe(ST.recipe);
 }
 
 
@@ -936,7 +841,7 @@ function showRecipeError(detail){
 ══════════════════════════════════ */
 function resetAll(){
   try { vizRecipeCleanup(); } catch(e){}
-  ST = { imageBase64: null, imageMediaType: null, analysis: null };
+  ST = { imageBase64: null, imageMediaType: null, analysis: null, recipe: null };
 
   var zone = document.getElementById('uploadZone');
   zone.classList.remove('has-image');
