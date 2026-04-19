@@ -1,15 +1,32 @@
 {
   "name": "쉴드 디자이너 커넥트",
   "short_name": "쉴드 커넥트",
-  "description": "미용사 전용 매출 관리 앱",
-  "start_url": "./index.html",
+  "description": "AI 조색·레시피 가이드 — 동양인 모발 특화",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
   "orientation": "portrait",
+  "background_color": "#FAFAF7",
+  "theme_color": "#1C1917",
+  "lang": "ko-KR",
   "icons": [
-    { "src": "./images/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "./images/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
-    { "src": "./images/icon.png",     "sizes": "180x180", "type": "image/png" }
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }
