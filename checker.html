@@ -253,7 +253,7 @@ async function runRecipe(item){
       role: 'user',
       content: [
         { type: 'image', source: { type: 'base64', media_type: item.mediaType, data: item.base64 } },
-        { type: 'text', text: '이 사진과 아래 분석 결과를 기반으로 조색 레시피를 역추론해. recipe JSON 하나만 출력해. 사고 과정·설명·인사 금지.\n\n<analysis>\n' + JSON.stringify(item.analysis) + '\n</analysis>' }
+        { type: 'text', text: '이 사진 속 모발 색감을 직접 관찰하여 조색 레시피를 역추론해. recipe JSON 하나만 출력해. 사고 과정·설명·인사 금지.' }
       ]
     }], 2048);
     var r = parseJsonFromResponse(data);
