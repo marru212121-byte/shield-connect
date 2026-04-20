@@ -3,8 +3,9 @@
 //   - GET /api/oauth/callback (code 없음) → 카페24 authorize URL 생성해서 리다이렉트 (설치 시작)
 //   - GET /api/oauth/callback?code=xxx    → 토큰 교환 후 DB 저장 (설치 완료)
 //
-// 형님은 브라우저로 https://shield-connect.vercel.app/api/oauth/callback 한 번 접속하면 됨.
-// 그러면 카페24 인증 페이지로 리다이렉트 → 승인 → 다시 이 엔드포인트로 돌아와 토큰 저장.
+// v23.1: SCOPES 최소화 (invalid_scope 에러 해결)
+//   - 원래: 4개 (application, order, customer, privacy)
+//   - 수정: 1개 (order만) — shield가 실제 호출하는 API는 주문 조회뿐
 
 import crypto from 'crypto';
 import {
@@ -14,12 +15,10 @@ import {
 } from '../../lib/cafe24.js';
 import { getTempCookie, setTempCookie, clearTempCookie } from '../../lib/session.js';
 
-// 앱 등록 때 선택한 권한과 맞아야 함
+// shield가 실제로 필요한 최소 권한만
+// 카페24 주문 조회 API(/api/v2/admin/orders/xxx) 호출에 필요
 const SCOPES = [
-  'mall.read_application',
-  'mall.read_order',
-  'mall.read_customer',
-  'mall.read_privacy'
+  'mall.read_order'
 ];
 
 function htmlPage(title, body) {
