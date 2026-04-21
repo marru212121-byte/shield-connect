@@ -83,6 +83,30 @@
     .bowl-res-grand{display:flex;justify-content:space-between;align-items:flex-end;padding:6px 0 0;margin-top:4px;border-top:2px solid #e8c0c0}
     .bowl-res-grand .label{font-size:13px;font-weight:700;color:#B71C1C}
     .bowl-res-grand .total{font-size:22px;font-weight:800;color:#B71C1C}
+
+    /* ════════════ 쉴드커넥트 계정 UI ════════════ */
+    /* 홈 상단 계정 바 */
+    .home-account-bar{display:flex;justify-content:flex-end;align-items:center;padding:14px 20px 4px;min-height:34px}
+    .account-login-link{font-size:13px;color:#1A1814;font-weight:600;text-decoration:none;padding:7px 18px;border:1.5px solid #1A1814;border-radius:18px;transition:all .15s;-webkit-tap-highlight-color:transparent;letter-spacing:-0.2px}
+    .account-login-link:active{background:#1A1814;color:#fff;transform:scale(.97)}
+    .account-info{display:flex;align-items:center;gap:10px;font-size:13px;color:#1A1814;letter-spacing:-0.2px}
+    .account-credit{font-weight:600}
+    .account-credit strong{font-weight:700;color:#1A1814}
+    .account-divider{color:#d0d0cb;font-weight:400}
+    .account-logout{color:#999;text-decoration:none;font-weight:500;cursor:pointer;transition:color .15s;-webkit-tap-highlight-color:transparent}
+    .account-logout:active{color:#1A1814}
+
+    /* 설정 페이지 계정 카드 */
+    .account-card-header{padding:4px 0 10px;font-size:11px;color:#999;font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+    .account-value{font-size:14px;font-weight:600;color:#1A1814;letter-spacing:-0.2px}
+    .account-value.muted{font-size:12px;color:#888;font-weight:500}
+    .account-id-display{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#888;letter-spacing:0}
+    .account-logged-out-wrap{padding:28px 16px;text-align:center}
+    .account-logged-out-msg{font-size:13px;color:#888;margin-bottom:16px;line-height:1.6}
+    .account-login-btn-big{display:inline-block;padding:12px 40px;background:#1A1814;color:#fff;text-decoration:none;border-radius:14px;font-size:14px;font-weight:700;letter-spacing:-0.2px;transition:all .15s;-webkit-tap-highlight-color:transparent}
+    .account-login-btn-big:active{opacity:.85;transform:scale(.98)}
+    .account-logout-btn{padding:8px 18px;background:transparent;color:#888;border:1.5px solid #e5e5e0;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;-webkit-tap-highlight-color:transparent}
+    .account-logout-btn:active{border-color:#1A1814;color:#1A1814}
   </style>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-82LSVB4T6K"></script>
 <script>
@@ -106,9 +130,16 @@
 ════════════════════════════════ -->
 <div id="page-home" class="page-screen page">
 
-  <!-- 인사말 -->
-  <div class="home-greeting">
-    <h1 id="greetName" class="home-greet-text">디자이너님 👋</h1>
+  <!-- 쉴드커넥트 계정 바 -->
+  <div class="home-account-bar">
+    <!-- 비로그인 상태 -->
+    <a href="/api/auth/cafe24" class="account-login-link" id="loginLinkHome">로그인</a>
+    <!-- 로그인 상태 -->
+    <div class="account-info" id="accountInfoHome" style="display:none">
+      <span class="account-credit"><strong id="creditCountHome">0</strong> 크레딧</span>
+      <span class="account-divider">·</span>
+      <a class="account-logout" id="logoutLinkHome">로그아웃</a>
+    </div>
   </div>
 
   <!-- 배너 (가로 full) -->
@@ -253,8 +284,8 @@
     <!-- 빈칸 (4열 맞춤) -->
     <div></div>
 
-    <!-- 매출 관리 -->
-    <div class="sales-card-group">
+    <!-- 매출 관리 (쉴드커넥트에서 비활성화) -->
+    <div class="sales-card-group" style="display:none">
       <div class="sales-card-title">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 3v18h18"/><path d="M7 16v-5"/><path d="M11 16v-8"/><path d="M15 16v-3"/>
@@ -726,10 +757,44 @@
     <button class="back-btn" onclick="navigate('home')">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
     </button>
-    <div><h2>설정</h2><div class="sub">목표 매출과 이름을 설정하세요</div></div>
+    <div><h2>설정</h2><div class="sub">계정 정보</div></div>
   </div>
   <div class="settings-section">
+
+    <!-- ════ 쉴드커넥트 계정 카드 ════ -->
     <div class="settings-card">
+      <!-- 비로그인 -->
+      <div id="settingsLoggedOut" class="account-logged-out-wrap">
+        <div class="account-logged-out-msg">로그인하면 크레딧 충전 내역과<br>사용 내역을 확인할 수 있어요</div>
+        <a href="/api/auth/cafe24" class="account-login-btn-big">로그인</a>
+      </div>
+      <!-- 로그인 -->
+      <div id="settingsLoggedIn" style="display:none">
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label">보유 크레딧</div>
+            <div class="settings-row-sub">AI 분석 1회당 1크레딧</div>
+          </div>
+          <div class="account-value"><span id="settingsCreditCount">0</span> 크레딧</div>
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label">로그인 계정</div>
+            <div class="settings-row-sub account-id-display" id="settingsMemberId">—</div>
+          </div>
+        </div>
+        <div class="settings-row" style="border:none">
+          <div>
+            <div class="settings-row-label">로그아웃</div>
+            <div class="settings-row-sub">현재 계정에서 나갑니다</div>
+          </div>
+          <button class="account-logout-btn" id="logoutBtnSettings">로그아웃</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 기존 이름/목표매출 카드 (쉴드커넥트에서 비활성화) -->
+    <div class="settings-card" style="display:none">
       <div class="settings-row">
         <div><div class="settings-row-label">이름</div><div class="settings-row-sub">앱 인사말에 표시됩니다</div></div>
         <input class="settings-input" type="text" id="setOwner" placeholder="홍길동"/>
@@ -739,8 +804,8 @@
         <input class="settings-input" type="number" id="setGoal" placeholder="예: 5000000"/>
       </div>
     </div>
-    <button class="btn-primary" onclick="saveSettings()">저장</button>
-    <button class="btn-danger"  onclick="clearAllData()">전체 데이터 삭제</button>
+    <button class="btn-primary" onclick="saveSettings()" style="display:none">저장</button>
+    <button class="btn-danger"  onclick="clearAllData()" style="display:none">전체 데이터 삭제</button>
   </div>
 </div>
 
@@ -971,11 +1036,11 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     홈
   </button>
-  <button class="nav-item" data-page="sales" onclick="navigate('sales')" type="button">
+  <button class="nav-item" data-page="sales" onclick="navigate('sales')" type="button" style="display:none">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
     매출
   </button>
-  <button class="nav-item" data-page="stats" onclick="navigate('stats')" type="button">
+  <button class="nav-item" data-page="stats" onclick="navigate('stats')" type="button" style="display:none">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-5"/><path d="M11 16v-8"/><path d="M15 16v-3"/></svg>
     통계
   </button>
@@ -990,5 +1055,71 @@
 <script src="./ingredient.js"></script>
 <script src="./calculator.js"></script>
 <script src="./reels.js"></script>
+
+<!-- ════════════ 쉴드커넥트 세션/크레딧 ════════════ -->
+<script>
+(function(){
+  'use strict';
+
+  // ── UI 엘리먼트 ──
+  var loginLinkHome   = document.getElementById('loginLinkHome');
+  var accountInfoHome = document.getElementById('accountInfoHome');
+  var creditCountHome = document.getElementById('creditCountHome');
+  var logoutLinkHome  = document.getElementById('logoutLinkHome');
+
+  var settingsLoggedOut = document.getElementById('settingsLoggedOut');
+  var settingsLoggedIn  = document.getElementById('settingsLoggedIn');
+  var settingsCredit    = document.getElementById('settingsCreditCount');
+  var settingsMemberId  = document.getElementById('settingsMemberId');
+  var logoutBtnSettings = document.getElementById('logoutBtnSettings');
+
+  // ── 로그아웃 ──
+  function doLogout(e){
+    if(e) e.preventDefault();
+    // 로그아웃 API 호출 후 홈 새로고침
+    fetch('/api/auth/logout', { method:'POST', credentials:'include' })
+      .catch(function(){})
+      .then(function(){ window.location.reload(); });
+  }
+  if(logoutLinkHome)  logoutLinkHome.addEventListener('click', doLogout);
+  if(logoutBtnSettings) logoutBtnSettings.addEventListener('click', doLogout);
+
+  // ── UI 업데이트 ──
+  function renderLoggedIn(data){
+    var credit = 0;
+    if(typeof data.credits_remaining === 'number') credit = data.credits_remaining;
+    else if(typeof data.credits === 'number')      credit = data.credits;
+    else if(typeof data.balance === 'number')      credit = data.balance;
+
+    var memberId = data.member_id || data.memberId || '';
+
+    // 홈 상단
+    if(loginLinkHome)   loginLinkHome.style.display   = 'none';
+    if(accountInfoHome) accountInfoHome.style.display = 'flex';
+    if(creditCountHome) creditCountHome.textContent   = credit;
+
+    // 설정 페이지
+    if(settingsLoggedOut) settingsLoggedOut.style.display = 'none';
+    if(settingsLoggedIn)  settingsLoggedIn.style.display  = 'block';
+    if(settingsCredit)    settingsCredit.textContent      = credit;
+    if(settingsMemberId)  settingsMemberId.textContent    = memberId;
+  }
+
+  function renderLoggedOut(){
+    // 이미 기본값이 로그아웃 상태이므로 건드릴 필요 없음
+  }
+
+  // ── 세션 확인 ──
+  fetch('/api/customer/me', { credentials:'include' })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(data){
+      if(!data) { renderLoggedOut(); return; }
+      var loggedIn = !!(data.logged_in || data.loggedIn || data.member_id || data.memberId);
+      if(loggedIn) renderLoggedIn(data);
+      else renderLoggedOut();
+    })
+    .catch(function(){ renderLoggedOut(); });
+})();
+</script>
 </body>
 </html>
