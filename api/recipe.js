@@ -4,8 +4,9 @@
 // ═══════════════════════════════════════════════════════════════
 // 호출 주체: analyzer-7.html, cut-analyzer.html (프론트)
 // 처리 흐름:
-//   1. 세션 검증 (쿠키에서 member_id 추출)
-//   2. 크레딧 차감 시도 (RPC) → admin은 무제한 통과
+//   1. 세션 검증 (쿠키에서 member_id 추출) — stage 무관 항상 수행
+//   2. stage === 'recipe_only'면 크레딧 차감 skip (동일 사진 2차 호출용)
+//      그 외에는 기존대로 1크레딧 차감
 //   3. Claude API 호출
 //   4. 결과 반환
 //
@@ -15,6 +16,10 @@
 //   500 { code: 'server_error' }           → 내부 에러
 //   502 { code: 'anthropic_error' }        → Claude API 오류
 //   200 { content: [...] }                 → 정상 응답
+//
+// 🔒 보안 참고:
+//   recipe_only는 크레딧을 차감하지 않지만 세션은 반드시 검증한다.
+//   악용 패턴 감지되면 Step 9에서 세션당 rate limit 도입 검토.
 // ═══════════════════════════════════════════════════════════════
 
 import { getSessionFromRequest } from '../lib/session.js';
@@ -44,68 +49,73 @@ export default async function handler(req, res) {
   }
 
   // analyzer의 system/user 프롬프트 구조 그대로 유지
-  const { model, max_tokens, system, messages } = body;
+  // stage: 'recipe_only' → 크레딧 차감 skip (동일 세션 2차 호출용)
+  const { model, max_tokens, system, messages, stage } = body;
   if (!model || !messages) {
     return res.status(400).json({ code: 'missing_required_fields' });
   }
 
+  const skipCharge = stage === 'recipe_only';
   const supabase = getSupabase();
 
-  // ─── 3. 크레딧 차감 (RPC) ───────────────────────────────────
-  const analysisRef = `analysis_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  // ─── 3. 크레딧 차감 (RPC) — skipCharge면 건너뜀 ─────────────
+  let analysisRef = null;
+  let result = null;
 
-  const { data: consumeResult, error: consumeError } = await supabase.rpc(
-    'consume_credit_by_member',
-    {
-      p_member_id: memberId,
-      p_amount: 1,
-      p_reference: analysisRef,
-    }
-  );
+  if (!skipCharge) {
+    analysisRef = `analysis_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
-  if (consumeError) {
-    console.error('[recipe] consume RPC failed:', consumeError);
-    return res.status(500).json({ code: 'server_error' });
-  }
+    const { data: consumeResult, error: consumeError } = await supabase.rpc(
+      'consume_credit_by_member',
+      {
+        p_member_id: memberId,
+        p_amount: 1,
+        p_reference: analysisRef,
+      }
+    );
 
-  const result = Array.isArray(consumeResult) ? consumeResult[0] : consumeResult;
-
-  // ─── 3-1. RPC 응답 해석 (스키마 호환 모드) ──────────────────
-  // 신 스키마: { member_id, consumed: true/false, credits_used, credits_remaining }
-  // 구 스키마: { success: true/false, reason, credits_remaining, is_admin }
-  // 두 스키마 모두 대응
-  const ok = result?.consumed === true || result?.success === true;
-
-  if (!ok) {
-    // 실패 사유 분기
-    const reason = result?.reason;
-    const remaining = Number(result?.credits_remaining ?? 0);
-
-    if (reason === 'member_not_found') {
-      // 이론상 세션 있는데 DB에 member 없음 = 비정상 상태
-      return res.status(401).json({
-        code: 'not_authenticated',
-        message: '세션이 만료되었습니다. 다시 로그인해주세요.',
-      });
+    if (consumeError) {
+      console.error('[recipe] consume RPC failed:', consumeError);
+      return res.status(500).json({ code: 'server_error' });
     }
 
-    // 크레딧 부족: reason 명시 or 잔액 <= 0
-    if (reason === 'insufficient_credits' || remaining <= 0) {
-      return res.status(402).json({
-        code: 'insufficient_credits',
-        message: '크레딧이 부족합니다. 충전 후 다시 시도해주세요.',
-        credits_remaining: remaining,
-      });
+    result = Array.isArray(consumeResult) ? consumeResult[0] : consumeResult;
+
+    // ─── 3-1. RPC 응답 해석 (스키마 호환 모드) ──────────────────
+    // 신 스키마: { member_id, consumed: true/false, credits_used, credits_remaining }
+    // 구 스키마: { success: true/false, reason, credits_remaining, is_admin }
+    // 두 스키마 모두 대응
+    const ok = result?.consumed === true || result?.success === true;
+
+    if (!ok) {
+      const reason = result?.reason;
+      const remaining = Number(result?.credits_remaining ?? 0);
+
+      if (reason === 'member_not_found') {
+        return res.status(401).json({
+          code: 'not_authenticated',
+          message: '세션이 만료되었습니다. 다시 로그인해주세요.',
+        });
+      }
+
+      if (reason === 'insufficient_credits' || remaining <= 0) {
+        return res.status(402).json({
+          code: 'insufficient_credits',
+          message: '크레딧이 부족합니다. 충전 후 다시 시도해주세요.',
+          credits_remaining: remaining,
+        });
+      }
+
+      console.error('[recipe] unknown consume reason:', result);
+      return res.status(500).json({ code: 'server_error' });
     }
 
-    // 그 외 알 수 없는 실패
-    console.error('[recipe] unknown consume reason:', result);
-    return res.status(500).json({ code: 'server_error' });
-  }
-
-  // admin 여부 로깅 (차감은 안 된 경우)
-  if (result.is_admin) {
-    console.log('[recipe] admin bypass:', memberId);
+    if (result.is_admin) {
+      console.log('[recipe] admin bypass:', memberId);
+    }
+  } else {
+    // recipe_only 경로: 크레딧 차감 skip, 세션 검증만 통과한 상태
+    console.log('[recipe] skipCharge (recipe_only):', memberId);
   }
 
   // ─── 4. Claude API 호출 ─────────────────────────────────────
@@ -127,32 +137,41 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error('[recipe] anthropic fetch failed:', err);
-    // ⚠️ 네트워크 오류 시: 크레딧은 이미 차감됨 → 환불 처리
-    await refundCredit(supabase, memberId, analysisRef, result.is_admin);
+    // ⚠️ 네트워크 오류 시: 차감됐으면 환불, skipCharge면 환불 불필요
+    if (!skipCharge) {
+      await refundCredit(supabase, memberId, analysisRef, result.is_admin);
+    }
     return res.status(502).json({
       code: 'anthropic_error',
-      message: 'AI 서버와 연결할 수 없습니다. 크레딧은 복구되었습니다.',
+      message: skipCharge
+        ? 'AI 서버와 연결할 수 없습니다. 잠시 후 다시 시도해주세요.'
+        : 'AI 서버와 연결할 수 없습니다. 크레딧은 복구되었습니다.',
     });
   }
 
   if (!anthropicResponse.ok) {
     const errorText = await anthropicResponse.text();
     console.error('[recipe] anthropic error:', anthropicResponse.status, errorText);
-    // Anthropic 응답 오류 시 크레딧 환불
-    await refundCredit(supabase, memberId, analysisRef, result.is_admin);
+    if (!skipCharge) {
+      await refundCredit(supabase, memberId, analysisRef, result.is_admin);
+    }
     return res.status(502).json({
       code: 'anthropic_error',
-      message: 'AI 분석 중 오류가 발생했습니다. 크레딧은 복구되었습니다.',
+      message: skipCharge
+        ? 'AI 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+        : 'AI 분석 중 오류가 발생했습니다. 크레딧은 복구되었습니다.',
     });
   }
 
   const aiData = await anthropicResponse.json();
 
   // ─── 5. 성공 응답 ────────────────────────────────────────────
+  // skipCharge면 credits_remaining / is_admin은 응답에서 제외
+  // (프론트에서 기존 뱃지 값 유지)
   return res.status(200).json({
     content: aiData.content,
-    credits_remaining: result.credits_remaining,
-    is_admin: result.is_admin,
+    credits_remaining: skipCharge ? undefined : result.credits_remaining,
+    is_admin: skipCharge ? undefined : result.is_admin,
   });
 }
 
