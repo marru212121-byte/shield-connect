@@ -70,25 +70,37 @@ export default async function handler(req, res) {
 
   const result = Array.isArray(consumeResult) ? consumeResult[0] : consumeResult;
 
-  if (!result?.success) {
-    switch (result?.reason) {
-      case 'member_not_found':
-        // 이론상 세션 있는데 DB에 member 없음 = 비정상 상태
-        // 세션 쿠키 무효화 유도
-        return res.status(401).json({
-          code: 'not_authenticated',
-          message: '세션이 만료되었습니다. 다시 로그인해주세요.',
-        });
-      case 'insufficient_credits':
-        return res.status(402).json({
-          code: 'insufficient_credits',
-          message: '크레딧이 부족합니다. 충전 후 다시 시도해주세요.',
-          credits_remaining: result?.credits_remaining ?? 0,
-        });
-      default:
-        console.error('[recipe] unknown consume reason:', result);
-        return res.status(500).json({ code: 'server_error' });
+  // ─── 3-1. RPC 응답 해석 (스키마 호환 모드) ──────────────────
+  // 신 스키마: { member_id, consumed: true/false, credits_used, credits_remaining }
+  // 구 스키마: { success: true/false, reason, credits_remaining, is_admin }
+  // 두 스키마 모두 대응
+  const ok = result?.consumed === true || result?.success === true;
+
+  if (!ok) {
+    // 실패 사유 분기
+    const reason = result?.reason;
+    const remaining = Number(result?.credits_remaining ?? 0);
+
+    if (reason === 'member_not_found') {
+      // 이론상 세션 있는데 DB에 member 없음 = 비정상 상태
+      return res.status(401).json({
+        code: 'not_authenticated',
+        message: '세션이 만료되었습니다. 다시 로그인해주세요.',
+      });
     }
+
+    // 크레딧 부족: reason 명시 or 잔액 <= 0
+    if (reason === 'insufficient_credits' || remaining <= 0) {
+      return res.status(402).json({
+        code: 'insufficient_credits',
+        message: '크레딧이 부족합니다. 충전 후 다시 시도해주세요.',
+        credits_remaining: remaining,
+      });
+    }
+
+    // 그 외 알 수 없는 실패
+    console.error('[recipe] unknown consume reason:', result);
+    return res.status(500).json({ code: 'server_error' });
   }
 
   // admin 여부 로깅 (차감은 안 된 경우)
@@ -152,12 +164,6 @@ async function refundCredit(supabase, memberId, reference, isAdmin) {
   if (isAdmin) return;
 
   try {
-    // 잔액 + 1, total_used - 1, 장부에 refund 기록
-    await supabase.rpc('grant_signup_bonus', {
-      // ⚠️ 임시: 별도 refund RPC 없으므로 수동 UPDATE + 장부 기록
-    });
-    // 정식 refund RPC는 다음 마이그레이션에서 추가
-    // 지금은 직접 UPDATE
     const { data: member } = await supabase
       .from('cafe24_member_credits')
       .select('credits_remaining, total_used')
@@ -168,8 +174,8 @@ async function refundCredit(supabase, memberId, reference, isAdmin) {
       await supabase
         .from('cafe24_member_credits')
         .update({
-          credits_remaining: member.credits_remaining + 1,
-          total_used: Math.max(0, member.total_used - 1),
+          credits_remaining: (member.credits_remaining ?? 0) + 1,
+          total_used: Math.max(0, (member.total_used ?? 0) - 1),
           updated_at: new Date().toISOString(),
         })
         .eq('member_id', memberId);
@@ -178,7 +184,7 @@ async function refundCredit(supabase, memberId, reference, isAdmin) {
         member_id: memberId,
         type: 'refund',
         amount: 1,
-        balance_after: member.credits_remaining + 1,
+        balance_after: (member.credits_remaining ?? 0) + 1,
         reference,
         note: 'AI 호출 실패 자동 환불',
       });
