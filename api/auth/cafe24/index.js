@@ -22,11 +22,9 @@ export default function handler(req, res) {
 
     // 로그인 성공 후 복귀할 앱 내부 경로 (쿼리스트링으로 받음, 없으면 홈)
     const returnTo = typeof req.query.return_to === 'string' ? req.query.return_to : '/';
-    // 보안: 외부 URL 방지 — 상대 경로만 허용
     const safeReturnTo = returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/';
 
     // state + returnTo를 같이 서명해서 쿠키에 저장
-    // 형식: state.returnTo(base64url).signature
     const payload = `${state}.${Buffer.from(safeReturnTo).toString('base64url')}`;
     const signature = crypto
       .createHmac('sha256', process.env.SESSION_SECRET)
@@ -35,13 +33,14 @@ export default function handler(req, res) {
     const stateCookieValue = `${payload}.${signature}`;
 
     // state 쿠키 심기 (단명 쿠키, 콜백에서 검증)
+    // SameSite=None: 카페24 → 우리 앱 크로스 사이트 리다이렉트에서도 쿠키 실림
     res.setHeader('Set-Cookie', [
       `${STATE_COOKIE}=${encodeURIComponent(stateCookieValue)}`,
       'Path=/',
       `Max-Age=${STATE_MAX_AGE}`,
       'HttpOnly',
       'Secure',
-      'SameSite=Lax',
+      'SameSite=None',
     ].join('; '));
 
     // 카페24 로그인 URL로 리다이렉트
