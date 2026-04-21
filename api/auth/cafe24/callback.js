@@ -1,12 +1,13 @@
 // api/auth/cafe24/callback.js
 // 카페24 Customer 로그인 콜백
+// v24 2차 수정:
+//   - user_identifier 사용 (member_id 대신)
+//   - SameSite=None (카페24 → 우리 앱 크로스 사이트 리다이렉트 허용)
 
 import crypto from 'node:crypto';
 import {
   exchangeCustomerCode,
   fetchCustomerIdentifier,
-  fetchCustomerByMemberId,
-  hashPhone,
 } from '../../../lib/cafe24.js';
 import { getSupabase } from '../../../lib/supabase.js';
 import { setSessionCookie } from '../../../lib/session.js';
@@ -57,16 +58,20 @@ export default async function handler(req, res) {
       return redirectToApp(res, '/?auth_error=no_access_token');
     }
 
+    // ⭐ user_identifier 조회 (공식 문서 기준)
+    // Response 형식: { identifier: { shop_no, user_identifier } }
     let memberId;
     try {
-      const identifier = await fetchCustomerIdentifier(customerAccessToken);
-      memberId = identifier?.customer?.member_id;
+      const identifierResp = await fetchCustomerIdentifier(customerAccessToken);
+      console.log('[auth/cafe24/callback] identifier response:', JSON.stringify(identifierResp));
+      memberId = identifierResp?.identifier?.user_identifier;
     } catch (err) {
       console.error('[auth/cafe24/callback] identifier fetch failed:', err);
       return redirectToApp(res, '/?auth_error=identifier_fetch_failed');
     }
 
     if (!memberId) {
+      console.error('[auth/cafe24/callback] no user_identifier in response');
       return redirectToApp(res, '/?auth_error=no_member_id');
     }
 
@@ -78,15 +83,8 @@ export default async function handler(req, res) {
       .maybeSingle();
 
     if (!existing?.signup_bonus_given) {
-      let phoneHash = null;
-      try {
-        const customerData = await fetchCustomerByMemberId(memberId);
-        const phone = customerData?.customers?.[0]?.phone
-          || customerData?.customers?.[0]?.cellphone;
-        phoneHash = hashPhone(phone);
-      } catch (err) {
-        console.warn('[auth/cafe24/callback] phone fetch failed:', err.message);
-      }
+      // 전화번호 조회는 user_identifier로는 불가능하므로 일단 스킵
+      const phoneHash = null;
 
       const { data: bonusResult, error: bonusError } = await supabase.rpc('grant_signup_bonus', {
         p_member_id: memberId,
@@ -114,10 +112,6 @@ export default async function handler(req, res) {
     return redirectToApp(res, '/?auth_error=internal');
   }
 }
-
-// ============================================================
-// 헬퍼
-// ============================================================
 
 function getCookie(req, name) {
   const header = req.headers.cookie || '';
