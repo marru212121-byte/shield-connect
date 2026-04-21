@@ -1,6 +1,6 @@
 // api/auth/cafe24/index.js
 // 카페24 Customer 로그인 시작
-// v24 2차: SameSite=None (카페24 크로스 사이트 리다이렉트 허용)
+// v24 2차: SameSite=None + 디버깅 로그
 
 import crypto from 'node:crypto';
 import { buildCustomerAuthorizeUrl } from '../../../lib/cafe24.js';
@@ -36,6 +36,13 @@ export default function handler(req, res) {
     ].join('; '));
 
     const authorizeUrl = buildCustomerAuthorizeUrl(state);
+
+    // 🔍 디버깅 로그 추가
+    console.log('[auth/cafe24] CUSTOMER_REDIRECT_URI env:', process.env.CAFE24_CUSTOMER_REDIRECT_URI);
+    console.log('[auth/cafe24] CLIENT_ID env:', process.env.CAFE24_CLIENT_ID);
+    console.log('[auth/cafe24] MALL_ID env:', process.env.CAFE24_MALL_ID);
+    console.log('[auth/cafe24] authorize URL full:', authorizeUrl);
+
     res.writeHead(302, { Location: authorizeUrl });
     res.end();
   } catch (err) {
