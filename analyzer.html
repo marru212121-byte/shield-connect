@@ -75,6 +75,20 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 .recipe-from-to .highlight{color:#8B7355;font-weight:700}
 .recipe-body{background:#fff;border-radius:14px;border:1.5px solid #e8e4df;padding:16px}
 
+/* 타이핑 로더 (Step 1, Step 2 공용) */
+.typing-loader{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:36px 20px;background:#FBF7F1;border:1px solid #EDE6DA;border-radius:14px;min-height:130px}
+.typing-loader-dots{display:flex;gap:6px;align-items:center}
+.typing-loader-dots>span{width:6px;height:6px;border-radius:50%;background:#8B7355;opacity:.3;animation:typingPulse 1.4s ease-in-out infinite}
+.typing-loader-dots>span:nth-child(2){animation-delay:.2s}
+.typing-loader-dots>span:nth-child(3){animation-delay:.4s}
+@keyframes typingPulse{0%,100%{opacity:.3}50%{opacity:1}}
+.typing-loader-text{font-size:15px;font-weight:500;color:#1A1814;letter-spacing:-.2px;min-height:22px;display:flex;align-items:center;gap:1px}
+.typing-loader-cursor{display:inline-block;width:2px;height:17px;background:#1A1814;margin-left:1px;animation:typingBlink .8s infinite}
+@keyframes typingBlink{0%,50%{opacity:1}51%,100%{opacity:0}}
+/* Step 2 로딩 래퍼 */
+.recipe-loading-wrap{display:none;animation:fadeUp .3s ease;margin-bottom:12px}
+.recipe-loading-wrap.show{display:block}
+
 .recipe-tips{background:#FBF7F1;border:1px solid #EDE6DA;border-radius:10px;padding:16px}
 .recipe-tips-title{font-size:13px;font-weight:700;color:#8B7355;margin-bottom:14px}
 .recipe-tips-text{font-size:13px;color:#6B5D4E;line-height:1.7}
@@ -287,6 +301,11 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 
   <!-- 레시피 생성 버튼 -->
   <button class="recipe-btn" id="recipeBtn" onclick="generateRecipe()" disabled>조색·레시피 가이드 보기</button>
+
+  <!-- STEP 2 로딩 중 타이핑 키워드 카드 -->
+  <div class="recipe-loading-wrap" id="recipeLoadingWrap">
+    <div class="typing-loader" id="recipeLoadingBox"></div>
+  </div>
 
   <!-- STEP 2: 레시피 결과 -->
   <div class="recipe-wrap" id="recipeWrap">
@@ -1104,7 +1123,20 @@ function analyzeImage(base64, mediaType){
   var boxEl = document.getElementById('analysisBox');
   boxEl.classList.remove('show');
   loadEl.classList.add('show');
-  loadEl.querySelector('.txt').textContent = '색감을 분석하고 있어요...';
+
+  // Step 1 타이핑 키워드 시작
+  var txtEl = loadEl.querySelector('.txt');
+  if(txtEl){
+    stopTypingLoader(ST.analysisTypingHandle);
+    ST.analysisTypingHandle = startTypingLoader(txtEl, [
+      '색감 분석중',
+      '언더톤 판독중',
+      '명도 체크중',
+      '뉘앙스 파악중',
+      '반사빛 분석중',
+      '베이스 톤 판정중'
+    ], 'textOnly');
+  }
 
   var sysPrompt = buildAnalysisPrompt();
   tryAnalyzeImage(sysPrompt, base64, mediaType, loadEl, boxEl, 0);
@@ -1142,13 +1174,13 @@ function tryAnalyzeImage(sysPrompt, base64, mediaType, loadEl, boxEl, attempt){
 
     // 401: 세션 만료 / 미로그인 → 로그인 카드로 전환
     if (status === 401) {
-      loadEl.classList.remove('show');
+      stopTypingLoader(ST.analysisTypingHandle); ST.analysisTypingHandle = null; loadEl.classList.remove('show');
       renderLoggedOut();
       return;
     }
     // 402: 크레딧 부족 → 모달
     if (status === 402) {
-      loadEl.classList.remove('show');
+      stopTypingLoader(ST.analysisTypingHandle); ST.analysisTypingHandle = null; loadEl.classList.remove('show');
       openCreditModal(data && data.credits_remaining);
       return;
     }
@@ -1175,14 +1207,14 @@ function tryAnalyzeImage(sysPrompt, base64, mediaType, loadEl, boxEl, attempt){
       ST.analysis = a;
       ST.recipe = null; // STEP 2에서 생성됨
 
-      loadEl.classList.remove('show');
+      stopTypingLoader(ST.analysisTypingHandle); ST.analysisTypingHandle = null; loadEl.classList.remove('show');
       showAnalysis(ST.analysis);
     } catch(e) {
       if(attempt + 1 < MAX_ATTEMPTS){
         setTimeout(function(){ tryAnalyzeImage(sysPrompt, base64, mediaType, loadEl, boxEl, attempt+1); }, 500);
         return;
       }
-      loadEl.classList.remove('show');
+      stopTypingLoader(ST.analysisTypingHandle); ST.analysisTypingHandle = null; loadEl.classList.remove('show');
       boxEl.innerHTML = '<div class="analysis-label">분석 실패</div><div class="analysis-desc">사진을 다시 업로드해주세요. 모발이 잘 보이는 사진이면 더 정확해요.</div>';
       boxEl.classList.add('show');
     }
@@ -1192,7 +1224,7 @@ function tryAnalyzeImage(sysPrompt, base64, mediaType, loadEl, boxEl, attempt){
       setTimeout(function(){ tryAnalyzeImage(sysPrompt, base64, mediaType, loadEl, boxEl, attempt+1); }, 500);
       return;
     }
-    loadEl.classList.remove('show');
+    stopTypingLoader(ST.analysisTypingHandle); ST.analysisTypingHandle = null; loadEl.classList.remove('show');
     boxEl.innerHTML = '<div class="analysis-label">연결 오류</div><div class="analysis-desc">네트워크를 확인해주세요.</div>';
     boxEl.classList.add('show');
   });
@@ -1242,6 +1274,29 @@ function generateRecipe(){
   btn.disabled = true;
   btn.textContent = '레시피 생성 중...';
 
+  // 로딩 카드 표시 + 타이핑 키워드 시작
+  var loadingWrap = document.getElementById('recipeLoadingWrap');
+  var loadingBox = document.getElementById('recipeLoadingBox');
+  if(loadingWrap && loadingBox){
+    loadingWrap.classList.add('show');
+    stopTypingLoader(ST.recipeTypingHandle);
+    ST.recipeTypingHandle = startTypingLoader(loadingBox, [
+      '탈색 공정 검토중',
+      '버진모 테크닉 검토중',
+      '리프팅 경로 검토중',
+      '염모제 조합 조율중',
+      '컨트롤컬러 비율 계산중',
+      '보색 중화 판단중',
+      '멜라닌 잔류 체크중',
+      '안착 경로 분석중',
+      '반사빛 수렴 예측중'
+    ]);
+    // 로딩 카드 위치로 스크롤
+    setTimeout(function(){
+      loadingWrap.scrollIntoView({behavior:'smooth', block:'start'});
+    }, 100);
+  }
+
   var sysPrompt = buildRecipePrompt();
   tryGenerateRecipe(sysPrompt, ST.imageBase64, ST.imageMediaType, 0);
 }
@@ -1279,6 +1334,9 @@ function tryGenerateRecipe(sysPrompt, base64, mediaType, attempt){
 
     // 401: 세션 만료 → 로그인 카드로 전환
     if (status === 401) {
+      stopTypingLoader(ST.recipeTypingHandle); ST.recipeTypingHandle = null;
+      var lw401 = document.getElementById('recipeLoadingWrap');
+      if(lw401) lw401.classList.remove('show');
       var btn0 = document.getElementById('recipeBtn');
       btn0.disabled = false;
       btn0.textContent = '조색·레시피 가이드 보기';
@@ -1411,7 +1469,89 @@ function buildTipsBlocks(tipsText){
 }
 
 
+/* ══════════════════════════════════
+   타이핑 로더 (Step 1, Step 2 공용)
+   - phrases 배열에서 랜덤으로 뽑아 한 글자씩 타이핑 → 잠깐 holding → 지우기 → 다음
+   - startTypingLoader(containerEl, phrases) → 핸들 반환
+   - stopTypingLoader(handle) 로 정지
+══════════════════════════════════ */
+function startTypingLoader(container, phrases, mode){
+  if(!container) return null;
+  mode = mode || 'replace';
+  var typed;
+  if(mode === 'replace'){
+    // 전체 내부 교체 — Step 2 로딩 카드 전용
+    container.innerHTML = '<div class="typing-loader-dots"><span></span><span></span><span></span></div>'
+      + '<div class="typing-loader-text"><span class="tl-typed"></span><span class="typing-loader-cursor"></span></div>';
+    typed = container.querySelector('.tl-typed');
+  } else {
+    // textOnly — 전달된 엘리먼트 자체의 textContent만 교체 (Step 1 analyzing .txt)
+    typed = container;
+  }
+  if(!typed) return null;
+
+  var current = '';
+  var charIdx = 0;
+  var phraseIdx = -1;
+  var state = 'typing'; // typing | holding | erasing
+  var holdUntil = 0;
+
+  function pickNext(){
+    var nextIdx;
+    if(phrases.length === 1){
+      nextIdx = 0;
+    } else {
+      do {
+        nextIdx = Math.floor(Math.random() * phrases.length);
+      } while(nextIdx === phraseIdx);
+    }
+    phraseIdx = nextIdx;
+    current = phrases[phraseIdx];
+    charIdx = 0;
+    state = 'typing';
+  }
+
+  pickNext();
+
+  var intervalId = setInterval(function(){
+    if(state === 'typing'){
+      if(charIdx < current.length){
+        typed.textContent = current.slice(0, charIdx + 1);
+        charIdx++;
+      } else {
+        state = 'holding';
+        holdUntil = Date.now() + 900;
+      }
+    } else if(state === 'holding'){
+      if(Date.now() >= holdUntil){
+        state = 'erasing';
+      }
+    } else if(state === 'erasing'){
+      if(charIdx > 0){
+        charIdx--;
+        typed.textContent = current.slice(0, charIdx);
+      } else {
+        pickNext();
+      }
+    }
+  }, 60);
+
+  return { intervalId: intervalId, container: container };
+}
+
+function stopTypingLoader(handle){
+  if(!handle) return;
+  if(handle.intervalId){ clearInterval(handle.intervalId); }
+}
+
+
 function showRecipe(recipe){
+  // Step 2 로딩 카드 정지 및 숨김
+  stopTypingLoader(ST.recipeTypingHandle);
+  ST.recipeTypingHandle = null;
+  var loadingWrap = document.getElementById('recipeLoadingWrap');
+  if(loadingWrap) loadingWrap.classList.remove('show');
+
   var btn = document.getElementById('recipeBtn');
   btn.classList.remove('show');
 
@@ -1446,17 +1586,17 @@ function showRecipe(recipe){
     }
     tipsInner += '</div>';
 
-    // 탭 구조: [고객 안내] [실무조언] — 기본 선택 = 고객 안내
+    // 탭 구조: [실무조언(기본)] [고객 안내] — 기본 선택 = 실무조언
     html += '<div class="recipe-tabs" id="recipeTabs">'
          +   '<div class="recipe-tab-bar">'
-         +     '<button type="button" class="recipe-tab-btn active" onclick="switchRecipeTab(\'customer\')" id="recipeTabCustomer">고객님께 권장드릴 내용</button>'
-         +     '<button type="button" class="recipe-tab-btn" onclick="switchRecipeTab(\'tips\')" id="recipeTabTips">실무조언</button>'
+         +     '<button type="button" class="recipe-tab-btn active" onclick="switchRecipeTab(\'tips\')" id="recipeTabTips">실무조언</button>'
+         +     '<button type="button" class="recipe-tab-btn" onclick="switchRecipeTab(\'customer\')" id="recipeTabCustomer">고객님께 권장드릴 내용</button>'
          +   '</div>'
-         +   '<div class="recipe-tab-content active" id="recipeTabContentCustomer">'
-         +     '<div class="customer-guide-loading">AI가 안내를 준비 중입니다<span class="dots"></span></div>'
-         +   '</div>'
-         +   '<div class="recipe-tab-content" id="recipeTabContentTips">'
+         +   '<div class="recipe-tab-content active" id="recipeTabContentTips">'
          +     tipsInner
+         +   '</div>'
+         +   '<div class="recipe-tab-content" id="recipeTabContentCustomer">'
+         +     '<div class="customer-guide-loading">AI가 안내를 준비 중입니다<span class="dots"></span></div>'
          +   '</div>'
          + '</div>';
   }
@@ -1465,28 +1605,30 @@ function showRecipe(recipe){
   document.getElementById('recipeWrap').classList.add('show');
   document.getElementById('resetBtn').classList.add('show');
 
-  // 3D 조색 가이드 시각화 초기화 (API 호출·프롬프트와 완전 독립)
+  // 3D 조색 가이드 시각화 초기화 (1 RAF로 paint 보장, 딜레이 최소화)
   requestAnimationFrame(function(){
-    requestAnimationFrame(function(){
-      try { vizRecipeInit(recipe, ST.analysis); }
-      catch(e){
-        var w = document.getElementById('rvizWrap');
-        if(w) w.style.display = 'none';
-      }
-    });
+    try { vizRecipeInit(recipe, ST.analysis); }
+    catch(e){
+      var w = document.getElementById('rvizWrap');
+      if(w) w.style.display = 'none';
+    }
+    // 즉시 스크롤 (이전 200ms setTimeout 제거)
+    document.getElementById('recipeWrap').scrollIntoView({behavior:'smooth', block:'start'});
   });
 
   // 고객 안내 자동 호출 (백그라운드)
   if(recipe.summary){
     tryGenerateCustomerGuide(recipe.summary, 0);
   }
-
-  setTimeout(function(){
-    document.getElementById('recipeWrap').scrollIntoView({behavior:'smooth', block:'start'});
-  }, 200);
 }
 
 function showRecipeError(detail){
+  // Step 2 로딩 카드 정지 및 숨김
+  stopTypingLoader(ST.recipeTypingHandle);
+  ST.recipeTypingHandle = null;
+  var loadingWrap = document.getElementById('recipeLoadingWrap');
+  if(loadingWrap) loadingWrap.classList.remove('show');
+
   var btn = document.getElementById('recipeBtn');
   btn.disabled = false;
   btn.textContent = '조색·레시피 가이드 보기';
