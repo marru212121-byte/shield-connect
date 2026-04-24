@@ -1250,30 +1250,12 @@ function tryGenerateRecipe(sysPrompt, base64, mediaType, attempt){
       if(!data.content) throw new Error('no content');
       var txt = data.content.map(function(b){ return b.text||''; }).join('');
       if(!txt.trim()) throw new Error('empty text');
-      // 코드블록 마커 제거
       txt = txt.replace(/```json|```/g,'').trim();
-      // 스마트 쿼트 → 일반 쿼트 정규화 (한글 IME 환경 대응)
-      txt = txt.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
-      // JSON 오브젝트 추출
       var jsonMatch = txt.match(/\{[\s\S]*\}/);
-      if(!jsonMatch) {
-        console.error('[recipe] no JSON in response. preview:', txt.slice(0, 200));
-        throw new Error('no json');
-      }
-      // trailing comma 제거 (Claude가 가끔 JSON5 스타일로 냄)
-      var jsonStr = jsonMatch[0].replace(/,(\s*[}\]])/g, '$1');
-      var r;
-      try { r = JSON.parse(jsonStr); }
-      catch(parseErr) {
-        console.error('[recipe] JSON parse failed:', parseErr.message);
-        console.error('[recipe] raw text preview:', txt.slice(0, 500));
-        throw new Error('json parse failed');
-      }
+      if(!jsonMatch) throw new Error('no json');
+      var r = JSON.parse(jsonMatch[0]);
 
-      if(!r.summary || !r.tips) {
-        console.error('[recipe] missing fields. got keys:', Object.keys(r));
-        throw new Error('레시피 필수 필드 누락');
-      }
+      if(!r.summary || !r.tips) throw new Error('레시피 필수 필드 누락');
 
       ST.recipe = r;
       var btn = document.getElementById('recipeBtn');
