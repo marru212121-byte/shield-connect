@@ -2,11 +2,12 @@
 // ═══════════════════════════════════════════════════════════════
 // AI 분석 엔드포인트 (member_id 기반 + 크레딧 차감)
 // ═══════════════════════════════════════════════════════════════
-// 호출 주체: analyzer-7.html, cut-analyzer.html (프론트)
+// 호출 주체: analyzer.html, cut-analyzer.html (프론트)
 // 처리 흐름:
 //   1. 세션 검증 (쿠키에서 member_id 추출) — stage 무관 항상 수행
-//   2. stage === 'recipe_only'면 크레딧 차감 skip (동일 사진 2차 호출용)
-//      그 외에는 기존대로 1크레딧 차감
+//   2. stage가 skip 대상이면 크레딧 차감 skip, 아니면 1크레딧 차감
+//      skip 대상: 'recipe_only' (Step 2 레시피), 'customer_message' (고객 안내)
+//      그 외 stage 없음: Step 1 분석, cut-analyzer 1회 호출 → 1크레딧 차감
 //   3. Claude API 호출
 //   4. 결과 반환
 //
@@ -18,14 +19,17 @@
 //   200 { content: [...] }                 → 정상 응답
 //
 // 🔒 보안 참고:
-//   recipe_only는 크레딧을 차감하지 않지만 세션은 반드시 검증한다.
-//   악용 패턴 감지되면 Step 9에서 세션당 rate limit 도입 검토.
+//   skip 대상도 세션은 반드시 검증. 무한 호출 악용 의심 시 Step 9에서
+//   세션당 rate limit 검토.
 // ═══════════════════════════════════════════════════════════════
 
 import { getSessionFromRequest } from '../lib/session.js';
 import { getSupabase } from '../lib/supabase.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
+
+// 크레딧 차감 skip 대상 stage
+const SKIP_CHARGE_STAGES = ['recipe_only', 'customer_message'];
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -48,14 +52,12 @@ export default async function handler(req, res) {
     return res.status(400).json({ code: 'invalid_body' });
   }
 
-  // analyzer의 system/user 프롬프트 구조 그대로 유지
-  // stage: 'recipe_only' → 크레딧 차감 skip (동일 세션 2차 호출용)
   const { model, max_tokens, system, messages, stage } = body;
   if (!model || !messages) {
     return res.status(400).json({ code: 'missing_required_fields' });
   }
 
-  const skipCharge = stage === 'recipe_only';
+  const skipCharge = SKIP_CHARGE_STAGES.includes(stage);
   const supabase = getSupabase();
 
   // ─── 3. 크레딧 차감 (RPC) — skipCharge면 건너뜀 ─────────────
@@ -81,10 +83,8 @@ export default async function handler(req, res) {
 
     result = Array.isArray(consumeResult) ? consumeResult[0] : consumeResult;
 
-    // ─── 3-1. RPC 응답 해석 (스키마 호환 모드) ──────────────────
     // 신 스키마: { member_id, consumed: true/false, credits_used, credits_remaining }
     // 구 스키마: { success: true/false, reason, credits_remaining, is_admin }
-    // 두 스키마 모두 대응
     const ok = result?.consumed === true || result?.success === true;
 
     if (!ok) {
@@ -114,8 +114,7 @@ export default async function handler(req, res) {
       console.log('[recipe] admin bypass:', memberId);
     }
   } else {
-    // recipe_only 경로: 크레딧 차감 skip, 세션 검증만 통과한 상태
-    console.log('[recipe] skipCharge (recipe_only):', memberId);
+    console.log('[recipe] skipCharge (' + stage + '):', memberId);
   }
 
   // ─── 4. Claude API 호출 ─────────────────────────────────────
@@ -137,7 +136,6 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error('[recipe] anthropic fetch failed:', err);
-    // ⚠️ 네트워크 오류 시: 차감됐으면 환불, skipCharge면 환불 불필요
     if (!skipCharge) {
       await refundCredit(supabase, memberId, analysisRef, result.is_admin);
     }
@@ -166,8 +164,6 @@ export default async function handler(req, res) {
   const aiData = await anthropicResponse.json();
 
   // ─── 5. 성공 응답 ────────────────────────────────────────────
-  // skipCharge면 credits_remaining / is_admin은 응답에서 제외
-  // (프론트에서 기존 뱃지 값 유지)
   return res.status(200).json({
     content: aiData.content,
     credits_remaining: skipCharge ? undefined : result.credits_remaining,
@@ -179,7 +175,6 @@ export default async function handler(req, res) {
 // 크레딧 환불 (Anthropic 실패 시)
 // ============================================================
 async function refundCredit(supabase, memberId, reference, isAdmin) {
-  // admin은 애초에 차감 안 됐으므로 환불 불필요
   if (isAdmin) return;
 
   try {
@@ -210,6 +205,5 @@ async function refundCredit(supabase, memberId, reference, isAdmin) {
     }
   } catch (err) {
     console.error('[recipe] refund failed:', err);
-    // 환불 실패는 로그만 남기고 무시 (관리자가 수동 처리)
   }
 }
