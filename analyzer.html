@@ -777,7 +777,7 @@ B. 쿨·잿빛 방향:
 
 JSON:
 {
-  "summary": "한 줄 요약 — 존댓말. 권장 시술 레시피 1줄 + 편차 안내 1줄을 한 문자열로 합침. 레시피 뒤에 반드시 '탈색 횟수와 잔류 색소는 상이합니다. 실제 언더톤을 확인하여 염모제를 조절하세요.' 덧붙임. 예: '탈색 2회 이상 후(16레벨 · 노랑기 잔류) 애쉬 염모제와 바이올렛 염모제로 착색하세요. 탈색 횟수와 잔류 색소는 상이합니다. 실제 언더톤을 확인하여 염모제를 조절하세요.'",
+  "summary": "한 줄 요약 — 존댓말. 권장 시술 레시피 1줄. 예: '탈색 2회 이상 후(16레벨 · 노랑기 잔류) 애쉬 염모제와 바이올렛 염모제로 착색하세요.'",
   "tips": "블록별 실무조언 (아래 구조)",
   "virgin_recipe": null
 }
@@ -1255,7 +1255,7 @@ function tryGenerateRecipe(sysPrompt, base64, mediaType, attempt){
       if(!jsonMatch) throw new Error('no json');
       var r = JSON.parse(jsonMatch[0]);
 
-      if(!r.summary || !r.tips) throw new Error('레시피 필수 필드 누락');
+      if(!r.recipe_direction || !r.summary || !r.tips) throw new Error('레시피 필수 필드 누락');
 
       ST.recipe = r;
       var btn = document.getElementById('recipeBtn');
