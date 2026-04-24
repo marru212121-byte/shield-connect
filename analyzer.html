@@ -1255,7 +1255,7 @@ function tryGenerateRecipe(sysPrompt, base64, mediaType, attempt){
       if(!jsonMatch) throw new Error('no json');
       var r = JSON.parse(jsonMatch[0]);
 
-      if(!r.recipe_direction || !r.summary || !r.tips) throw new Error('레시피 필수 필드 누락');
+      if(!r.summary || !r.tips) throw new Error('레시피 필수 필드 누락');
 
       ST.recipe = r;
       var btn = document.getElementById('recipeBtn');
