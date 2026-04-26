@@ -128,6 +128,7 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 .recipe-thoughts-list{font-size:13px;color:#5C4F3A;line-height:1.75;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:26px}
 .thoughts-line{margin:1px 0;display:block}
 .thoughts-line-text{color:#5C4F3A}
+.thoughts-line-dots{color:#5C4F3A;letter-spacing:1px}
 .thoughts-cursor{display:inline-block;color:#8B7355;font-weight:600;margin-left:1px;animation:thoughts-blink 0.8s infinite}
 @keyframes thoughts-blink{0%,50%{opacity:1}51%,100%{opacity:0}}
 .thoughts-cursor.done{animation:none;opacity:0}
@@ -2525,65 +2526,77 @@ function showRecipe(recipe){
   }
 }
 
-// ✨ v3.2 quick_thoughts 타이핑 함수
-// thoughts: 문자열 배열. 한 줄씩 순차 타이핑.
+// ✨ v3.2.6 quick_thoughts 타이핑 함수 (본문 통째 + 점 똑똑똑 방식)
+// thoughts: 문자열 배열. 한 줄씩 순차 출현.
+// 동작: 본문 한번에 출현 → 점 1개 → 점 2개 → 점 3개 → 다음 줄
 function typeQuickThoughts(thoughts){
   var listEl = document.getElementById('recipeThoughtsList');
   if(!listEl || !Array.isArray(thoughts)) return;
-  listEl.innerHTML = ''; // 초기 커서 제거하고 새로 시작
+  listEl.innerHTML = ''; // 초기 커서 제거
 
-  var charDelay = 32;   // ms per char
-  var lineDelay = 240;  // ms between lines
+  var DOT_DELAY  = 250;  // 점과 점 사이
+  var LINE_DELAY = 600;  // 줄 끝나고 다음 줄까지
+  var BODY_TO_DOT_DELAY = 200; // 본문 출현 후 첫 점까지
+
   var lineIdx = 0;
-  var charIdx = 0;
-  var currentLineEl = null;
 
-  function startNewLine(){
-    // 이전 줄 커서 제거
+  function showNextLine(){
+    if(lineIdx >= thoughts.length){
+      // 끝 — 마지막 커서 페이드
+      var cs = listEl.querySelectorAll('.thoughts-cursor');
+      cs.forEach(function(c){ c.classList.add('done'); });
+      return;
+    }
+
+    var rawLine = String(thoughts[lineIdx] || '');
+    // 끝의 점들 분리: "본문..." → 본문 + "..."
+    var match = rawLine.match(/^(.*?)(\.+)?$/);
+    var body = match[1] || rawLine;
+    var dotCount = (match[2] || '').length;
+    if (dotCount === 0) dotCount = 3; // 점 없으면 3개로 디폴트
+
+    // 이전 줄 커서 페이드
     var prevCursors = listEl.querySelectorAll('.thoughts-cursor');
     prevCursors.forEach(function(c){ c.classList.add('done'); });
 
+    // 새 줄 컨테이너 생성 (본문 + 점 + 커서)
     var div = document.createElement('span');
     div.className = 'thoughts-line';
-    div.innerHTML = '<span class="thoughts-line-text"></span><span class="thoughts-cursor">▍</span>';
+    div.innerHTML = '<span class="thoughts-line-text"></span><span class="thoughts-line-dots"></span><span class="thoughts-cursor">▍</span>';
     listEl.appendChild(div);
-    currentLineEl = div.querySelector('.thoughts-line-text');
-  }
 
-  function tick(){
-    if(lineIdx >= thoughts.length){
-      // 끝 — 마지막 커서 fade
-      var lastCursors = listEl.querySelectorAll('.thoughts-cursor');
-      lastCursors.forEach(function(c){ c.classList.add('done'); });
-      return;
-    }
-    var line = String(thoughts[lineIdx] || '');
+    var bodyEl = div.querySelector('.thoughts-line-text');
+    var dotsEl = div.querySelector('.thoughts-line-dots');
 
-    if(charIdx === 0){
-      startNewLine();
-    }
+    // 1. 본문 통째로 출현
+    bodyEl.textContent = body;
 
-    if(charIdx < line.length){
-      currentLineEl.textContent = line.slice(0, charIdx + 1);
-      charIdx++;
-      setTimeout(tick, charDelay);
-    } else {
-      // 줄 끝 → 다음 줄
-      lineIdx++;
-      charIdx = 0;
-      if(lineIdx < thoughts.length){
-        setTimeout(tick, lineDelay);
-      } else {
-        // 마지막 줄 끝
-        setTimeout(function(){
-          var cs = listEl.querySelectorAll('.thoughts-cursor');
-          cs.forEach(function(c){ c.classList.add('done'); });
-        }, 400);
+    // 2. BODY_TO_DOT_DELAY 후부터 점 1개씩 추가
+    var currentDot = 0;
+    function addDot(){
+      if(currentDot >= dotCount){
+        // 점 다 찍혔음 → 다음 줄로
+        lineIdx++;
+        if(lineIdx < thoughts.length){
+          setTimeout(showNextLine, LINE_DELAY);
+        } else {
+          // 마지막 줄 → 커서 페이드
+          setTimeout(function(){
+            var cs = listEl.querySelectorAll('.thoughts-cursor');
+            cs.forEach(function(c){ c.classList.add('done'); });
+          }, 400);
+        }
+        return;
       }
+      currentDot++;
+      dotsEl.textContent = '.'.repeat(currentDot);
+      setTimeout(addDot, DOT_DELAY);
     }
+
+    setTimeout(addDot, BODY_TO_DOT_DELAY);
   }
 
-  tick();
+  showNextLine();
 }
 
 // ✨ v3.2 보조 — HTML 이스케이프 (reasoning용)
