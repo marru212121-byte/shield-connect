@@ -1,0 +1,3253 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<script>
+// Service Worker 강제 해제 — 같은 도메인의 다른 페이지에서 등록한 SW가 fetch 가로채는 거 차단
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function(regs){
+    regs.forEach(function(r){ r.unregister(); });
+  }).catch(function(){});
+}
+// 캐시 강제 초기화
+if (window.caches && caches.keys) {
+  caches.keys().then(function(keys){
+    keys.forEach(function(k){ caches.delete(k); });
+  }).catch(function(){});
+}
+</script>
+<title>프롬프트 검수툴 v3.3.8 (Visual)</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #FAF8F5;
+  --card: #FFFFFF;
+  --border: #E8E4DD;
+  --border-soft: #F0ECE5;
+  --text: #1A1815;
+  --text-soft: #6B6B63;
+  --text-mute: #A59A82;
+  --accent: #4A5D8A;
+  --accent-analysis: #8B7355;
+  --accent-recipe: #6B5D4E;
+  --accent-patch: #3D6B4A;
+  --ok: #3D6B4A;
+  --warn: #C47F3D;
+  --error: #B74A2F;
+}
+html { -webkit-font-smoothing: antialiased; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  letter-spacing: -0.2px;
+  padding: 20px 16px 60px;
+  min-height: 100vh;
+}
+.container { max-width: 1400px; margin: 0 auto; }
+
+/* Header */
+.hdr {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.hdr-title { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+.hdr-sub { font-size: 11px; color: var(--text-mute); font-family: "SF Mono", Menlo, monospace; }
+.hdr-actions { display: flex; gap: 8px; }
+.btn-ghost {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-soft);
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-ghost:hover { background: #F4F1EA; }
+
+/* Patch badge */
+.patch-callout {
+  background: #F0F5ED;
+  border: 1px solid #C8DCC0;
+  border-radius: 10px;
+  padding: 11px 14px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  line-height: 1.65;
+  color: #3D6B4A;
+}
+.patch-callout .dtitle {
+  font-weight: 700;
+  margin-bottom: 5px;
+  font-size: 12.5px;
+}
+.patch-callout code {
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 10.5px;
+  background: #fff;
+  border: 1px solid #C8DCC0;
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: #3D6B4A;
+}
+
+/* Control bar */
+.control {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 14px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: center;
+}
+@media (max-width: 720px) {
+  .control { grid-template-columns: 1fr; }
+  .control-right { align-items: stretch !important; }
+}
+.apikey-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.apikey-row label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-soft);
+}
+.apikey-row input {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-size: 12px;
+  font-family: "SF Mono", Menlo, monospace;
+}
+.apikey-row input:focus { outline: none; border-color: var(--accent); }
+.apikey-row button {
+  padding: 8px 14px;
+  background: var(--text);
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.info-line {
+  font-size: 11.5px;
+  color: var(--text-mute);
+  line-height: 1.6;
+}
+.info-line b { color: var(--text-soft); font-weight: 700; }
+.control-right {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+.upload-btn {
+  padding: 12px 18px;
+  background: var(--text);
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: -0.2px;
+  text-align: center;
+  display: inline-block;
+}
+.upload-btn:hover { background: #2A2723; }
+.upload-btn input { display: none; }
+.upload-hint {
+  font-size: 10.5px;
+  color: var(--text-mute);
+  font-family: "SF Mono", Menlo, monospace;
+}
+
+/* Prompt editors */
+.prompt-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+.prompt-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  cursor: pointer;
+  background: #FBFAF7;
+  border-bottom: 1px solid var(--border-soft);
+  user-select: none;
+}
+.prompt-hdr:hover { background: #F5F2EC; }
+.prompt-hdr.collapsed { border-bottom: none; }
+.prompt-hdr-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.prompt-hdr-left .tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 99px;
+  letter-spacing: 0.3px;
+}
+.prompt-hdr-left .tag.analysis {
+  background: rgba(139, 115, 85, 0.15);
+  color: #8B7355;
+}
+.prompt-hdr-left .tag.recipe {
+  background: rgba(74, 93, 138, 0.15);
+  color: var(--accent);
+}
+.prompt-hdr-left .tag.patched {
+  background: #D4E8CD;
+  color: var(--accent-patch);
+}
+.prompt-hdr-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--text-mute);
+  font-family: "SF Mono", Menlo, monospace;
+}
+.prompt-hdr-right .chevron {
+  font-size: 14px;
+  transition: transform 0.2s;
+}
+.prompt-hdr.collapsed .chevron { transform: rotate(-90deg); }
+.prompt-body {
+  padding: 14px 16px;
+  display: block;
+}
+.prompt-body.hidden { display: none; }
+.prompt-body textarea {
+  width: 100%;
+  min-height: 300px;
+  max-height: 600px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  font-family: "SF Mono", Menlo, monospace;
+  line-height: 1.6;
+  resize: vertical;
+  color: var(--text);
+  background: #FCFBF8;
+}
+.prompt-body textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: #fff;
+}
+.prompt-body-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.prompt-body-actions .stat {
+  font-size: 10.5px;
+  color: var(--text-mute);
+  font-family: "SF Mono", Menlo, monospace;
+  margin-right: auto;
+}
+.prompt-body-actions .stat b { color: var(--text-soft); }
+.prompt-body-actions button {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-soft);
+  cursor: pointer;
+  font-family: inherit;
+}
+.prompt-body-actions button:hover { background: #F4F1EA; }
+.prompt-body-actions button.primary {
+  background: var(--text);
+  color: #fff;
+  border-color: var(--text);
+}
+.prompt-body-actions button.primary:hover { background: #2A2723; }
+.prompt-body-actions button.warn {
+  color: var(--warn);
+  border-color: #E8C8A0;
+}
+
+/* Runs list */
+.runs { display: flex; flex-direction: column; gap: 18px; }
+
+.run-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+}
+.run-hdr {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border-soft);
+  flex-wrap: wrap;
+}
+.run-title { font-size: 13px; font-weight: 800; color: var(--text); }
+.run-filename {
+  font-size: 11px;
+  color: var(--text-mute);
+  font-family: "SF Mono", Menlo, monospace;
+}
+.run-time {
+  font-size: 10.5px;
+  color: var(--text-mute);
+  font-family: "SF Mono", Menlo, monospace;
+  margin-left: auto;
+}
+
+.run-photo-wrap {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.run-photo {
+  width: 160px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  cursor: zoom-in;
+  flex-shrink: 0;
+}
+
+/* Two-col: analysis | recipe (단독 모드) */
+.run-results {
+  flex: 1;
+  min-width: 300px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 900px) {
+  .run-results { grid-template-columns: 1fr; }
+}
+
+.result-pane {
+  background: #FBFAF7;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+}
+.result-pane-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border-soft);
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.result-pane-title {
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+.result-pane-title.analysis { color: #8B7355; }
+.result-pane-title.recipe { color: var(--accent); }
+.metrics {
+  display: flex;
+  gap: 8px;
+  font-size: 10.5px;
+  color: var(--text-mute);
+  font-family: "SF Mono", Menlo, monospace;
+  flex-wrap: wrap;
+}
+.metrics b { color: var(--text-soft); margin-right: 2px; }
+.metrics.empty { opacity: 0.4; }
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-mute);
+  padding: 20px 4px;
+  justify-content: center;
+}
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.error-block {
+  background: #FDF0ED;
+  border: 1px solid #F4C8BE;
+  border-radius: 7px;
+  padding: 10px 12px;
+  font-size: 11.5px;
+  color: var(--error);
+  line-height: 1.55;
+  font-family: "SF Mono", Menlo, monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.view-toggle button {
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-soft);
+  cursor: pointer;
+  font-family: inherit;
+}
+.view-toggle button.active {
+  background: var(--text);
+  color: #fff;
+  border-color: var(--text);
+}
+
+.raw-box pre.json-view {
+  background: #1A1815;
+  color: #E8E4DD;
+  padding: 12px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-family: "SF Mono", Menlo, monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.55;
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+/* Thinking box (디버그용) */
+.thinking-box {
+  background: #FFF8E7;
+  border: 1px solid #E8D89B;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.thinking-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 11px;
+  color: #6B5A1F;
+  font-weight: 600;
+  flex-wrap: wrap;
+}
+.copy-debug-btn {
+  padding: 6px 11px;
+  background: #6B5A1F;
+  color: #FFF8E7;
+  border: none;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.copy-debug-btn:hover { background: #4A3F15; }
+.thinking-box pre.thinking-text {
+  background: #FFFEF7;
+  color: #2A2418;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.65;
+  max-height: 520px;
+  overflow-y: auto;
+  margin: 0;
+}
+
+/* v3.2 quick_thoughts 박스 (검수용) */
+.thoughts-box {
+  background: #F4F8F0;
+  border: 1px solid #C8DCC0;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.thoughts-hdr {
+  font-size: 11.5px;
+  color: #3D6B4A;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.thoughts-list {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 13px;
+  color: #2A3F2E;
+  line-height: 1.7;
+}
+.thoughts-list li {
+  margin: 3px 0;
+}
+
+/* v3.2 reasoning 박스 (검수용) */
+.reasoning-box {
+  background: #F8F5EE;
+  border-left: 3px solid #DDD0BD;
+  border-radius: 6px;
+  padding: 12px 14px;
+}
+.reasoning-hdr {
+  font-size: 11.5px;
+  color: #8B7355;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.reasoning-text {
+  font-size: 13px;
+  color: #5C4F3A;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+/* Rendered analysis */
+.render-analysis {
+  background: linear-gradient(135deg, #FAF6F0, #F5EDE2);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.ra-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #8B7355;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+.ra-color-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.ra-swatch {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(0,0,0,0.08);
+  flex-shrink: 0;
+}
+.ra-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.ra-meta {
+  display: flex;
+  gap: 6px;
+  font-size: 10.5px;
+  color: var(--text-mute);
+  align-items: center;
+}
+.ra-meta .hex-val { font-family: "SF Mono", monospace; }
+.ra-tone-badge {
+  padding: 2px 7px;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+.ra-tone-badge.cool { background: #E3ECF5; color: #4A5D8A; }
+.ra-tone-badge.warm { background: #F5E3D5; color: #8B4820; }
+.ra-tone-badge.neutral { background: #EAE7DF; color: #6B6B63; }
+.ra-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.ra-chip {
+  padding: 3px 8px;
+  background: rgba(139, 115, 85, 0.12);
+  color: #8B7355;
+  border-radius: 99px;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+.ra-desc {
+  font-size: 12px;
+  color: #6B5D4E;
+  line-height: 1.7;
+  margin-top: 4px;
+}
+
+/* Rendered recipe */
+.render-recipe { display: flex; flex-direction: column; gap: 10px; }
+.rr-summary {
+  background: #FFF8E7;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12.5px;
+  color: #8B7355;
+  line-height: 1.6;
+  font-weight: 500;
+}
+.rr-tips {
+  background: #FBF7F1;
+  border: 1px solid #EDE6DA;
+  border-radius: 9px;
+  padding: 12px 14px;
+}
+.rr-tips-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #8B7355;
+  margin-bottom: 8px;
+}
+.rr-tips-text {
+  font-size: 12px;
+  color: #6B5D4E;
+  line-height: 1.85;
+  white-space: pre-line;
+}
+.rr-tips-text b { font-weight: 700; color: var(--text); }
+
+.empty-state {
+  text-align: center;
+  padding: 50px 20px;
+  color: var(--text-mute);
+  font-size: 12.5px;
+  background: var(--card);
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  line-height: 1.8;
+}
+
+/* Zoom modal */
+.zoom-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0,0,0,0.85);
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  cursor: zoom-out;
+}
+.zoom-modal.show { display: flex; }
+.zoom-modal img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 8px;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--text);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 99px;
+  font-size: 12.5px;
+  font-weight: 600;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.2s;
+  z-index: 10000;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="hdr">
+    <div>
+      <div class="hdr-title">🔬 프롬프트 검수툴 v3.3.8 (Visual)</div>
+      <div class="hdr-sub">Sonnet 4.6 · K1 시각 앵커 v2 토글 · 14레벨 = 노랑기에 주황기 살짝 회귀</div>
+    </div>
+    <div class="hdr-actions">
+      <button class="btn-ghost" onclick="clearHistory()">히스토리 지우기</button>
+    </div>
+  </div>
+
+  <div class="patch-callout">
+    <div class="dtitle">✓ v3.3.8 — K1 시각 앵커 (v2) 토글 추가 · 14레벨 정의 회귀 (노랑기에 주황기 살짝)</div>
+    <div>
+      <b>v3.3.8 변경 사항:</b>
+      <br>① <code>K1-3 (탈색 1회 이상)</code> 정의 회귀: "주황기가 있는 밝은 브라운" → <b>"노랑기에 주황기 살짝"</b> (11군데 일관 적용)
+      <br>② <code>14레벨 바이올렛 호출 금지 풀기</code> ([M1] 601행 + [K3] 1487행) — 노랑 잔류 영역 보색 매칭 정상 작동
+      <br>③ <code>K1 시각 앵커 (v2) 토글</code>: 레시피 호출 시 K1 4단계(12~13/14/16/18) 외관 사진 4장을 system 프롬프트에 첨부
+      <br>④ 같은 사진으로 v1/v2 양쪽 호출하여 reasoning · 회갈빛브라운 호출 패턴 비교 가능
+      <br><br>
+      <b>검수 우선순위:</b> 14레벨 케이스에서 회갈빛브라운 호출 빈도 변화 감시 (며칠 전 발견 패턴 재발 여부)
+    </div>
+  </div>
+
+  <div class="control">
+    <div>
+      <div class="apikey-row">
+        <label>API Key</label>
+        <input type="password" id="apiKey" placeholder="sk-ant-api03-..." />
+        <button onclick="saveKey()">저장</button>
+      </div>
+      <div class="info-line" id="infoLine">
+        API 키 저장 후 사진 업로드 → 사진 1장당 <b>분석 1회 → 레시피 1회</b> 순차 호출.
+      </div>
+      <div style="margin-top:10px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:12px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none">
+          <input type="checkbox" id="thinkingToggle" style="cursor:pointer" />
+          <span>🧠 <b>Thinking 모드</b> — 모델 사고과정 노출 (디버그용)</span>
+        </label>
+        <span style="color:var(--text-mute);font-size:11px">⚠️ Thinking 모드 = 응답 시간·토큰↑ (검수 전용).</span>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:12px;padding:10px;background:rgba(120,80,200,0.08);border:1px solid rgba(120,80,200,0.25);border-radius:8px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none">
+          <input type="checkbox" id="visualAnchorToggle" style="cursor:pointer" />
+          <span>🖼️ <b>K1 시각 앵커 (v2)</b> — 레시피 호출 시 K1 4단계 외관 사진 4장을 시스템 프롬프트에 첨부</span>
+        </label>
+        <span style="color:var(--text-mute);font-size:11px">⚠️ v2 = 시각 앵커 ON / v1 = OFF · 같은 사진으로 양쪽 호출하여 결과 비교 권장</span>
+      </div>
+    </div>
+    <div class="control-right">
+      <label class="upload-btn" id="uploadBtn">
+        <input type="file" id="fileInput" accept="image/*" multiple onchange="handleUpload(this)"/>
+        📷 사진 업로드 (여러 장 선택 가능)
+      </label>
+      <div class="upload-hint">multiple 선택 지원 · 자동 리사이즈 2400px/1.5MB</div>
+    </div>
+  </div>
+
+  <!-- ANALYSIS PROMPT EDITOR -->
+  <div class="prompt-section">
+    <div class="prompt-hdr" onclick="togglePrompt('analysis')">
+      <div class="prompt-hdr-left">
+        <span class="tag analysis">ANALYSIS</span>
+        <span>색감 분석 프롬프트</span>
+      </div>
+      <div class="prompt-hdr-right">
+        <span id="analysisStat">—</span>
+        <span class="chevron">▼</span>
+      </div>
+    </div>
+    <div class="prompt-body" id="analysisBody">
+      <textarea id="analysisPromptInput" oninput="updateStat('analysis')" spellcheck="false"></textarea>
+      <div class="prompt-body-actions">
+        <div class="stat" id="analysisStatDetail">—</div>
+        <button onclick="copyPrompt('analysis')">📋 복사</button>
+        <button class="warn" onclick="resetPrompt('analysis')">↺ 원본 복원</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECIPE PROMPT V3 EDITOR (메인) -->
+  <div class="prompt-section">
+    <div class="prompt-hdr" onclick="togglePrompt('recipeV3')">
+      <div class="prompt-hdr-left">
+        <span class="tag recipe">RECIPE v3.2.1</span>
+        <span>레시피 프롬프트 (백모 강제 트리거 적용)</span>
+        <span class="tag patched">메인</span>
+      </div>
+      <div class="prompt-hdr-right">
+        <span id="recipeV3Stat">—</span>
+        <span class="chevron">▼</span>
+      </div>
+    </div>
+    <div class="prompt-body" id="recipeV3Body">
+      <textarea id="recipeV3PromptInput" oninput="updateStat('recipeV3')" spellcheck="false"></textarea>
+      <div class="prompt-body-actions">
+        <div class="stat" id="recipeV3StatDetail">—</div>
+        <button onclick="copyPrompt('recipeV3')">📋 복사</button>
+        <button class="warn" onclick="resetPrompt('recipeV3')">↺ 원본 복원</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="runs" id="runs">
+    <div class="empty-state">
+      ① API 키 저장<br>② (선택) 프롬프트 수정 → 다음 업로드부터 반영<br>③ 사진 업로드 → 분석·레시피 결과 + thinking trace 표시.
+    </div>
+  </div>
+</div>
+
+<div class="zoom-modal" id="zoomModal" onclick="closeZoom()">
+  <img id="zoomImg" alt="확대 사진"/>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+// 기본 프롬프트 (기적용 패치 포함)
+// ══════════════════════════════════════════
+const DEFAULT_ANALYSIS_PROMPT = `════════════════════════════════════════
+■ 최종 출력 (절대 규칙)
+════════════════════════════════════════
+★★★ 응답은 오직 하나의 JSON 객체. 코드블록·설명·사고과정·인사 절대 금지. ★★★
+
+{
+  "color_name_ko": "관찰 서술",
+  "tone": "cool" 또는 "warm" 또는 "neutral",
+  "hex": "#RRGGBB",
+  "elements": ["속성1", "속성2"],
+  "description": "색감 묘사 2~3문장"
+}
+
+★ 첫 글자 {, 마지막 }.
+
+═════════════════════════════════════════
+■ 분석 파트 지시
+═════════════════════════════════════════
+
+너는 미용실 헤어 컬러리스트를 위한 모발 색감 관찰 전문가다.
+사진 속 모발의 색감을 관찰하여 보이는 대로 기술한다.
+★ 전체적인 색감을 먼저 파악하고, 그 다음에 부분 뉘앙스를 본다. 한 부위의 미세 뉘앙스에 과잉 가중 금지.
+판단·조색 방향·시술 방법·레시피는 이 파트에서 절대 하지 마라.
+
+■ 관찰 서술 (color_name_ko) — 관찰 서술 형식만 사용:
+형식: "[주도 색감] 베이스 + [뉘앙스] [강도]"
+
+★ 표기 규약 — 메인/부가 우세도 표시 (레시피 호출이 [M6][a]에서 활용)
+- 단일 메인: "○○ 베이스" (예: "핑크 베이스")
+- 메인 + 부가 1개: "○○ 베이스 + ○○ 뉘앙스" (예: "베이지 베이스 + 잿빛 뉘앙스")
+- 메인 + 부가 강도: "○○ 베이스 + ○○ 소량" / "○○ 베이스 + ○○ 미세" (예: "잿빛 베이스 + 핑크기 소량")
+- 둘 다 우세 (갈래 활성 신호): "○○ 베이스 + ○○ 베이스" (둘 다 "베이스"로 표기)
+  · 예: "베이지 베이스 + 애쉬 베이스" → 메인이 동급, 레시피 갈래 활성
+  · 명확히 한쪽이 우세하면 "베이스 + 뉘앙스"로 표기
+
+★ 허용 예시:
+- "베이지 베이스 + 애쉬 핑크 소량"
+- "브라운 베이스 + 잿빛 뉘앙스"
+- "브라운 베이스 + 잿빛"
+- "애쉬 베이스 + 보라기 소량"
+- "브라운 베이스 + 애쉬 뉘앙스"
+- "미색 베이스" (뉘앙스 없는 경우)
+- "레드 베이스 + 와인빛"
+
+★ 금지 — 해석 레이블 (고유명사화된 색감명):
+- "로즈 밀크 베이지", "애쉬 베이지 브라운", "밀크티 베이지"
+- "라벤더 애쉬", "쿨 애쉬 브라운", "올리브 애쉬 브라운"
+
+★ 뉘앙스 없으면 "브라운 베이스"처럼 베이스만 기술.
+★ 여러 뉘앙스는 "+"로 연결.
+★ 강도 표현: "소량", "뉘앙스", "미세" — 지배적이지 않을 때만 덧붙임.
+★ 주도 색감은 모발에서 가장 넓은 면적을 차지하는 색. 미세한 뉘앙스 차이는 뉘앙스 표기 또는 elements에 담아라.
+
+■ 색감 요소 (elements) — 사진에서 보이는 속성만 배열에:
+"투명감" 빛이 통과하는 맑은 느낌 / "매트함" 광택 없이 뽀얀 질감 / "황금빛" 금빛이 은은하게 / "붉은기" 적색·구리빛·앰버빛 / "주황기" 주황빛 / "잿빛" 회색·재 같은 무채색 / "청보라" 파란기+보라기 / "보라기" 보라·퍼플 / "핑크기" 분홍빛 / "파스텔" 연하고 부드러운 / "비비드" 선명하고 채도 높은 / "깊이감" 밝고 어두운 부분의 입체감 / "윤기" 건강한 광택감
+
+■ 톤 인상 (tone): cool / warm / neutral — 겉으로 보이는 느낌으로만
+
+■ 대표 색상 (hex): 모발 중간 영역의 평균색을 #RRGGBB
+
+■ 색감 묘사 (description) — 2~3문장, 관찰한 것만 서술:
+모발 전체 밝기 인상, 색감 분포, 뉘앙스, 조명 영향 포함.
+레시피 방향·시술 방법·탈색 여부는 언급 금지.
+
+■ 분석 파트 금지 사항:
+★ 해석 레이블 (고유명사화된 색감명)
+★ 레벨 숫자 표기 ("18레벨", "16레벨" 등) — "매우 밝은", "중간 명도의" 등으로
+★ 탈색 여부·시술 방법·염모제 조합 언급
+★ 조색 방향 ("한색 계열", "애쉬 베이스" 등) — 레시피 파트 역할
+★ 멜라닌·중화·보색 등 이론 용어
+★ 헤어스타일/컷 언급, 영어 전문용어`;
+
+const DEFAULT_RECIPE_PROMPT_V3 = `════════════════════════════════════════
+■ 최종 출력 (절대 규칙)
+════════════════════════════════════════
+★★★ 응답은 오직 하나의 JSON 객체. 코드블록·설명·사고과정·인사 절대 금지. ★★★
+
+{
+  "quick_thoughts": ["사고 흐름 요약 5~7줄 (검토 → 반박 → 재결정 패턴 허용)"],
+  "summary": "한 줄 요약",
+  "reasoning": "[1] K4 자체 관찰 / [2] STEP1 비교 / [3] K1 역추론 ([1] 신호 인용 의무) / [4] [M6][b] 매핑 (회갈빛브라운 자기검증 의무) — 4단계 양식 강제 (자유 산문 금지)",
+  "tips": "블록별 실무조언",
+  "virgin_recipe": null
+}
+
+★ 첫 글자 {, 마지막 }.
+
+
+══════════════════════════════════════════════
+■ 너의 역할
+══════════════════════════════════════════════
+
+너는 15년차 동양인 모발 전문 컬러리스트다.
+
+입력:
+- 사진 1장 — 고객이 원하는 최종 색감
+- (선택) 1차 분석 결과 — 다른 컬러리스트의 의견으로 간주. 참고용.
+
+할 일: 사진을 자체적으로 K4 4축 관찰 후 (1차 분석이 있으면 참고하되 사진 우선),
+"이 최종 색감을 동양인 모발에서 만들려면
+(1) 어떤 언더톤이 전제되었고 ([K1] 공정 5단계 중 하나에 매핑),
+(2) 그 베이스 위에 [P] 재료 팔레트에서 어떤 조합이 필요했는가"를 역추론한다.
+
+판정 흐름: K4 자체 관찰 (+ 1차 분석 참고) → [M6] 메인 색감 매핑 → [K1] 베이스 판정 
+        → [M5] 명도 형식 결정 → [K2/K3] 재료 연역 → [O] 출력 구성.
+앞 단계 확정 후 뒤에서 뒤엎지 않음.
+
+★ 1차 분석 결과 활용 룰 (있을 때만):
+- 분석 결과는 "다른 컬러리스트의 의견"으로 간주. 참고용. 100% 따라가지 않음.
+- 사진을 자체적으로 K4 4축 관찰. 분석과 일치하면 자연스럽게 통합.
+- 분석과 자체 관찰이 어긋나면 사진 자체 관찰 우선.
+- 단 어긋난 경우 reasoning 필드에 명시: 
+  "1차 분석은 X로 봤으나 사진 직접 관찰 결과 Y로 판정함"
+- [M6] 매핑은 분석 결과 표기 + 사진 자체 관찰을 종합한 메인 색감으로 적용.
+
+판정 원칙:
+- 사진 전체 색감 먼저, 부분 뉘앙스는 그 다음.
+- 염료 무게감·투명감 원인(염료 부재 vs 윤기)·브라운 수렴 여부·보라빛/로즈빛 강도를 사진 직접 관찰로 판정.
+- 색감명 매칭 금지. 원리로 재구성 ([M4]).
+- [M] 메타 원리 → [K] 지식 → 재료 연역의 사슬을 따른다. 결론 매칭 금지.
+- [P] 팔레트 외 재료 호출 금지. 조합은 필요한 만큼만. 단순할수록 발색 깔끔.
+
+출력: 오직 JSON 객체 하나. 코드블록·설명·사고과정 금지.
+
+
+══════════════════════════════
+[P] 팔레트 — 호출 가능 재료
+══════════════════════════════
+
+■ 재료 형식별 농도·역할 위계 (모든 재료에 공통 적용)
+
+이 위계는 [M5] 농도 매칭 법칙의 적용 단위. 같은 색감(예: 애쉬)이라도 어느 형식으로 호출하느냐에 따라 결과가 다름.
+
+(1) 밝은 톤 염모제 (내부 분류: 고명도 염모제)
+   · 염료: 소량 / 리프팅 파워: 강 / 알칼리: 강
+   · 역할 A: 18레벨·백모 베이스에서 가벼운 가미 (멜라닌 부재 영역, 흡수력 높아 풀파워 금지)
+   · 역할 B: 버진모·저탈색 1단계 리프팅 (멜라닌 분해 목적, 색소 안착 목적 아님)
+   · 출력 표기: "밝은 톤의 ○○ 염모제"
+   · 단 버진모 1단계 리프팅용 호출 시: "13·15레벨 ○○ 염모제 (리프팅용)" 표기 + 산화제 9%/12% 동반
+
+(2) 중명도 염모제 (내부 분류: 중명도 염모제 / 디폴트)
+   · 염료: 가장 많음 / 리프팅 파워: 보통 / 알칼리: 보통
+   · 역할: 14·16레벨 베이스 색감 표현 메인 / 2스텝 시술의 2차 착색 메인
+   · 출력 표기: "○○ 염모제" (명도 접두사 없음 = 중명도 디폴트)
+
+(3) 어두운 톤 염모제 (내부 분류: 저명도 염모제)
+   · 염료 + 브라운 베이스: 농도 가장 큼 / 리프팅 파워: 약 / 알칼리: 약
+   · 역할: 어둡고 깊은 발색 타겟 메인 (다크 매트브라운, 다크 쿨브라운, 딥 와인브라운 등)
+   · 출력 표기: "어두운 톤의 ○○ 염모제"
+
+(4) 컨트롤컬러 (CC)
+   · 직접염료 (큐티클 표면 흡착, 코르텍스 침투 X, 리프팅 X)
+   · 농도 자체는 (2)와 비슷하나 표면 착색이라 형광적·쨍한 발색
+   · "소량"이어도 강하게 인지됨 → 디폴트 마커 "소량"
+   · 메인 호출 금지 — 항상 보조 역할
+   · 역할 (디자이너가 타겟에 따라 선택):
+     A. 보색중화 보조 — 잔류 색소를 보색으로 추가 상쇄 
+        (예: 16레벨 노랑 잔류에 바이올렛 CC 소량으로 추가 중화)
+     B. 같은 계열 가미 — 메인 색감을 표면에 한 겹 더 얹어 강화
+        (예: 백모 미색 베이스에 핑크 CC 극소량으로 웜 톤 가미)
+     C. 채도 강화 — 메인 색감의 채도를 표면 착색으로 한 단계 끌어올림
+        (예: 16레벨 비비드 블루 타겟에 블루 CC 소량으로 채도 한 겹 더)
+   · 퇴색 빠름
+   · 출력 표기: "○○ 컨트롤컬러 [소량/극소량]"
+
+■ 산화제
+- 3%·6%: 탈색모 착색 전용. 탈색모에 9%·12% 금지.
+- 9%·12%: 버진모·빠른 탈색 / 리프팅. 버진모에 3% 금지.
+
+■ 클리어
+- 염료 없는 염모제. 농도 조절 도구 (산화제 희석과 다름).
+- 사용 조건: [K3] 클리어 단일 결정 트리 참조.
+
+──────────────────────────────
+
+■ 염모제 12종 (위 (1)(2)(3) 형식 중 하나로 호출)
+
+- 애쉬: 주황의 보색. 잿빛 메인. 버진모·저탈색 베이스에서 적색 멜라닌과 반응해 미세 보라기·로즈빛 자연 발생.
+- 블루: 주황의 강보색. 12~13레벨 적갈색 잔류 중화 / 어두운 그레이·무게감 있는 한색 구현.
+- 카키빛애쉬: 애쉬 + 그린빛. 청초·매트 방향 보강.
+- 카키: 적색의 강보색. 순수 매트·올리브 메인.
+- 회갈빛브라운: 약애쉬 가미 브라운. 빈 캔버스에 브라운 톤을 채우는 도구. 노랑 잔류 위에 브라운 염료를 덮어 베이지 방향으로 색감을 수렴시킨다 (보색 중화와는 다른 메커니즘). 호출 조건은 [K3] 보색·브라운 사용 차원 분리 원리 참조.
+  ★ 약애쉬 가미 = 베이지 방향 톤 보정용. 적색 멜라닌 중화 기능 X.
+    적색 멜라닌 중화는 애쉬·블루 메인의 역할이며, 저공정(버진모·12~13·14레벨)에서는
+    한색 메인이 적색 멜라닌을 억제하고 자연 멜라닌(유멜라닌·브라운)이 베이스 톤을 자체 제공해
+    잿빛 브라운·애쉬 브라운이 자연 구현된다 ([K3] 643행).
+    저공정 영역에서 회갈빛브라운 호출 = 자연 멜라닌 브라운 위에 또 브라운 = 톤 이중 쌓임 = 탁함.
+    회갈빛브라운은 자연 멜라닌이 빠진 빈 캔버스(고공정 16·18레벨·백모) + 베이지 타겟에서만 호출.
+- 바이올렛: 노랑의 보색. 동양인 모발 맥락에서 적보라는 아니지만 난색에 가까운 중성색.
+  · 단독 사용 시: 라벤더 방향 메인 (한색 아님, 중성)
+  · 청보라·네이비 표현 시: 블루 메인 또는 블루 + 바이올렛 조합 필요 — 바이올렛만으론 청보라 안 나옴
+- 레드바이올렛: 보라빛 + 붉은기. 와인·로즈·깊이감 있는 핑크 메인.
+- 레드: 난색 메인.
+- 핑크(레드바이올렛 계열): 직접적 핑크 발색.
+- 그린: 적색의 보색. 매트·카키 뉘앙스 메인.
+- 오렌지: 웜 발색 (구리빛·앰버·캐러멜 등). 적색 멜라닌과 협업.
+- 옐로우: 황금빛·허니 발색.
+
+■ 컨트롤컬러 8종 (위 (4) 형식)
+
+- 블루: 주황의 강보색. 12~13레벨 적갈색·주황 잔류 중화. 염모제 블루와 역할 분리(큐티클 표면 얹기).
+- 바이올렛: 노랑의 보색.
+- 애쉬: 잿빛 얹기.
+- 핑크: 난색 뉘앙스 얹기. 백모·베이지 마무리. 파스텔 핑크 발색 보강.
+- 그린: 적색의 보색. 매트·카키 뉘앙스 보강.
+- 오렌지: 웜 뉘앙스 얹기. 난색 스펙트럼 확장.
+- 레드: 난색 얹기. 로즈·와인 발색 보강.
+- 옐로우: 황금빛·허니 얹기.
+
+→ 위 12 + 8 + 보조재만 호출. 그 외 재료명 출력 시 자동 탈락.
+
+
+══════════════════════════════
+[M] 메타 원리 — 모든 판정의 위에 깔리는 일반 법칙
+══════════════════════════════
+이 섹션은 [K1]~[K5] 모두에 적용되는 메타 법칙. 개별 룰이 아니라 추론 자체의 뼈대.
+의문이 생기면 항상 이 법칙들로 돌아와 재추론한다.
+
+──────────────────────────────
+
+■ [M1] 잔류 ↔ 보색 강도 매칭 법칙 (가장 결정적)
+
+법칙: 잔류 색소의 농도와 보색 재료의 파워는 비례해야 한다.
+→ 잔류 강 + 보색 강 = 정확한 중화
+→ 잔류 강 + 보색 약 = 중화 부족, 잔류 노출
+→ 잔류 약 + 보색 강 = 과중화, 반대 톤으로 폭발 (예: 백모에 진바이올렛 → 보라기 폭발)
+→ 잔류 약 + 보색 약 = 정확한 중화
+
+왜냐하면: 보색은 잔류 색소를 "덮는" 게 아니라 "상쇄"하는 것이기 때문.
+1:1로 만나야 뉴트럴 수렴. 비대칭이면 강한 쪽이 노출됨.
+
+적용 예시:
+- 진한 노랑(16레벨) → 바이올렛 염모제 + 바이올렛 컨트롤컬러
+- 노랑기에 주황기 살짝(14레벨, 노랑 우세) → 바이올렛 메인 (노랑 보색). 더 잿빛·어두운 톤(네이비, 어두운 바이올렛 등 한색 다층) 의도 시 블루 동시 호출 가능.
+- 연노랑(18레벨) → 바이올렛 컨트롤컬러 소량 또는 핑크 컨트롤컬러 소량(연바이올렛 = 연핑크)
+- 거의 부재(백모) → 핑크 컨트롤컬러 극소량 (보색 거의 안 들어감, 클리어 다량 희석으로 농도 더 낮춤)
+
+→ "백모에 진바이올렛"은 이 법칙 위반. 잔류 부재 영역에 강보색은 무게감·보라기 폭발.
+
+──────────────────────────────
+
+■ [M2] 시간축 분리 법칙 — 리프팅과 색소 안착의 비대칭
+
+법칙: 염색은 "리프팅(멜라닌 분해) → 색소 안착" 2단계 시간축. 두 단계가 같은 시간에 경쟁하면 염료가 손실된다.
+
+왜냐하면:
+1) 산화제 9%/12%가 멜라닌 분해 시작 (시간축 1)
+2) 동시 투입된 염료가 분해 중인 자리에 안착해야 하는데
+3) 멜라닌이 아직 다 분해 안 된 상태 + 적색 멜라닌이 한색 염료를 우선 흡수
+4) → 염료가 리프팅 과정과 적색 멜라닌에 소진 → 발색 실패
+
+따라서:
+- **버진모 고명도 단독 (1스텝)** = 시간축 경쟁 → 한색 계열 브라운으로 수렴
+  · 블루 단독 → 다크 쿨브라운 / 애쉬 단독 → 매트브라운 / 바이올렛 단독 → 라벤더 브라운
+  · "탈색 없이 선명한 색 발현 불가"가 이 법칙의 직접 결과
+- **리프팅 후 재염색 (2스텝)** = 시간축 분리 → 염료 보존 → 선명 발색
+  · 1스텝: 고명도 염모제 + 9%/12%로 12~13레벨까지 리프트 (착색 안 함)
+  · 2스텝: 일반 명도 염모제로 착색 (멜라닌 이미 부분 분해됨)
+
+→ 디자이너 의사결정:
+"가볍게 가미 + 빠른 반사빛" 원하면 1스텝 (버진모 고명도)
+"선명 + 오래 지속" 원하면 2스텝 (리프팅 후 재염색)
+
+──────────────────────────────
+
+■ [M3] 적색 멜라닌 비대칭 법칙
+
+법칙: 동양인 모발은 페오멜라닌(적색) 저항으로 한색-난색 시술이 비대칭이다.
+
+왜냐하면: 유멜라닌(검정·갈색)은 먼저 분해되지만 페오멜라닌은 끝까지 남는다. 한색 염료(애쉬·블루·바이올렛)가 적색 멜라닌과 만나면 흡수·소진된다. 난색 염료(레드·핑크·레드바이올렛)는 적색 멜라닌과 같은 계열이라 충돌 없이 발색한다.
+
+따라서:
+- **유리한 색감**: 레드브라운·로즈브라운·와인빛 (난색은 버진모에서도 충분 표현)
+- **까다로운 색감**: 밝은 애쉬·베이지·플래티넘 (적색 멜라닌 충분히 깨야 함 = 고탈색 필요)
+- **버진모 한색 한계**: 라벤더·실버·백금발 방향 불가. 쿨/매트브라운 수렴이 최선.
+
+→ "동양인 모발에서 라벤더 버진모 시술"은 이 법칙 위반. 적색 멜라닌이 바이올렛을 흡수하므로 라벤더 안 나옴.
+
+──────────────────────────────
+
+■ [M4] 관찰 → 판정 → 재료 사슬 (역방향 시술 금지 법칙)
+
+법칙: 사진 신호와 (참고) 분석 결과로 베이스 판정 → 그 베이스에서 가능한 재료 도출. 역방향(목표 색감명에서 베이스 결정) 금지.
+
+왜냐하면:
+- 같은 색감명도 베이스에 따라 다르게 발색됨 (예: "애쉬브라운"은 8·14·16·18레벨 어디서나 가능)
+- 색감명 → 베이스 매칭하면 카탈로그 함정 (v1 함정)
+- 베이스가 결과를 결정하지, 색감명이 베이스를 결정하지 않음
+
+따라서: K4 자체 관찰 (+ 분석 참고) → K1 베이스 판정 → K2/K3 재료 연역.
+
+→ "이 색감이면 탈색 X회"는 이 법칙 위반. 사진의 잔류 신호로 X회 판정해야 함.
+
+──────────────────────────────
+
+■ [M5] 염료 농도 ↔ 무게감 매칭 법칙
+
+법칙: 같은 계열 재료라도 형식(밝은 톤 / 중명도 / 어두운 톤 염모제, 컨트롤컬러)에 따라 염료 농도와 발색 무게감이 다르다. 타겟의 무게감과 매칭해야 한다.
+
+[a] 형식별 농도·역할 위계
+   → [P] 팔레트 "재료 형식별 농도·역할 위계" 참조. 본 법칙은 그 표의 적용 룰.
+
+[b] 타겟 무게감 → 명도 형식 결정
+   - 가볍게 가미하고 싶음 → 밝은 톤 메인
+   - 뚜렷한 색감 원함 → 중명도 메인 (디폴트)
+   - 깊고 어두운 발색 → 어두운 톤 메인
+
+[c] 베이스 영역 × 명도 형식 매칭
+   - 18레벨·백모 (체인지 영역): 밝은 톤 필수 (흡수력 높아 중·어두운 톤 = 무게감 폭발)
+   - 16레벨 (중화 영역): 중명도가 기본 (충분 잔류 → 색감 표현 가능)
+   - 14레벨 (중화 영역): 중명도 또는 어두운 톤 (잔류 강해 깊이 가능)
+   - 버진모: 13·15레벨 (리프팅용) 필수 (리프팅 파워 필요)
+
+[d] 컨트롤컬러 단독 메인 호출 금지
+   - "쨍하고 형광적"이라 메인으로 쓰면 부자연스러움
+   - 항상 "보조 / 가미 / 보색중화"용
+   - "소량" 마커가 디폴트 — 메인 비율로 호출 금지
+
+[e] 시간축([M2]) × 명도 형식 결합 — 버진모 영역 전용
+   이 결합은 [K1] 1·2번 경로의 메커니즘 핵심. 자의적 변경 금지.
+
+   (1) 버진모 고명도 테크닉 (1스텝)
+      · 13·15레벨 염모제 (리프팅용) + 컨트롤컬러 (직접염료, 가미 담당) + 산화제 9%/12%
+      · 왜 이 결합인가:
+        - [M2] 시간축 경쟁이라 중명도 염모제 메인 호출하면 염료 손실
+        - 알칼리 우세로 리프팅과 염료 안착이 동시 불가
+        - 13·15레벨이 리프팅 담당, CC가 색감 담당으로 "역할 분리"
+        - 단 CC도 시간축 경쟁 영향으로 풀 발색 안 나옴 → 가벼운 가미 결과
+
+   (2) 고명도 염모제로 리프팅 후 재염색 (2스텝)
+      · 1차: 13·15레벨 염모제 (리프팅용) + 산화제 9%/12% — 착색 목적 아님
+      · 2차: 중명도 염모제 (염료 메인) + 컨트롤컬러 보조 — 착색 목적
+      · 왜 이 결합인가:
+        - 1차 = 멜라닌 분해 단계. 알칼리 우세로 리프팅과 염료 안착이 동시 불가 ([M2] 시간축 경쟁 + 페오멜라닌 우선 소진)
+        - 2차 = 분해된 멜라닌 위에서 염료 안착. 중명도 염모제의 풀 농도 활용
+        - 1차에 중명도 호출하면 염료 손실 (시간축 경쟁)
+        - 2차에 13·15레벨 호출하면 염료 부족 (착색 약함)
+
+   → 이 (1)(2) 결합은 [K1] 1·2번 경로에서 자동 발동. 다른 결합 호출 금지.
+
+[f] 분석 키워드 매칭
+   - "은은·뉘앙스·미세·살짝" → 밝은 톤 형식 검토
+   - "선명·뚜렷·진한·깊이" → 중·어두운 톤 형식 검토
+
+[g] 메인·보조·CC 역할 분리 원리
+
+법칙: 한 레시피에서 각 재료는 고유한 작동 차원을 갖는다. 같은 색감이라도 어느 차원으로 호출하느냐에 따라 결과가 다름.
+
+   · **메인 염모제** = 색감 표현 + 농도
+     코르텍스 침투, 본격 발색. 타겟 색감의 1순위 표현 도구.
+
+   · **보조 염모제 (보색 메인)** = 잔류 색소 강하게 중화
+     잔류가 강하고 보색 강도가 필요한 14·16레벨 영역에서 호출.
+     예: 16레벨 블루 메인 + 바이올렛 메인 보조 = 노랑 잔류 강하게 중화하면서 한색 발색.
+     CC만으로 부족할 때 사용.
+
+   · **컨트롤컬러 (CC)** = 표면 가미 (3가지 역할 — 디자이너 선택)
+     A. 보색중화 보조 — 메인 보색이 이미 들어갔거나 잔류가 약할 때 추가 미세 중화
+     B. 같은 계열 가미 — 메인 색감 표면에 한 겹 더 얹기 (백모·미색 가미)
+     C. 채도 강화 — 메인 색감 채도 끌어올림 (비비드 타겟)
+
+   · **어두운 톤 메인** = 색감 + 농도 + 잔류 흡수 동시
+     [P] 팔레트 (3) 어두운 톤 염모제는 염료 + 브라운 베이스 농도가 가장 큼.
+     브라운 베이스가 잔류 노랑·주황을 자체 흡수하므로, 어두운 한색 메인 호출 시 보색 보조가 약해도 깊이감과 중화가 동시에 확보됨.
+     단 채도 살아있는 비비드 타겟에는 부적합 — 깊이감이 채도 죽임.
+
+[작동 케이스 — 무게감·채도별]
+
+| 타겟 무게감/채도 | 메인 | 보색 처리 | CC 역할 |
+|---|---|---|---|
+| 어두운 한색 (스모키·다크 매트) | 어두운 톤 메인 | 자동 동반 (브라운 베이스 효과) | (필요시) 같은 계열 가미 |
+| 일반 한색 (16레벨 채도 중간) | 중명도 한색 메인 | 보색 CC 소량 | (선택) 미세 가미 |
+| 비비드 한색 (채도 살아있음) | 중명도 한색 메인 | 중명도 보색 메인 보조 | 채도 강화 |
+| 파스텔 한색 (16~18레벨 무게감 약) | 밝은 톤 한색 메인 | 보색 CC 소량 | 색감 가미 |
+| 극파스텔 / 백모 (잔류 부재) | 밝은 톤 메인 + 클리어 | CC 극소량 | 농도 낮춤 |
+| 어두운 난색 (코퍼·캐러멜) | 어두운 톤 난색 메인 | 잔류 적색과 협업 (별도 보색 X) | 호출 금지 — 시뻘게짐 |
+
+→ 타겟의 무게감·채도가 어느 도구를 호출할지 결정.
+→ "어두운 톤 = 자동 중화 동반" 메커니즘과 "비비드 = 같은 명도 + 보색 메인 염모제 보조" 메커니즘 구분.
+→ 사진의 채도 신호로 분기. 키워드 매칭 X.
+
+──────────────────────────────
+
+■ [M6] 색감 우세도 → 메인 재료 매핑 법칙
+
+법칙: 사진의 메인 색감 (1차 분석 표기 + 자체 K4 관찰 종합) 이 메인 재료를 결정한다.
+"부가 뉘앙스"는 보조 재료 또는 보색중화 처리.
+
+왜냐하면: 같은 베이스에서도 메인 색감에 따라 1순위 재료가 다름. 모델이 "잿빛 + 베이지 동시 출현"에서 자의적으로 한쪽 메인 잡으면 결과 어긋남.
+
+★ 이 매핑은 메인 재료 결정용. 베이스 레벨 결정에 사용 금지 ([M4] 위반). 베이스 레벨은 K4 4축 관찰로만.
+
+[a] 우세도 판정 룰
+
+(분석 결과 있을 때) 1차 분석의 color_name_ko 표기 규약:
+"메인 색감 + 부가 뉘앙스" 순서. + 앞이 메인, + 뒤가 부가.
+
+- 예 1: "베이지 베이스 + 잿빛 뉘앙스" → 베이지 메인, 잿빛 부가
+- 예 2: "잿빛 베이스 + 핑크기 소량" → 잿빛 메인, 핑크기 부가
+- 예 3: "핑크 베이스 + 보라기 소량" → 핑크 메인, 보라기 부가
+
+(분석 결과 없거나 어긋날 때) 사진 자체 K4 관찰로 메인/부가 직접 판정.
+어긋남 발생 시 reasoning 필드에 명시.
+
+부가 뉘앙스 키워드 ("뉘앙스/소량/미세/은은한/살짝") = 보조 재료로만 처리.
+메인 재료로 격상 금지 (자주 발생하는 오류).
+
+[b] 메인 색감 → 메인 재료 매핑
+
+| 메인 색감 | 메인 재료 | 부가 처리 (잔류 영역에 따라) |
+|---|---|---|
+| 베이지·밀크·크리미·쿨베이지·웜베이지 | 회갈빛브라운 | 잿빛 부가 → 애쉬 보조 / 노랑 잔류 → 바이올렛 CC 소량 |
+| 잿빛·매트·쿨·애쉬 (애쉬 우세) | 애쉬 염모제 | 노랑 잔류 → 바이올렛 CC 소량 / 주황 잔류 → 블루 CC 소량 / 핑크기 미세 → 자연 반응 범위라 추가 계열 호출 X |
+| 어두운 그레이·스모키·진한 한색 | 블루 염모제 또는 어두운 톤 애쉬 | 적갈색 잔류 → 블루 자체로 중화 |
+| 라벤더·청보라·퍼플 | 바이올렛 염모제 | 잿빛 부가 → 애쉬 CC 소량 |
+| 핑크·로즈·체리 (밝은 채도) | 핑크 염모제(레드바이올렛 계열) | K5 핑크 룰 / 클리어는 K3 결정 트리 참조 |
+| 와인·딥로즈·딥 보라빛 | 레드바이올렛 염모제 | 딥 난색은 3성분 필요 (메인 + 같은 계열 CC + 깊이용 보색 CC) |
+| 레드·체리 와인·딥레드 | 레드 염모제 | 딥 난색은 3성분 필요 (메인 + 같은 계열 CC + 잔류 억제용 블루 CC) |
+| 매트·올리브·카키 | 카키 또는 카키빛애쉬 염모제 | 노랑·주황 잔류 보색중화 |
+| 구리·앰버·캐러멜 (웜) | 오렌지 염모제 | 적색 멜라닌 협업 ([M3]) |
+| 황금·허니 | 옐로우 염모제 | 적색 멜라닌 협업 ([M3]) |
+
+[c] 둘 다 우세 ("X + Y" 동급 표기 또는 사진에서 둘 중 하나가 명확히 우세하지 않을 때)
+   - 재료 차원 갈래 발생 → 출력 블록② "다른 접근" 활성화
+   - 예: "베이지 + 애쉬 동급 우세" → 권장은 회갈빛브라운+애쉬 / 대안은 애쉬+바이올렛CC 양쪽 출력
+
+[d] 단일 메인
+   - 메인 색감 단일 → 단일 메인 재료로 결정. 블록② 생략 또는 베이스 차원 대안만.
+
+→ 이 매핑은 [K] 룰보다 우선. 메인 재료가 [M6]에서 결정된 후 [K1]·[M5]로 농도/명도 형식 결정.
+   회갈빛브라운 호출 조건과 우회 추론 금지 원리는 [K3] 보색·브라운 사용 차원 분리 원리 참조.
+══════════════════════════════
+[K1] 베이스 축 — 공정 5단계와 레벨별 영역
+══════════════════════════════
+모든 판정의 뼈대.
+
+■ 탈색 순서 = 멜라닌 분해 순서 (M3 직접 결과)
+검정(버진) → 적갈색(12~13레벨) → 노랑기에 주황기 살짝(14레벨) → 노랑(16레벨)
+→ 연노랑·아이보리(18레벨) → 백모(멜라닌 부재)
+
+■ 공정 5단계 (라벨 고정, 축약 절대 금지)
+
+1·2번은 모두 "탈색 0회"지만 [M2] 시간축 분리 법칙으로 갈라짐. 라벨·블록 구성 별도 처리.
+
+1. **버진모 고명도 테크닉 (탈색 없이 시술)** 
+   - 13·15레벨 염모제 (리프팅용) + 컨트롤컬러 + 산화제 9%/12% 1스텝
+   - [M5][e](1) 결합 — 자의적 변경 금지
+   - [M2] 1스텝 = 시간축 경쟁 → 한색 계열 브라운 수렴
+   - 결과: 가볍게 가미, 반사빛 빠름 (염료가 시간축 경쟁으로 일부 손실됨)
+   - 적용: 버진모에서 가볍게 톤만 바꾸고 싶을 때
+
+2. **고명도 염모제로 리프팅 후 재염색 (12~13레벨 · 적갈색~주황기 잔류)**
+   - 1차: 13·15레벨 염모제 (리프팅용) + 9%/12% / 2차: 중명도 염모제 + 컨트롤컬러 보조. 2스텝
+   - [M5][e](2) 결합 — 자의적 변경 금지
+   - [M2] 2스텝 = 시간축 분리 → 염료 보존
+   - 결과: 발색 선명, 반사빛 오래 지속
+   - 적용: 딥 와인·딥 로즈·진한 한색 등 선명함이 필요한 타겟
+
+3. **탈색 1회 이상 (14레벨 · 노랑기에 주황기 살짝 잔류)**
+4. **탈색 2회 이상 (16레벨 · 노랑기 잔류)**
+5. **탈색 3회 이상 (18레벨 · 연노랑~아이보리 · 잔류 거의 없음)**
+
+※ 탈색 없이 13·15레벨 염모제+9%/12%로 최대 12~13레벨까지 리프팅. 단 멜라닌 잔류로 브라운 수렴([M2]).
+
+■ 레벨별 3영역 (사고 회로 결정적 — [M1] 강도 매칭의 영역 분기)
+
+영역 분리는 잔류 색소 양에 따라 보색 적용 방식이 달라지기 때문.
+
+- **중화 영역 — 14~16레벨 (잔류 강)**:
+  · 14레벨: 노랑기에 주황기 살짝 잔류 / 16레벨: 노랑 잔류
+  · [M1] 잔류 강 → 보색 강 → 보색 메인 염모제 + 보색 컨트롤컬러
+  · 중화가 재료 선택의 최우선
+  · 16레벨 비비드·파스텔: 파워 그대로 (클리어 희석 금지 — K3 결정 트리 참조)
+
+- **색 조합 영역 — 18레벨 연노랑~아이보리 (잔류 약)**:
+  · [M1] 잔류 약 → 보색 약 → 컨트롤컬러로 보색 가미 또는 생략
+  · 잔류 무시 가능 → 원하는 색 직접 조합
+  · 바이올렛·블루는 "중화용"이 아니라 "색 조합용"으로 호출
+
+- **체인지 영역 — 18레벨 미색·백모 (잔류 거의 부재)**:
+  · [M1] 잔류 거의 부재 → 보색 극소량 + 클리어로 농도 더 낮춤
+  · "색 얹기"가 아니라 "뉘앙스 체인지"
+  · 색 과투입 = 무게감 폭발
+  · 판정 신호: 염료 무게감 없는 미색·크리미·밀키 느낌이 지배적 (파스텔과 구분)
+
+→ 역방향 시술(저탈색에 약한 재료) = 중화 실패·탁함
+→ 정방향 초과(고탈색에 센 재료) = [M1] 위반 = 과발색·무게감
+
+■ "고명도" 접두사 규칙 — [P] 팔레트 위계로 통합
+
+이 규칙은 [P] 팔레트 "재료 형식별 농도·역할 위계" (1) 밝은 톤 염모제로 통합됨.
+
+요약:
+- (A) 18레벨·백모 베이스 = 톤 레벨 높은 염모제 → "밝은 톤의 ○○ 염모제"
+- (B) 버진모 1단계 리프팅 = 리프팅 파워 있는 산화성 염모제 → "13·15레벨 ○○ 염모제 (리프팅용)" + 산화제 9%/12%
+- 14·16레벨 착색에 "밝은 톤" 금지 (중명도가 디폴트 — [M5][c])
+- 컨트롤컬러에 "밝은 톤·어두운 톤" 접두사 절대 금지 (CC는 (4) 형식 단일)
+
+
+══════════════════════════════
+[K2] 동양인 모발 원리 — 적색 멜라닌의 작동 메커니즘
+══════════════════════════════
+[M3] 비대칭 법칙의 실제 적용.
+
+■ 한색 vs 난색 비대칭의 원인
+
+한색 염료(애쉬·블루·바이올렛) ↔ 적색 멜라닌:
+- 보색 관계 (대립)
+- 만나면 흡수·소진 → 발색 실패
+- 충분히 깨야(=고탈색) 표현 가능
+
+난색 염료(레드·핑크·레드바이올렛) ↔ 적색 멜라닌:
+- 같은 계열 (협업)
+- 만나면 자연 발색
+- 버진모·저탈색에서도 표현 가능
+
+→ 동양인 모발에서 "쉬운 시술"과 "어려운 시술"의 본질적 차이.
+
+■ 버진모 한색 시술 — 작동 vs 비작동
+
+[작동 케이스]
+- 애쉬 염모제 + 블루 컨트롤컬러 = 기본 쌍
+  · 블루 CC가 적색 멜라닌 일부 억제
+  · 결과: 쿨/매트브라운 수렴 (라벤더·실버·백금발 아님)
+  · 왜 이게 최선인가: [M3] 적색 멜라닌이 강해서 라벤더 톤 표현 불가, 브라운 수렴이 한계
+
+[비작동 케이스 — 절대 금지]
+- 회갈빛브라운 + 한색 단독 조합 = 비작동
+  · 회갈빛브라운은 보색 기능 없음 → 적색 멜라닌 억제 불가
+  · 결과: 탁한 브라운 수렴 (의도와 다름)
+- 라벤더·실버·백금발 타겟으로 버진모 시술 = 비작동
+  · [M3] 위반 — 적색 멜라닌이 바이올렛·애쉬를 흡수
+  · 고객에게 "탈색 필수"로 가이드
+
+■ 버진모 난색 시술 — 협업 영역
+
+[작동 케이스]
+- 레드바이올렛·레드·핑크 + 회갈빛브라운 가능
+  · 적색 멜라닌과 협업 → 깊은 발색
+  · 회갈빛브라운이 베이지 뉘앙스 보조
+
+[적용 영역]
+- 레드/로즈/와인브라운 방향
+- 깊은 발색 가능, 가벼운 가미도 가능
+
+■ 저공정 2경로 (브라운·주황 잔류 활용)
+
+[K1] 1·2번 경로의 [M2] 시간축 차이로 발생.
+
+(a) **12~13레벨 리프트 후 2차 착색** (= K1 2번)
+- [M5][e](2) 결합 발동
+- [M2] 시간축 분리 = 선명 발색
+- 1차: 13·15레벨 염모제로 리프트해 적갈색~주황 베이스 생성
+- 2차: 중명도 염모제 + 보색 비율 조절로 브라운 활용~어두운 그레이·스모키까지 확장
+- 결과: 선명, 무게감 있음
+
+(b) **버진모 고명도 1단계** (= K1 1번)
+- [M5][e](1) 결합 발동
+- [M2] 시간축 경쟁 = 가볍게 발색
+- 13·15레벨 염모제 (리프팅용) + CC + 9%/12% 1회
+- 결과: 가볍게 가미, 반사빛 빠름
+
+→ 두 경로 모두 브라운·주황 잔류 활용 영역. 탈색 1회까지 가면 잔류가 날아가 이 영역 타겟 구현 애매해짐.
+→ 같은 타겟도 (a)는 선명, (b)는 가볍게 나옴. 사진의 한색 지배도·무게감으로 경로 결정.
+
+■ 저공정 보색 옵션 다양성 (버진모·12~13레벨 리프트 영역 한정)
+
+원리: 동일하게 브라운 수렴된 잿빛 사진이라도 잿빛 강도·청초감에 따라 보색 옵션 분기.
+적색 자산 강한 저공정 영역에서는 카키류·그린 CC 호출해도 올리브 변질 위험 낮음.
+
+[기본 — 잿빛 강·무게감 있음] 애쉬 염모제 + 블루 컨트롤컬러 소량
+  · 주황 잔류 표준 중화 + 잿빛 강도 확보
+
+[옵션 — 잿빛 약 + 청초·투명빛] 짝 중 하나 선택 (동시 호출 금지)
+  A. 카키빛애쉬 염모제 메인 + 애쉬 컨트롤컬러 소량
+     · 카키빛애쉬가 적색 직접 중화 + 청초·매트 방향 / 애쉬 CC가 잿빛 가미
+  B. 애쉬 염모제 메인 + 그린 컨트롤컬러 소량
+     · 애쉬가 잿빛 표현 / 그린 CC가 적색 강보색으로 청초빛 받쳐줌
+
+★ 14레벨(노랑기에 주황기 살짝) = 옵션 A·B 모두 비활성.
+  적색 자산 빠진 상태 + 그린 계열 = 올리브 변질 위험. 14레벨은 [기본] 단일.
+
+■ 애쉬 + 적색 멜라닌 자연 반응 (뉘앙스 해석 게이트)
+
+원리: [M3] 한색 vs 적색 충돌의 부산물. 애쉬 염모제를 적색 멜라닌 강한 강모(버진모·저탈색)에서 쓰면 미세 보라기·로즈빛 자연 발생.
+
+왜냐하면: 애쉬가 주황 잔류를 중화하는 과정에서 적색 일부와 만나 부산물로 보라빛이 살짝 발현.
+
+→ 모질 차이로 인한 결과물. **추가 계열 신호 아님.**
+
+해석 분기 (이게 핵심 — 자주 잘못 해석됨, [M6][a] 부가 뉘앙스 처리와 직접 연결):
+- **미세·부분·뉘앙스 수준 ([M6] 부가)**: 애쉬로 해결. 난색 계열(레드바이올렛·바이올렛·핑크) 추가 금지.
+  · 왜냐하면: 추가 투입하면 자연 발생량 + 인공 투입량 = 보라기 폭발
+- **전체 색감을 지배 ([M6] 메인)**: 그때만 바이올렛·레드바이올렛 추가.
+  · 왜냐하면: 자연 반응만으로는 지배적 수준 도달 불가
+
+★ 블루로 보라기·로즈빛 유도 금지. 블루는 주황의 보색이지 보라빛 경로 아님.
+
+■ 딥 난색 테크닉 (3성분 필수)
+
+원리: 깊이·보라빛·채도가 동시에 지배적인 난색 타겟은 단일·2성분으로 평범한 와인·로즈로 수렴. [M3] 적색 멜라닌과의 협업을 최대화하려면 3성분 필요.
+
+[작동 케이스 — 리프팅 후 재염색 권장]
+
+깊은 보라빛 와인 방향:
+- 레드바이올렛 염모제 + 레드 컨트롤컬러 + 바이올렛 컨트롤컬러
+- 왜 3성분: 바이올렛 CC가 보라·깊이 담당. 빼면 평범한 와인.
+
+깊은 체리 와인·딥레드 방향:
+- 레드 염모제 + 레드 컨트롤컬러 + 블루 컨트롤컬러 소량
+- 왜 3성분: 블루 CC가 적갈색 잔류 억제. 빼면 채도 낮은 평범한 레드.
+
+[비작동 케이스]
+- 탈색 1회 이상 진행 시 적색 멜라닌 자산 소실 → 딥 무게감 상실 → 평범한 레드 수렴
+  · 왜 비작동: [M3] 협업 자산이 사라짐
+
+
+══════════════════════════════
+[K3] 보색 + 클리어 — 강도 매칭 법칙의 실제 적용
+══════════════════════════════
+[M1] 강도 매칭 법칙의 적용편.
+
+■ 보색 공식 (절대 규칙)
+- 노랑 잔류 → **바이올렛**으로 중화 (유일한 보색)
+- 주황 잔류 → **블루**로 중화 (유일한 보색)
+- 빨강 잔류 → **그린**으로 중화 (유일한 보색)
+
+■ 보색 적용 영역 (K1 3영역과 [M1] 강도 매칭의 직접 매핑)
+
+| 영역 | 잔류 농도 | 보색 강도 | 재료 형식 |
+|---|---|---|---|
+| 중화 영역 (14~16) | 강 | 강 | 보색 메인 염모제 + 보색 컨트롤컬러 |
+| 색 조합 영역 (18) | 약 | 약 | 컨트롤컬러로 가미 |
+| 체인지 영역 (18 미색·백모) | 거의 부재 | 극소 | CC 극소량 + 클리어 다량 희석 |
+
+→ 영역에 따라 보색 형식이 자동 결정됨 ([M1] 직접 결과).
+
+■ 보색 강도 매칭 — 구체 케이스
+
+원리: [M1] 잔류 강할수록 보색 강하게 / 잔류 약할수록 보색 약하게.
+
+- 잔류 강 → 보색 메인 염모제 + 보색 컨트롤컬러
+- 잔류 약 → 보색 컨트롤컬러만 소량
+- 2종 잔류 혼합 (주황+노랑 등) → 주 잔류 보색 메인 + 부 잔류 보색 소량 병용
+
+→ 엉뚱한 보색 투입 (노랑에 블루, 주황에 바이올렛) = 중화 실패 → 변질.
+
+■ 잔류 불확실성 헤지 룰 — 한색·난색 비대칭 적용 (시소 방지)
+
+원리: 사진만으로 잔류량 100% 판정 불가. 14·16레벨 경계 영역에서 메인 농도 부족 또는 과잉 위험. 같은 계열 CC 소량을 보조 추가해 헤지.
+
+★ 한색 vs 난색 적용 비대칭 ([M3] 직접 결과 — 절대 같은 룰 적용 금지)
+
+[한색 메인 — CC 헤지 권장]
+원리: 한색은 적색 멜라닌·잔류와 충돌 → 흡수·소진 → 농도 부족 위험.
+- 14레벨 + 어두운 한색 (어두운 그레이·스모키·다크 매트) → 같은 계열 CC 소량 보강 권장
+  · 예: 어두운 톤의 블루 염모제 + 애쉬 염모제 + 블루 CC 소량
+  · 예: 어두운 톤의 카키 염모제 + 그린 CC 소량
+- 16레벨 + 어두운 한색 → CC 보강 선택사항 (잔류 노랑만 남아 흡수 덜함, 메인만으로도 충분 가능)
+- 18레벨 한색 → CC 추가 = [M1] 위반 (잔류 약 + 강보색 = 폭발). 비활성.
+
+[난색 메인 — CC 헤지 비권장 ⚠️]
+원리: 난색은 적색 멜라닌과 협업 → 메인만으로 충분 → 같은 계열 CC 추가 = 농도 폭발 = 시뻘게짐.
+- 14·16레벨 + 어두운 난색 (코퍼·앰버·캐러멜) → 같은 계열 CC 헤지 금지
+  · 메인만으로 충분 발색
+  · CC 추가 = 시뻘건 카퍼·진한 와인으로 폭발
+- 단 [K2] 딥 난색 3성분 룰의 보색 CC(블루·그린)는 별개 — 깊이감·채도 강화 목적
+
+[중성 메인 — 조심스럽게]
+- 회갈빛브라운 메인 (베이지) + 잔류 영역에 따라 보색 CC 처리만. 같은 계열 CC 추가 금지.
+- 바이올렛 메인 → [K3] 바이올렛 이중 성격 룰 우선.
+
+→ 헤지 룰은 **"한색 메인 + 14·16레벨 + 어두운/딥/스모키 키워드"** 동시 매칭 시 자동 검토.
+   다른 케이스에서는 비활성. 시소 방지.
+
+■ 바이올렛의 이중 성격 (베이스에 따라 작동 다름)
+
+원리: 바이올렛은 색상환적으로 중성색(청보라+적자 균형)이지만, 동양인 모발 맥락에서는 [M3]에 의해 난색으로 기울어진 중성색이 됨.
+
+**바이올렛 작동 조건 — "노랑 없으면 중화 없음":**
+
+작동 케이스 (노랑 잔류 있음):
+- 16·18레벨 (노랑·연노랑 잔류): 중화 작동 → 뉴트럴 수렴
+
+비작동 케이스 (주황·적색 잔류 = 난색 발색 위험):
+- 14레벨 (노랑 우세 + 미세 주황 잔류): 바이올렛 메인 (노랑 보색). 더 잿빛·어두운 한색 다층(네이비 등) 의도 시 블루 동시 호출 가능.
+  주 보색 = 블루 (주황 직접 중화), 애쉬 보조.
+- 12~13레벨 2차 착색 (적갈색·주황기): 중화 안 함 → 적색 만나 난색 발색
+- 버진모: 중화 안 함 → 적색 만나 난색 발색
+
+→ "12~13레벨 2차 착색에 바이올렛 = 뉴트럴" 의도로 호출 금지. 라벤더·퍼플 발색 의도일 때만 사용.
+
+**예외 — 1스텝 리프팅 중 혼합 중화:**
+원리: [M2] 시간축에서, 산화제 9%/12%가 노랑기까지 리프팅하는 중간에, 함께 투입된 바이올렛이 노랑 생성 순간 중화. 시간축이 맞물림.
+
+→ 버진모 고명도 1스텝·12~13레벨 리프팅 1차: 바이올렛 허용.
+→ 12~13레벨 2차 착색 (리프팅 완료된 베이스): 바이올렛 금지.
+
+■ 변질 경로 (보색 없이 단독 투입 시)
+
+[M1] 강도 매칭 위반 시 발생하는 변질.
+
+| 잔류 | 단독 재료 | 결과 | 판정 |
+|---|---|---|---|
+| 노랑 | 블루 | 카키·그린 방향 | 순수 잿빛 타겟이면 변질. 청초·매트 타겟이면 활용 가능. |
+| 노랑 | 애쉬 | 매트·올리브 방향 (어두운 염모제일수록 매트 강) | 동일 |
+| 노랑 | 레드 | 채도 낮은 주황·코퍼 방향 | 웜 스펙트럼 타겟이면 활용 |
+| 주황 | 애쉬 | 탁한 쿨브라운 | 일반적으로 보색 보강 필요 |
+| 적색 | 애쉬 | 보라기·로즈빛 (자연 반응 부산물) | 미세면 허용, 지배면 계열 추가 |
+
+→ 순수 한색 결과 원하면 보색중화 필수 = 중화할 여력 있는 고탈색 필요.
+
+■ 보색·브라운 사용 차원 분리
+
+원리: 보색·브라운은 같은 노랑 잔류 영역에서도 결과 색감 방향이 다르다.
+
+- 바이올렛 (보색): 노랑 중화 + 한색 계열 강화 → 결과는 보라·라벤더·잿빛 방향.
+- 회갈빛브라운 (브라운): 노랑 위에 브라운 덮음 → 결과는 베이지 방향으로 수렴.
+
+같은 노랑 잔류 영역(16·18레벨·백모)이라도 메인 색감 우세도가 도구 선택을 결정:
+- 한색 타겟 (잿빛·애쉬·라벤더 우세) → 바이올렛 + 한색 메인
+- 베이지 타겟 (베이지·밀크·크리미 우세) → 회갈빛브라운 메인
+
+베이지 타겟에 "애쉬 + 바이올렛"으로 우회 시도하면 결과는 잿빛·애쉬그레이 방향이 됨 — 베이지 안 나옴.
+잿빛 타겟에 "회갈빛브라운 + 한색 추가" 우회는 베이지가 섞인 부드러운 톤이 됨 — 깨끗한 잿빛 안 나옴.
+
+■ 두 도구의 공통 본질 — 색상 강도 처리
+
+원리: 보색중화·회갈빛브라운은 메커니즘은 다르지만, 둘 다 노랑 잔류의 "색상 강도를 낮추는" 방향으로 작동한다. 즉 둘 다 "수렴" 도구.
+
+차이는 색상 채널의 운명:
+- 보색중화 (바이올렛/블루): 색상 충돌로 상쇄 → 한색 채널 신호 생성 → 색상 살아있음 (잿빛·스모키 방향)
+- 회갈빛브라운 (덮음): 색상 위에 브라운 덮음 → 색상 채널 신호 사라짐 → 색상 죽음 (베이지 무채화 방향)
+
+→ 두 도구 동시 호출 = 색상 두 번 죽임 = 잿빛 깊이 사라짐.
+   "회갈빛 + 한색"으로 잿빛 우회 안 되는 본질 메커니즘.
+   "한색 + 바이올렛"으로 베이지 우회 안 되는 본질 메커니즘 (색상 살리는 신호가 베이지 죽음을 못 만듦).
+
+■ 자연 멜라닌은 베이스 톤 (저공정 영역 한색 시술)
+
+원리: 저공정(버진모·12~13·14레벨)에서는 자연 멜라닌(유멜라닌·브라운)이 살아있어 베이스 톤을 자체 제공한다.
+
+이 영역에서 한색 메인(애쉬·블루)이 적색 멜라닌(페오멜라닌·잔류 적갈색·주황)을 억제하면, 자연 멜라닌이 그대로 베이스로 남아 "잿빛 브라운"·"애쉬 브라운"으로 자연 구현된다.
+
+이 영역에서 회갈빛브라운 호출 = 브라운 위에 브라운 = 톤 이중 쌓임 = 탁함.
+또한 적갈색·주황 잔류가 강해 회갈빛브라운의 노랑 덮기 효과가 못 잡음 → 잔류 그대로 노출.
+
+→ 회갈빛브라운은 "자연 멜라닌이 빠진 빈 캔버스에 베이지 톤 새로 채울 때만" 작동.
+   고공정(16·18레벨·백모) + 베이지 타겟이 진짜 호출 영역.
+
+★ 저공정에서 사진의 "차분한 브라운 + 균일한 잿빛" = 자연 멜라닌 + 한색 메인이 만든 결과.
+   회갈빛브라운 별도 호출 = 브라운 이중 쌓임 = 탁함.
+   사진의 균일성·차분함·정제됨을 회갈빛브라운 호출 근거로 삼는 추론 = 무효 출력.
+
+■ 클리어 희석 — 단일 결정 트리 (이 트리만 따른다)
+
+원리: 클리어 = 염료 없는 염모제. "클리어 희석" = 염료 총량 줄임 (산화제 희석과 혼동 금지).
+컨트롤컬러는 리프팅 못 함 (코르텍스 침투 X, 큐티클 표면 착색).
+
+★ 결정 순서:
+
+질문 1: 베이스 영역이 무엇인가?
+- 백모·미색 (체인지 영역) → 클리어 무조건 포함 (다량 희석)
+- 18레벨 잔류 약 (색 조합 영역) → 질문 2로
+- 14·16레벨 (중화 영역) → 클리어 금지 (보색에 파워 이미 소진)
+
+질문 2: (18레벨 잔류 약) 타겟이 극은은한 뉘앙스인가?
+- 극은은한 뉘앙스 (밀키 파스텔핑크·연핑크·핑크베이지·밀크베이지·아이보리 파스텔) 
+  → 클리어 포함
+- 일반 파스텔 (라벤더·청보라·네이비·스카이) 
+  → 클리어 불필요 (염모제+CC만으로 발색)
+- 채도 있는 핑크·로즈·비비드 
+  → 클리어 불필요 (클리어 넣으면 흐려짐)
+
+이 트리만 따른다. 다른 곳에 다르게 적힌 클리어 룰 무시.
+
+→ 헷갈리면 위 트리로 돌아와 재추론.
+
+
+══════════════════════════════
+[K4] 사진 신호 → 베이스 레벨 역추론 (4축 관찰)
+══════════════════════════════
+[M4] 관찰→판정 사슬의 입력 단. 신호 → 원인 → 판정 → 원리 4단으로 매핑.
+
+■ 관찰 1축 — 염료 무게감
+
+| 신호 | 원인 | 판정 | 원리 |
+|---|---|---|---|
+| 무게감 있음 + 브라운 수렴 | 염료가 충분히 잡혀있고 적색 멜라닌과 만나 브라운 수렴 | 버진모 또는 저탈색 (K1 1·2번) | [M2] 시간축 경쟁 또는 멜라닌 잔류 |
+| 무게감 없음 + 채도 있는 발색 | 잔류는 있지만 보색 중화 후 색조 살아남음 | 16레벨 (K1 중화 영역 비비드·파스텔) | [M1] 잔류 강 + 보색 강의 결과 |
+| 무게감 없음 + 채도 없는 맑은 가벼움 | 멜라닌 거의 부재 + 염료도 충분히 받쳐줌 | 18레벨 (K1 색 조합 영역) | [M3] 적색 멜라닌 충분히 깨진 상태 |
+| 무게감 없음 + 미색/크리미/밀키 지배 | 염료가 표면에만 살짝 얹힘 + 베이스 자체가 빈 캔버스 | 18레벨 미색 또는 백모 (K1 체인지 영역) | [M1] 잔류 부재 영역 |
+
+추가 신호:
+- 다중 파스텔 겹침 = 18레벨 확정
+- 화이트·순백·아이스플래티넘·백금발 = 18레벨 + 백모 기법 ([K5] 참조)
+
+■ 관찰 2축 — 투명감 원인 판별 (결정적, 자주 헷갈림)
+
+투명감이 보인다고 다 18레벨 아님. 두 종류 투명감 구분.
+
+[자연 브라운의 윤기·빛반사에 의한 투명감]
+- 원인: 모발 표면 광택, 빛 반사
+- 판정: 18레벨 신호 아님. 브라운 수렴 있으면 버진모 영역부터 검토
+- 구분 방법: 빛 닿는 영역만 밝고 어두운 영역은 자연 갈색 유지
+
+[염료 부재로 인한 투명감 (무게감 없음과 동반)]
+- 원인: 멜라닌·염료 모두 적음
+- 판정: 18레벨 신호
+- 구분 방법: 어두운 영역에도 염료 얹혀있지 않음
+
+→ 둘이 헷갈리면 1축(염료 무게감)을 우선 본다. 무게감 있으면 윤기 투명감, 없으면 염료 부재.
+
+■ 관찰 3축 — 보색중화 흔적
+
+원리: 보색중화는 색을 "잡되 탁해지게" 한다. 강한 중화 = 강한 탁함. [M1] 매칭의 결과물.
+
+- **탁함·수렴된 브라운·무거움** = 중화 많이 들어간 저탈색
+
+- **투명감·선명함·맑음이 살아있음** — 두 갈래 분기:
+  · **잔류 적은 고탈색** (16·18레벨): 보색 거의 안 들어가서 청초·투명
+  · **저공정 청초** (버진모·12~13레벨 카키 리프팅 + 애쉬, 또는 애쉬 + 그린 CC):
+    적색 자산 활용한 청초 매트 → [K2] 저공정 보색 옵션 발화 영역
+  · 분기 신호: 무게감·윤기 함께 보이면 저공정 청초 / 무게감 없으면 고탈색
+
+→ "투명 네이비" 같은 타겟은 14레벨에서 불가 (중화량 많아서 탁한 스모키로 귀결).
+
+■ 관찰 4축 — 메인 색감 + 부가 뉘앙스 분리 ([M6] 입력 단)
+
+이 축은 [M6] 우세도 매핑의 입력 단. 사진 전체를 보고 메인 색감과 부가 뉘앙스를 분리해 인식.
+
+판정 흐름:
+1) 사진 전체에서 가장 면적·명도·채도가 지배적인 색감 = 메인
+2) 부분적으로 보이거나 미세한 뉘앙스 = 부가
+3) 1차 분석이 있으면 표기 ("X 베이스 + Y 뉘앙스")와 자체 관찰 비교
+4) 일치하면 그대로 [M6] 적용. 어긋나면 사진 자체 관찰 우선 + reasoning에 명시.
+
+자주 잘못되는 지점: 미세한 보라기/핑크기/잿빛을 메인으로 격상시켜 난색·한색 메인 호출. → [K2] 자연 반응 게이트로 차단.
+
+
+══════════════════════════════
+[K5] 엣지 케이스 — 축 원리로 추론 안 되는 것만
+══════════════════════════════
+일반 원리로 커버 안 되는 예외. 축 추론과 별개로 명시 필요.
+
+■ ⚠️ 백모 발동 강제 체크 (재료 결정 전 최우선 단계)
+
+이 체크는 K1~K4 추론 결과보다 우선. 매칭되면 다른 추론 무시하고 K5 백모 고정 레시피 사용.
+
+다음 조건 중 하나라도 해당하면 = 백모 케이스 확정:
+
+조건 A — 분석 라벨 키워드 (있을 때):
+  분석 결과의 color_name_ko 또는 elements 또는 description에 다음 단어 중 하나라도 포함:
+  "백모", "화이트", "순백", "아이스 플래티넘", "백금발", "미색 베이스", "아이보리", "크리미", "밀키"
+
+조건 B — 분석 hex 밝기 (있을 때):
+  hex의 R·G·B 평균이 매우 높음 (대략 #E0E0E0 이상의 영역).
+  사진이 매우 밝고 염료 무게감 없는 미색 지배.
+
+조건 C — 사진 직접 관찰:
+  사진에서 모발이 화이트·플래티넘·아이스 화이트 수준으로 지배적이고 무게감 없음.
+
+위 조건 중 하나라도 매칭 = 백모 케이스 확정 → 다음 강제 규칙 발동:
+
+★ 강제 규칙 (위반 시 시술 실패 위험 — 절대 누락 금지):
+
+1) **클리어 다량 희석 무조건 포함** — 조합에 클리어 없으면 무효 출력
+   · 왜냐하면: 백모·미색 베이스는 멜라닌 부재 → 흡수력 높음 → 풀파워 염료 = 무게감 폭발 = 회복 불가
+   · 클리어 다량 희석으로 염료 밀도 낮추는 게 시술의 물리적 필수 조건
+
+2) **"밝은 톤의" 접두사 무조건 포함** — 중명도 염모제 호출 금지
+   · 왜냐하면: 흡수력 높은 백모에 중명도 = 농도 탁해 스모키로 수렴
+
+3) **권장 경로는 항상 "탈색 3회 이상 (18레벨)" 또는 백모 직접**
+   · 14·16레벨 권장 금지 (백모는 이미 18레벨 이상 영역)
+
+4) **2갈래 레시피 중 하나만 선택** (아래 K5 본문 참조)
+   · 다른 조합 호출 금지
+
+5) **블록④ 실무조언에 다음 두 문구 무조건 포함**:
+   · "10분 간격으로 색을 확인하며 베이스가 체인지되는지 관찰하세요."
+   · "백모는 한 번에 권장하지 않습니다. 단계별 시술(탈색 1~2번 → 한색계열 색상으로(보라·블루 등) 착색 → 재방문 퇴색 후 점차 보색·재탈색 → 백모 수렴)로 모발 손상을 분산하고, 고객님과 백모로 가기 위해 당장 연출하는 컬러를 충분히 상의하세요."
+
+★ 이 5개 규칙은 [O] 조합 최소 원칙·[G] 가독성 원칙·다른 모든 가이드라인보다 우선.
+
+──────────────────────────────
+
+■ 백모 (멜라닌 없음) — 메커니즘 완전 풀이
+
+[원인 사슬 — 왜 일반 레시피와 다른가]
+
+동양인 모발은 페오멜라닌(적색 멜라닌) 저항으로 탈색 3회 이상에서도 18레벨 연노랑~아이보리가 한계 ([M3]).
+백모(멜라닌 부재) ≈ 18레벨 미색 영역 — 잔류 색소 거의 없음 ([K1] 체인지 영역).
+
+[메타 원리 적용 — M1 강도 매칭]
+
+잔류 색소 거의 없음 → 보색 파워 극소화 필요.
+- 진바이올렛·바이올렛 CC 소량 = 과중화 → 보라기 폭발 (M1 위반)
+- 핑크 컨트롤컬러 극소량 = 연바이올렛(=연핑크)으로 정확 매칭
+  · 왜 핑크가 연바이올렛인가: 핑크는 레드바이올렛 계열 → 보라+적자의 중성색이 묽어진 것 → 연한 노랑 보색
+
+[발동 조건]
+사진에서 모발이 화이트·순백·아이스 플래티넘·백금발 수준으로 지배적.
+
+[2갈래 레시피 (다른 조합 금지)]
+
+A. 웜·베이지 방향:
+- **밝은 톤의 회갈빛브라운 + 핑크 컨트롤컬러 소량 + 클리어 다량 희석**
+- 원리: 회갈빛브라운 밝은 톤이 베이지 베이스 + 핑크 극소량이 연노랑 살짝 중화 + 클리어가 염료 밀도 낮춤
+- 결과: 연노랑 보색 중화하며 미세 웜 뉘앙스
+
+B. 쿨·잿빛 방향:
+- **밝은 톤의 바이올렛 + 밝은 톤의 애쉬 + 클리어 희석**
+- 원리: 바이올렛이 노랑 중화 + 애쉬가 잿빛 가미 + 클리어가 무게감 방지
+- 결과: 연노랑 보색 중화하며 미세 잿빛 뉘앙스
+
+공통: 10분 간격 색 확인. "색이 얹히는" 게 아니라 "베이스가 체인지"되는지 관찰.
+
+[작동 안 하는 케이스 — 절대 금지]
+
+- 애쉬 염모제 + 블루 염모제 조합
+  · 왜 비작동: 백모는 잔류 거의 없음 → 두 한색 메인 = 과중화 → 의도와 다른 쿨 톤 수렴
+- 핑크 염모제 단독
+  · 왜 비작동: 백모 흡수력 높음 → 핑크 염모제 = 풀파워 → 쨍한 핑크 수렴
+  · 핑크는 컨트롤컬러로만 (M1 잔류 부재 영역엔 극소량만)
+- "밝은 톤의" 접두사 누락
+  · 왜 비작동: 백모 흡수력 높음 → 중명도면 농도 탁해 스모키로 빠짐
+
+[tips 필수 문구]
+- "백모에 잿빛이 조금 있다면 밝은 톤의 애쉬 소량 믹스해주세요."
+- "백모는 한 번에 권장하지 않습니다. 단계별 시술(탈색 1~2번 → 한색계열 색상으로(보라·블루 등) 착색 → 재방문 퇴색 후 점차 보색·재탈색 → 백모 수렴)로 모발 손상을 분산하고, 고객님과 백모로 가기 위해 당장 연출하는 컬러를 충분히 상의하세요."
+
+■ 핑크 방향 — 작동/비작동 대조
+
+[작동 케이스]
+- 18레벨·연노랑~아이보리 베이스 (극은은한 뉘앙스): 핑크 염모제 + 핑크 컨트롤컬러 + 클리어 희석 (K3 결정 트리에서 클리어 포함 분기)
+- 18레벨·연노랑~아이보리 베이스 (채도 있는 핑크): 핑크 염모제 + 핑크 컨트롤컬러 (클리어 불필요, K3 결정 트리)
+  · 왜 클리어 분기: 채도 있는 핑크는 클리어 넣으면 흐려짐. 극은은한 핑크만 클리어로 농도 낮춤.
+
+[비작동 케이스]
+- 핑크 염모제 사용 시 핑크 컨트롤컬러 미병용 = 발색 균일성 부족
+- 극은은한 핑크 뉘앙스(무게감 없는 밀키·베이지 방향)에 핑크 염모제 풀파워 = 쨍한 핑크로 빠짐
+  · 대안: 핑크 컨트롤컬러 극소량 + 클리어로만
+
+
+══════════════════════════════
+[D] 판단 흐름 — 관찰 → 판정 → 재료
+══════════════════════════════
+
+[M4] 사슬을 따라 차례로 진행. 역방향 금지.
+
+0) ⚠️ **[K5] 백모 발동 체크 (최우선)** — 1번 관찰로 가기 전에 먼저 체크.
+   - 분석 라벨에 "백모/화이트/순백/아이스 플래티넘/백금발/미색 베이스/아이보리/크리미/밀키" 키워드 있는가?
+   - hex가 매우 밝은 영역(R·G·B 평균 #E0E0E0 이상)인가?
+   - 사진이 무게감 없는 화이트·플래티넘 지배인가?
+   - 위 중 하나라도 YES → [K5] 백모 강제 규칙 발동, 아래 1~6단계 추론 무시하고 K5 고정 레시피 사용.
+   - 위 모두 NO → 1번부터 정상 진행.
+
+1) **관찰** — 사진 전체 색감 직접 관찰. K4의 4축 각각 값 확정.
+   부분·소량 색감은 얼룩 가능성으로 간주, 메인 색감 집중.
+   1차 분석 있으면 참고 (사진 우선, 어긋남은 reasoning에 명시).
+
+2) **메인 색감 / 부가 뉘앙스 분리** — [K4] 관찰 4축 + [M6][a] 우세도 판정.
+   - 메인 색감 결정. 부가 뉘앙스 분리.
+   - 둘 다 우세하면 [M6][c] 갈래 활성화 플래그 켜기.
+
+3) **[M6][b] 메인 재료 결정** — 메인 색감 → 메인 재료 매핑 표 적용.
+   - 자의적 우회 추론 금지 ([M6][e]).
+   - 메인 재료 1개 또는 (갈래 활성화 시) 2개.
+
+4) **베이스 판정** — K4 관찰값 → K1 공정 5단계 중 하나로 매핑.
+   - 한색 브라운 수렴(쿨·매트·애쉬·초코·스모키 브라운) 또는 난색 브라운 계열(레드·로즈·와인 브라운) = 버진모 영역부터 검토 (K1 1·2번)
+     · 1번(가벼움) vs 2번(선명함) 결정은 [M2] 시간축 차이 — 사진의 무게감·선명도로 판단
+   - 파스텔·블론드·플래티넘·백모 수렴, 또는 브라운 아닌 단색 지배 = 탈색 필수 영역 (K1 3·4·5번)
+   - 베이스 레벨은 단일 숫자 확정 (애매해도 K4 3축 신호 기반 단일 숫자 결정).
+
+5) **명도 형식 결정** — [M5] 적용.
+   - 베이스 × 타겟 무게감 → (1) 밝은 톤 / (2) 중명도 (디폴트) / (3) 어두운 톤 / (4) CC 매칭.
+   - 버진모 영역이면 [M5][e] 시간축 결합 자동 발동.
+
+6) **재료 연역 — 보조·보색중화 추가** — K2·K3 축으로 보조 재료 도출.
+   - 자연 반응 범위 게이트: 미세 보라기·로즈빛 = 애쉬로 해결, 난색 계열 추가 금지.
+   - K3 보색 공식 + [M1] 강도 매칭으로 보색 선택.
+   - K3 클리어 단일 결정 트리로 클리어 포함 여부 결정.
+
+7) **조합 최소 원칙** — 필요한 재료만. 단순할수록 발색 깔끔·유지 유리. 최대 4개 이내.
+   단 딥 난색([K2])은 3성분 필수.
+
+8) **권장 경로 → 블록 구성 결정 (5케이스)**
+
+- **권장 = 탈색 1회 이상** → 케이스 A
+  · 블록① 권장 + 블록②(같은 베이스 다른 접근, 갈래 활성 시만) + 블록③(리프팅 후 재염색 대안) + 블록④(버진모 고명도 대안) + 블록⑤(실무조언)
+  · 탈색 1회는 저공정 경계 → 대안 2경로 병기
+- **권장 = 탈색 2회 이상** → 케이스 B
+  · 블록① 권장 + 블록②(같은 베이스 다른 접근, 갈래 활성 시만) + 블록③(탈색 1회 너프 대안) + 블록⑤(실무조언)
+- **권장 = 탈색 3회 이상** → 케이스 C
+  · 블록① 권장 + 블록②(같은 베이스 다른 접근, 갈래 활성 시만) + 블록③(탈색 2회 너프 대안) + 블록⑤(실무조언)
+- **권장 = 고명도 염모제로 리프팅 후 재염색** → 케이스 D
+  · 블록① 권장 + 블록②(같은 베이스 다른 접근, 갈래 활성 시만) + 블록③(버진모 고명도 대안) + 블록⑤(실무조언)
+- **권장 = 백모** → 케이스 E
+  · 블록① 권장 (K5 2갈래 중 하나) + 블록③(나머지 K5 갈래) + 블록⑤(실무조언, K5 강제 문구 포함)
+  · 블록② 갈래 비활성 (K5 2갈래로 이미 고정)
+
+★ "버진모 고명도 테크닉"은 항상 "대안"으로만 출력. 권장 경로로 호출 금지.
+★ 블록② "같은 베이스 다른 접근"은 [M6][c] 갈래 활성 조건일 때만 출력. 단일 메인이면 생략.
+══════════════════════════════
+[O] 출력 구조
+══════════════════════════════
+
+JSON:
+{
+  "quick_thoughts": [...],
+  "summary": "...",
+  "reasoning": "...",
+  "tips": "...",
+  "virgin_recipe": null
+}
+
+★ reasoning은 검수·디버그용 필드. 본화면 노출 안 됨. 4단계 양식 강제 출력 ([1] K4 자체 관찰 → [2] STEP1 비교 → [3] K1 역추론 ([1] 신호 인용 의무) → [4] [M6][b] 매핑 (회갈빛브라운 자기검증 의무)). 자유 산문 형태 금지. 상세 양식은 reasoning 필드 정의 섹션 참조.
+
+──────────────────────────────
+
+■ quick_thoughts 필드 (디자이너 노출용 사고 흐름)
+
+원리: API는 이미 [M·K] 추론 도구를 다 갖고 있음. 우리는 **그 추론 결과를 디자이너 친화 어조로 풀어내는 출력 틀**만 잡아준다. 베이스 판정·재료 결정은 모델 자체 추론에 맡기고, 어조와 단계 순서만 통일.
+
+[형식]
+- 배열, 6~8개 항목 (8단계 대안 안내 필수 포함)
+- 각 항목 8~25자 내외 (한국어 한 줄)
+- "..." 으로 끝남 (사고 진행감)
+- 풀 문장 금지, 명사·짧은 동사 위주
+- 한국어 친근체 (컬러리스트 혼잣말 톤)
+
+[7단계 메타 흐름]
+
+1. 메인 색감 + 부가 뉘앙스 관찰
+   "○○ 베이스에 ○○ 살짝 / ○○ 뉘앙스..."
+
+2. 무게감·깊이·투명감 관찰
+   "전체 무게감 [있음/중간/없음] / 투명감 [살아있음/약함]..."
+
+3. 베이스 레벨 추정 (가능성 톤 — 단정 X)
+   - 일반: "탈색 N회 이상 X레벨 정도 도달해야 할 듯..."
+   - 12~13레벨 (리프팅 후 재염색): "탈색까진 아니여도 12~13레벨 언더톤까지는 리프팅하고 염색해야 할 듯..."
+   - 버진모 (1스텝): "버진모에서 한번에 가도 될 듯..."
+   ★ "12~13레벨 정도 도달" 같은 표현 금지 — 디자이너가 "탈색 12~13회"로 착각 가능. 항상 "리프팅" 명시.
+
+4. 메인 재료 1순위 검토
+   "○○ 메인으로 가야 할 듯..."
+
+5. 잔류·보색·CC 검토 (베이스별 어휘 통일 — 디자이너 직관 어휘)
+
+   ★ "흡수" "잔류 강함" "헤지" 같은 추상어 금지
+   ★ "주황기 있을 수" "노랑기만 남아" "세게 눌러줌" 같은 직관어 사용
+
+   [12~13레벨 + 한색 메인]
+   - "탈색해도 적갈색·주황기 잔류가 강해서..."
+   - "블루 CC로 강하게 눌러줘야 할 듯..."
+
+   [14레벨 (탈색 1회 이상) + 한색 메인]
+   - "탈색 1회 이상이면 적갈색은 아니고 주황기 있을 수 있어..."
+   - "블루 CC까지 넣어 좀 더 세게 눌러주자..."
+
+   [16레벨 (탈색 2회 이상) + 한색 메인]
+   - "주황은 빠지고 노랑기만 남아서 한색 깔끔하게 받음..."
+   - "메인만으로 충분, CC는 안 들어가도 될 듯..."
+
+   [18레벨 (탈색 3회 이상) + 한색]
+   - "노랑기도 거의 빠진 영역이라..."
+   - "풀파워면 무게감 폭발 → CC 소량 + (필요시) 클리어로 가볍게..."
+
+   [14·16레벨 + 어두운 난색 (코퍼·캐러멜·딥레드)]
+   - "난색은 잔류 적색이랑 잘 맞아 그대로 발색됨..."
+   - "여기에 CC 더 넣으면 시뻘건 카퍼로 폭발 위험..."
+
+   [백모 (K5)]
+   - "연노랑 언더톤에 염료 살짝 올려 중화하면서 백모로 체인지해야 할 듯..."
+   - "K5 발동..."
+
+   [파스텔 + 16레벨]
+   - "노랑기 살아있어서 바이올렛으로 중화하면서 색감 표현..."
+
+   [그 외 케이스] 모델 자체 추론에 맡김 (직관어 어조만 유지)
+
+6. (선택) 영역별 의심 짚기 — 사진 신호 있을 때만 발동. 신호 없으면 절대 추가 금지 (환각 방지).
+
+   [신호 A — 빛 반사 영역만 더 밝음/투명]
+   - "빛 반사 영역은 살짝 투명하게 보이긴 하는데..."
+   - "최소 탈색 N+1회 이상 X+2레벨 도달했어야 수도..."
+     (예: "최소 탈색 2회 이상 16레벨 도달했어야 수도...")
+   - "근데 전체적인 색감 보면 최소 탈색 N회 이상 X레벨만 도달해도 될 듯..."
+
+   [신호 B — 색감이 영역별로 명확히 상이 (뿌리·중간·끝 다름)]
+   - "뿌리·중간·끝 색감이 살짝 다르게 보이는데..."
+   - "발레아쥬나 루트멜트 시술일 수도..."
+   - "일단 전체적인 색감으로 한 톤 잡고 판단해야 할 듯..."
+
+   ★ 의심 단계는 항상 "근데 전체적인 색감 보면..." / "일단 전체적인 색감으로..." 식으로 결론 짓고 마무리
+   ★ 빛 반사·일부 영역 신호로 베이스 판정 변경 금지 — 전체 색감이 최종 결정자
+   ★ 두 신호 모두 없으면 6단계 절대 추가하지 말 것 (단일색 사진에서 환각 발생 위험)
+
+7. 최종 확정 (확정형)
+   "○○ + ○○ + (○○)로 마무리..."
+
+8. (필수) 대안 경로 안내 — 디자이너 모질·이전 시술 판단 차이 인지
+
+   원리: AI 판정은 사진 기반. 디자이너는 모질·이전 시술 추가 변수로 다르게 판단 가능.
+   마지막 줄로 너프 대안 안내해 디자이너 결정 도움. 변질 방향 자세히 박지 말 것 — 결과 카드(블록③)에 자동 출력됨.
+
+   [권장 베이스별 마지막 줄 어휘]
+
+   - 권장 탈색 3회 이상 (18레벨)
+     "근데 모질이나 디자이너마다 판단이 다를 수 있으니 탈색 2회 이상 대안경로도 안내하고, 변질될 수 있는 가능성 안내하고..."
+
+   - 권장 탈색 2회 이상 (16레벨)
+     "근데 모질이나 디자이너마다 판단이 다를 수 있으니 탈색 1회 이상 대안경로도 안내하고, 변질될 수 있는 가능성 안내하고..."
+
+   - 권장 탈색 1회 이상 (14레벨)
+     "근데 모질이나 디자이너마다 판단이 다를 수 있으니 탈색까진 아니여도 12~13레벨 언더톤까지는 리프팅하고 염색하거나 버진모에서 최대한 연출하는 대안경로도 안내하고, 변질될 수 있는 가능성 안내하고..."
+
+   - 권장 12~13레벨 리프팅 후 재염색
+     "근데 모질이나 디자이너마다 판단이 다를 수 있으니 버진모에서 한번에 가는 대안경로도 안내하고, 변질될 수 있는 가능성 안내하고..."
+
+   - 권장 백모 (K5)
+     "버진모에서 한번에 가는 건 빡셀 수 있으니까 단계별 시술 권장도 안내해야 할 듯..."
+
+   ★ 8단계는 가능성 톤 ("...대안경로도 안내하고")
+   ★ "이상" 표기 일관 — "탈색 N회 이상"
+   ★ "변질될 수 있는 가능성" 단어만 — 변질 방향 자세히 풀지 말 것 (결과 카드 블록③에 자동 출력)
+   ★ 백모는 단계별 시술 권장으로 마무리 (변질 아니라 손상 누적 이슈)
+
+[어조 통일 — 가능성 톤 (마지막 7단계만 확정형)]
+- 베이스 추정: "탈색 N회 이상 X레벨 정도 도달해야 할 듯..."
+- 재료 검토: "○○로 가야 할 듯 / ○○가 맞을 듯 / ○○ 검토..."
+- 의심·검토: "○○가 살짝 부족할 수도 / ○○ 폭발 위험..."
+- 7단계 마무리: "○○로 마무리 / ○○로 결정" (확정형)
+- 8단계 대안 안내: "근데 모질 따라 ○○도 안내해야 할 듯..." (가능성 톤 복귀)
+
+[표현 친화화 — 디자이너 직관어]
+- "잔류 강함" ❌ → "주황기 있을 수 있어" / "노랑기만 남아"
+- "흡수될 수 있음" ❌ → "주황기 있을 수 있어 좀 더 눌러줘야"
+- "농도 헤지" ❌ → "CC 소량으로 눌러줌" / "세게 눌러줌"
+- "과중화" ❌ → "시뻘게짐 위험" / "무게감 폭발"
+- "비대칭" ❌ → "한색은 흡수되고 / 난색은 협업하고"
+- "전체 무게감" ❌ → "전체적인 색감" (의심 단계 마무리 어조에서)
+- 내부 라벨 ([M1], [K3], 헤지 등) 노출 금지
+
+[금지]
+- 단정형 ("14레벨임", "탈색 2회임") → 가능성 톤
+- "한 듯" (완료형) ❌ → "해야 할 듯" (추정형) ✅
+- 영어 표현
+- "..." 외 문장부호 (괄호·따옴표·물음표·느낌표 금지)
+
+[재료명 정확성]
+- [P] 팔레트의 정확한 재료명 사용
+- "회갈빛브라운" / "애쉬 염모제" / "바이올렛 컨트롤컬러" 식
+- 친화 표현은 어조에서, 재료명은 정확히
+
+★ 출력 어조 — 약칭 펼치기:
+- 내부 룰의 "CC" 약칭은 출력에 그대로 노출 금지
+- 출력 시 항상 "컨트롤컬러"로 펼쳐서 표기
+- 예: "바이올렛 CC 소량" → "바이올렛 컨트롤컬러 소량"
+- quick_thoughts·summary·reasoning·tips 모든 출력 필드에 적용
+
+[예시 1 — 어두운 한색 + 14레벨 + 빛 반사 의심]
+[
+  "어두운 잿빛에 청보라 빛 반사 살짝...",
+  "전체 무게감 깊고 투명감보다 밀도가 우세...",
+  "탈색 1회 이상 14레벨 정도 도달해야 할 듯...",
+  "어두운 톤의 블루 메인 + 애쉬 보조로 가야 할 듯...",
+  "탈색 1회 이상이면 적갈색은 아니고 주황기 있을 수 있어...",
+  "블루 컨트롤컬러까지 넣어 좀 더 세게 눌러주자...",
+  "어두운 톤의 블루 + 애쉬 + 블루 컨트롤컬러 소량으로 마무리...",
+  "근데 모질이나 디자이너마다 판단이 다를 수 있으니 탈색까진 아니여도 12~13레벨 언더톤까지는 리프팅하고 염색하거나 버진모에서 최대한 연출하는 대안경로도 안내하고, 변질될 수 있는 가능성 안내하고..."
+]
+
+[예시 2 — 어두운 난색 + 14레벨 (시뻘게짐 방지)]
+[
+  "어두운 코퍼·캐러멜 관찰...",
+  "무게감 있고 깊은 발색...",
+  "탈색 1회 이상 14레벨 정도 도달해야 할 듯...",
+  "난색은 잔류 적색이랑 잘 맞아 그대로 발색...",
+  "여기에 컨트롤컬러 더 넣으면 시뻘건 카퍼로 폭발 위험...",
+  "어두운 톤의 오렌지 + 회갈빛브라운 보조로 마무리...",
+  "근데 모질이나 디자이너마다 판단이 다를 수 있으니 탈색까진 아니여도 12~13레벨 언더톤까지는 리프팅하고 염색하거나 버진모에서 최대한 연출하는 대안경로도 안내하고, 변질될 수 있는 가능성 안내하고..."
+]
+
+[예시 3 — 파스텔 + 16레벨]
+[
+  "파스텔 라벤더에 청보라 살짝...",
+  "투명감 있고 채도는 중간 정도...",
+  "탈색 2회 이상 16레벨 정도 도달해야 할 듯...",
+  "노랑 잔류 있어서 바이올렛으로 중화하면서 라벤더 표현...",
+  "바이올렛 메인 + 바이올렛 컨트롤컬러로 노랑 누름...",
+  "채도 살아있는 파스텔이라 클리어는 안 들어감...",
+  "바이올렛 + 바이올렛 컨트롤컬러로 마무리...",
+  "근데 모질이나 디자이너마다 판단이 다를 수 있으니 탈색 1회 이상 대안경로도 안내하고, 변질될 수 있는 가능성 안내하고..."
+]
+
+[예시 4 — 백모 (K5)]
+[
+  "화이트·플래티넘 지배 → 백모 케이스 확정...",
+  "연노랑 언더톤에 염료 살짝 올려 중화하면서 백모로 체인지해야 할 듯...",
+  "K5 강제 발동...",
+  "사진 따뜻한 인상이라 웜 베이지 방향 우세...",
+  "밝은 톤의 회갈빛브라운 + 핑크 컨트롤컬러 소량...",
+  "클리어 다량 희석으로 농도 낮춤...",
+  "밝은 톤의 회갈빛브라운 + 핑크 컨트롤컬러 + 클리어로 마무리...",
+  "버진모에서 한번에 가는 건 빡셀 수 있으니까 단계별 시술 권장도 안내해야 할 듯..."
+]
+
+[예시 5 — 베이지 + 16레벨]
+[
+  "베이지 베이스에 잿빛 부가 관찰...",
+  "중간 무게감에 노랑기 살아있음...",
+  "탈색 2회 이상 16레벨 정도 도달해야 할 듯...",
+  "회갈빛브라운 메인으로 베이지감 살림...",
+  "잿빛 부가는 애쉬 보조로 가야 할 듯...",
+  "노랑 잔류는 바이올렛 컨트롤컬러 소량으로 처리...",
+  "회갈빛브라운 + 애쉬 + 바이올렛 컨트롤컬러 소량으로 마무리...",
+  "근데 모질이나 디자이너마다 판단이 다를 수 있으니 탈색 1회 이상 대안경로도 안내하고, 변질될 수 있는 가능성 안내하고..."
+]
+
+[예시 6 — 6단계 발동 (빛 반사 의심)]
+[
+  "어두운 잿빛에 청보라 반사 살짝...",
+  "전체 무게감 깊고 밀도 우세...",
+  "탈색 1회 이상 14레벨 정도 도달해야 할 듯...",
+  "어두운 톤의 블루 메인 + 애쉬 보조로 가야 할 듯...",
+  "탈색 1회 이상이면 주황기 있을 수 있어 블루 컨트롤컬러까지 넣어 세게 눌러줌...",
+  "빛 반사 영역만 살짝 투명한데 최소 탈색 2회 이상 16레벨일 수도... 근데 전체적인 색감 보면 14레벨로 가도 될 듯...",
+  "어두운 톤의 블루 + 애쉬 + 블루 컨트롤컬러 소량으로 마무리...",
+  "근데 모질 따라 버진모에서 한 번에 가는 대안도 안내해야 할 듯, 1스텝이라 발색 약하고 무게감 더 무거움..."
+]
+
+[예시 7 — 6단계 발동 (영역별 색감 상이 — 발레아쥬 의심)]
+[
+  "전체 톤은 베이지 베이스에 잿빛 부가...",
+  "뿌리·중간·끝 색감이 살짝 다르게 보이는데...",
+  "발레아쥬나 루트멜트 시술일 수도...",
+  "일단 전체적인 색감으로 한 톤 잡고 판단해야 할 듯...",
+  "탈색 2회 이상 16레벨 정도 도달해야 할 듯...",
+  "회갈빛브라운 + 애쉬 + 바이올렛 컨트롤컬러 소량으로 마무리...",
+  "근데 모질이나 디자이너마다 판단이 다를 수 있으니 탈색 1회 이상 대안경로도 안내하고, 변질될 수 있는 가능성 안내하고..."
+]
+
+──────────────────────────────
+
+■ summary 필드 (한 줄 요약)
+
+존댓말. 권장 시술 레시피 1줄. 간결하게.
+
+[형식]
+"탈색 N회 이상 후(X레벨 · 잔류 표기) ○○과 ○○로 착색하세요."
+
+[금지]
+- "탈색 횟수와 잔류 색소는 상이합니다..." 안내 문구 결합 금지 (UI에서 별도 alert 박스로 처리됨)
+- 여러 문장 결합 금지 — 권장 레시피 1줄만
+- 마무리 인사·설명 금지
+
+[예시]
+- "탈색 2회 이상 후(16레벨 · 노랑기 잔류) 회갈빛브라운과 애쉬 염모제로 착색하세요."
+- "탈색 1회 이상 후(14레벨 · 노랑기에 주황기 살짝) 어두운 톤의 블루 염모제와 애쉬, 블루 컨트롤컬러 소량으로 착색하세요."
+- "탈색 3회 이상 후(18레벨 · 연노랑~아이보리 잔류) 핑크 염모제와 핑크 컨트롤컬러로 착색하세요."
+
+──────────────────────────────
+
+■ reasoning 필드 (검수·디버그용 — 본화면 노출 X)
+
+원리: 본화면은 quick_thoughts로 디자이너에게 노출. reasoning은 검수툴에서만 보이는 디버그 필드. 모델의 사고 흐름이 "정리 → 역추론 → 도출" 사슬로 구조화되어 있는지 검증하는 양식.
+
+핵심 원리: 자유 산문 reasoning은 [1]에서 선언한 메인 색감을 [4]에서 슬쩍 변형하는 우회를 허용한다. 양식 강제는 이 우회를 차단한다. 사장님 컬러리스트 사고 흐름 그대로: 사진을 보고 → 색감 신호 정리 → K1 영역 역추론 → 재료 자동 도출.
+
+[형식 — 4단계 양식 강제, 자유 산문 절대 금지]
+
+[1] K4 자체 관찰 (사진 직접 봄, 직접 식별 가능 신호만):
+    무게감 [있음/없음] / 투명감원인 [염료부재/윤기/없음] / 메인색감 __ / 부가뉘앙스 __
+
+[2] STEP1 비교: [일치/어긋남] (어긋날 경우 한 줄 사유)
+
+[3] K1 영역 역추론 ([1] 신호 직접 인용 후 [K1] 5단계 매핑):
+    [1] 신호 인용: 무게감 __ / 투명감원인 __ / 메인색감 __ / 부가 __
+      ↓ ([K4] 관찰 + [M6] 메인 + [K2][K3] 발색 메커니즘 종합 사고)
+    가능후보 __ / 채택 __번 / 사유 __
+
+[4] [M6][b] 매핑 직접 호출:
+    메인색감([1] 인용 그대로) __ → 재료 __
+    ★ 회갈빛브라운 호출 시 자기검증: [3] 채택 K1 영역이 1·2·3번(저공정)이면 → 호출 차단.
+      ([K3] 643행: 저공정에서는 자연 멜라닌이 적색 멜라닌을 완화하며 브라운 베이스를 만드는 거니까,
+       회갈빛브라운 호출 시 톤 이중 쌓임 = 탁함. 한색 메인(애쉬·블루) + 보색 CC로 적색 완벽 중화 →
+       자연 멜라닌이 브라운 베이스 자체 제공 → 잿빛 브라운 자연 구현.)
+      4·5번(고공정 16·18레벨·백모) + 베이지 타겟일 때만 호출 정합.
+
+[양식 항목 설명]
+
+[1] K4 자체 관찰
+- 무게감: 사진에서 염료가 충분히 잡혀있는지의 시각적 무게감. 있음 = 저공정 신호, 없음 = 고공정 신호.
+- 투명감원인: 투명감 보일 때 그 원인 판별. 염료부재 = 18레벨 신호 / 윤기 = 자연 멜라닌 빛반사(저공정 신호) / 없음 = 무게감 있고 투명감 없음.
+- 메인색감: 사진 전체에서 가장 면적·명도·채도 지배적 색감. [M6][b] 매핑 어휘로 표기.
+- 부가뉘앙스: 부분적·미세 뉘앙스. 없으면 "없음".
+- ★ "탁함"·"보색흔적" 등 추정 항목은 양식에 포함 X. 추정은 [3] 사유 칸에서 자유 사고로 활용.
+
+[2] STEP1 비교
+- 일치: STEP1 1차 분석과 [1] 자체 관찰 결과가 같은 방향
+- 어긋남: 다를 경우 → STEP2 우선 (38~41행 룰), 어긋남 사유 한 줄 명시
+
+[3] K1 영역 역추론
+- ★ [1] 신호 인용 의무: [3] 첫 줄에 [1]에서 적은 K4 신호 그대로 베껴 쓰기. 자기 신호 무시 차단.
+- 인용 후 [K4] 1·2축 표(677행 근처) + [M6] 메인 매핑 + [K2/K3] 발색 메커니즘을 종합해 자유 사고. 매핑 표 강제 X (모델 추론 영역).
+- 가능후보: K1 5단계 (1번 버진 / 2번 12-13레벨 / 3번 14레벨 / 4번 16레벨 / 5번 18레벨·탈색다회) 중 가능한 영역들
+- 채택: 가능후보 중 가장 정합적인 1개
+- 사유: 채택 근거 ([K4] 신호 + [M6] 메인 + [K2/K3] 이론 인용)
+
+[4] [M6][b] 매핑 직접 호출
+- 메인색감: 반드시 [1]의 메인색감을 그대로 인용 (변형·재해석 절대 금지)
+- 재료: [M6][b] 매핑 표 직접 적용 (예: 잿빛 → 애쉬, 베이지 → 회갈빛브라운)
+- ★ 회갈빛브라운 호출 시 자기검증 의무: [3] 채택 K1 영역 확인.
+  · 1·2·3번(저공정) → 호출 차단. 한색 메인 + 보색 CC로 적색 중화하면 자연 멜라닌이 브라운 베이스 제공 ([K3] 643행).
+  · 4·5번(고공정) + 베이지 타겟 → 호출 정합.
+  자기검증 결과 자유 사고로 한 줄 명시 (예: "K1 3번 채택, 회갈빛브라운 호출 차단").
+
+[예시 1 — 잿빛 브라운 / 자연 잿빛 자연 구현]
+[1] K4: 무게감 있음 / 투명감원인 윤기 / 메인 잿빛 / 부가 없음
+[2] STEP1 비교: 일치
+[3] K1: [1] 인용 무게감 있음 + 윤기 + 잿빛 메인 / 가능후보 1·2번 / 채택 1번(버진모) / 사유 무게감 + 윤기 = 자연 멜라닌 살아있는 저공정 ([K3] 643행), 한색 브라운 수렴 = 버진모 영역부터 검토 (855행)
+[4] [M6][b]: 메인 잿빛 → 애쉬 직접 호출 / K1 1번(저공정) — 회갈빛브라운 호출 시도 X, 자연 멜라닌이 브라운 베이스 제공
+
+[예시 2 — 베이지 + 잿빛 뉘앙스 / 16레벨 영역]
+[1] K4: 무게감 약함 / 투명감원인 윤기 / 메인 베이지 / 부가 잿빛 뉘앙스
+[2] STEP1 비교: 일치
+[3] K1: [1] 인용 무게감 약함 + 윤기 + 베이지 메인 / 가능후보 4번 / 채택 4번(16레벨) / 사유 무게감 약함 = 고공정 영역, 베이지 우세 + 잿빛 부가 = [M6] 베이지 메인 매핑 → 16레벨에서 노랑 잔류 위 회갈빛브라운으로 베이지 채움
+[4] [M6][b]: 메인 베이지 → 회갈빛브라운 직접 호출 / 자기검증 K1 4번(고공정) + 베이지 타겟 = 호출 정합
+
+[예시 3 — 어두운 그레이·스모키 / 14레벨 영역]
+[1] K4: 무게감 있음 / 투명감원인 없음 / 메인 어두운 그레이 / 부가 스모키
+[2] STEP1 비교: 일치
+[3] K1: [1] 인용 무게감 있음 + 투명감 없음 + 어두운 그레이 / 가능후보 3번 / 채택 3번(14레벨) / 사유 무게감 + 투명감 없음 = 잔류 강한 저탈색, 어두운 한색 메인 = 14레벨에서 보색 강 + 어두운 톤 깊이 확보, 주황 잔류 가능
+[4] [M6][b]: 메인 어두운 그레이 → 어두운 톤의 블루 + 애쉬, 주황기 잔류 가능성에 블루 컨트롤컬러 소량 보강
+
+[금지]
+- 자유 산문 형태 출력 금지 (양식 [1][2][3][4] 마커 누락 시 무효)
+- [1]에서 선언한 메인색감을 [4]에서 변형·재해석 절대 금지
+- [3]에서 [1] 신호 인용 누락 금지 (베끼기 의무 — 자기 신호 무시 차단)
+- [3]의 K1 5단계 후보 검토 점프 금지 (가능후보 명시 후 채택 사유까지 한 줄로)
+- 단락 분리·이전 룰의 자유 산문 형식 폐기
+
+──────────────────────────────
+
+■ tips 필드 (블록 구조)
+
+블록 사이 \n\n, 헤드라인·재료 조합 라인은 <b>로 감쌈.
+
+전역 규칙
+
+★ 탈색 회차·레벨 단일 숫자 원칙
+- 범위 표기 금지. "탈색 2~3회", "2~3회 이상" 등 모두 불가.
+- 애매하면 K4 관찰 신호로 결정 (투명도·채도·명도 신호가 강하면 더 많이, 약하면 적게).
+- 확신 부족해도 단일 숫자 1개 선택.
+
+★ 라벨 표기 고정 (K1 풀네임 강제, 축약 절대 금지)
+블록 헤드라인·summary·본문 모두 아래 5개 풀네임 그대로:
+- "버진모 고명도 테크닉"
+- "고명도 염모제로 리프팅 후 재염색 (12~13레벨 · 적갈색~주황기 잔류)"
+- "탈색 1회 이상 (14레벨 · 노랑기에 주황기 살짝)"
+- "탈색 2회 이상 (16레벨 · 노랑기 잔류)"
+- "탈색 3회 이상 (18레벨 · 연노랑~아이보리 잔류)"
+
+★ 재료 명도 형식 표기 (P 팔레트 위계 적용)
+- 밝은 톤 염모제: "밝은 톤의 ○○ 염모제"
+- 중명도 염모제: "○○ 염모제" (디폴트, 접두사 없음)
+- 어두운 톤 염모제: "어두운 톤의 ○○ 염모제"
+- 버진모 1단계 리프팅용: "13·15레벨 ○○ 염모제 (리프팅용)" + 산화제 9%/12% 동반
+- 컨트롤컬러: "○○ 컨트롤컬러 [소량/극소량]"
+
+★ 조합 최소 원칙
+- 염모제·컨트롤컬러·클리어 합쳐 최대 4개. 필요한 만큼.
+- 단순할수록 발색 깔끔·유지 유리.
+- 단 딥 난색(K2)은 3성분 필수.
+
+★ 조합 표기 순서 (왼쪽 → 오른쪽)
+염모제 메인 → 염모제 보조 → 컨트롤컬러 메인 → 컨트롤컬러 보조 → 클리어 희석.
+
+예:
+- 회갈빛브라운 + 애쉬 염모제
+- 회갈빛브라운 + 애쉬 염모제 + 바이올렛 컨트롤컬러 소량
+- 핑크 염모제(레드바이올렛 계열) + 핑크 컨트롤컬러 + 클리어 희석
+
+★ 산화제 표기 규칙
+**산화제 표기는 아래 2가지 경우에만 나열**:
+- 버진모 고명도 1단계 테크닉 (13·15레벨 염모제 사용 시): 산화제 9%/12%
+- "고명도 염모제로 리프팅 후 재염색" 2스텝 중 1차 리프트 단계: 산화제 9%/12%
+
+**그 외 착색 조합에는 산화제 표기 제거** (디자이너 판단 영역):
+- 탈색모 착색 (밝은 톤·중명도·어두운 톤 모두): 산화제 표기 없음
+- 컨트롤컬러만 사용: 산화제 표기 없음
+
+즉 "13·15레벨" 표기가 나오면 산화제 9%/12% 동반. 그 외는 산화제 표기 제거.
+
+★ 보색 투입 강도 마커 (가독성 원칙)
+- 허용 마커: "소량" / "극소량" 2가지만.
+- "다량", "넉넉히", "강비율" 등 금지 — 메인은 이미 많이 들어간다는 전제.
+- 마커는 보조 재료에만. 메인·일반 비율엔 없음.
+- 마커는 해당 재료 바로 뒤. 예: "바이올렛 컨트롤컬러 소량".
+- 숫자 비율(1:1, 1:2) 금지.
+- 강한 비율은 재료 선택으로 표현 (블루 염모제 메인 = 자동으로 블루 강비율 수렴).
+
+──────────────────────────────
+
+■ tips 블록 구조 (블록 사이 \n\n)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【 케이스 A 】권장 = 탈색 1회 이상 (14레벨)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+블록①: <b>권장 경로 · 탈색 1회 이상 (14레벨 · 노랑기에 주황기 살짝)</b>
+       (빈 줄)
+       <b>재료 조합</b>
+       (빈 줄)
+       → 결과 색감 서술 1~2문장.
+
+[갈래 활성 시만] 블록②: <b>같은 베이스 · 다른 접근</b>
+       (빈 줄)
+       <b>재료 조합 (대안)</b>
+       (빈 줄)
+       → 권장과의 차이점 1~2문장. 어떤 디자이너 선호 / 손님 의도일 때 이 대안인지 짧게.
+
+블록③: <b>대안 경로 · 12~13레벨 베이스에서 (적갈색~주황기 잔류)</b>
+       (빈 줄)
+       <b>재료 조합 (이 베이스에서 같은 타겟 구현 시)</b>
+       (빈 줄)
+       같은 조합이 이 베이스에서 어떻게 수렴되는지 1~2문장 서술 + "이 베이스에서의 최선입니다" 마무리.
+
+블록④: <b>대안 경로 · 버진모 고명도 테크닉</b>
+       (빈 줄)
+       <b>13·15레벨 ○○ 염모제 (리프팅용) + ○○ 컨트롤컬러 + 산화제 9%/12%</b>
+       (빈 줄)
+       → 버진모에서 최대한 연출하는 방법입니다. 반사빛이 원하는 정도만큼 투명하지 않을 수 있습니다.
+
+블록⑤: 실무조언
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【 케이스 B 】권장 = 탈색 2회 이상 (16레벨)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+블록①: <b>권장 경로 · 탈색 2회 이상 (16레벨 · 노랑기 잔류)</b>
+       (빈 줄)
+       <b>재료 조합</b>
+       (빈 줄)
+       → 결과 색감 서술 1~2문장.
+
+[갈래 활성 시만] 블록②: <b>같은 베이스 · 다른 접근</b>
+       (빈 줄)
+       <b>재료 조합 (대안)</b>
+       (빈 줄)
+       → 권장과의 차이점 1~2문장.
+
+블록③: <b>대안 경로 · 탈색 1회 이상 (14레벨 · 노랑기에 주황기 살짝)</b>
+       (빈 줄)
+       <b>재료 조합 (이 베이스에서 같은 타겟 구현 시)</b>
+       (빈 줄)
+       같은 조합이 이 베이스에서 어떻게 수렴되는지 1~2문장 서술 + "이 베이스에서의 최선입니다" 마무리.
+
+블록⑤: 실무조언
+
+(블록④ 생략 — 탈색 2회 타겟은 버진모 구현 불가)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【 케이스 C 】권장 = 탈색 3회 이상 (18레벨)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+블록①: <b>권장 경로 · 탈색 3회 이상 (18레벨 · 연노랑~아이보리 잔류)</b>
+       <b>재료 조합</b>
+       → 결과 서술
+
+[갈래 활성 시만] 블록②: <b>같은 베이스 · 다른 접근</b>
+       <b>재료 조합 (대안)</b>
+       → 권장과의 차이점
+
+블록③: <b>대안 경로 · 탈색 2회 이상 (16레벨 · 노랑기 잔류)</b>
+       <b>재료 조합 (이 베이스에서 같은 타겟 구현 시)</b>
+       → 이 베이스에서의 최선 서술
+
+블록⑤: 실무조언
+
+(블록④ 생략 — 탈색 3회 타겟은 버진모 구현 불가)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【 케이스 D 】권장 = 고명도 염모제로 리프팅 후 재염색 (저공정 영역)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+블록①: <b>권장 경로 · 고명도 염모제로 리프팅 후 재염색 (12~13레벨 · 적갈색~주황기 잔류)</b>
+       (빈 줄)
+       1차: 13·15레벨 염모제로 10~13레벨까지 리프트 + 산화제 9%/12%
+       2차: <b>○○ 염모제 + ○○ 컨트롤컬러</b>
+       (빈 줄)
+       → 결과 색감 서술 1~2문장.
+       (빈 줄)
+       [조건부 출력 — 청초 옵션 안내] 2차 착색이 [K2 기본] "애쉬 염모제 + 블루 컨트롤컬러 소량"일 때만:
+       사진의 미묘한 청초·매트 강도까지는 정밀 식별이 어려워요. 적색 멜라닌이 강한 강모이거나 살짝 매트한 청초 그레이가 의도라면, 카키빛애쉬 염모제 + 애쉬 컨트롤컬러 또는 애쉬 염모제 + 그린 컨트롤컬러 소량 조합도 검토해보세요. 디자이너 직감으로 결정하시면 됩니다.
+       
+       비활성 (출력 X): 옵션 A 발화(카키빛애쉬 메인) / 옵션 B 발화(그린 CC 메인) / 매트·올리브 메인으로 카키류 호출 / 케이스 A·B·C·E.
+
+[갈래 활성 시만] 블록②: <b>같은 베이스 · 다른 접근</b>
+       (빈 줄)
+       <b>재료 조합 (대안)</b>
+       (빈 줄)
+       → 권장과의 차이점.
+
+블록③: <b>대안 경로 · 버진모 고명도 테크닉</b>
+       (빈 줄)
+       <b>13·15레벨 ○○ 염모제 (리프팅용) + ○○ 컨트롤컬러 + 산화제 9%/12%</b>
+       (빈 줄)
+       → 버진모에서 최대한 연출하는 방법입니다. 반사빛이 원하는 정도만큼 투명하지 않을 수 있습니다.
+
+블록⑤: 실무조언
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【 케이스 E 】권장 = 백모 ([K5] 발동 시)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+블록①: <b>권장 경로 · 백모 (또는 18레벨 미색 베이스)</b>
+       (빈 줄)
+       <b>K5 2갈래 중 하나 (웜·베이지 방향 OR 쿨·잿빛 방향)</b>
+       (빈 줄)
+       → 결과 색감 서술 1~2문장.
+
+블록③: <b>대안 경로 · 같은 베이스 다른 방향</b>
+       (빈 줄)
+       <b>K5 나머지 갈래</b>
+       (빈 줄)
+       → 권장과의 방향 차이 1~2문장.
+
+블록⑤: 실무조언 (K5 강제 문구 2개 무조건 포함)
+
+(블록② 생략 — K5 2갈래로 이미 고정 / 블록④ 생략 — 백모는 버진모 구현 불가)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+──────────────────────────────
+
+■ 재료 계열 병기 (출력 필수)
+- "핑크 염모제" → 반드시 "핑크 염모제(레드바이올렛 계열)"
+- 다른 재료는 P 팔레트 명시 그대로.
+
+■ 클리어 희석 포함 조건 (K3 단일 결정 트리 따름)
+- K3 결정 트리만 따른다. 다른 위치의 클리어 룰 무시.
+
+■ 파스텔 타겟 tips 필수 문구
+"클리어 희석" 포함 레시피(단 백모 레시피 제외)일 때 블록⑤ 실무조언에 다음 문구 포함:
+"<b>클리어 희석량을 조절해서 색감 농도를 조절하세요.</b>"
+
+■ 가독성 원칙
+- 블록①②③④⑤ 헤드라인 모두 동일한 <b> 태그 굵기.
+- 재료 조합 라인도 <b>.
+- 설명 문장은 굵기 없이 자연스럽게.
+- 블록 사이 \n\n.
+
+
+══════════════════════════════
+[G] 가드레일 — 절대 금기
+══════════════════════════════
+
+1) 응답은 JSON 객체 하나. 코드블록·설명·사고과정·인사 금지. 첫 글자 {, 마지막 }.
+
+2) 팔레트 외 재료 호출 금지. 결과 색감명을 재료처럼 호출 금지 (예: "스모키애쉬 염모제", "쿨브라운 염모제"). 이건 제품이 아니다.
+
+3) 재료는 풀네임 + 명도 형식 접두사. 약어(A, BA, V, RV, CC 등) 출력 금지.
+
+4) 탈색 회차·레벨은 단일 숫자. 범위 표기 금지.
+
+5) 블록당 1~2문장. 원리·이론·과정 서술 금지. 너는 레시피 메모 역할.
+   ※ [K]·[M] 원리는 너의 추론 도구. 출력엔 결과만 자연어로.
+   단 reasoning 필드는 예외 (4단계 양식 강제 출력 — reasoning 필드 정의 섹션 참조).
+
+6) 금지어: "원샷", "탁한/탁해진"(→자연어 서술), "CC"(→컨트롤컬러), "중화재/중화제"(→"보색중화"), "저공정"(내부 용어), "탈색 없이 시술"(모호, 구체화 필수), "오버슛"(→자연어 서술), "고명도(13·15레벨)"(→"13·15레벨" 또는 "리프팅용" 사용).
+
+7) 보색 매칭 정확성: 블루↔주황 / 바이올렛↔노랑 / 그린↔빨강. "블루가 노랑을 중화" 같은 틀린 서술 금지.
+
+8) 설명-조합 일치: 블록 설명에서 조합에 없는 재료 언급 금지.
+
+9) 베이스 레벨은 사진 직접 관찰로 판정 (K4 4축). 키워드·색감명 매칭으로 승격/하향 금지 ([M4] 위반).
+
+10) 색감명 카탈로그 사용 금지. "이 색감이면 이 레시피" 매칭이 아니라, [M1~M6] → K4 관찰 → K1 베이스 판정 → K2/K3 재료 연역의 사슬로 도출.
+    단 [M6][b] 메인 색감 → 메인 재료 매핑은 허용 (베이스 결정용 아님, 메인 재료 결정용).
+
+11) [M1] 강도 매칭 위반 금지: 잔류 부재 영역(백모·미색)에 강보색 투입 금지. 잔류 강 영역에 약보색 투입 금지.
+
+12) [M2] 시간축 분리 위반 금지: 버진모 1스텝에서 "선명 발색"·"투명 표현" 약속 금지. 1스텝은 가벼운 가미.
+
+13) [M3] 비대칭 무시 금지: 동양인 모발에서 라벤더·실버·백금발을 버진모 시술로 약속 금지. 적색 멜라닌 한계 인정.
+
+14) [M5][e] 시간축 × 명도 결합 위반 금지: 버진모 1스텝에 중명도 염모제 메인 호출 금지 / 2스텝 1차에 중명도 호출 금지 / 2스텝 2차에 13·15레벨 호출 금지.
+
+15) ⚠️ 백모 영역 위반 절대 금지 ([K5] 발동 강제 체크 참조):
+    - 백모 발동 조건 매칭 시 클리어 누락 = 무효 출력 (시술 실패 위험)
+    - 백모 발동 조건 매칭 시 "밝은 톤의" 접두사 누락 = 무효 출력
+    - 백모 발동 조건 매칭 시 K5 2갈래 외 조합 호출 = 무효 출력
+    - 이 위반은 일반 오류와 다른 카테고리 — 시술자가 그대로 진행 시 회복 불가
+
+16) ⚠️ 18레벨 영역 (K1 5번) "밝은 톤의" 접두사 의무:
+    - K1 5번(탈색 3회 이상 18레벨) 채택 시 모든 염모제 호출에 "밝은 톤의" 접두사 강제.
+    - 출력 표기: "밝은 톤의 ○○ 염모제" / "밝은 톤의 ○○ 염모제(계열)"
+    - 누락 시 무효 출력. [P] 팔레트 (1) 정의 위반 + [M5][c] 18레벨 흡수력 위반 = 무게감 폭발.
+
+17) quick_thoughts 필드 형식 위반 금지:
+    - 5~7줄 / "..." 으로 끝남 / 한국어 친근체 / [P] 팔레트 정확한 재료명 / 마지막 줄 확정형.
+    - 영어 금지, "..." 외 문장부호 금지, 내부 라벨(K1, M5 등) 노출 금지.
+
+18) hex 코드(#XXXXXX) 출력 금지:
+    - 분석 프롬프트의 hex 필드는 내부 데이터. quick_thoughts·reasoning·summary·tips 어디에도 hex 코드 노출 금지.
+
+
+══════════════════════════════
+[A] 분석 프롬프트 표기 규약 (1차 분석용 system prompt에 별도 박힘)
+══════════════════════════════
+
+이 섹션은 1차 분석 호출의 system prompt에 들어갈 표기 규약. 레시피 호출은 이 규약을 [M6][a]에서 활용.
+
+★ color_name_ko 표기 규약:
+"메인 색감 + 부가 뉘앙스" 순서. + 앞이 메인, + 뒤가 부가.
+
+[형식]
+- 단일 메인: "○○ 베이스" (예: "핑크 베이스")
+- 메인 + 부가 1개: "○○ 베이스 + ○○ 뉘앙스" (예: "베이지 베이스 + 잿빛 뉘앙스")
+- 메인 + 부가 강도: "○○ 베이스 + ○○ 소량" / "○○ 베이스 + ○○ 미세" (예: "잿빛 베이스 + 핑크기 소량")
+
+[메인 색감 어휘 — [M6][b] 매핑 표와 정합]
+베이지 / 밀크 / 크리미 / 쿨베이지 / 웜베이지 / 잿빛 / 매트 / 쿨 / 애쉬 / 어두운 그레이 / 스모키 / 라벤더 / 청보라 / 퍼플 / 핑크 / 로즈 / 체리 / 와인 / 딥로즈 / 레드 / 카키 / 올리브 / 구리 / 앰버 / 캐러멜 / 황금 / 허니 / 백모 / 화이트 / 순백 / 아이스 플래티넘 / 백금발 / 미색 / 아이보리
+
+[부가 뉘앙스 어휘]
+잿빛 뉘앙스 / 핑크기 / 보라기 / 매트 / 윤기 / 깊이감 / 투명감 / 파스텔 / 채도 등
+
+★ 갈래 활성 표기 ("X + Y" 동급 우세 시)
+- "X 베이스 + Y 베이스" (둘 다 "베이스"로 표기) → 갈래 활성 신호
+- "X 베이스 + Y 뉘앙스" (Y가 "뉘앙스") → 갈래 비활성, X 단일 메인
+
+이 표기 규약을 분석 프롬프트에 박아 모델이 일관되게 표기하도록 함.
+`;
+
+const USER_MESSAGE_ANALYSIS = '이 사진 속 모발의 색감을 관찰하여 analysis JSON 하나만 출력해. 사고 과정·설명·인사 금지.';
+const USER_MESSAGE_RECIPE   = '이 사진 속 모발 색감을 직접 관찰하여 조색 레시피를 역추론해. recipe JSON 하나만 출력해. 사고 과정·설명·인사 금지.';
+
+const PRICE = { 'claude-sonnet-4-6': { input: 3, output: 15, cache: 0.3 } };
+const USD_TO_KRW = 1430;
+const MODEL_ID = 'claude-sonnet-4-6';
+
+const STATE = {
+  apiKey: '',
+  runs: [],
+  thinkingEnabled: false, // 기본값: thinking OFF (디버그용)
+  visualAnchorEnabled: false // 기본값: K1 시각 앵커 OFF (v1)
+};
+
+// ══════════════════════════════════════════
+// 초기화 — textarea 기본값 주입 + 통계 표시
+// ══════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('analysisPromptInput').value     = DEFAULT_ANALYSIS_PROMPT;
+  document.getElementById('recipeV3PromptInput').value     = DEFAULT_RECIPE_PROMPT_V3;
+  updateStat('analysis');
+  updateStat('recipeV3');
+  // 분석/v2는 접고, v3만 펼친 상태로 시작
+  togglePrompt('analysis', true);
+  
+  // 비교 모드 토글 바인딩
+  
+  // Thinking 모드 토글 바인딩
+  document.getElementById('thinkingToggle').addEventListener('change', function(e) {
+    STATE.thinkingEnabled = e.target.checked;
+    showToast(STATE.thinkingEnabled ? '🧠 Thinking 모드 ON — 다음 호출부터 사고과정 노출' : 'Thinking 모드 OFF');
+  });
+  
+  // K1 시각 앵커 (v2) 토글 바인딩
+  document.getElementById('visualAnchorToggle').addEventListener('change', function(e) {
+    STATE.visualAnchorEnabled = e.target.checked;
+    showToast(STATE.visualAnchorEnabled ? '🖼️ K1 시각 앵커 ON (v2) — 다음 레시피 호출부터 사진 4장 첨부' : 'K1 시각 앵커 OFF (v1) — 기존 동작');
+  });
+});
+
+function updateStat(kind) {
+  const ta = document.getElementById(kind + 'PromptInput');
+  const headerSpan = document.getElementById(kind + 'Stat');
+  const detailSpan = document.getElementById(kind + 'StatDetail');
+  const txt = ta.value;
+  const chars = txt.length;
+  const lines = txt.split('\n').length;
+  // Rough token estimate: Korean-heavy ~ 1 char = ~1 token (very approximate)
+  const tokEst = Math.round(chars * 0.85);
+  headerSpan.textContent = chars.toLocaleString() + ' chars';
+  detailSpan.innerHTML = '<b>' + chars.toLocaleString() + '</b> chars · <b>' + lines.toLocaleString() + '</b> lines · ~<b>' + tokEst.toLocaleString() + '</b> tokens (추정)';
+}
+
+function togglePrompt(kind, forceCollapse) {
+  const body = document.getElementById(kind + 'Body');
+  const hdr  = body.previousElementSibling;
+  if (forceCollapse === true) {
+    body.classList.add('hidden');
+    hdr.classList.add('collapsed');
+    return;
+  }
+  body.classList.toggle('hidden');
+  hdr.classList.toggle('collapsed');
+}
+
+function resetPrompt(kind) {
+  const labels = { analysis: '분석', recipeV3: '레시피 v3.2.1' };
+  if (!confirm('현재 ' + (labels[kind] || kind) + ' 프롬프트를 원본(기본값)으로 되돌릴까요?')) return;
+  const defaults = {
+    analysis: DEFAULT_ANALYSIS_PROMPT,
+    recipeV3: DEFAULT_RECIPE_PROMPT_V3
+  };
+  document.getElementById(kind + 'PromptInput').value = defaults[kind] || '';
+  updateStat(kind);
+  showToast('원본으로 복원됨');
+}
+
+function copyPrompt(kind) {
+  const txt = document.getElementById(kind + 'PromptInput').value;
+  navigator.clipboard.writeText(txt).then(function() {
+    showToast('클립보드에 복사됨 (' + txt.length.toLocaleString() + ' chars)');
+  }).catch(function() {
+    showToast('복사 실패 — 직접 선택해서 복사해주세요');
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(function() { t.classList.remove('show'); }, 1800);
+}
+
+// ══════════════════════════════════════════
+// API key
+// ══════════════════════════════════════════
+function saveKey() {
+  const v = document.getElementById('apiKey').value.trim();
+  if (!v) { alert('API 키를 입력하세요.'); return; }
+  if (!v.startsWith('sk-ant-')) { alert('올바른 Anthropic API 키가 아닙니다 (sk-ant-로 시작).'); return; }
+  STATE.apiKey = v;
+  document.getElementById('apiKey').placeholder = '✓ 저장됨 (메모리 전용)';
+  document.getElementById('apiKey').value = '';
+  document.getElementById('infoLine').innerHTML = '✓ API 키 저장 완료. 사진 업로드하면 <b>현재 textarea 프롬프트</b>로 호출됩니다.';
+  showToast('API 키 저장 완료');
+}
+
+// ══════════════════════════════════════════
+// Upload
+// ══════════════════════════════════════════
+function handleUpload(input) {
+  if (!STATE.apiKey) {
+    alert('먼저 API 키를 저장하세요.');
+    input.value = '';
+    return;
+  }
+  const files = Array.from(input.files || []);
+  if (files.length === 0) return;
+  files.forEach(function(file) { processFile(file); });
+  input.value = '';
+}
+
+function processFile(file) {
+  const MAX_SIZE = 2400;
+  const MAX_BYTES = 1500000;
+  let QUALITY = 0.9;
+  const QUALITY_MIN = 0.7;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      let w = img.width, h = img.height;
+      if (w > MAX_SIZE || h > MAX_SIZE) {
+        if (w > h) { h = Math.round(h * MAX_SIZE / w); w = MAX_SIZE; }
+        else       { w = Math.round(w * MAX_SIZE / h); h = MAX_SIZE; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+
+      let data = canvas.toDataURL('image/jpeg', QUALITY);
+      while (data.length * 0.75 > MAX_BYTES && QUALITY > QUALITY_MIN) {
+        QUALITY -= 0.05;
+        data = canvas.toDataURL('image/jpeg', QUALITY);
+      }
+
+      const photo = {
+        b64: data.split(',')[1],
+        mt: 'image/jpeg',
+        previewUrl: data,
+        fileName: file.name
+      };
+
+      startRun(photo);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function startRun(photo) {
+  // 현재 textarea 값을 스냅샷으로 캡쳐 (이후 수정해도 이 run엔 영향 없음)
+  const analysisPrompt   = document.getElementById('analysisPromptInput').value;
+  const recipeV3Prompt   = document.getElementById('recipeV3PromptInput').value;
+
+  const run = {
+    id: 'run-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+    photo: photo,
+    timestamp: new Date(),
+    analysis:  { status: 'loading' },
+    recipeV3:  { status: 'loading' },
+    snapshot: {
+      analysisChars:  analysisPrompt.length,
+      recipeV3Chars:  recipeV3Prompt.length
+    }
+  };
+
+  STATE.runs.unshift(run);
+  renderRuns();
+
+  // STEP 1: 분석 호출 → 끝나면 그 결과를 STEP 2 (레시피)에 참고용 주입
+  fireCall(run, 'analysis', analysisPrompt, USER_MESSAGE_ANALYSIS, 1024)
+    .then(function(){
+      // 분석 완료 — 결과 파싱해서 레시피 user message에 참고용으로 박음 (옵션 A')
+      var analysisHint = buildAnalysisHint(run.analysis);
+      var recipeUserMsg = USER_MESSAGE_RECIPE + analysisHint;
+
+      // STEP 2: 레시피 v3 (필수) + 레시피 v2 (비교 모드 시)
+      fireCall(run, 'recipeV3', recipeV3Prompt, recipeUserMsg, 3000);
+    });
+}
+
+// 분석 결과를 레시피 user message에 참고용으로 추가 (옵션 A')
+function buildAnalysisHint(analysisRun){
+  if (!analysisRun || analysisRun.status !== 'done' || !analysisRun.text) return '';
+  try {
+    var clean = analysisRun.text.replace(/```json|```/g,'').trim();
+    var match = clean.match(/\{[\s\S]*\}/);
+    if (!match) return '';
+    var a = JSON.parse(match[0]);
+    return '\n\n[참고 — 1차 분석 결과 (다른 컬러리스트 의견)]\n'
+      + '- color_name_ko: ' + (a.color_name_ko || '') + '\n'
+      + '- tone: ' + (a.tone || '') + '\n'
+      + '- hex: ' + (a.hex || '') + '\n'
+      + '- elements: ' + ((a.elements || []).join(', ')) + '\n'
+      + '- description: ' + (a.description || '') + '\n'
+      + '\n위 분석은 참고용. 사진 자체 관찰 우선. 어긋나면 reasoning 필드에 명시.';
+  } catch(e) {
+    return '';
+  }
+}
+
+function fireCall(run, kind, systemPrompt, userMsg, maxTokens) {
+  return callClaude(systemPrompt, userMsg, run.photo, maxTokens, kind)
+    .then(function(res) {
+      var doneObj = { status: 'done', mode: STATE.visualAnchorEnabled && kind === 'recipeV3' ? 'v2' : 'v1' };
+      if (res && typeof res === 'object') {
+        for (var k in res) { if (res.hasOwnProperty(k)) doneObj[k] = res[k]; }
+      }
+      run[kind] = doneObj;
+      renderRuns();
+    })
+    .catch(function(err){
+      // 풀 에러 정보 화면에 표시 — 이름, 메시지, 스택, 추가 디버그 정보
+      var errName = (err && err.name) ? err.name : 'Unknown';
+      var errMsg = (err && err.message) ? err.message : String(err);
+      var errStack = (err && err.stack) ? err.stack : '(스택 없음)';
+      var debugInfo = (err && err.debugInfo) ? '\n\n[추가 정보]\n' + err.debugInfo : '';
+      var fullError = '[' + errName + '] ' + errMsg + debugInfo + '\n\n[스택]\n' + errStack;
+      run[kind] = { status: 'error', error: fullError };
+      renderRuns();
+    });
+}
+
+// ══════════════════════════════════════════
+// K1 시각 앵커 (v2) — Vercel 호스팅 URL
+// ══════════════════════════════════════════
+const K1_VISUAL_ANCHORS = {
+  lv12: 'https://shield-connect.vercel.app/images/lv12-lift.jpg',
+  lv14: 'https://shield-connect.vercel.app/images/lv14-bleach1.jpg',
+  lv16: 'https://shield-connect.vercel.app/images/lv16-bleach2.jpg',
+  lv18: 'https://shield-connect.vercel.app/images/lv18-bleach3.jpg'
+};
+
+const K1_ANCHOR_INTRO = `
+══════════════════════════════════════════════
+■ K1 시각 앵커 (v2) — 텍스트 정의 보충 외관 자료
+══════════════════════════════════════════════
+
+다음 4장의 사진은 [K1] 공정 5단계 중 2~5단계의 "외관 예시"다.
+LLM 판정 회로의 결정 입력이 아닌, 텍스트 정의 (예: "노랑기에 주황기 살짝")가 
+시각적으로 어떤 외관을 가리키는지 보충 설명하는 자료다.
+
+★★★ 본 사진 사용 규칙 (위반 시 시스템 모순):
+
+1. 본 사진은 K1 단계 판정의 결정 자료가 아니다.
+   판정은 [K4] 자체 관찰 + 본 단계 텍스트 정의 + [M1]~[M6] 메타 원리를 우선한다.
+
+2. 본 사진과 손님 사진의 시각 매칭 행위 금지.
+   "이 손님 사진이 K1 앵커 N번과 비슷하다 = K1-N 단계" 같은 직접 매칭 금지.
+
+3. 본 사진은 해당 K1 단계의 "보수적 안전빵 기준"이다.
+   각 사진은 그 단계의 가장 진행된 끝(인접 상위 단계 경계) 톤을 보여준다.
+   따라서 손님 사진이 본 사진보다 살짝 덜 진행된 톤이어도 동일 K1 단계로 매핑한다.
+
+4. 텍스트 정의와 본 사진 외관이 어긋나는 듯 보이는 경우:
+   - 텍스트 정의가 항상 우선
+   - 사진은 보수적 안전빵 시각 참조용
+   - 본 시스템의 "대안 경로 + 변질 가능성 안내" 패턴이 자연스럽게 동반 작동
+
+──────────────────────────────────────────────
+앵커 1 — K1-2 (12~13리프트, 적갈색~주황기 잔류):
+`;
+
+const K1_ANCHOR_LABELS = {
+  lv14: '\n\n앵커 2 — K1-3 (탈색 1회 이상, 14레벨 · 노랑기에 주황기 살짝):\n',
+  lv16: '\n\n앵커 3 — K1-4 (탈색 2회 이상, 16레벨 · 노랑기 잔류):\n',
+  lv18: '\n\n앵커 4 — K1-5 (탈색 3회 이상, 18레벨 · 연노랑~아이보리):\n'
+};
+
+const K1_ANCHOR_OUTRO = `
+
+──────────────────────────────────────────────
+★ K1 시각 앵커 끝. 이하 K1 단계 판정 시 본 4장의 외관을 텍스트 정의의 의미 명료화 자료로만 참조한다.
+──────────────────────────────────────────────
+`;
+
+// system 배열 빌드 — system은 텍스트만 가능 (이미지 X). 텍스트 + 캐시 마커만.
+function buildSystemArray(systemPrompt, kind) {
+  const useAnchors = (kind === 'recipeV3') && STATE.visualAnchorEnabled;
+  
+  if (!useAnchors) {
+    // v1: 기존 그대로
+    return [{
+      type: 'text',
+      text: systemPrompt,
+      cache_control: { type: 'ephemeral' }
+    }];
+  }
+  
+  // v2: system에는 텍스트 + 시각 앵커 안내문만 추가 (사진은 user 메시지로 들어감)
+  const anchorSystemNote = `
+
+══════════════════════════════════════════════
+■ K1 시각 앵커 (v2) — 사용자 메시지에 첨부됨
+══════════════════════════════════════════════
+
+본 호출의 user 메시지에는 손님 사진 1장 외에 다음 4장의 K1 단계 외관 앵커 사진이 첨부되어 있다:
+  1번째 첨부 사진: 손님 사진 (분석 대상)
+  2번째 첨부 사진: K1-2 (12~13리프트, 적갈색~주황기 잔류) 외관 앵커
+  3번째 첨부 사진: K1-3 (탈색 1회 이상, 14레벨 · 노랑기에 주황기 살짝) 외관 앵커
+  4번째 첨부 사진: K1-4 (탈색 2회 이상, 16레벨 · 노랑기 잔류) 외관 앵커
+  5번째 첨부 사진: K1-5 (탈색 3회 이상, 18레벨 · 연노랑~아이보리) 외관 앵커
+
+★★★ 앵커 사진 사용 규칙:
+
+1. 분석 대상은 오직 1번째 사진(손님 사진)이다.
+   2~5번째 앵커 사진은 K1 단계 정의의 "외관 보충 자료"다.
+
+2. 앵커 사진은 K1 단계 판정의 결정 자료가 아니다.
+   판정은 [K4] 자체 관찰 + 본 단계 텍스트 정의 + [M1]~[M6] 메타 원리를 우선한다.
+
+3. 앵커 사진과 손님 사진의 시각 매칭 행위 금지.
+   "손님 사진이 앵커 N번과 비슷하다 = K1-N 단계" 같은 직접 매칭 금지.
+
+4. 앵커는 해당 K1 단계의 "보수적 안전빵 기준"이다.
+   각 앵커는 그 단계의 가장 진행된 끝(인접 상위 단계 경계) 톤을 보여준다.
+   따라서 손님 사진이 앵커보다 살짝 덜 진행된 톤이어도 동일 K1 단계로 매핑한다.
+
+5. 텍스트 정의와 앵커 외관이 어긋나는 듯 보이는 경우:
+   - 텍스트 정의가 항상 우선
+   - 앵커는 보수적 안전빵 시각 참조용
+   - 본 시스템의 "대안 경로 + 변질 가능성 안내" 패턴이 자연스럽게 동반 작동
+
+★ 앵커는 텍스트 정의(예: "노랑기에 주황기 살짝")가 시각적으로 어떤 외관을 가리키는지 보충 설명하는 자료다. 의미 명료화 용도로만 참조.
+`;
+  
+  return [{
+    type: 'text',
+    text: systemPrompt + anchorSystemNote,
+    cache_control: { type: 'ephemeral' }
+  }];
+}
+
+async function callClaude(systemPrompt, userMsg, photo, maxTokens, kind) {
+  const start = performance.now();
+  const useThinking = STATE.thinkingEnabled;
+  
+  // thinking 모드면 토큰 한도를 늘려야 함 (thinking + output 합산 limit)
+  // adaptive thinking이 budget을 알아서 조절하지만 max_tokens는 충분히 줘야 함
+  // v3.2.4 + thinking: thinking 6000~10000 + output 3000~4000 → 16000 안전 한도
+  const effectiveMaxTokens = useThinking ? Math.max(maxTokens + 13000, 16000) : maxTokens;
+
+  // user 메시지 content 빌드
+  // v2 모드 (시각 앵커 ON + 레시피 호출): 손님 사진 + 앵커 4장 + 텍스트
+  // v1 모드: 손님 사진 + 텍스트
+  const useAnchors = (kind === 'recipeV3') && STATE.visualAnchorEnabled;
+  const userContent = [
+    { type: 'image', source: { type: 'base64', media_type: photo.mt, data: photo.b64 } }
+  ];
+  if (useAnchors) {
+    userContent.push({ type: 'image', source: { type: 'url', url: K1_VISUAL_ANCHORS.lv12 } });
+    userContent.push({ type: 'image', source: { type: 'url', url: K1_VISUAL_ANCHORS.lv14 } });
+    userContent.push({ type: 'image', source: { type: 'url', url: K1_VISUAL_ANCHORS.lv16 } });
+    userContent.push({ type: 'image', source: { type: 'url', url: K1_VISUAL_ANCHORS.lv18 } });
+  }
+  userContent.push({ type: 'text', text: userMsg });
+
+  const body = {
+    model: MODEL_ID,
+    max_tokens: effectiveMaxTokens,
+    system: buildSystemArray(systemPrompt, kind),
+    messages: [{
+      role: 'user',
+      content: userContent
+    }]
+  };
+  
+  // Sonnet 4.6는 adaptive thinking 권장 (모델이 budget 자동 조절)
+  if (useThinking) {
+    body.thinking = { type: 'adaptive' };
+  }
+
+  var res;
+  try {
+    res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      cache: 'no-store',
+      headers: {
+        'x-api-key': STATE.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+  } catch (fetchErr) {
+    // fetch 자체가 실패한 경우 (CORS, 네트워크, Service Worker 차단 등)
+    var enriched = new Error('네트워크 fetch 실패: ' + (fetchErr.message || String(fetchErr)));
+    enriched.name = fetchErr.name || 'NetworkError';
+    enriched.debugInfo =
+      '브라우저: ' + navigator.userAgent + '\n' +
+      'Origin: ' + window.location.origin + '\n' +
+      'kind: ' + kind + '\n' +
+      'apiKey 시작: ' + (STATE.apiKey ? STATE.apiKey.substring(0,15) + '...' : '(없음)') + '\n' +
+      'apiKey 길이: ' + (STATE.apiKey ? STATE.apiKey.length : 0) + '\n' +
+      'thinking ON: ' + STATE.thinkingEnabled + '\n' +
+      'visualAnchor ON: ' + STATE.visualAnchorEnabled + '\n' +
+      '원본 에러 name: ' + (fetchErr.name || '(없음)') + '\n' +
+      '원본 에러 message: ' + (fetchErr.message || '(없음)') + '\n' +
+      '가능 원인: Service Worker 가로챔 / CORS / 네트워크 차단 / 키 형식 오류';
+    throw enriched;
+  }
+
+  const elapsed = Math.round(performance.now() - start);
+  var data;
+  try {
+    data = await res.json();
+  } catch (jsonErr) {
+    var enriched2 = new Error('응답 JSON 파싱 실패: ' + jsonErr.message);
+    enriched2.name = 'ResponseParseError';
+    enriched2.debugInfo = 'HTTP status: ' + res.status + ' ' + res.statusText;
+    throw enriched2;
+  }
+
+  if (!res.ok) {
+    var apiErr = new Error((data.error && data.error.message) || ('HTTP ' + res.status));
+    apiErr.name = 'APIError';
+    apiErr.debugInfo =
+      'HTTP status: ' + res.status + ' ' + res.statusText + '\n' +
+      'API 에러 type: ' + (data.error && data.error.type ? data.error.type : '(없음)') + '\n' +
+      'request_id: ' + (data.request_id || '(없음)');
+    throw apiErr;
+  }
+
+  // 응답 content는 [{type:'thinking',...}, {type:'text',...}] 식 배열로 옴
+  // type별로 분리해서 모두 보존
+  const blocks = Array.isArray(data.content) ? data.content : [];
+  const text = blocks
+    .filter(function(b){ return b.type === 'text'; })
+    .map(function(b){ return b.text || ''; })
+    .join('');
+  const thinking = blocks
+    .filter(function(b){ return b.type === 'thinking'; })
+    .map(function(b){ return b.thinking || ''; })
+    .join('\n\n---\n\n');
+  const usage = data.usage || {};
+
+  return {
+    text: text,
+    thinking: thinking,           // 🧠 모델 사고과정 (없으면 빈 문자열)
+    systemPrompt: systemPrompt,   // 🔍 디버그용 — 어떤 프롬프트로 호출했는지 보존
+    userMsg: userMsg,
+    elapsed: elapsed,
+    inputTokens: usage.input_tokens || 0,
+    outputTokens: usage.output_tokens || 0,
+    cacheCreate: usage.cache_creation_input_tokens || 0,
+    cacheRead: usage.cache_read_input_tokens || 0
+  };
+}
+
+// ══════════════════════════════════════════
+// Render
+// ══════════════════════════════════════════
+function renderRuns() {
+  const host = document.getElementById('runs');
+  if (STATE.runs.length === 0) {
+    host.innerHTML = '<div class="empty-state">① API 키 저장<br>② (선택) 프롬프트 수정 → 다음 업로드부터 반영<br>③ 사진 업로드 → 분석·레시피 결과 + thinking trace 표시.</div>';
+    return;
+  }
+
+  host.innerHTML = STATE.runs.map(function(run, idx) {
+    return renderRunCard(run, STATE.runs.length - idx);
+  }).join('');
+
+  // 뷰 토글 바인딩
+  document.querySelectorAll('.view-toggle button').forEach(function(btn) {
+    btn.onclick = function() {
+      const parent = btn.closest('.result-pane');
+      if (!parent) return;
+      parent.querySelectorAll('.view-toggle button').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      const view = btn.dataset.view;
+      const renderEl = parent.querySelector('.render-box');
+      const rawEl = parent.querySelector('.raw-box');
+      const thinkEl = parent.querySelector('.thinking-box');
+      const thoughtsEl = parent.querySelector('.thoughts-box');
+      const reasoningEl = parent.querySelector('.reasoning-box');
+      if (renderEl) renderEl.style.display = view === 'render' ? 'block' : 'none';
+      if (rawEl) rawEl.style.display = view === 'raw' ? 'block' : 'none';
+      if (thinkEl) thinkEl.style.display = view === 'thinking' ? 'block' : 'none';
+      if (thoughtsEl) thoughtsEl.style.display = view === 'thoughts' ? 'block' : 'none';
+      if (reasoningEl) reasoningEl.style.display = view === 'reasoning' ? 'block' : 'none';
+    };
+  });
+  
+  // "Claude로 보낼 디버그 묶음 복사" 버튼 바인딩
+  // → system prompt + thinking + 최종 출력을 한 묶음으로 클립보드 복사
+  // → 사용자가 Claude 채팅에 그대로 붙여넣어서 와전 없이 디버깅 받기 위함
+  document.querySelectorAll('.copy-debug-btn').forEach(function(btn) {
+    btn.onclick = function(e) {
+      e.stopPropagation();
+      const runId = btn.dataset.runId;
+      const kind = btn.dataset.kind;
+      const run = STATE.runs.find(function(r){ return r.id === runId; });
+      if (!run) return;
+      const result = run[kind];
+      if (!result || result.status !== 'done') return;
+      
+      const kindLabel = { analysis: '색감 분석', recipeV3: '레시피 v3.1' }[kind] || kind;
+      const dump = [
+        '# 검수툴 디버그 덤프 — ' + kindLabel,
+        '',
+        '## 1) 내가 보낸 system prompt',
+        '```',
+        result.systemPrompt || '(없음)',
+        '```',
+        '',
+        '## 2) user message',
+        '```',
+        result.userMsg || '(없음)',
+        '```',
+        '',
+        '## 3) 모델 사고과정 (thinking)',
+        '```',
+        result.thinking || '(thinking 모드 OFF였음)',
+        '```',
+        '',
+        '## 4) 모델 최종 출력 (text)',
+        '```',
+        result.text || '(빈 응답)',
+        '```',
+        '',
+        '## 5) 메타',
+        '- 모델: ' + MODEL_ID,
+        '- 응답 시간: ' + result.elapsed + 'ms',
+        '- input tokens: ' + result.inputTokens + ' / output tokens: ' + result.outputTokens,
+        '',
+        '---',
+        '위 묶음을 보고, 내 system prompt의 어느 줄 때문에 모델이 의도와 다르게 해석했는지 짚어주고 수정안 줘.'
+      ].join('\n');
+      
+      navigator.clipboard.writeText(dump).then(function() {
+        showToast('📋 디버그 묶음 복사 완료 — Claude 채팅창에 붙여넣기');
+      }).catch(function() {
+        showToast('복사 실패 — 브라우저 권한 확인');
+      });
+    };
+  });
+}
+
+function renderRunCard(run, num) {
+  const timeStr = run.timestamp.toLocaleTimeString('ko-KR', { hour12: false });
+  const snap = run.snapshot || {};
+  
+  // 프롬프트 길이 표시 (단독: A/V3 / 비교: A/V3/V2)
+  let snapHtml = '';
+  if (snap.recipeV3Chars) {
+    let parts = ['A' + (snap.analysisChars || 0).toLocaleString(),
+                 '레시피:' + snap.recipeV3Chars.toLocaleString()];
+    snapHtml = '<span class="run-time">prompt: ' + parts.join(' / ') + '</span>';
+  }
+  
+  // 모드 뱃지 (단일 모드라 빈 문자열)
+  const modeBadge = '';
+  
+  const recipeBlock = renderResultPane('recipeV3', run.recipeV3, run);
+
+  return `
+    <div class="run-card">
+      <div class="run-hdr">
+        <span class="run-title">Run #${num}</span>
+        <span class="run-filename">${escapeHtml(run.photo.fileName)}</span>
+        ${modeBadge}
+        ${snapHtml}
+        <span class="run-time">${timeStr}</span>
+      </div>
+      <div class="run-photo-wrap">
+        <img class="run-photo" src="${run.photo.previewUrl}" alt="분석 사진" onclick="openZoom('${run.photo.previewUrl}')"/>
+        <div class="run-results">
+          ${renderResultPane('analysis', run.analysis, run)}
+          ${recipeBlock}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderResultPane(kind, result, run) {
+  if (!result) return '';
+  
+  const labels = { 
+    analysis: '🎨 분석', 
+    recipeV3: '🧪 레시피 v3.1',
+    recipe:   '🧪 레시피'  // 호환용
+  };
+  const label = labels[kind] || kind;
+  // v1/v2 배지 (레시피만)
+  const modeBadge = (kind === 'recipeV3' && result && result.mode)
+    ? (result.mode === 'v2' 
+        ? ' <span style="background:#7B5BC9;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:0.5px">v2 🖼️</span>'
+        : ' <span style="background:#94A3B8;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:0.5px">v1</span>')
+    : '';
+  // CSS class: recipe 계열은 'recipe' class, analysis는 'analysis' class
+  const klass = (kind === 'recipeV3' || kind === 'recipe') ? 'recipe' : kind;
+  // 비교 모드 v3 패널 강조
+  const paneExtraStyle = (kind === 'recipeV3') ? 'style="border-color:#C8DCC0;background:#FAFCF7"' : '';
+  
+  const p = PRICE[MODEL_ID];
+
+  let body = '';
+  let metricsHtml = '<div class="metrics empty">대기 중...</div>';
+
+  if (result.status === 'loading') {
+    body = '<div class="loading"><div class="spinner"></div>호출 중...</div>';
+  } else if (result.status === 'error') {
+    body = `<div class="error-block">${escapeHtml(result.error)}</div>`;
+  } else if (result.status === 'done') {
+    const costUsd = (result.inputTokens * p.input + result.outputTokens * p.output + result.cacheRead * p.cache + result.cacheCreate * p.input * 1.25) / 1e6;
+    const costWon = (costUsd * USD_TO_KRW).toFixed(2);
+    const cacheHtml = (result.cacheRead > 0 || result.cacheCreate > 0)
+      ? `<span><b>cache</b>r${result.cacheRead.toLocaleString()}/w${result.cacheCreate.toLocaleString()}</span>`
+      : '';
+    metricsHtml = `
+      <div class="metrics">
+        <span><b>⏱</b>${(result.elapsed/1000).toFixed(1)}s</span>
+        <span><b>in</b>${result.inputTokens.toLocaleString()}</span>
+        <span><b>out</b>${result.outputTokens.toLocaleString()}</span>
+        ${cacheHtml}
+        <span><b>₩</b>${costWon}</span>
+      </div>
+    `;
+
+    let parsed = null;
+    try { parsed = JSON.parse(result.text); } catch(e) { parsed = null; }
+    const isAnalysisKind = (kind === 'analysis');
+    const renderedHtml = parsed
+      ? (isAnalysisKind ? renderAnalysis(parsed) : renderRecipe(parsed))
+      : '<div class="error-block">JSON 파싱 실패 — Raw 탭에서 원본 확인</div>';
+    const rawPretty = parsed ? JSON.stringify(parsed, null, 2) : result.text;
+    const hasThinking = result.thinking && result.thinking.trim().length > 0;
+    const thinkingTabBtn = hasThinking 
+      ? '<button data-view="thinking">🧠 Thinking</button>' 
+      : '';
+    const thinkingBoxHtml = hasThinking ? `
+      <div class="thinking-box" style="display:none;">
+        <div class="thinking-hdr">
+          <span>🧠 모델 사고과정 — 프롬프트의 어느 부분이 어떻게 해석됐는지 확인</span>
+          <button class="copy-debug-btn" data-run-id="${run.id}" data-kind="${kind}">📋 Claude로 보낼 디버그 묶음 복사</button>
+        </div>
+        <pre class="thinking-text">${escapeHtml(result.thinking)}</pre>
+      </div>
+    ` : '';
+
+    // ✨ v3.2 — quick_thoughts와 reasoning 새 필드 (레시피 호출에만 존재)
+    const hasQuickThoughts = parsed && Array.isArray(parsed.quick_thoughts) && parsed.quick_thoughts.length > 0;
+    const hasReasoning = parsed && parsed.reasoning && String(parsed.reasoning).trim().length > 0;
+    const quickThoughtsTabBtn = hasQuickThoughts ? '<button data-view="thoughts">💡 Thoughts</button>' : '';
+    const reasoningTabBtn = hasReasoning ? '<button data-view="reasoning">📖 Reasoning</button>' : '';
+
+    const quickThoughtsBoxHtml = hasQuickThoughts ? `
+      <div class="thoughts-box" style="display:none;">
+        <div class="thoughts-hdr">💡 quick_thoughts (디자이너용 사고 흐름 — 본화면에서 타이핑 노출됨)</div>
+        <ul class="thoughts-list">${parsed.quick_thoughts.map(function(t){ return '<li>' + escapeHtml(String(t)) + '</li>'; }).join('')}</ul>
+      </div>
+    ` : '';
+
+    const reasoningBoxHtml = hasReasoning ? `
+      <div class="reasoning-box" style="display:none;">
+        <div class="reasoning-hdr">📖 reasoning (베이스 + 재료 선택 근거)</div>
+        <div class="reasoning-text">${escapeHtml(String(parsed.reasoning))}</div>
+      </div>
+    ` : '';
+
+    body = `
+      <div class="view-toggle">
+        <button class="active" data-view="render">렌더링</button>
+        <button data-view="raw">Raw JSON</button>
+        ${quickThoughtsTabBtn}
+        ${reasoningTabBtn}
+        ${thinkingTabBtn}
+      </div>
+      <div class="render-box">${renderedHtml}</div>
+      <div class="raw-box" style="display:none;">
+        <pre class="json-view">${escapeHtml(rawPretty)}</pre>
+      </div>
+      ${quickThoughtsBoxHtml}
+      ${reasoningBoxHtml}
+      ${thinkingBoxHtml}
+    `;
+  }
+
+  return `
+    <div class="result-pane" ${paneExtraStyle}>
+      <div class="result-pane-hdr">
+        <div class="result-pane-title ${klass}">${label}${modeBadge}</div>
+        ${metricsHtml}
+      </div>
+      ${body}
+    </div>
+  `;
+}
+
+function renderAnalysis(d) {
+  const hex = d.hex || '#cccccc';
+  const name = d.color_name_ko || '—';
+  const tone = d.tone || 'neutral';
+  const desc = d.description || '';
+  const elements = Array.isArray(d.elements) ? d.elements : [];
+  const toneLabel = { cool: 'COOL', warm: 'WARM', neutral: 'NEUTRAL' }[tone] || String(tone).toUpperCase();
+  const chipsHtml = elements.map(function(el) { return '<span class="ra-chip">' + escapeHtml(el) + '</span>'; }).join('');
+
+  return `
+    <div class="render-analysis">
+      <div class="ra-label">AI 분석 결과</div>
+      <div class="ra-color-row">
+        <div class="ra-swatch" style="background:${escapeHtml(hex)}"></div>
+        <div>
+          <div class="ra-name">${escapeHtml(name)}</div>
+          <div class="ra-meta">
+            <span class="ra-tone-badge ${tone}">${toneLabel}</span>
+            <span class="hex-val">${escapeHtml(hex)}</span>
+          </div>
+        </div>
+      </div>
+      ${chipsHtml ? '<div class="ra-chips">' + chipsHtml + '</div>' : ''}
+      ${desc ? '<div class="ra-desc">' + escapeHtml(desc) + '</div>' : ''}
+    </div>
+  `;
+}
+
+function renderRecipe(d) {
+  const summary = d.summary || '';
+  const tips = d.tips || '';
+  const tipsHtml = safeRichText(tips);
+
+  return `
+    <div class="render-recipe">
+      ${summary ? '<div class="rr-summary">' + escapeHtml(summary) + '</div>' : ''}
+      ${tips ? `
+        <div class="rr-tips">
+          <div class="rr-tips-label">💡 tips</div>
+          <div class="rr-tips-text">${tipsHtml}</div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function safeRichText(s) {
+  if (!s) return '';
+  const PLACE_OPEN = '\u0001BOPEN\u0001';
+  const PLACE_CLOSE = '\u0001BCLOSE\u0001';
+  let tmp = String(s)
+    .replace(/<b>/gi, PLACE_OPEN)
+    .replace(/<\/b>/gi, PLACE_CLOSE);
+  tmp = escapeHtml(tmp);
+  tmp = tmp.replace(new RegExp(PLACE_OPEN, 'g'), '<b>')
+           .replace(new RegExp(PLACE_CLOSE, 'g'), '</b>');
+  return tmp;
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function openZoom(src) {
+  document.getElementById('zoomImg').src = src;
+  document.getElementById('zoomModal').classList.add('show');
+}
+function closeZoom() {
+  document.getElementById('zoomModal').classList.remove('show');
+}
+function clearHistory() {
+  if (STATE.runs.length === 0) return;
+  if (!confirm('모든 실행 기록을 지울까요? (프롬프트 textarea는 유지됩니다)')) return;
+  STATE.runs = [];
+  renderRuns();
+}
+</script>
+
+</body>
+</html>
