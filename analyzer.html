@@ -2373,28 +2373,37 @@ function generateRecipe(){
   btn.disabled = true;
   btn.textContent = '레시피 생성 중...';
 
-  // 로딩 카드 표시 + 타이핑 키워드 시작
+  // ⭐ 키워드 로더는 사용하지 않음 — 사고 흐름 박스를 즉시 띄우고 토큰 단위로 흘림
   var loadingWrap = document.getElementById('recipeLoadingWrap');
-  var loadingBox = document.getElementById('recipeLoadingBox');
-  if(loadingWrap && loadingBox){
-    loadingWrap.classList.add('show');
-    stopTypingLoader(ST.recipeTypingHandle);
-    ST.recipeTypingHandle = startTypingLoader(loadingBox, [
-      '탈색 공정 검토중',
-      '버진모 테크닉 검토중',
-      '리프팅 경로 검토중',
-      '염모제 조합 조율중',
-      '컨트롤컬러 비율 계산중',
-      '보색 중화 판단중',
-      '멜라닌 잔류 체크중',
-      '안착 경로 분석중',
-      '반사빛 수렴 예측중'
-    ]);
-    // 로딩 카드 위치로 스크롤
-    setTimeout(function(){
-      loadingWrap.scrollIntoView({behavior:'smooth', block:'start'});
-    }, 100);
+  if(loadingWrap) loadingWrap.classList.remove('show');
+  stopTypingLoader(ST.recipeTypingHandle);
+  ST.recipeTypingHandle = null;
+
+  // recipeWrap 미리 보여주기 — 사고 흐름 박스 자리 확보
+  var recipeWrap = document.getElementById('recipeWrap');
+  if(recipeWrap) recipeWrap.classList.add('show');
+
+  // 헤더에 사고 흐름 박스만 미리 삽입 (summary/note/viz는 응답 완료 후 채움)
+  var hdr = document.getElementById('recipeHeader');
+  if(hdr){
+    hdr.innerHTML =
+      '<div class="recipe-thoughts" id="recipeThoughts">'
+      + '<div class="recipe-thoughts-title">AI 사고 흐름</div>'
+      + '<div class="recipe-thoughts-list" id="recipeThoughtsList"><span class="thoughts-cursor">▍</span></div>'
+      + '</div>';
   }
+
+  // body, source는 일단 비움
+  var body = document.getElementById('recipeBody');
+  if(body) body.innerHTML = '';
+  var srcEl = document.getElementById('recipeSource');
+  if(srcEl) srcEl.innerHTML = '';
+
+  // 사고 흐름 박스 위치로 스크롤
+  setTimeout(function(){
+    var thoughtsEl = document.getElementById('recipeThoughts');
+    if(thoughtsEl) thoughtsEl.scrollIntoView({behavior:'smooth', block:'center'});
+  }, 50);
 
   var sysPrompt = buildRecipePrompt();
   tryGenerateRecipe(sysPrompt, ST.imageBase64, ST.imageMediaType, 0);
@@ -2404,7 +2413,6 @@ function tryGenerateRecipe(sysPrompt, base64, mediaType, attempt){
   var MAX_ATTEMPTS = 3;
 
   // 1차 분석 결과를 참고용으로 user message에 주입 (옵션 A')
-  // 사진 우선이지만 분석을 "다른 컬러리스트 의견"으로 활용
   var analysisHint = '';
   if (ST.analysis) {
     var a = ST.analysis;
@@ -2417,14 +2425,20 @@ function tryGenerateRecipe(sysPrompt, base64, mediaType, attempt){
       + '\n위 분석은 참고용. 사진 자체 관찰 우선. 어긋나면 reasoning 필드에 명시.';
   }
 
+  // 사고 흐름 파서 초기화 (이번 시도용)
+  resetThoughtsParser();
+
+  var fullText = '';
+
   fetch(API_URL, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
-      max_tokens: 3500,  // v3.2: quick_thoughts + reasoning 추가로 토큰 ↑
-      stage: 'recipe_only',  // ⭐ 서버에서 크레딧 차감 skip (분석에서 이미 1크레딧 차감됨)
+      max_tokens: 3500,
+      stage: 'recipe_only',
+      stream: true,                    // ⭐ 스트리밍 활성화
       messages: [{
         role: 'user',
         content: [
@@ -2441,30 +2455,88 @@ function tryGenerateRecipe(sysPrompt, base64, mediaType, attempt){
       ]
     })
   })
-  .then(function(r){ return r.json().then(function(data){ return {status: r.status, data: data}; }); })
-  .then(function(res){
-    var status = res.status;
-    var data = res.data;
-
-    // 401: 세션 만료 → 로그인 카드로 전환
-    if (status === 401) {
-      stopTypingLoader(ST.recipeTypingHandle); ST.recipeTypingHandle = null;
-      var lw401 = document.getElementById('recipeLoadingWrap');
-      if(lw401) lw401.classList.remove('show');
+  .then(function(response){
+    // 401 (세션 만료) — 스트리밍 시작 전 JSON 에러로 떨어짐
+    if (response.status === 401) {
       var btn0 = document.getElementById('recipeBtn');
       btn0.disabled = false;
       btn0.textContent = '조색·레시피 가이드 보기';
+      var rw = document.getElementById('recipeWrap');
+      if(rw) rw.classList.remove('show');
       renderLoggedOut();
-      return;
+      return null;
     }
-    if (status !== 200) {
-      throw new Error('api error ' + status);
+    if (!response.ok) {
+      throw new Error('api error ' + response.status);
     }
 
+    // 응답이 SSE 스트림인지 일반 JSON인지 판별 (혹시 서버가 stream 미지원 시 fallback)
+    var contentType = response.headers.get('content-type') || '';
+    if (contentType.indexOf('text/event-stream') === -1) {
+      // 비-스트리밍 fallback
+      return response.json().then(function(data){
+        if(!data.content) throw new Error('no content');
+        fullText = data.content.map(function(b){ return b.text||''; }).join('');
+        // 비-스트리밍 시에도 파서에 통째로 흘려서 사고 흐름 박스에 표시
+        feedThoughtsParser(fullText);
+        return processFinalText(fullText);
+      });
+    }
+
+    // SSE 스트리밍 처리
+    var reader = response.body.getReader();
+    var decoder = new TextDecoder();
+    var sseBuffer = '';
+
+    function pump(){
+      return reader.read().then(function(res){
+        if (res.done) {
+          // 스트림 끝 — 누적된 fullText에서 최종 JSON 파싱
+          return processFinalText(fullText);
+        }
+
+        sseBuffer += decoder.decode(res.value, { stream: true });
+
+        // SSE 라인 단위 파싱 (마지막 미완성 라인은 다음 청크와 합치기)
+        var lines = sseBuffer.split('\n');
+        sseBuffer = lines.pop();
+
+        for (var i = 0; i < lines.length; i++){
+          var line = lines[i];
+          if (line.indexOf('data:') !== 0) continue;
+          var dataStr = line.slice(5).trim();
+          if (!dataStr) continue;
+          try {
+            var event = JSON.parse(dataStr);
+            if (event.type === 'content_block_delta' && event.delta && event.delta.type === 'text_delta') {
+              var delta = event.delta.text;
+              fullText += delta;
+              // ⭐ 사고 흐름 박스에 토큰 단위로 흘림
+              feedThoughtsParser(delta);
+            }
+          } catch(e){ /* 키프알라이브 / 빈 라인 무시 */ }
+        }
+        return pump();
+      });
+    }
+
+    return pump();
+  })
+  .catch(function(err){
+    console.error('[recipe stream]', err);
+    if(attempt + 1 < MAX_ATTEMPTS){
+      setTimeout(function(){ tryGenerateRecipe(sysPrompt, base64, mediaType, attempt+1); }, 500);
+      return;
+    }
+    var btn = document.getElementById('recipeBtn');
+    btn.disabled = false;
+    btn.textContent = '조색·레시피 가이드 보기';
+    showRecipeError('연결 오류. 네트워크를 확인해주세요.');
+  });
+
+  function processFinalText(txt){
     try {
-      if(!data.content) throw new Error('no content');
-      var txt = data.content.map(function(b){ return b.text||''; }).join('');
-      if(!txt.trim()) throw new Error('empty text');
+      if(!txt || !txt.trim()) throw new Error('empty text');
       txt = txt.replace(/```json|```/g,'').trim();
       var jsonMatch = txt.match(/\{[\s\S]*\}/);
       if(!jsonMatch) throw new Error('no json');
@@ -2475,7 +2547,8 @@ function tryGenerateRecipe(sysPrompt, base64, mediaType, attempt){
       ST.recipe = r;
       var btn = document.getElementById('recipeBtn');
       btn.textContent = '레시피 확인';
-      showRecipe(ST.recipe);
+      finalizeThoughtsParser();          // 모든 커서 페이드 처리
+      showRecipe(ST.recipe);              // thoughts 박스는 유지하면서 나머지 채움
     } catch(e) {
       if(attempt + 1 < MAX_ATTEMPTS){
         setTimeout(function(){ tryGenerateRecipe(sysPrompt, base64, mediaType, attempt+1); }, 500);
@@ -2486,17 +2559,115 @@ function tryGenerateRecipe(sysPrompt, base64, mediaType, attempt){
       btn.textContent = '조색·레시피 가이드 보기';
       showRecipeError('레시피 생성 실패. 다시 시도해주세요.');
     }
-  })
-  .catch(function(err){
-    if(attempt + 1 < MAX_ATTEMPTS){
-      setTimeout(function(){ tryGenerateRecipe(sysPrompt, base64, mediaType, attempt+1); }, 500);
-      return;
+  }
+}
+
+/* ══════════════════════════════════
+   스트리밍 사고 흐름 파서
+   누적 텍스트에서 "quick_thoughts": [ ... ] 배열 안의 문자열들을
+   토큰 단위로 추출해 화면에 즉시 출력
+══════════════════════════════════ */
+var thoughtsParserState = null;
+
+function resetThoughtsParser(){
+  thoughtsParserState = {
+    buffer: '',
+    arrayStartIdx: -1,
+    cursor: 0,
+    inString: false,
+    escape: false,
+    finished: false,
+    currentLineEl: null
+  };
+  var listEl = document.getElementById('recipeThoughtsList');
+  if(listEl) listEl.innerHTML = '<span class="thoughts-cursor">▍</span>';
+}
+
+function feedThoughtsParser(newText){
+  var s = thoughtsParserState;
+  if(!s || s.finished) return;
+  s.buffer += newText;
+
+  // quick_thoughts 배열 시작점 아직 못 찾았으면 찾기
+  if (s.arrayStartIdx < 0) {
+    var m = s.buffer.match(/"quick_thoughts"\s*:\s*\[/);
+    if (!m) return;
+    s.arrayStartIdx = m.index + m[0].length;
+    s.cursor = s.arrayStartIdx;
+    var listEl0 = document.getElementById('recipeThoughtsList');
+    if(listEl0) listEl0.innerHTML = ''; // 초기 커서 제거 (곧 첫 줄에서 새 커서 추가됨)
+  }
+
+  // cursor 부터 buffer 끝까지 한 글자씩 처리
+  for (var i = s.cursor; i < s.buffer.length; i++){
+    if (s.finished) break;
+    var c = s.buffer[i];
+
+    if (s.escape) {
+      var ech = c;
+      if (c === 'n') ech = '\n';
+      else if (c === 't') ech = '\t';
+      else if (c === 'r') ech = '';
+      else if (c === 'u') {
+        // \uXXXX 4글자 더 필요. 아직 안 왔으면 \ 위치로 cursor 되돌리고 대기
+        if (i + 4 >= s.buffer.length) {
+          s.cursor = i - 1;
+          s.escape = false;
+          return;
+        }
+        var hex = s.buffer.slice(i+1, i+5);
+        var code = parseInt(hex, 16);
+        ech = isNaN(code) ? '' : String.fromCharCode(code);
+        i += 4;
+      }
+      appendCharToCurrentThoughtLine(ech);
+      s.escape = false;
+    } else if (s.inString) {
+      if (c === '\\') {
+        s.escape = true;
+      } else if (c === '"') {
+        s.inString = false;
+        // 줄 종료
+        if (s.currentLineEl) s.currentLineEl = null;
+      } else {
+        appendCharToCurrentThoughtLine(c);
+      }
+    } else {
+      // 문자열 밖
+      if (c === '"') {
+        s.inString = true;
+        startNewThoughtLine();
+      } else if (c === ']') {
+        s.finished = true;
+      }
+      // 그 외(콤마/공백/개행)는 무시
     }
-    var btn = document.getElementById('recipeBtn');
-    btn.disabled = false;
-    btn.textContent = '조색·레시피 가이드 보기';
-    showRecipeError('연결 오류. 네트워크를 확인해주세요.');
-  });
+  }
+  s.cursor = s.buffer.length;
+}
+
+function startNewThoughtLine(){
+  var listEl = document.getElementById('recipeThoughtsList');
+  if(!listEl) return;
+  // 이전 줄 커서 페이드
+  listEl.querySelectorAll('.thoughts-cursor').forEach(function(c){ c.classList.add('done'); });
+
+  var div = document.createElement('span');
+  div.className = 'thoughts-line';
+  div.innerHTML = '<span class="thoughts-line-text"></span><span class="thoughts-cursor">▍</span>';
+  listEl.appendChild(div);
+  thoughtsParserState.currentLineEl = div.querySelector('.thoughts-line-text');
+}
+
+function appendCharToCurrentThoughtLine(ch){
+  var s = thoughtsParserState;
+  if (s && s.currentLineEl) s.currentLineEl.textContent += ch;
+}
+
+function finalizeThoughtsParser(){
+  var listEl = document.getElementById('recipeThoughtsList');
+  if(!listEl) return;
+  listEl.querySelectorAll('.thoughts-cursor').forEach(function(c){ c.classList.add('done'); });
 }
 
 
@@ -2660,7 +2831,7 @@ function stopTypingLoader(handle){
 
 
 function showRecipe(recipe){
-  // Step 2 로딩 카드 정지 및 숨김
+  // Step 2 로딩 카드 정지 및 숨김 (스트리밍 모드에서는 애초에 안 띄웠지만 안전 차원)
   stopTypingLoader(ST.recipeTypingHandle);
   ST.recipeTypingHandle = null;
   var loadingWrap = document.getElementById('recipeLoadingWrap');
@@ -2698,23 +2869,71 @@ function showRecipe(recipe){
     ? '<div class="recipe-summary-note"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>모질에 따라 탈색횟수는 편차가 있습니다. 잔류 색소를 확인하세요.</div>'
     : '';
 
-  // ✨ v3.2 quick_thoughts 박스 — 빈 박스로 시작, 타이핑은 아래 typeQuickThoughts에서
-  var thoughtsHtml = (Array.isArray(recipe.quick_thoughts) && recipe.quick_thoughts.length > 0)
-    ? '<div class="recipe-thoughts" id="recipeThoughts">'
-      + '<div class="recipe-thoughts-title">💡 AI 사고 흐름</div>'
-      + '<div class="recipe-thoughts-list" id="recipeThoughtsList"><span class="thoughts-cursor">▍</span></div>'
-    + '</div>'
-    : '';
+  // ⭐ 스트리밍 모드: 사고 흐름 박스(recipeThoughts)는 이미 떠 있고 토큰이 흘러 들어간 상태.
+  //   기존 박스를 보존하면서 그 앞에 summary/note, 뒤에 rviz를 삽입한다.
+  var existingThoughts = document.getElementById('recipeThoughts');
 
-  hdr.innerHTML = '<div class="recipe-from-to">' + summaryHtml + '</div>' + noteHtml
-    + thoughtsHtml
-    + '<div class="rviz-wrap" id="rvizWrap"></div>';
+  if (existingThoughts && existingThoughts.parentNode === hdr) {
+    // 1) thoughts 외 다른 자식 모두 제거 (혹시 이전 노드가 남아 있으면)
+    var kids = Array.prototype.slice.call(hdr.children);
+    for (var k = 0; k < kids.length; k++){
+      if (kids[k] !== existingThoughts) hdr.removeChild(kids[k]);
+    }
+    // 2) summary div 만들어서 thoughts 앞에 삽입
+    var summaryEl = document.createElement('div');
+    summaryEl.className = 'recipe-from-to';
+    summaryEl.innerHTML = summaryHtml;
+    hdr.insertBefore(summaryEl, existingThoughts);
+    // 3) note가 있으면 summary 다음, thoughts 앞에 삽입
+    if (noteHtml) {
+      var tmpWrap = document.createElement('div');
+      tmpWrap.innerHTML = noteHtml;
+      while (tmpWrap.firstChild) {
+        hdr.insertBefore(tmpWrap.firstChild, existingThoughts);
+      }
+    }
+    // 4) rviz는 thoughts 뒤에 추가
+    var rvizEl = document.createElement('div');
+    rvizEl.className = 'rviz-wrap';
+    rvizEl.id = 'rvizWrap';
+    hdr.appendChild(rvizEl);
+
+    // 비-스트리밍 fallback 또는 quick_thoughts가 화면에 안 찍힌 경우: 즉시 채움
+    var listEl = document.getElementById('recipeThoughtsList');
+    if (listEl && listEl.querySelectorAll('.thoughts-line').length === 0
+        && Array.isArray(recipe.quick_thoughts) && recipe.quick_thoughts.length > 0) {
+      listEl.innerHTML = '';
+      recipe.quick_thoughts.forEach(function(line){
+        var div = document.createElement('span');
+        div.className = 'thoughts-line';
+        var bodyEl = document.createElement('span');
+        bodyEl.className = 'thoughts-line-text';
+        bodyEl.textContent = String(line || '').replace(/\.+$/, '');
+        div.appendChild(bodyEl);
+        var dotsEl = document.createElement('span');
+        dotsEl.className = 'thoughts-line-dots';
+        dotsEl.textContent = '...';
+        div.appendChild(dotsEl);
+        listEl.appendChild(div);
+      });
+    }
+  } else {
+    // 사고 흐름 박스가 없는 케이스 (이론상 도달 안 함, 안전 차원의 fallback)
+    var thoughtsHtml = (Array.isArray(recipe.quick_thoughts) && recipe.quick_thoughts.length > 0)
+      ? '<div class="recipe-thoughts" id="recipeThoughts">'
+        + '<div class="recipe-thoughts-title">AI 사고 흐름</div>'
+        + '<div class="recipe-thoughts-list" id="recipeThoughtsList"><span class="thoughts-cursor">▍</span></div>'
+      + '</div>'
+      : '';
+    hdr.innerHTML = '<div class="recipe-from-to">' + summaryHtml + '</div>' + noteHtml
+      + thoughtsHtml
+      + '<div class="rviz-wrap" id="rvizWrap"></div>';
+  }
 
   var body = document.getElementById('recipeBody');
   var html = '';
 
   // ✨ v3.2.2: reasoning 토글 박스 제거 (호출 시간 단축 + UI 단순화).
-  // reasoning은 검수툴에서만 보고, 본화면은 quick_thoughts로 충분.
 
   if(recipe.tips){
     var blocksHtml = buildTipsBlocks(recipe.tips);
@@ -2731,7 +2950,6 @@ function showRecipe(recipe){
     }
     tipsInner += '</div>';
 
-    // 탭 제거 — 실무조언만 그대로 표시 (고객 안내 탭은 시술 안내로 대체되어 viz 행 안쪽으로 이동)
     html += tipsInner;
   }
   body.innerHTML = html;
@@ -2739,20 +2957,19 @@ function showRecipe(recipe){
   document.getElementById('recipeWrap').classList.add('show');
   document.getElementById('resetBtn').classList.add('show');
 
-  // ✨ v3.2 quick_thoughts 타이핑 시작 (레시피 카드 등장 직후 100ms부터)
-  if (Array.isArray(recipe.quick_thoughts) && recipe.quick_thoughts.length > 0) {
-    setTimeout(function(){ typeQuickThoughts(recipe.quick_thoughts); }, 100);
-  }
+  // ⭐ 스트리밍 모드: quick_thoughts는 이미 화면에 토큰 단위로 출력 완료됨.
+  //   별도 typeQuickThoughts 호출 불필요.
 
-  // 3D 조색 가이드 시각화 초기화 (1 RAF로 paint 보장, 딜레이 최소화)
+  // 3D 조색 가이드 시각화 초기화
   requestAnimationFrame(function(){
     try { vizRecipeInit(recipe, ST.analysis); }
     catch(e){
       var w = document.getElementById('rvizWrap');
       if(w) w.style.display = 'none';
     }
-    // 즉시 스크롤 (이전 200ms setTimeout 제거)
-    document.getElementById('recipeWrap').scrollIntoView({behavior:'smooth', block:'start'});
+    // 사용자가 사고 흐름을 보고 있던 위치에서 살짝만 보정 — block:'nearest'
+    var rw = document.getElementById('recipeWrap');
+    if(rw) rw.scrollIntoView({behavior:'smooth', block:'nearest'});
   });
 
 }
