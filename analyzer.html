@@ -110,15 +110,7 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 .recipe-tab-content{display:none}
 .recipe-tab-content.active{display:block}
 /* 고객 안내 본문 */
-.customer-guide-body{background:#FBF7F1;border:1px solid #EDE6DA;border-radius:10px;padding:16px;font-size:13px;color:#4A443C;line-height:1.85;letter-spacing:-0.1px;white-space:pre-line}
-.customer-guide-body b{font-weight:700;color:#1C1917}
-.customer-guide-loading{background:#FBF7F1;border:1px solid #EDE6DA;border-radius:10px;padding:28px 16px;text-align:center;font-size:13px;color:#8B7355}
-.customer-guide-loading .dots{display:inline-block;margin-left:2px}
-.customer-guide-loading .dots::after{content:'';animation:dots 1.4s infinite}
 @keyframes dots{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}100%{content:''}}
-.customer-guide-error{background:#FBF7F1;border:1px solid #EDE6DA;border-radius:10px;padding:20px 16px;text-align:center;font-size:13px;color:#8B7355;line-height:1.7}
-.customer-guide-retry{display:inline-block;margin-top:10px;padding:8px 16px;background:#fff;border:1px solid #8B7355;border-radius:8px;font-size:12px;font-weight:600;color:#8B7355;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent}
-.customer-guide-retry:active{background:#8B7355;color:#fff}
 .recipe-summary-note{font-size:12px;color:#8B7355;margin-top:8px;line-height:1.6;background:#FFF8E7;border-radius:8px;padding:10px 12px;font-weight:500}
 
 /* AI 사고 흐름 박스 (quick_thoughts) */
@@ -234,6 +226,8 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 .rviz-base-text{text-align:center;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(139,115,85,0.2)}
 .rviz-base-main{font-size:11.5px;font-weight:700;color:#1C1917}
 .rviz-base-sub{font-size:9.5px;color:#8B7355;margin-top:1px}
+.rviz-care-note{margin-top:8px;padding-top:8px;border-top:1px dashed rgba(139,115,85,0.25);font-size:10.5px;color:#6B5C48;line-height:1.55;letter-spacing:-0.1px}
+.rviz-care-note b{color:#1A1814;font-weight:700}
 </style>
 </head>
 <body>
@@ -2154,22 +2148,6 @@ function buildAnalysisPrompt(){ return ANALYSIS_PROMPT; }
 function buildRecipePrompt(){ return RECIPE_PROMPT; }
 
 /* ── 고객 안내 프롬프트 (검수툴에 별도 존재하지 않음, 필요 시 여기서 튜닝) ── */
-const CUSTOMER_GUIDE_PROMPT = `너는 15년차 헤어 컬러리스트. 오늘 시술 전 고객에게 간략한 시술 과정과 클리닉 관리 권장을 안내한다. 영업적·전문적이지 않고 부드러운 권유 톤.
-
-본문 3문단:
-1) summary의 권장 경로 기반 시술 과정 (탈색 횟수 숫자 금지 — "다량 탈색 공정" 같은 완곡한 표현)
-2) 매 시술마다 <b>전처리</b>와 <b>중간 클리닉</b>을 받으시면 손상이 누적되지 않아 더 안정적이라는 권유
-3) 홈케어: <b>산성 pH 샴푸</b>와 주 2~3회 영양 트리트먼트 권장. 타겟이 <b>애쉬·쿨 계열</b>이면 <b>바이올렛·실버 보색 샴푸</b> 추가 권장 (그 외 계열은 보색 샴푸 언급 금지).
-
-말투: "~권장드립니다"/"~좋습니다" 제안형. 각 문단 2~3문장. 문단 사이 \\n\\n.
-금지: "사멸세포" 같은 공포 단어, 브랜드명·가격, 팔레트 재료명(애쉬 염모제 등), 영어 전문용어(pH 예외), 탈색 횟수 숫자.
-핵심 용어만 <b>태그</b>로 강조.
-
-출력 (오직 JSON 하나, 코드블록·설명 금지):
-{"title":"고객님께 권장드릴 내용","body":"본문 (문단 사이 \\n\\n)"}`;
-
-function buildCustomerGuidePrompt(){ return CUSTOMER_GUIDE_PROMPT; }
-
 
 
 /* ══════════════════════════════════
@@ -2753,19 +2731,8 @@ function showRecipe(recipe){
     }
     tipsInner += '</div>';
 
-    // 탭 구조: [실무조언(기본)] [고객 안내] — 기본 선택 = 실무조언
-    html += '<div class="recipe-tabs" id="recipeTabs">'
-         +   '<div class="recipe-tab-bar">'
-         +     '<button type="button" class="recipe-tab-btn active" onclick="switchRecipeTab(\'tips\')" id="recipeTabTips">실무조언</button>'
-         +     '<button type="button" class="recipe-tab-btn" onclick="switchRecipeTab(\'customer\')" id="recipeTabCustomer">고객님께 권장드릴 내용</button>'
-         +   '</div>'
-         +   '<div class="recipe-tab-content active" id="recipeTabContentTips">'
-         +     tipsInner
-         +   '</div>'
-         +   '<div class="recipe-tab-content" id="recipeTabContentCustomer">'
-         +     '<div class="customer-guide-loading">AI가 안내를 준비 중입니다<span class="dots"></span></div>'
-         +   '</div>'
-         + '</div>';
+    // 탭 제거 — 실무조언만 그대로 표시 (고객 안내 탭은 시술 안내로 대체되어 viz 행 안쪽으로 이동)
+    html += tipsInner;
   }
   body.innerHTML = html;
 
@@ -2788,10 +2755,6 @@ function showRecipe(recipe){
     document.getElementById('recipeWrap').scrollIntoView({behavior:'smooth', block:'start'});
   });
 
-  // 고객 안내 자동 호출 (백그라운드)
-  if(recipe.summary){
-    tryGenerateCustomerGuide(recipe.summary, 0);
-  }
 }
 
 // ✨ v3.2.6 quick_thoughts 타이핑 함수 (본문 통째 + 점 똑똑똑 방식)
@@ -2889,102 +2852,6 @@ function showRecipeError(detail){
   var msg = '레시피 생성에 실패했어요.';
   if(detail) msg += '\n\n[디버그 정보]\n' + detail;
   alert(msg);
-}
-
-/* ══════════════════════════════════
-   탭 전환 (고객 안내 / 실무조언)
-══════════════════════════════════ */
-function switchRecipeTab(tab){
-  var btnC = document.getElementById('recipeTabCustomer');
-  var btnT = document.getElementById('recipeTabTips');
-  var cC = document.getElementById('recipeTabContentCustomer');
-  var cT = document.getElementById('recipeTabContentTips');
-  if(!btnC || !btnT || !cC || !cT) return;
-  if(tab === 'customer'){
-    btnC.classList.add('active'); btnT.classList.remove('active');
-    cC.classList.add('active');   cT.classList.remove('active');
-  } else {
-    btnC.classList.remove('active'); btnT.classList.add('active');
-    cC.classList.remove('active');   cT.classList.add('active');
-  }
-}
-
-/* ══════════════════════════════════
-   고객 안내 생성 (Step 3)
-   - stage: 'customer_message' → 서버 skipCharge
-   - 레시피 생성 성공 후 자동 호출 (백그라운드)
-   - 결과는 #recipeTabContentCustomer에 렌더
-══════════════════════════════════ */
-function tryGenerateCustomerGuide(recipeSummary, attempt){
-  var MAX_ATTEMPTS = 2;
-  var container = document.getElementById('recipeTabContentCustomer');
-  if(!container) return;
-
-  fetch(API_URL, {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
-      stage: 'customer_message',
-      system: [{
-        type: 'text',
-        text: buildCustomerGuidePrompt(),
-        cache_control: { type: 'ephemeral' }
-      }],
-      messages: [{
-        role: 'user',
-        content: [{ type: 'text', text: '오늘 고객의 권장 레시피: ' + recipeSummary + '\n\n이 고객에게 전할 시술 전·후 관리 안내문을 생성해.' }]
-      }]
-    })
-  })
-  .then(function(r){ return r.json().then(function(data){ return {status: r.status, data: data}; }); })
-  .then(function(res){
-    var status = res.status;
-    var data = res.data;
-
-    if(status !== 200){
-      if(status === 401){ renderLoggedOut(); return; }
-      throw new Error('api error ' + status);
-    }
-
-    if(!data.content) throw new Error('no content');
-    var txt = data.content.map(function(b){ return b.text||''; }).join('');
-    if(!txt.trim()) throw new Error('empty text');
-    txt = txt.replace(/```json|```/g,'').trim();
-    var jsonMatch = txt.match(/\{[\s\S]*\}/);
-    if(!jsonMatch) throw new Error('no json');
-    var g = JSON.parse(jsonMatch[0]);
-    if(!g.body) throw new Error('no body');
-
-    renderCustomerGuide(g);
-  })
-  .catch(function(err){
-    if(attempt + 1 < MAX_ATTEMPTS){
-      setTimeout(function(){ tryGenerateCustomerGuide(recipeSummary, attempt + 1); }, 600);
-      return;
-    }
-    // 최종 실패 → 에러 상태 + 재시도 버튼
-    container.innerHTML = '<div class="customer-guide-error">안내 생성이 지연되고 있어요.<br>잠시 후 다시 시도해주세요.<br><button type="button" class="customer-guide-retry" onclick="retryCustomerGuide()">다시 시도</button></div>';
-  });
-}
-
-function renderCustomerGuide(guide){
-  var container = document.getElementById('recipeTabContentCustomer');
-  if(!container) return;
-  var body = (guide.body || '').replace(/\n/g, '<br>');
-  container.innerHTML = '<div class="customer-guide-body">' + body + '</div>';
-}
-
-function retryCustomerGuide(){
-  var container = document.getElementById('recipeTabContentCustomer');
-  if(container){
-    container.innerHTML = '<div class="customer-guide-loading">AI가 안내를 준비 중입니다<span class="dots"></span></div>';
-  }
-  if(ST.recipe && ST.recipe.summary){
-    tryGenerateCustomerGuide(ST.recipe.summary, 0);
-  }
 }
 
 /* ══════════════════════════════════
@@ -3125,6 +2992,18 @@ function rvizPhotoBase(){
   return (typeof window !== 'undefined' && window.RVIZ_PHOTO_BASE_OVERRIDE) || RVIZ_PHOTO_BASE;
 }
 
+// 시술 안내 — base_stage 기준 2분기 고정 문구 (API 호출 X)
+function rvizBuildCareNote(baseStage){
+  if(baseStage === 'virgin' || baseStage === 'lv12'){
+    return '<b>12~13레벨 리프팅 시술입니다.</b><br>' +
+           '산화제를 이용해 멜라닌을 충분히 리프팅한 뒤 염색하는 시술입니다. ' +
+           '전처리, 중간 클리닉, 후처리 케어가 필수입니다.';
+  }
+  // lv14 / lv16 / lv18 — 탈색 케이스
+  return '<b>다수의 탈색이 예상되는 시술입니다.</b><br>' +
+         '전처리와 탈색 시술 중간 안정화 작업, 후처리 케어가 필수입니다.';
+}
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 메인 렌더 함수 — recipe.viz 받아서 색칩 시각화
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -3182,6 +3061,7 @@ function vizRecipeInit(recipe, analysis){
   if(finalHex){
     var glowSoft = rvizHexToRgba(finalHex, 0.45);
     var glowStrong = rvizHexToRgba(finalHex, 0.7);
+    var careNote = rvizBuildCareNote(baseStage);
     finalRow =
       '<div class="rviz-final-row">' +
         '<div class="rviz-final-chip" style="background:' + rvizChipBg(finalHex) + ';--rviz-glow:' + glowSoft + ';--rviz-glow-strong:' + glowStrong + '"></div>' +
@@ -3189,6 +3069,7 @@ function vizRecipeInit(recipe, analysis){
           '<div class="rviz-final-label">최종 수렴</div>' +
           '<div class="rviz-final-name">' + rvizEsc(finalLabel) + '</div>' +
           '<div class="rviz-final-hex">' + rvizEsc(finalHex.toUpperCase()) + '</div>' +
+          (careNote ? '<div class="rviz-care-note">' + careNote + '</div>' : '') +
         '</div>' +
       '</div>';
   }
