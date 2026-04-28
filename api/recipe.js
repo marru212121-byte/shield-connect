@@ -1,26 +1,16 @@
 // api/recipe.js
 // ═══════════════════════════════════════════════════════════════
-// AI 분석 엔드포인트 (member_id 기반 + 크레딧 차감)
+// AI 분석 엔드포인트 (member_id 기반 + 크레딧 차감 + 스트리밍 지원)
 // ═══════════════════════════════════════════════════════════════
 // 호출 주체: analyzer.html, cut-analyzer.html (프론트)
 // 처리 흐름:
 //   1. 세션 검증 (쿠키에서 member_id 추출) — stage 무관 항상 수행
 //   2. stage가 skip 대상이면 크레딧 차감 skip, 아니면 1크레딧 차감
 //      skip 대상: 'recipe_only' (Step 2 레시피), 'customer_message' (고객 안내)
-//      그 외 stage 없음: Step 1 분석, cut-analyzer 1회 호출 → 1크레딧 차감
 //   3. Claude API 호출
+//      - body.stream === true 면 SSE 스트리밍 모드 (Anthropic SSE 그대로 클라이언트로 릴레이)
+//      - 아니면 기존 non-stream 모드 (JSON 한 번에 반환)
 //   4. 결과 반환
-//
-// ⚠️ 에러 응답 규칙 (프론트에서 이 code로 분기):
-//   401 { code: 'not_authenticated' }      → 로그인 필요
-//   402 { code: 'insufficient_credits' }   → 크레딧 부족, 충전 유도
-//   500 { code: 'server_error' }           → 내부 에러
-//   502 { code: 'anthropic_error' }        → Claude API 오류
-//   200 { content: [...] }                 → 정상 응답
-//
-// 🔒 보안 참고:
-//   skip 대상도 세션은 반드시 검증. 무한 호출 악용 의심 시 Step 9에서
-//   세션당 rate limit 검토.
 // ═══════════════════════════════════════════════════════════════
 
 import { getSessionFromRequest } from '../lib/session.js';
@@ -58,6 +48,7 @@ export default async function handler(req, res) {
   }
 
   const skipCharge = SKIP_CHARGE_STAGES.includes(stage);
+  const wantStream = body.stream === true;
   const supabase = getSupabase();
 
   // ─── 3. 크레딧 차감 (RPC) — skipCharge면 건너뜀 ─────────────
@@ -83,8 +74,6 @@ export default async function handler(req, res) {
 
     result = Array.isArray(consumeResult) ? consumeResult[0] : consumeResult;
 
-    // 신 스키마: { member_id, consumed: true/false, credits_used, credits_remaining }
-    // 구 스키마: { success: true/false, reason, credits_remaining, is_admin }
     const ok = result?.consumed === true || result?.success === true;
 
     if (!ok) {
@@ -132,6 +121,7 @@ export default async function handler(req, res) {
         max_tokens: max_tokens || 2000,
         system,
         messages,
+        ...(wantStream ? { stream: true } : {}),
       }),
     });
   } catch (err) {
@@ -161,9 +151,35 @@ export default async function handler(req, res) {
     });
   }
 
-  const aiData = await anthropicResponse.json();
+  // ─── 5-A. 스트리밍 응답 (SSE 릴레이) ────────────────────────
+  if (wantStream) {
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache, no-transform',
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no',
+    });
 
-  // ─── 5. 성공 응답 ────────────────────────────────────────────
+    // anthropicResponse.body 는 ReadableStream (Node 18+ / Vercel)
+    try {
+      const reader = anthropicResponse.body.getReader();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        res.write(Buffer.from(value));
+      }
+    } catch (err) {
+      console.error('[recipe] stream relay failed:', err);
+      try {
+        res.write(`event: error\ndata: ${JSON.stringify({ message: 'stream interrupted' })}\n\n`);
+      } catch (_) {}
+    }
+    res.end();
+    return;
+  }
+
+  // ─── 5-B. 일반(non-stream) 응답 ────────────────────────────
+  const aiData = await anthropicResponse.json();
   return res.status(200).json({
     content: aiData.content,
     credits_remaining: skipCharge ? undefined : result.credits_remaining,
