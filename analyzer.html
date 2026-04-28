@@ -219,6 +219,13 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 .rviz-chip-text{flex:1;min-width:0}
 .rviz-chip-label{font-size:9px;color:#8B7355;font-weight:600;margin-bottom:1px}
 .rviz-chip-value{font-size:11px;color:#1C1917;font-weight:600;line-height:1.3}
+/* 메인 염모제 — 재료별 swatch 분리 형식 */
+.rviz-chip-row-multi{flex-direction:column;align-items:stretch;gap:6px;padding:8px 10px}
+.rviz-chip-multi-head{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.rviz-chip-multi-head .rviz-chip-label{margin-bottom:0}
+.rviz-mini-chips{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.rviz-mini-chip{width:18px;height:18px;border-radius:50%;flex-shrink:0;box-shadow:inset -1.5px -1.5px 3px rgba(0,0,0,0.18),0 1px 2px rgba(0,0,0,0.08);border:0.5px solid rgba(0,0,0,0.05)}
+.rviz-chip-value-small{font-size:10.5px;color:#1C1917;font-weight:600;line-height:1.45;letter-spacing:-0.2px}
 .rviz-final-row{display:flex;align-items:center;gap:11px;padding:9px 11px;margin-top:8px;background:linear-gradient(135deg,rgba(255,255,255,0.7) 0%,rgba(245,238,222,0.5) 100%);border:1px solid rgba(139,115,85,0.2);border-radius:10px}
 .rviz-final-chip{width:34px;height:34px;border-radius:50%;flex-shrink:0;animation:rvizFinalPulse 2.5s ease-in-out infinite}
 @keyframes rvizFinalPulse{0%,100%{box-shadow:inset -3px -3px 6px rgba(0,0,0,0.25),0 0 12px var(--rviz-glow,rgba(107,92,194,0.4)),0 2px 6px rgba(0,0,0,0.1);transform:translateY(0)}50%{box-shadow:inset -3px -3px 6px rgba(0,0,0,0.25),0 0 22px var(--rviz-glow-strong,rgba(107,92,194,0.7)),0 4px 10px rgba(0,0,0,0.12);transform:translateY(-2px)}}
@@ -456,7 +463,7 @@ const RECIPE_PROMPT = `═══════════════════
   "tips": "블록별 실무조언",
   "virgin_recipe": null,
   "viz": {
-    "base_stage": "virgin | lv12 | lv14 | lv16 | lv18",
+    "base_stage": "virgin | lv12 | lv14 | lv16 | lv18  ★ 백모 K5 케이스: 무조건 lv18 (virgin/lv12/lv14/lv16 금지)",
     "neutralizer_hex": "#XXXXXX | null",
     "neutralizer_label": "보색 이름 | null",
     "main_color_hex": "#XXXXXX",
@@ -1253,6 +1260,8 @@ const RECIPE_PROMPT = `═══════════════════
 
 3) **권장 경로는 항상 "탈색 3회 이상 (18레벨)" 또는 백모 직접**
    · 14·16레벨 권장 금지 (백모는 이미 18레벨 이상 영역)
+   · **viz.base_stage 필드는 무조건 "lv18" 출력** (virgin·lv12·lv14·lv16 금지)
+   · 이미지 단계 라벨이 "탈색 3회 이상"으로 표기되어야 백모 케이스가 정확히 시각화됨
 
 4) **2갈래 레시피 중 하나만 선택** (아래 K5 본문 참조)
    · 다른 조합 호출 금지
@@ -1283,6 +1292,11 @@ const RECIPE_PROMPT = `═══════════════════
 사진에서 모발이 화이트·순백·아이스 플래티넘·백금발 수준으로 지배적.
 
 [2갈래 레시피 (다른 조합 금지)]
+
+★ 백모 시술의 핵심: **매우 밝은 명도의 염모제로 클리어까지 믹스하여 아이보리 언더톤을 살짝 중화하는 것**.
+   - 풀파워 발색 ❌ (백모 흡수력 폭발 → 무게감 누적)
+   - 강한 보색 중화 ❌ (잔류 부재 영역에 강보색 = 변질 폭발, [M1] 위반)
+   - 핵심: 살짝만 중화 + 농도 묽게 = 아이보리·미색 베이스가 "체인지"되어 보임
 
 A. 웜·베이지 방향:
 - **밝은 톤의 회갈빛브라운 + 핑크 컨트롤컬러 소량 + 클리어 다량 희석**
@@ -1476,8 +1490,15 @@ JSON:
    - "여기에 CC 더 넣으면 시뻘건 카퍼로 폭발 위험..."
 
    [백모 (K5)]
-   - "연노랑 언더톤에 염료 살짝 올려 중화하면서 백모로 체인지해야 할 듯..."
-   - "K5 발동..."
+   - "연노랑·아이보리 언더톤이라 염료 살짝 올려 중화..."
+   - "백모 매칭..." 또는 "K5 매칭..." (짧게)
+   - "매우 밝은 명도 염모제 + 클리어로 아이보리 언더톤 살짝 중화..."
+   - "풀파워 금지, 클리어 다량 희석으로 농도 낮춤..."
+
+   ★ 시스템 룰 어휘 노출 금지 (디자이너 친화 어조 위반):
+     - "발동 조건 매칭" / "키워드 + hex 매우 밝음 + 사진 직접 확인" 같은 시스템 룰 서술 금지
+     - "○○ 필수" 같은 단정 어휘 금지 → "○○로 농도 낮춤" / "○○로 무게감 방지" 식 직관 어휘
+     - "K5 매칭..." 정도까진 허용 (짧게, 디자이너에게 영역 신호용)
 
    [파스텔 + 16레벨]
    - "노랑기 살아있어서 바이올렛으로 중화하면서 색감 표현..."
@@ -1601,12 +1622,12 @@ JSON:
 
 [예시 4 — 백모 (K5)]
 [
-  "화이트·플래티넘 지배 → 백모 케이스 확정...",
-  "연노랑 언더톤에 염료 살짝 올려 중화하면서 백모로 체인지해야 할 듯...",
-  "K5 강제 발동...",
+  "전체 미색·아이스 화이트 지배, 두상 상단 일부만 황금빛 소량...",
+  "염료 무게감 거의 없음, 투명감은 염료 부재 + 멜라닌 거의 없음 신호...",
+  "백모 매칭, 연노랑·아이보리 언더톤이라 살짝만 중화...",
   "사진 따뜻한 인상이라 웜 베이지 방향 우세...",
-  "밝은 톤의 회갈빛브라운 + 핑크 컨트롤컬러 소량...",
-  "클리어 다량 희석으로 농도 낮춤...",
+  "매우 밝은 명도의 회갈빛브라운 + 핑크 컨트롤컬러 소량...",
+  "클리어 다량 희석으로 농도 낮춰 아이보리 언더톤 살짝 중화...",
   "밝은 톤의 회갈빛브라운 + 핑크 컨트롤컬러 + 클리어로 마무리...",
   "버진모에서 한번에 가는 건 빡셀 수 있으니까 단계별 시술 권장도 안내해야 할 듯..."
 ]
@@ -2100,6 +2121,8 @@ viz 출력 예시 (케이스별):
     - 백모 발동 조건 매칭 시 클리어 누락 = 무효 출력 (시술 실패 위험)
     - 백모 발동 조건 매칭 시 "밝은 톤의" 접두사 누락 = 무효 출력
     - 백모 발동 조건 매칭 시 K5 2갈래 외 조합 호출 = 무효 출력
+    - 백모 발동 조건 매칭 시 viz.base_stage ≠ "lv18" = 무효 출력
+      (이미지 단계 라벨이 "탈색 3회 이상"이 아닌 "버진모"·"리프팅"으로 표시되면 시술 안내까지 어긋남)
     - 이 위반은 일반 오류와 다른 카테고리 — 시술자가 그대로 진행 시 회복 불가
 
 16) ⚠️ 18레벨 영역 (K1 5번) 출력 의무:
@@ -3245,12 +3268,13 @@ var RVIZ_PHOTO_BASE = '/images/';
 // (로컬 테스트 시: window.RVIZ_PHOTO_BASE_OVERRIDE = './' 식으로 외부에서 덮어쓰기 가능)
 
 // 단계별 라벨 (사진 인디케이터 + 베이스 텍스트)
+// sub 표현은 디자이너 친화 표준 — 잔류 색감 표기 통일
 var RVIZ_STAGE_LABELS = {
-  virgin: { main: '버진모', sub: '5레벨 흑갈색' },
-  lv12:   { main: '12~13레벨 리프팅', sub: '적갈색 잔류' },
-  lv14:   { main: '탈색 1회 이상', sub: '14레벨 · 노랑기에 주황기 살짝' },
-  lv16:   { main: '탈색 2회 이상', sub: '16레벨 · 노랑 잔류' },
-  lv18:   { main: '탈색 3회 이상', sub: '18레벨 · 연노랑' }
+  virgin: { main: '버진모',          sub: '5레벨 흑갈색' },
+  lv12:   { main: '12~13레벨 리프팅', sub: '적갈색~주황기' },
+  lv14:   { main: '탈색 1회 이상',    sub: '주황기에서 밝은 브라운기' },
+  lv16:   { main: '탈색 2회 이상',    sub: '노랑기~연노랑' },
+  lv18:   { main: '탈색 3회 이상',    sub: '연노랑~아이보리' }
 };
 
 // 페이드 시퀀스 — 시작 단계부터 target 단계까지
@@ -3297,6 +3321,60 @@ function rvizChipBg(hex){
          rvizLighten(nh, 0.25) + ' 0%, ' +
          nh + ' 60%, ' +
          rvizDarken(nh, 0.35) + ' 100%)';
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 재료별 swatch 매핑 — main_color_label 파싱 전용
+// 시스템 프롬프트는 손대지 않고, 클라이언트에서 라벨 텍스트만 파싱.
+// hex 값은 헤어 컬러 시각화용 표준 톤. 정확한 컬러칩 아님 (UI 표지 용도).
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+var RVIZ_INGREDIENT_HEX = {
+  // 염모제 12종
+  '카키빛애쉬':   '#6F7E6A',
+  '회갈빛브라운': '#998878',
+  '레드바이올렛': '#8E4565',
+  '카키':         '#6B7755',
+  '블루':         '#4A6FA5',
+  '애쉬':         '#7B8896',
+  '바이올렛':     '#8E63B5',
+  '레드':         '#B85450',
+  '핑크':         '#D88494',
+  '그린':         '#6B9670',
+  '오렌지':       '#D88B5A',
+  '옐로우':       '#C9A85A',
+  // 보조재
+  '클리어':       '#F5F0E8'   // 살짝 베이지 톤의 흰색 (구체감 위해)
+};
+
+// 라벨 파싱 — "밝은 톤 바이올렛 + 밝은 톤 애쉬 + 클리어" → 재료 배열
+function rvizParseMainIngredients(label){
+  if (!label || typeof label !== 'string') return [];
+  // "+" 로 분할. 단순한 한국어 텍스트 파싱이라 정규식 불필요.
+  var parts = label.split('+').map(function(s){ return s.trim(); });
+  // 가장 긴 키부터 매칭 (회갈빛브라운이 그냥 "브라운"보다 먼저)
+  var keys = Object.keys(RVIZ_INGREDIENT_HEX).sort(function(a,b){ return b.length - a.length; });
+  var result = [];
+  parts.forEach(function(part){
+    // 컨트롤컬러는 보색 행에 별도 표시되므로 메인 swatch에서 제외 (중복 방지)
+    if (part.indexOf('컨트롤컬러') !== -1) return;
+    var matched = null;
+    for (var i = 0; i < keys.length; i++){
+      if (part.indexOf(keys[i]) !== -1) { matched = keys[i]; break; }
+    }
+    if (!matched) return;
+    var baseHex = RVIZ_INGREDIENT_HEX[matched];
+    // 톤 접두사 조정 (밝은/어두운/리프팅용)
+    var hex = baseHex;
+    if (part.indexOf('밝은 톤') !== -1 || part.indexOf('밝은톤') !== -1) {
+      hex = rvizLighten(baseHex, 0.30);
+    } else if (part.indexOf('어두운 톤') !== -1 || part.indexOf('어두운톤') !== -1) {
+      hex = rvizDarken(baseHex, 0.25);
+    } else if (part.indexOf('13·15레벨') !== -1 || part.indexOf('리프팅용') !== -1) {
+      hex = rvizLighten(baseHex, 0.15);
+    }
+    result.push({ name: matched, hex: hex, rawLabel: part });
+  });
+  return result;
 }
 
 function rvizLighten(hex, amt){
@@ -3381,14 +3459,26 @@ function vizRecipeInit(recipe, analysis){
         '</div>' +
       '</div>';
   }
-  if(mainColorHex){
+  if(mainColorHex || mainColorLabel){
+    // 재료별 swatch 분리
+    var ingredients = rvizParseMainIngredients(mainColorLabel || '');
+    var swatchHtml = '';
+    if (ingredients.length > 0) {
+      swatchHtml = ingredients.map(function(ing){
+        return '<div class="rviz-mini-chip" style="background:' + rvizChipBg(ing.hex) + '" title="' + rvizEsc(ing.name) + '"></div>';
+      }).join('');
+    } else if (mainColorHex) {
+      // 파싱 실패 시 — 단일 swatch fallback (기존 호환)
+      swatchHtml = '<div class="rviz-mini-chip" style="background:' + rvizChipBg(mainColorHex) + '"></div>';
+    }
+
     chipRows +=
-      '<div class="rviz-chip-row">' +
-        '<div class="rviz-chip" style="background:' + rvizChipBg(mainColorHex) + '"></div>' +
-        '<div class="rviz-chip-text">' +
+      '<div class="rviz-chip-row rviz-chip-row-multi">' +
+        '<div class="rviz-chip-multi-head">' +
           '<div class="rviz-chip-label">메인 염모제</div>' +
-          '<div class="rviz-chip-value">' + rvizEsc(mainColorLabel) + '</div>' +
+          '<div class="rviz-mini-chips">' + swatchHtml + '</div>' +
         '</div>' +
+        '<div class="rviz-chip-value-small">' + rvizEsc(mainColorLabel) + '</div>' +
       '</div>';
   }
 
