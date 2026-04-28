@@ -2453,6 +2453,10 @@ function tryGenerateRecipe(sysPrompt, base64, mediaType, attempt){
 
       if(!r.summary || !r.tips) throw new Error('레시피 필수 필드 누락');
 
+      // 백모 변형 표기를 표준 풀네임으로 통일 (시스템 프롬프트 0줄 변경)
+      r.summary = rvizUnifyLabels(r.summary);
+      r.tips = rvizUnifyLabels(r.tips);
+
       ST.recipe = r;
       var btn = document.getElementById('recipeBtn');
       btn.textContent = '레시피 확인';
@@ -3152,6 +3156,21 @@ var RVIZ_PHOTO_BASE = '/images/';
 
 // 단계별 라벨 (사진 인디케이터 + 베이스 텍스트)
 // sub 표현은 디자이너 친화 표준 — 잔류 색감 표기 통일
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 백모 케이스 표기 통일 — AI가 "백모 (또는 18레벨 미색 베이스)" 변형 형식으로
+// 출력했을 때 표준 풀네임 "탈색 3회 이상 (18레벨 · 연노랑~아이보리 잔류)"로 치환.
+// 시스템 프롬프트 0줄 변경. AI 추론 영향 0. 순수 출력 후처리.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function rvizUnifyLabels(text){
+  if (!text) return text;
+  var t = String(text);
+  // summary 변형: "백모(또는 18레벨 미색 베이스) 기반으로/기준으로" → "탈색 3회 이상 후(18레벨 · 연노랑~아이보리 잔류) "
+  t = t.replace(/백모\s*\(\s*또는\s*18\s*레벨\s*미색\s*베이스\s*\)\s*(?:기반으로|기준으로)\s*/g, '탈색 3회 이상 후(18레벨 · 연노랑~아이보리 잔류) ');
+  // 권장 경로 헤드라인: "백모 (또는 18레벨 미색 베이스)" → "탈색 3회 이상 (18레벨 · 연노랑~아이보리 잔류)"
+  t = t.replace(/백모\s*\(\s*또는\s*18\s*레벨\s*미색\s*베이스\s*\)/g, '탈색 3회 이상 (18레벨 · 연노랑~아이보리 잔류)');
+  return t;
+}
+
 var RVIZ_STAGE_LABELS = {
   virgin: { main: '버진모',          sub: '5레벨 흑갈색' },
   lv12:   { main: '12~13레벨 리프팅', sub: '적갈색~주황기' },
