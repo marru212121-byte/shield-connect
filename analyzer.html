@@ -461,16 +461,7 @@ const RECIPE_PROMPT = `═══════════════════
   "summary": "한 줄 요약",
   "reasoning": "[1] K4 자체 관찰 / [2] STEP1 비교 / [3] K1 역추론 ([1] 신호 인용 의무) / [4] [M6][b] 매핑 (회갈빛브라운 자기검증 의무) — 4단계 양식 강제 (자유 산문 금지)",
   "tips": "블록별 실무조언",
-  "virgin_recipe": null,
-  "viz": {
-    "base_stage": "virgin | lv12 | lv14 | lv16 | lv18  ★ 백모 K5 케이스: 무조건 lv18 (virgin/lv12/lv14/lv16 금지)",
-    "neutralizer_hex": "#XXXXXX | null",
-    "neutralizer_label": "보색 이름 | null",
-    "main_color_hex": "#XXXXXX",
-    "main_color_label": "메인 염모제 조합명",
-    "final_hex": "#XXXXXX",
-    "final_label": "최종 색감명"
-  }
+  "virgin_recipe": null
 }
 
 ★ 첫 글자 {, 마지막 }.
@@ -1260,8 +1251,6 @@ const RECIPE_PROMPT = `═══════════════════
 
 3) **권장 경로는 항상 "탈색 3회 이상 (18레벨)" 또는 백모 직접**
    · 14·16레벨 권장 금지 (백모는 이미 18레벨 이상 영역)
-   · **viz.base_stage 필드는 무조건 "lv18" 출력** (virgin·lv12·lv14·lv16 금지)
-   · 이미지 단계 라벨이 "탈색 3회 이상"으로 표기되어야 백모 케이스가 정확히 시각화됨
 
 4) **2갈래 레시피 중 하나만 선택** (아래 K5 본문 참조)
    · 다른 조합 호출 금지
@@ -1979,110 +1968,6 @@ JSON:
 ══════════════════════════════
 
 ══════════════════════════════════════════════
-■ viz 필드 (시각화 데이터 — 4필드 필수)
-══════════════════════════════════════════════
-
-원리: 결과 카드 우측에 사진 페이드 + 색칩으로 표시. AI 출력 그대로 시각화 (코드 추측 금지).
-
-[필드 1] base_stage — 권장 베이스 사진 매핑
-  케이스 A (탈색 1회 이상) → "lv14"
-  케이스 B (탈색 2회 이상) → "lv16"
-  케이스 C (탈색 3회 이상) → "lv18"
-  케이스 D (12~13레벨 리프팅 후 재염색 / [K2] 게이트 발동) → "virgin"
-  케이스 E (백모) → "virgin"
-  ★ 외관상 다른 레벨로 보여도 권장 베이스 기준으로 매핑 ([K2] 게이트 발동 시 적색 멜라닌 자산 보존이 우선).
-
-[필드 2] neutralizer_hex — 보색 컨트롤컬러 hex (보색 호출 시만, 그 외 null)
-  ★ 보색 컨트롤컬러를 실제로 호출한 경우만 hex 박음. 호출 안 했으면 null.
-  ★ 케이스 D·E (버진모 영역, 12~13 리프팅) 같이 보색 단계 없는 케이스는 항상 null.
-  
-  보색 hex 매핑 ([K3] 보색 공식 따라):
-    블루   #5A7FBB
-    바이올렛 #8968B8
-    그린    #6D9B5E
-    핑크    #E8A0B0
-    레드    #C26890
-    오렌지  #E89060
-    애쉬    #7A8B92
-    매트    #6B8B5C
-
-[필드 3] neutralizer_label — 보색 이름 (필드 2가 null이면 null)
-  예: "블루", "바이올렛", "그린", "핑크"
-
-[필드 4] main_color_hex — 메인 염모제 조합의 시각 hex
-  ★ 메인 염모제(또는 CC 단독 케이스)의 명도+색상 매핑.
-  
-  메인 색감 hex 매핑표 (명도 × 색상):
-    어두운 톤 블루 + 애쉬     #3E5670
-    중명도 블루                #5A7FBB
-    밝은 톤 블루              #8FA5C8
-    어두운 톤 바이올렛         #4A3D8F
-    중명도 바이올렛            #8968B8
-    밝은 톤 바이올렛          #B5A8D5
-    어두운 톤 매트            #4A5C3E
-    중명도 매트              #6B8B5C
-    어두운 톤 레드 (딥 와인)   #6B1F3A
-    중명도 레드 (체리·로즈)    #B25080
-    레드바이올렛              #8B2D45
-    어두운 톤 코퍼·캐러멜      #8B4513
-    중명도 코퍼               #C26F3F
-    밝은 톤 베이지·골드        #C9A878
-    핑크 (CC 단독)            #E8A0B0
-    파스텔 핑크               #F5DCDC
-  
-  ★ 위 표에 없으면 가장 가까운 항목 사용. 새 hex 만들지 말 것.
-
-[필드 5] main_color_label — 메인 염모제 조합명
-  예: "어두운 톤 블루 + 애쉬", "레드바이올렛 + 레드 컨트롤컬러", "핑크 + 클리어 다량"
-
-[필드 6] final_hex — 최종 수렴 색 hex
-  ★ analysis.hex 그대로 사용 (1차 분석 결과의 hex 필드).
-  ★ 1차 분석이 없거나 hex가 없으면 본인이 결정한 최종 색감 hex.
-
-[필드 7] final_label — 최종 색감 이름
-  예: "딥 와인", "스모키 라벤더", "잿빛 블루 그레이", "파스텔 핑크"
-  ★ analysis.color_name이 있으면 그대로 사용.
-
-──────────────────────────────
-
-viz 출력 예시 (케이스별):
-
-▶ 케이스 1 — 탈색 1회 이상 + 어두운 톤 블루 + 애쉬:
-   "viz": {
-     "base_stage": "lv14",
-     "neutralizer_hex": "#5A7FBB",
-     "neutralizer_label": "블루",
-     "main_color_hex": "#3E5670",
-     "main_color_label": "어두운 톤 블루 + 애쉬",
-     "final_hex": "#5C7A95",
-     "final_label": "잿빛 블루 그레이"
-   }
-
-▶ 케이스 D — 딥 와인 ([K2] 게이트 발동):
-   "viz": {
-     "base_stage": "virgin",
-     "neutralizer_hex": null,
-     "neutralizer_label": null,
-     "main_color_hex": "#6B1F3A",
-     "main_color_label": "레드바이올렛 + 레드 컨트롤컬러",
-     "final_hex": "#6B1F3A",
-     "final_label": "딥 와인"
-   }
-
-▶ 케이스 E — 백모 + 핑크 CC:
-   "viz": {
-     "base_stage": "virgin",
-     "neutralizer_hex": null,
-     "neutralizer_label": null,
-     "main_color_hex": "#E8A0B0",
-     "main_color_label": "핑크 + 클리어 다량",
-     "final_hex": "#F5DCDC",
-     "final_label": "파스텔 핑크"
-   }
-
-──────────────────────────────
-
-══════════════════════════════════════════════
 ■ 출력 규칙 (최종 점검)
 ══════════════════════════════════════════════
 
@@ -2121,8 +2006,6 @@ viz 출력 예시 (케이스별):
     - 백모 발동 조건 매칭 시 클리어 누락 = 무효 출력 (시술 실패 위험)
     - 백모 발동 조건 매칭 시 "밝은 톤의" 접두사 누락 = 무효 출력
     - 백모 발동 조건 매칭 시 K5 2갈래 외 조합 호출 = 무효 출력
-    - 백모 발동 조건 매칭 시 viz.base_stage ≠ "lv18" = 무효 출력
-      (이미지 단계 라벨이 "탈색 3회 이상"이 아닌 "버진모"·"리프팅"으로 표시되면 시술 안내까지 어긋남)
     - 이 위반은 일반 오류와 다른 카테고리 — 시술자가 그대로 진행 시 회복 불가
 
 16) ⚠️ 18레벨 영역 (K1 5번) 출력 의무:
@@ -3363,14 +3246,12 @@ function rvizParseMainIngredients(label){
     }
     if (!matched) return;
     var baseHex = RVIZ_INGREDIENT_HEX[matched];
-    // 톤 접두사 조정 (밝은/어두운/리프팅용)
+    // 톤 접두사 조정 (밝은/어두운)
     var hex = baseHex;
     if (part.indexOf('밝은 톤') !== -1 || part.indexOf('밝은톤') !== -1) {
-      hex = rvizLighten(baseHex, 0.30);
+      hex = rvizLighten(baseHex, 0.55);
     } else if (part.indexOf('어두운 톤') !== -1 || part.indexOf('어두운톤') !== -1) {
-      hex = rvizDarken(baseHex, 0.25);
-    } else if (part.indexOf('13·15레벨') !== -1 || part.indexOf('리프팅용') !== -1) {
-      hex = rvizLighten(baseHex, 0.15);
+      hex = rvizDarken(baseHex, 0.50);
     }
     result.push({ name: matched, hex: hex, rawLabel: part });
   });
@@ -3419,6 +3300,78 @@ function rvizBuildCareNote(baseStage){
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 보색 컨트롤컬러 추출 — summary/tips에서 "○○ 컨트롤컬러" 매칭
+// 시스템 프롬프트 viz 출력 없이 텍스트로만 결정
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function rvizExtractNeutralizer(recipe){
+  if (!recipe) return { hex: null, label: null };
+  var text = String((recipe.summary || '') + ' ' + (recipe.tips || ''));
+  // 컨트롤컬러 8종 (긴 키부터 매칭)
+  var keys = ['바이올렛', '오렌지', '옐로우', '블루', '애쉬', '핑크', '그린', '레드'];
+  for (var i = 0; i < keys.length; i++){
+    var k = keys[i];
+    var re = new RegExp(k + '\\s*컨트롤컬러');
+    if (re.test(text)) {
+      return {
+        hex: RVIZ_INGREDIENT_HEX[k] || null,
+        label: k
+      };
+    }
+  }
+  return { hex: null, label: null };
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 메인 염모제 라벨 추출 — summary 텍스트에서 메인 조합만 깔끔하게 추출
+// summary 형식 예:
+//   "탈색 3회 이상 후(백모...) 밝은 톤의 바이올렛 염모제와 밝은 톤의 애쉬 염모제, 클리어 다량 희석으로 착색하세요."
+//   → "밝은 톤의 바이올렛 염모제 + 밝은 톤의 애쉬 염모제 + 클리어 다량 희석"
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function rvizExtractMainLabel(recipe){
+  if (!recipe) return '';
+  var summary = String(recipe.summary || '');
+
+  // 1단계: 분리자 통일 ("와" / ", " → "+")
+  var t = summary
+    .replace(/염모제\s*와\s+/g, '염모제 + ')
+    .replace(/컨트롤컬러\s*와\s+/g, '컨트롤컬러 + ')
+    .replace(/,\s*/g, ' + ');
+
+  // 2단계: 시작 부분 제거 — "탈색 N회 이상 후(...)" / "리프팅 후 재염색으로" / "리프팅 후"
+  t = t.replace(/^.*?(?:후\s*\([^)]*\)|리프팅\s*후\s*재염색으로|리프팅\s*후\s*재염색|리프팅\s*후)\s*/, '');
+
+  // 3단계: 끝 부분 제거 — "으로 착색하세요." / "로 마무리" / "으로 진행" 등
+  t = t.replace(/\s*(?:으로|로)\s*(?:착색|마무리|진행)[^+]*$/, '');
+
+  return t.trim();
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 페이드 단계 결정 — summary/tips 텍스트만 보고 결정
+// AI의 viz.base_stage 출력은 무시. 시스템 프롬프트 0줄 추가.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function rvizInferBaseStageFromText(recipe){
+  if (!recipe) return null;
+  var text = ((recipe.summary || '') + ' ' + (recipe.tips || '')).replace(/\s+/g, ' ');
+  if (!text.trim()) return null;
+
+  // 우선순위 매칭 (위에서 아래)
+  // 백모 키워드 → 탈색 3회 이상 = lv18
+  if (/백모|화이트|순백|아이스\s*플래티넘|백금발|미색\s*베이스|아이보리/.test(text)) return 'lv18';
+  // 탈색 3회 이상 / 18레벨
+  if (/탈색\s*3회\s*이상|18\s*레벨/.test(text)) return 'lv18';
+  // 탈색 2회 이상 / 16레벨
+  if (/탈색\s*2회\s*이상|16\s*레벨/.test(text)) return 'lv16';
+  // 탈색 1회 이상 / 14레벨
+  if (/탈색\s*1회\s*이상|14\s*레벨/.test(text)) return 'lv14';
+  // 12~13레벨 리프팅
+  if (/12\s*~\s*13\s*레벨|리프팅\s*후\s*재염색/.test(text)) return 'lv12';
+  // 버진모 1스텝 (드묾)
+  if (/버진모\s*고명도|버진모\s*1\s*스텝/.test(text)) return 'virgin';
+  return null;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 메인 렌더 함수 — recipe.viz 받아서 색칩 시각화
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function vizRecipeInit(recipe, analysis){
@@ -3427,15 +3380,21 @@ function vizRecipeInit(recipe, analysis){
 
   rvizCleanup();
 
-  // viz 객체 추출 (하위 호환: recipe.viz가 없으면 안전 기본값)
-  var viz = (recipe && recipe.viz) ? recipe.viz : {};
-  var baseStage = (viz.base_stage && RVIZ_STAGE_LABELS[viz.base_stage]) ? viz.base_stage : 'lv14';
-  var neutralizerHex = rvizNormHex(viz.neutralizer_hex);
-  var neutralizerLabel = viz.neutralizer_label || (neutralizerHex ? '보색' : null);
-  var mainColorHex = rvizNormHex(viz.main_color_hex);
-  var mainColorLabel = viz.main_color_label || '메인 염모제';
-  var finalHex = rvizNormHex(viz.final_hex || (analysis && analysis.hex));
-  var finalLabel = viz.final_label || (analysis && analysis.color_name) || '최종';
+  // viz 객체는 더 이상 사용하지 않음 — recipe + analysis 텍스트로만 처리
+  // 페이드 단계: summary 텍스트 추론
+  var baseStage = rvizInferBaseStageFromText(recipe) || 'lv14';
+
+  // 보색: summary/tips에서 "○○ 컨트롤컬러" 매칭 → 매핑표
+  var neutralizer = rvizExtractNeutralizer(recipe);
+  var neutralizerHex = neutralizer.hex;
+  var neutralizerLabel = neutralizer.label;
+
+  // 메인 염모제 라벨: summary 텍스트에서 추출
+  var mainColorLabel = rvizExtractMainLabel(recipe);
+
+  // 최종 hex/라벨: 1차 분석 결과 그대로
+  var finalHex = rvizNormHex(analysis && analysis.hex);
+  var finalLabel = (analysis && (analysis.color_name_ko || analysis.color_name)) || '최종';
 
   // 시퀀스 생성 — virgin → ... → baseStage
   var targetIdx = RVIZ_STAGE_ORDER.indexOf(baseStage);
@@ -3459,7 +3418,7 @@ function vizRecipeInit(recipe, analysis){
         '</div>' +
       '</div>';
   }
-  if(mainColorHex || mainColorLabel){
+  if(mainColorLabel){
     // 재료별 swatch 분리
     var ingredients = rvizParseMainIngredients(mainColorLabel || '');
     var swatchHtml = '';
@@ -3467,9 +3426,6 @@ function vizRecipeInit(recipe, analysis){
       swatchHtml = ingredients.map(function(ing){
         return '<div class="rviz-mini-chip" style="background:' + rvizChipBg(ing.hex) + '" title="' + rvizEsc(ing.name) + '"></div>';
       }).join('');
-    } else if (mainColorHex) {
-      // 파싱 실패 시 — 단일 swatch fallback (기존 호환)
-      swatchHtml = '<div class="rviz-mini-chip" style="background:' + rvizChipBg(mainColorHex) + '"></div>';
     }
 
     chipRows +=
