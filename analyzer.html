@@ -3300,18 +3300,20 @@ function rvizBuildCareNote(baseStage){
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 보색 컨트롤컬러 추출 — summary/tips에서 "○○ 컨트롤컬러" 매칭
-// 시스템 프롬프트 viz 출력 없이 텍스트로만 결정
+// 보색 컨트롤컬러 추출 — 메인 라벨에서만 "○○ 컨트롤컬러" 매칭
+// (summary/tips 전체를 보면 다른 블록의 "○○ 컨트롤컬러" 단어에 잘못 매칭됨)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function rvizExtractNeutralizer(recipe){
   if (!recipe) return { hex: null, label: null };
-  var text = String((recipe.summary || '') + ' ' + (recipe.tips || ''));
+  // 메인 조합 부분만 추출해서 거기서만 검색
+  var mainLabel = rvizExtractMainLabel(recipe);
+  if (!mainLabel) return { hex: null, label: null };
   // 컨트롤컬러 8종 (긴 키부터 매칭)
   var keys = ['바이올렛', '오렌지', '옐로우', '블루', '애쉬', '핑크', '그린', '레드'];
   for (var i = 0; i < keys.length; i++){
     var k = keys[i];
     var re = new RegExp(k + '\\s*컨트롤컬러');
-    if (re.test(text)) {
+    if (re.test(mainLabel)) {
       return {
         hex: RVIZ_INGREDIENT_HEX[k] || null,
         label: k
@@ -3322,25 +3324,27 @@ function rvizExtractNeutralizer(recipe){
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 메인 염모제 라벨 추출 — summary 텍스트에서 메인 조합만 깔끔하게 추출
-// summary 형식 예:
-//   "탈색 3회 이상 후(백모...) 밝은 톤의 바이올렛 염모제와 밝은 톤의 애쉬 염모제, 클리어 다량 희석으로 착색하세요."
-//   → "밝은 톤의 바이올렛 염모제 + 밝은 톤의 애쉬 염모제 + 클리어 다량 희석"
+// 메인 염모제 라벨 추출 — summary에서 메인 조합만 깔끔하게 추출
+// 접근: 첫 "재료명/톤 단어"부터 시작 → 부가 설명(베이스/언더톤/회차 등) 자동 제거
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function rvizExtractMainLabel(recipe){
   if (!recipe) return '';
   var summary = String(recipe.summary || '');
 
-  // 1단계: 분리자 통일 ("와" / ", " → "+")
+  // 1단계: 분리자 통일 ("와" / ", " → " + ")
   var t = summary
     .replace(/염모제\s*와\s+/g, '염모제 + ')
     .replace(/컨트롤컬러\s*와\s+/g, '컨트롤컬러 + ')
     .replace(/,\s*/g, ' + ');
 
-  // 2단계: 시작 부분 제거 — "탈색 N회 이상 후(...)" / "리프팅 후 재염색으로" / "리프팅 후"
-  t = t.replace(/^.*?(?:후\s*\([^)]*\)|리프팅\s*후\s*재염색으로|리프팅\s*후\s*재염색|리프팅\s*후)\s*/, '');
+  // 2단계: 첫 재료명/톤 표현 시작점 찾기 → 그 앞 부가 텍스트 통째 잘라냄
+  // (백모/베이스/회차/리프팅 등 어떤 부가 설명이 와도 자동 제거)
+  var startRe = /(밝은\s*톤|어두운\s*톤|매우\s*밝은|중명도|클리어|레드바이올렛|회갈빛브라운|카키빛애쉬|애쉬|블루|바이올렛|핑크|레드|그린|오렌지|옐로우|카키)/;
+  var sm = t.match(startRe);
+  if (!sm) return '';
+  t = t.substring(sm.index);
 
-  // 3단계: 끝 부분 제거 — "으로 착색하세요." / "로 마무리" / "으로 진행" 등
+  // 3단계: 끝의 "으로 착색하세요" / "로 마무리" 제거
   t = t.replace(/\s*(?:으로|로)\s*(?:착색|마무리|진행)[^+]*$/, '');
 
   return t.trim();
