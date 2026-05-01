@@ -2646,10 +2646,46 @@ h1.title,p.lead,.zone-title,.zone-desc,.mechanism-title,.mechanism-desc,
   margin-bottom:14px !important;
 }
 
+/* ── 우상단 홈으로 빠져나가는 버튼 (모든 페이지 공용) ── */
+.exit-home{
+  position:fixed;
+  top:max(14px, env(safe-area-inset-top));
+  right:14px;
+  z-index:100;
+  width:38px; height:38px;
+  border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(15, 8, 4, 0.82);
+  color:#f4e4c5;
+  text-decoration:none;
+  font-size:16px;
+  font-weight:300;
+  border:1px solid rgba(212, 168, 96, 0.45);
+  box-shadow:0 3px 10px rgba(0,0,0,0.5);
+  -webkit-tap-highlight-color:transparent;
+  transition:transform 0.15s ease, background 0.15s ease;
+  backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
+}
+.exit-home:active{
+  transform:scale(0.9);
+  background:rgba(15, 8, 4, 0.95);
+}
+.exit-home svg{ width:16px; height:16px; }
+
 
 </style>
 </head>
 <body>
+
+<!-- 우상단 홈으로 빠져나가기 (✕ 닫기) -->
+<a class="exit-home" href="./index.html" aria-label="홈으로 나가기" title="홈으로">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18"/>
+    <line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+</a>
+
 <div class="wrap" style="position:relative;">
 
   <div class="topbar">
@@ -4219,7 +4255,7 @@ routesContainer.addEventListener('click', (e) => {
   const lv = STAGES[idx].lv;
   const zoneKey = ZONE_MAP[lv];
 
-  // 다음 영역으로 점프 — zone2.B → Lv 14, zone3.B → Lv 16, zone4.B → Lv 18
+  // 다음 영역으로 점프 — zone2.B → Lv 14, zone3.B → Lv 16, zone4.B → Lv 18 + ch3 직진
   if (
     (zoneKey === 'zone2' && letter === 'B') ||
     (zoneKey === 'zone3' && letter === 'B') ||
@@ -4231,8 +4267,14 @@ routesContainer.addEventListener('click', (e) => {
       slider.value = targetIdx;
       update();       // Ch1 사진/카드 갱신
       renderCh2();    // Ch2 영역 페이지 갱신
-      // 시각적 피드백 — 부드러운 스크롤 톱
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      if (zoneKey === 'zone4') {
+        // zone4 B는 한 번 클릭으로 18 베이스 ch3 페이지까지 직진
+        goToCh3('zone4', 'B');
+      } else {
+        // zone2/zone3는 ch2에 머무르며 다음 영역 보여주기
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
     return;
   }

@@ -179,9 +179,41 @@
       repeating-radial-gradient(circle at 30% 40%, rgba(255,255,255,0.05) 0, rgba(0,0,0,0.05) 1px, transparent 2px),
       repeating-radial-gradient(circle at 70% 60%, rgba(255,255,255,0.05) 0, rgba(0,0,0,0.05) 1px, transparent 2px);
   }
+  /* ── 우상단 홈으로 빠져나가기 ── */
+  .exit-home{
+    position:fixed;
+    top:max(14px, env(safe-area-inset-top));
+    right:14px;
+    z-index:100;
+    width:38px; height:38px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(15, 8, 4, 0.7);
+    color:#f4e4c5;
+    text-decoration:none;
+    border:1px solid rgba(212, 168, 96, 0.45);
+    box-shadow:0 3px 10px rgba(0,0,0,0.5);
+    -webkit-tap-highlight-color:transparent;
+    transition:transform 0.15s ease, background 0.15s ease;
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+  }
+  .exit-home:active{
+    transform:scale(0.9);
+    background:rgba(15, 8, 4, 0.9);
+  }
+  .exit-home svg{ width:16px; height:16px; }
 </style>
 </head>
 <body>
+
+  <!-- 우상단 홈으로 빠져나가기 -->
+  <a class="exit-home" href="./index.html" aria-label="홈으로 나가기" title="홈으로">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"/>
+      <line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+  </a>
 
   <!-- ───── PHASE 1: 로딩 ───── -->
   <div id="phase-loading" class="phase">
