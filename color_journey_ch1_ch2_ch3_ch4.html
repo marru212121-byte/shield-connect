@@ -4100,18 +4100,24 @@ function renderCh3(zoneKey, routeLetter){
   mechanismLimit.innerHTML = route.limit;
   ch3WarmText.textContent = route.warmTone;
 
-  recommendLabel.innerHTML = route.recommend.label;
-  recommendList.innerHTML = route.recommend.items.map(item => `
-    <div class="recommend-item" data-route="${item.letter}">
-      <div class="recommend-letter">${item.letter}</div>
-      <div class="recommend-content">
-        <div class="recommend-title">${item.title}</div>
-        <div class="recommend-sub">${item.sub}</div>
+  // recommend 박스 — zone4.B 처럼 recommend 없는 케이스 안전 가드
+  if (route.recommend) {
+    recommendLabel.innerHTML = route.recommend.label;
+    recommendList.innerHTML = route.recommend.items.map(item => `
+      <div class="recommend-item" data-route="${item.letter}">
+        <div class="recommend-letter">${item.letter}</div>
+        <div class="recommend-content">
+          <div class="recommend-title">${item.title}</div>
+          <div class="recommend-sub">${item.sub}</div>
+        </div>
+        ${item.badge ? `<div class="recommend-badge">${item.badge}</div>` : ''}
+        <div class="recommend-arrow">→</div>
       </div>
-      ${item.badge ? `<div class="recommend-badge">${item.badge}</div>` : ''}
-      <div class="recommend-arrow">→</div>
-    </div>
-  `).join('');
+    `).join('');
+  } else {
+    recommendLabel.innerHTML = '';
+    recommendList.innerHTML = '';
+  }
 
   // zone4.A/B — 레시피 박스 표시 + finalCtaCh3 숨김 (보색 페이지 안 만들고 ch3에서 끝)
   const recipeBox  = document.getElementById('ch3RecipeBox');
