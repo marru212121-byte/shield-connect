@@ -1377,7 +1377,7 @@ html,body{background:#0E0804}
 
 /* ── wrap = 골드 프레임 일체형 양피지 한 장 ── */
 .wrap{
-  background-image:url('/images/color-journey/parchment_main.jpg');
+  background-image:url('./images/parchment_main.jpg');
   background-size:100% 100%;background-repeat:no-repeat;background-position:center top;
   padding:54px 36px 64px !important;
   padding-top:max(54px,env(safe-area-inset-top)) !important;
@@ -3301,7 +3301,10 @@ function renderCh2(){
         activeRoutes = (lv === 16) ? ZONE4_LV16_ROUTES : (lv === 18 ? ZONE4_LV18_ROUTES : []);
       }
       const isActive = activeRoutes.includes(r.letter);
-      const isJump = (zoneKey === 'zone2' || zoneKey === 'zone3') && r.letter === 'B';
+      const isJump = (
+        ((zoneKey === 'zone2' || zoneKey === 'zone3') && r.letter === 'B') ||
+        (zoneKey === 'zone4' && lv === 16 && r.letter === 'B')
+      );
       const isClickable = isActive || isJump;
       return `
       <div class="route ${isClickable ? 'route-active' : 'route-coming'}" data-letter="${r.letter}">
@@ -4216,9 +4219,13 @@ routesContainer.addEventListener('click', (e) => {
   const lv = STAGES[idx].lv;
   const zoneKey = ZONE_MAP[lv];
 
-  // 다음 영역으로 점프 — zone2.B → Lv 14, zone3.B → Lv 16
-  if ((zoneKey === 'zone2' && letter === 'B') || (zoneKey === 'zone3' && letter === 'B')) {
-    const targetLv = (zoneKey === 'zone2') ? 14 : 16;
+  // 다음 영역으로 점프 — zone2.B → Lv 14, zone3.B → Lv 16, zone4.B → Lv 18
+  if (
+    (zoneKey === 'zone2' && letter === 'B') ||
+    (zoneKey === 'zone3' && letter === 'B') ||
+    (zoneKey === 'zone4' && lv === 16 && letter === 'B')
+  ) {
+    const targetLv = (zoneKey === 'zone2') ? 14 : (zoneKey === 'zone3') ? 16 : 18;
     const targetIdx = STAGES.findIndex(s => s.lv === targetLv);
     if (targetIdx !== -1) {
       slider.value = targetIdx;
