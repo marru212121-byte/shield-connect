@@ -110,11 +110,11 @@
     display:block;
   }
 
-  /* 클릭 안내 문구 — 절대값으로 명확히 분리 */
+  /* 클릭 안내 문구 — 구체 바로 아래에 가깝게 */
   .start-cta{
     position:absolute;
     left:50%;
-    top:71%;
+    top:66%;
     transform:translateX(-50%);
     z-index:3;
     text-align:center;
@@ -159,12 +159,12 @@
   /* 모바일 좁은 화면 보정 */
   @media (max-width: 380px){
     .orb-stage{ width:88px; height:88px; top:57%; }
-    .start-cta{ top:69%; }
+    .start-cta{ top:64%; }
     .loading-title{ font-size:19px; }
   }
   @media (min-width: 768px){
     .orb-stage{ width:130px; height:130px; }
-    .start-cta{ top:73%; }
+    .start-cta{ top:68%; }
     .start-cta-line{ font-size:15px; }
   }
 
@@ -198,7 +198,7 @@
     <div class="phase-bg"></div>
     <div class="orb-stage" id="orbStage"></div>
     <div class="start-cta">
-      <div class="start-cta-line">클릭하여 여정을 준비하세요</div>
+      <div class="start-cta-line">빨간공을 클릭하여 여정을 준비하세요</div>
       <div class="start-cta-sub">— Tap the orb to begin —</div>
     </div>
   </div>
