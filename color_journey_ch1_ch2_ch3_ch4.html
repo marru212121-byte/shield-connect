@@ -1,0 +1,5470 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<meta name="theme-color" content="#0A0907"/>
+<title>Color Journey · Ch.1 데모 v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500;1,9..144,700&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+
+:root{
+  --bg:#0A0907;
+  --bg-card:#161310;
+  --bg-card-2:#1F1B16;
+  --line:rgba(212,168,96,0.15);
+  --line-2:rgba(212,168,96,0.28);
+  --fg:#F5EFE2;
+  --fg-dim:#C5B89B;
+  --fg-faint:#8A7B5E;
+  --fg-deep:#6B5F47;
+  --gold:#D4A860;
+  --gold-deep:#A88440;
+  --pheo:#B85838;
+  --pheo-deep:#8A2E1C;
+  --sans:'Noto Sans KR',-apple-system,BlinkMacSystemFont,sans-serif;
+  --serif:'Fraunces',serif;
+  --mono:'SF Mono',Menlo,Monaco,monospace;
+}
+
+html,body{
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--fg);
+  min-height:100dvh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+.wrap{
+  width:100%;
+  max-width:430px;
+  margin:0 auto;
+  padding:14px 14px 30px;
+  padding-top:max(14px,env(safe-area-inset-top));
+  padding-bottom:max(30px,env(safe-area-inset-bottom));
+}
+
+/* ════ 헤더 ════ */
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:18px;
+  padding:6px 0;
+}
+.brand{
+  display:flex;
+  align-items:baseline;
+  gap:8px;
+}
+.brand .dot{
+  width:7px;height:7px;
+  border-radius:50%;
+  background:var(--gold);
+  align-self:center;
+  margin-right:2px;
+}
+.brand .name{
+  font-family:var(--serif);
+  font-weight:700;
+  font-size:14px;
+  letter-spacing:0.06em;
+}
+.brand .name em{
+  font-style:italic;
+  font-weight:500;
+  color:var(--gold);
+}
+.steps{display:flex;gap:5px}
+.step{
+  width:22px;height:2px;
+  background:rgba(212,168,96,0.2);
+  border-radius:99px;
+}
+.step.active{background:var(--gold)}
+
+/* ════ 챕터 헤더 ════ */
+.kicker{
+  font-family:var(--mono);
+  font-size:9.5px;
+  letter-spacing:0.2em;
+  color:var(--gold);
+  text-transform:uppercase;
+  font-weight:700;
+  margin-bottom:10px;
+}
+
+h1.title{
+  font-family:var(--serif);
+  font-size:30px;
+  line-height:1.15;
+  letter-spacing:-0.025em;
+  font-weight:500;
+  margin-bottom:8px;
+}
+h1.title em{
+  font-style:italic;
+  color:var(--gold);
+  font-weight:700;
+}
+
+p.lead{
+  font-size:13px;
+  line-height:1.7;
+  color:var(--fg-dim);
+  margin-bottom:18px;
+  letter-spacing:-0.1px;
+}
+p.lead b{color:var(--fg);font-weight:500}
+p.lead em{font-style:normal;color:var(--pheo);font-weight:500}
+
+/* ════ 사진 영역 ════ */
+.photo-frame{
+  position:relative;
+  width:100%;
+  aspect-ratio:879/1089;
+  background:#000;
+  border-radius:14px;
+  overflow:hidden;
+  margin-bottom:14px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.4);
+}
+
+.layer{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-drag:none;
+  opacity:0;
+  transition:opacity 280ms ease-out;
+}
+.layer.active{opacity:1}
+
+/* 라벨 */
+.photo-label{
+  position:absolute;
+  top:12px;left:12px;
+  font-family:var(--mono);
+  font-size:9.5px;
+  font-weight:700;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  padding:5px 9px;
+  border-radius:6px;
+  background:rgba(0,0,0,0.55);
+  color:var(--gold);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  z-index:3;
+  border:1px solid rgba(212,168,96,0.2);
+}
+
+.photo-coords{
+  position:absolute;
+  bottom:60px;right:12px;
+  font-family:var(--mono);
+  font-size:9px;
+  letter-spacing:0.16em;
+  color:rgba(245,239,226,0.78);
+  text-transform:uppercase;
+  padding:5px 9px;
+  background:rgba(0,0,0,0.45);
+  border-radius:6px;
+  backdrop-filter:blur(6px);
+  z-index:3;
+  text-align:right;
+  line-height:1.5;
+}
+.photo-coords b{color:var(--fg);font-weight:600}
+
+/* 우상단 — 안에 숨은 색 표시 */
+.hidden-pigment{
+  position:absolute;
+  top:12px;right:12px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+  padding:9px 11px 8px;
+  background:rgba(0,0,0,0.6);
+  border-radius:10px;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  z-index:3;
+  border:1px solid rgba(184,88,56,0.3);
+  box-shadow:0 2px 12px rgba(0,0,0,0.3);
+}
+.hidden-pigment .label{
+  font-family:var(--mono);
+  font-size:8px;
+  font-weight:700;
+  letter-spacing:0.16em;
+  color:rgba(245,239,226,0.6);
+  text-transform:uppercase;
+  text-align:center;
+  line-height:1.2;
+}
+.hidden-pigment .swatch{
+  width:32px;height:32px;
+  border-radius:50%;
+  background:#3A1830;
+  border:1.5px solid rgba(255,255,255,0.18);
+  box-shadow:0 0 0 2px rgba(0,0,0,0.4),
+             inset -2px -2px 4px rgba(0,0,0,0.3),
+             inset 2px 2px 4px rgba(255,255,255,0.15);
+  transition:background 350ms ease-out;
+  position:relative;
+  overflow:hidden;
+}
+.hidden-pigment .swatch::after{
+  content:'';
+  position:absolute;
+  top:5px;left:7px;
+  width:8px;height:6px;
+  border-radius:50%;
+  background:rgba(255,255,255,0.32);
+  filter:blur(1px);
+}
+.hidden-pigment .swatch-name{
+  font-size:9.5px;
+  font-weight:600;
+  color:var(--fg);
+  letter-spacing:-0.1px;
+  text-align:center;
+  min-height:12px;
+  transition:color .3s;
+}
+
+.photo-bottom{
+  position:absolute;
+  bottom:12px;left:12px;right:12px;
+  font-size:11px;
+  color:rgba(245,239,226,0.85);
+  font-weight:500;
+  padding:7px 11px;
+  background:rgba(0,0,0,0.5);
+  border-radius:8px;
+  backdrop-filter:blur(6px);
+  z-index:3;
+  letter-spacing:-0.1px;
+  text-align:center;
+}
+.photo-bottom em{
+  font-style:normal;
+  color:var(--pheo);
+  font-weight:600;
+}
+
+/* ════ 슬라이더 ════ */
+.slider-block{margin-bottom:20px}
+.slider-row{
+  position:relative;
+  height:46px;
+  margin-bottom:6px;
+}
+.lift-slider{
+  position:absolute;
+  inset:0;
+  width:100%;height:100%;
+  background:transparent;
+  -webkit-appearance:none;
+  appearance:none;
+  cursor:pointer;
+}
+.lift-slider::-webkit-slider-runnable-track{
+  height:6px;
+  margin-top:20px;
+  background:linear-gradient(to right,
+    #1A0F08 0%,
+    #4A2818 12%,
+    #8A4220 25%,
+    #C66838 40%,
+    #DC8A48 55%,
+    #E8B872 70%,
+    #F0D898 85%,
+    #F5E8C8 100%);
+  border-radius:99px;
+  border:0.5px solid rgba(212,168,96,0.2);
+}
+.lift-slider::-moz-range-track{
+  height:6px;
+  background:linear-gradient(to right,
+    #1A0F08,#4A2818,#8A4220,#C66838,#DC8A48,#E8B872,#F0D898,#F5E8C8);
+  border-radius:99px;
+}
+.lift-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:22px;height:22px;
+  background:var(--fg);
+  border:2px solid var(--gold);
+  border-radius:50%;
+  margin-top:-9px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.5),
+             0 0 0 4px rgba(212,168,96,0.12);
+  cursor:grab;
+}
+.lift-slider::-webkit-slider-thumb:active{cursor:grabbing}
+.lift-slider::-moz-range-thumb{
+  width:20px;height:20px;
+  background:var(--fg);
+  border:2px solid var(--gold);
+  border-radius:50%;
+}
+.lift-ticks{
+  display:flex;
+  justify-content:space-between;
+  font-family:var(--mono);
+  font-size:9px;
+  color:var(--fg-deep);
+  letter-spacing:0.04em;
+  padding:0 4px;
+  margin-top:-2px;
+}
+.lift-ticks span{position:relative}
+.lift-ticks .marker{
+  font-size:7.5px;
+  color:var(--fg-deep);
+  display:block;
+  margin-top:1px;
+  letter-spacing:0;
+}
+
+/* ════ 인포 카드 ════ */
+.info-card{
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:16px 16px 14px;
+  margin-bottom:14px;
+}
+.info-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  margin-bottom:10px;
+}
+.info-label{
+  font-family:var(--mono);
+  font-size:9px;
+  letter-spacing:0.18em;
+  color:var(--fg-faint);
+  text-transform:uppercase;
+  font-weight:700;
+}
+.info-meta{
+  font-family:var(--mono);
+  font-size:9px;
+  letter-spacing:0.12em;
+  color:var(--gold);
+  text-transform:uppercase;
+}
+
+.lvl-row{
+  display:flex;
+  align-items:flex-end;
+  gap:14px;
+  margin-bottom:12px;
+  padding-bottom:12px;
+  border-bottom:1px solid var(--line);
+}
+.lvl-num{
+  font-family:var(--serif);
+  font-size:64px;
+  line-height:0.85;
+  font-weight:500;
+  letter-spacing:-0.04em;
+}
+.lvl-text{flex:1;padding-bottom:6px}
+.lvl-name{
+  font-size:14px;
+  font-weight:600;
+  letter-spacing:-0.2px;
+  margin-bottom:2px;
+}
+.lvl-stage{
+  font-size:11px;
+  color:var(--fg-faint);
+  letter-spacing:-0.1px;
+}
+
+.melanin-row{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-bottom:12px;
+}
+.melanin-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.melanin-dot{
+  width:11px;height:11px;
+  border-radius:50%;
+  flex-shrink:0;
+  transition:opacity .3s ease, transform .3s ease;
+  position:relative;
+}
+.melanin-dot.eu{background:#000;border:1px solid rgba(255,255,255,0.18)}
+.melanin-dot.pheo{background:var(--pheo-deep)}
+.melanin-text{
+  flex:1;
+  font-size:11.5px;
+  color:var(--fg-dim);
+  letter-spacing:-0.1px;
+}
+.melanin-text b{color:var(--fg);font-weight:500}
+.melanin-power{
+  font-family:var(--mono);
+  font-size:9.5px;
+  color:var(--gold);
+  letter-spacing:0.06em;
+  font-weight:700;
+  padding:2px 8px;
+  background:rgba(212,168,96,0.1);
+  border-radius:5px;
+  border:1px solid rgba(212,168,96,0.22);
+  min-width:48px;
+  text-align:center;
+}
+
+.insight{
+  font-size:12px;
+  line-height:1.7;
+  color:var(--fg-dim);
+  background:rgba(212,168,96,0.05);
+  border-left:2px solid var(--gold);
+  padding:10px 12px;
+  border-radius:0 8px 8px 0;
+  letter-spacing:-0.1px;
+}
+.insight b{color:var(--fg);font-weight:600}
+.insight em{
+  font-style:normal;
+  color:var(--pheo);
+  font-weight:500;
+}
+
+/* ════ CTA ════ */
+.cta{
+  width:100%;
+  padding:14px;
+  background:var(--fg);
+  color:var(--bg);
+  border:none;
+  border-radius:12px;
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:-0.2px;
+  font-family:inherit;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  transition:all .15s;
+}
+.cta:active{transform:scale(.98);opacity:.9}
+.cta .arrow{opacity:.55;font-size:14px}
+
+/* ════ Ch1 / Ch2 페이지 전환 ════ */
+.page{
+  width:100%;
+  position:relative;
+}
+.page.hidden{ display:none; }
+
+/* 모핑 클론 - Ch1 → Ch2 이동 중 보이는 임시 요소 */
+.morph-clone{
+  position:fixed;
+  z-index:9999;
+  pointer-events:none;
+  transform-origin:top left;
+  transition:all .7s cubic-bezier(.4,0,.2,1);
+}
+
+/* Ch1 모핑 중 — 원본 숨김 */
+.page#page-ch1.morphing .photo-frame,
+.page#page-ch1.morphing .info-card{
+  visibility:hidden;
+}
+.page#page-ch1.morphing .slider-block,
+.page#page-ch1.morphing .kicker,
+.page#page-ch1.morphing h1.title,
+.page#page-ch1.morphing p.lead,
+.page#page-ch1.morphing .cta{
+  transition:opacity .35s ease;
+  opacity:0;
+}
+
+/* Ch2 페이드인 — 도착 직전 */
+.page#page-ch2.entering .kicker,
+.page#page-ch2.entering h1.title,
+.page#page-ch2.entering .principle-box,
+.page#page-ch2.entering .zone-card,
+.page#page-ch2.entering .back-btn{
+  opacity:0;
+  transform:translateY(15px);
+  animation:itemFadeIn .5s cubic-bezier(.4,0,.2,1) forwards;
+}
+.page#page-ch2.entering .kicker        { animation-delay:.55s; }
+.page#page-ch2.entering h1.title       { animation-delay:.6s; }
+.page#page-ch2.entering .principle-box { animation-delay:.65s; }
+.page#page-ch2.entering .zone-card     { animation-delay:.7s; }
+.page#page-ch2.entering .back-btn      { animation-delay:.75s; }
+@keyframes itemFadeIn{
+  to{ opacity:1; transform:translateY(0); }
+}
+
+/* Step1 미니 카드 — 모핑 끝나고 등장 (모핑 중엔 숨김) */
+.page#page-ch2.entering .step-mini{
+  opacity:0;
+}
+
+/* ════ Step 1 미니 카드 (사진 + 인포 가로 배치) ════ */
+.step-mini{
+  display:flex;
+  gap:8px;
+  margin-bottom:18px;
+  cursor:pointer;
+  transition:opacity .3s ease;
+}
+.step-mini:active{transform:scale(.985)}
+
+.step-mini-photo{
+  width:64px;
+  height:80px;
+  border-radius:9px;
+  background:#000;
+  overflow:hidden;
+  flex-shrink:0;
+  position:relative;
+  border:1px solid rgba(212,168,96,0.18);
+}
+.step-mini-photo img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.step-mini-photo .mini-swatch{
+  position:absolute;
+  top:5px;
+  right:5px;
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  background:#2A0806;
+  border:1.5px solid rgba(255,255,255,0.4);
+  box-shadow:0 1px 3px rgba(0,0,0,0.5);
+}
+
+.step-mini-info{
+  flex:1;
+  background:rgba(212,168,96,0.06);
+  border:1px solid rgba(212,168,96,0.22);
+  border-radius:11px;
+  padding:10px 12px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+.step-mini-info-top{
+  display:flex;
+  align-items:baseline;
+  gap:8px;
+}
+.step-mini-info-top .step-tag{
+  font-family:var(--mono);
+  font-size:9px;
+  letter-spacing:0.18em;
+  color:var(--gold);
+  font-weight:700;
+  text-transform:uppercase;
+}
+.step-mini-info-top .step-meta{
+  font-family:var(--mono);
+  font-size:8.5px;
+  color:var(--fg-faint);
+  letter-spacing:0.1em;
+  margin-left:auto;
+}
+.step-mini-info-row{
+  display:flex;
+  align-items:baseline;
+  gap:8px;
+}
+.step-mini-info-row .lvl{
+  font-family:var(--serif);
+  font-size:24px;
+  font-weight:500;
+  color:var(--fg);
+  line-height:1;
+  letter-spacing:-0.04em;
+}
+.step-mini-info-row .name{
+  font-size:13px;
+  font-weight:600;
+  color:var(--fg);
+  letter-spacing:-0.2px;
+}
+.step-mini-info-row .stage{
+  font-size:10px;
+  color:var(--fg-faint);
+  letter-spacing:-0.1px;
+}
+.step-mini-info-bottom{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.step-mini-edit{
+  font-family:var(--mono);
+  font-size:8.5px;
+  color:var(--fg-faint);
+  letter-spacing:0.08em;
+}
+
+/* ════ 원리 박스 ════ */
+.principle-box{
+  background:rgba(245,239,226,0.04);
+  border:1px solid rgba(212,168,96,0.12);
+  border-radius:12px;
+  padding:14px 14px 12px;
+  margin-bottom:18px;
+}
+
+/* ════ Three.js 두 구 캔버스 ════ */
+.orbs-container{
+  width:100%;
+  height:160px;
+  margin-bottom:18px;
+  position:relative;
+  border-radius:14px;
+  overflow:hidden;
+  background:radial-gradient(ellipse at center, rgba(212,168,96,0.04) 0%, transparent 60%);
+}
+.orbs-container canvas{
+  width:100%;
+  height:100%;
+  display:block;
+}
+.orb-label{
+  position:absolute;
+  top:14px;
+  font-family:var(--mono);
+  font-size:12px;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  font-weight:700;
+  white-space:nowrap;
+  transition:left 1.4s cubic-bezier(.4,0,.2,1), right 1.4s cubic-bezier(.4,0,.2,1), opacity 0.5s ease;
+}
+.orb-label-l{
+  left:26%;
+  transform:translateX(-50%);
+  color:#C5B89B;
+}
+.orb-label-r{
+  right:20%;
+  transform:translateX(50%);
+  color:#E0CFE8;
+  opacity:0;
+}
+
+.principle-text-sub{
+  font-size:11px;
+  line-height:1.65;
+  color:var(--fg-faint);
+  letter-spacing:-0.1px;
+  margin-top:4px;
+  font-style:italic;
+}
+.principle-label{
+  font-family:var(--mono);
+  font-size:9px;
+  letter-spacing:0.18em;
+  color:var(--fg-faint);
+  text-transform:uppercase;
+  font-weight:700;
+  margin-bottom:8px;
+}
+.principle-text{
+  font-size:12px;
+  line-height:1.7;
+  color:var(--fg-dim);
+  letter-spacing:-0.1px;
+}
+.principle-text b{color:var(--fg);font-weight:500}
+.principle-divider{
+  height:1px;
+  background:rgba(212,168,96,0.1);
+  margin:8px 0;
+}
+
+/* ════ 영역 카드 ════ */
+.zone-card{
+  background:var(--bg-card);
+  border:1px solid var(--zone-color, rgba(212,168,96,0.3));
+  border-radius:14px;
+  padding:16px 14px 14px;
+  margin-bottom:14px;
+}
+.zone-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  margin-bottom:8px;
+}
+.zone-tag{
+  font-family:var(--mono);
+  font-size:9px;
+  letter-spacing:0.18em;
+  color:var(--zone-color, var(--gold));
+  text-transform:uppercase;
+  font-weight:700;
+}
+.zone-title{
+  font-size:16px;
+  font-weight:600;
+  color:var(--fg);
+  margin-top:3px;
+  letter-spacing:-0.2px;
+}
+.zone-range{
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--fg-faint);
+}
+.zone-desc{
+  font-size:11.5px;
+  line-height:1.65;
+  color:var(--fg-dim);
+  letter-spacing:-0.1px;
+  padding:10px 12px;
+  background:var(--zone-bg, rgba(212,168,96,0.06));
+  border-radius:8px;
+  margin-bottom:14px;
+}
+.zone-desc b{color:var(--fg);font-weight:500}
+.zone-desc em{
+  font-style:normal;
+  color:var(--zone-color, var(--gold));
+  font-weight:500;
+}
+.zone-desc-line2{
+  margin-top:10px;
+  display:block;
+}
+.zone-desc-route{
+  margin-top:8px;
+  display:block;
+  padding-left:10px;
+  border-left:2px solid var(--zone-color, var(--gold));
+  border-radius:1px;
+  line-height:1.55;
+}
+.zone-desc-route:first-of-type{
+  margin-top:14px;
+}
+
+/* ════ 영역 난색 참조 (✦) ════ */
+.zone-warm{
+  display:flex;
+  align-items:flex-start;
+  gap:7px;
+  padding:9px 12px;
+  margin-bottom:14px;
+  background:rgba(212,168,96,0.04);
+  border-left:2px solid var(--zone-color, var(--gold));
+  border-radius:4px;
+}
+.zone-warm.hidden{display:none}
+.zone-warm-mark{
+  font-size:11px;
+  color:var(--zone-color, var(--gold));
+  flex-shrink:0;
+  line-height:1.5;
+  font-weight:700;
+}
+.zone-warm-text{
+  font-size:11px;
+  line-height:1.55;
+  color:var(--fg-faint);
+  letter-spacing:-0.1px;
+  font-style:italic;
+}
+
+/* ════ 좌측 슬라이더 + 우측 경로 영역 ════ */
+.zone-body{
+  display:flex;
+  gap:12px;
+}
+.dual-axis{
+  display:flex;
+  gap:10px;
+  flex-shrink:0;
+}
+.axis-col{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:5px;
+}
+.axis-end{
+  font-family:var(--mono);
+  font-size:8px;
+  color:var(--fg-deep);
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+}
+.axis-track{
+  position:relative;
+  width:16px;
+  height:200px;
+  border-radius:99px;
+  border:0.5px solid rgba(212,168,96,0.18);
+}
+.axis-track.brightness{
+  background:linear-gradient(to top,
+    #0A0805 0%, #1A1A1A 20%, #4A4A4A 45%, #888888 65%, #C8C8C8 82%, #F5F5F5 100%);
+}
+.axis-track.residue{
+  background:linear-gradient(to top,
+    #2A0806 0%, #5A1812 12%, #8C2C1C 25%, #B84C28 40%,
+    #D87838 55%, #E8A848 70%, #F0CA68 85%, #F5E8C8 100%);
+}
+.axis-thumb{
+  position:absolute;
+  left:50%;
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  background:var(--fg);
+  border:2px solid var(--zone-color, var(--gold));
+  transform:translate(-50%, 50%);
+  box-shadow:0 1px 6px rgba(0,0,0,0.6);
+  transition:bottom .4s cubic-bezier(.4,0,.2,1);
+}
+.axis-lv-label{
+  position:absolute;
+  left:24px;
+  font-family:var(--mono);
+  font-size:9.5px;
+  color:var(--zone-color, var(--gold));
+  font-weight:700;
+  white-space:nowrap;
+  transform:translateY(50%);
+  transition:bottom .4s cubic-bezier(.4,0,.2,1);
+}
+.axis-name{
+  font-family:var(--mono);
+  font-size:9px;
+  color:var(--fg-faint);
+  font-weight:700;
+  letter-spacing:0.16em;
+  text-transform:uppercase;
+  margin-top:2px;
+}
+
+/* ════ 시술 경로 ════ */
+.routes{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+.routes-label{
+  font-family:var(--mono);
+  font-size:9px;
+  letter-spacing:0.18em;
+  color:var(--fg-faint);
+  text-transform:uppercase;
+  font-weight:700;
+  margin-bottom:1px;
+}
+.route{
+  padding:9px 11px;
+  background:rgba(245,239,226,0.04);
+  border:1px solid rgba(212,168,96,0.18);
+  border-radius:10px;
+  cursor:pointer;
+  transition:all .15s;
+  position:relative;
+}
+.route:active{transform:scale(.985);opacity:.85}
+.route-active{
+  border-color:var(--zone-color, var(--gold));
+  background:var(--zone-bg, rgba(212,168,96,0.08));
+}
+.route-coming{
+  opacity:0.55;
+  cursor:default;
+}
+.route-coming:active{transform:none;opacity:0.4}
+.route-pending{
+  animation:routePending .6s ease;
+}
+@keyframes routePending{
+  0%,100%{transform:translateX(0)}
+  20%,60%{transform:translateX(-3px)}
+  40%,80%{transform:translateX(3px)}
+}
+.route-arrow{
+  margin-left:auto;
+  color:var(--zone-color, var(--gold));
+  font-size:14px;
+  flex-shrink:0;
+}
+.route-soon{
+  margin-left:auto;
+  font-family:var(--mono);
+  font-size:8.5px;
+  letter-spacing:0.12em;
+  color:var(--fg-faint);
+  padding:2px 7px;
+  background:rgba(212,168,96,0.08);
+  border:1px solid rgba(212,168,96,0.18);
+  border-radius:99px;
+  font-weight:700;
+  flex-shrink:0;
+}
+.route-head{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:3px;
+}
+.route-letter{
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  background:var(--zone-bg-strong, rgba(212,168,96,0.18));
+  border:1px solid var(--zone-color, var(--gold));
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  font-family:var(--mono);
+  font-size:9.5px;
+  color:var(--zone-color, var(--gold));
+  font-weight:700;
+}
+.route-title{
+  font-size:12.5px;
+  font-weight:500;
+  color:var(--fg);
+  letter-spacing:-0.2px;
+  flex:1;
+}
+.route-sub{
+  font-size:10.5px;
+  color:var(--fg-faint);
+  line-height:1.5;
+  padding-left:28px;
+}
+
+/* ════ 영역 색상 변수 ════ */
+.zone-1{
+  --zone-color:#B84C28;
+  --zone-bg:rgba(184,76,40,0.06);
+  --zone-bg-strong:rgba(184,76,40,0.18);
+}
+.zone-2{
+  --zone-color:#D87838;
+  --zone-bg:rgba(216,120,56,0.06);
+  --zone-bg-strong:rgba(216,120,56,0.18);
+}
+.zone-3{
+  --zone-color:#C8945A;
+  --zone-bg:rgba(200,148,90,0.06);
+  --zone-bg-strong:rgba(200,148,90,0.18);
+}
+.zone-4{
+  --zone-color:#C99840;
+  --zone-bg:rgba(201,152,64,0.06);
+  --zone-bg-strong:rgba(201,152,64,0.18);
+}
+
+/* ════ 뒤로가기 버튼 ════ */
+.back-btn{
+  width:100%;
+  padding:13px;
+  background:rgba(245,239,226,0.06);
+  color:var(--fg-faint);
+  border:1px solid rgba(212,168,96,0.18);
+  border-radius:12px;
+  font-size:12px;
+  font-weight:500;
+  letter-spacing:-0.1px;
+  font-family:inherit;
+  cursor:pointer;
+  margin-top:6px;
+}
+.back-btn:active{transform:scale(.99);opacity:.85}
+
+/* ════ Ch 3 — 시술 원리 ════ */
+.step-mini-row{
+  display:flex;
+  gap:6px;
+  margin-bottom:18px;
+}
+.step-chip{
+  flex:1;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:9px 11px;
+  background:rgba(184,76,40,0.06);
+  border:1px solid rgba(184,76,40,0.25);
+  border-radius:9px;
+  cursor:pointer;
+  min-width:0;
+  transition:all .15s;
+}
+.step-chip:active{transform:scale(.985)}
+.step-chip-active{
+  background:rgba(184,76,40,0.1);
+  border-color:rgba(184,76,40,0.4);
+}
+.step-chip-tag{
+  font-family:var(--mono);
+  font-size:8px;
+  letter-spacing:0.16em;
+  color:var(--fg-faint);
+  font-weight:700;
+  flex-shrink:0;
+}
+.step-chip-active .step-chip-tag{
+  color:#B84C28;
+}
+.step-chip-divider{
+  width:1px;
+  height:12px;
+  background:rgba(212,168,96,0.2);
+  flex-shrink:0;
+}
+.step-chip-content{
+  font-size:11px;
+  color:var(--fg-dim);
+  letter-spacing:-0.1px;
+  flex:1;
+  min-width:0;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.step-chip-content b{color:var(--fg);font-weight:600}
+
+.orbs-container.ch3-orbs{
+  height:200px;
+  margin-top:14px;
+  margin-bottom:14px;
+}
+.ch3-phase-tag{
+  position:absolute;
+  top:12px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:4px 12px;
+  background:rgba(184,76,40,0.18);
+  border:1px solid rgba(184,76,40,0.4);
+  border-radius:99px;
+  font-family:var(--mono);
+  font-size:9.5px;
+  color:#D87838;
+  letter-spacing:0.16em;
+  text-transform:uppercase;
+  font-weight:700;
+  white-space:nowrap;
+  transition:all .5s ease;
+}
+.ch3-result-label{
+  position:absolute;
+  bottom:14px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:12.5px;
+  color:var(--fg);
+  font-weight:500;
+  letter-spacing:-0.1px;
+  opacity:0;
+  transition:opacity .6s ease;
+  white-space:nowrap;
+}
+
+.mechanism-box{
+  background:#161310;
+  border:1px solid rgba(212,168,96,0.18);
+  border-radius:12px;
+  padding:14px;
+  margin-bottom:14px;
+}
+.mechanism-label{
+  font-family:var(--mono);
+  font-size:9px;
+  letter-spacing:0.18em;
+  color:var(--fg-faint);
+  text-transform:uppercase;
+  font-weight:700;
+  margin-bottom:12px;
+}
+.mechanism-list{
+  display:flex;
+  flex-direction:column;
+  gap:11px;
+}
+.mechanism-item{
+  display:flex;
+  gap:10px;
+}
+.mechanism-dot-wrap{
+  flex-shrink:0;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:rgba(184,76,40,0.12);
+  border:1px solid rgba(184,76,40,0.4);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-top:1px;
+}
+.mechanism-dot{
+  width:4px;
+  height:4px;
+  background:#B84C28;
+  border-radius:50%;
+}
+.mechanism-content{flex:1}
+.mechanism-title{
+  font-size:12.5px;
+  color:var(--fg);
+  font-weight:500;
+  letter-spacing:-0.2px;
+  margin-bottom:2px;
+}
+.mechanism-desc{
+  font-size:11px;
+  color:var(--fg-faint);
+  line-height:1.55;
+  letter-spacing:-0.1px;
+}
+.mechanism-limit{
+  margin-top:14px;
+  padding-top:12px;
+  border-top:1px solid rgba(212,168,96,0.1);
+  display:flex;
+  gap:7px;
+  align-items:flex-start;
+}
+.limit-mark{
+  font-size:11px;
+  color:#B84C28;
+  font-weight:700;
+  line-height:1.55;
+}
+.limit-text{
+  font-size:11px;
+  color:var(--fg-dim);
+  line-height:1.6;
+  letter-spacing:-0.1px;
+  font-style:italic;
+}
+.limit-text em{
+  color:#D87838;
+  font-style:normal;
+}
+
+.warm-tone-ref{
+  display:flex;
+  align-items:flex-start;
+  gap:7px;
+  padding:10px 12px;
+  margin-bottom:14px;
+  background:rgba(184,76,40,0.05);
+  border-left:2px solid #B84C28;
+  border-radius:4px;
+}
+.warm-tone-mark{
+  font-size:11px;
+  color:#B84C28;
+  font-weight:700;
+  line-height:1.55;
+  flex-shrink:0;
+}
+.warm-tone-text{
+  font-size:11.5px;
+  line-height:1.6;
+  color:var(--fg-dim);
+  letter-spacing:-0.1px;
+  font-style:italic;
+}
+
+.recommend-box{
+  background:rgba(245,239,226,0.03);
+  border:1px solid rgba(212,168,96,0.12);
+  border-radius:12px;
+  padding:14px;
+  margin-bottom:14px;
+}
+.recommend-label{
+  font-size:12px;
+  color:var(--fg-dim);
+  line-height:1.6;
+  letter-spacing:-0.1px;
+  margin-bottom:12px;
+}
+.recommend-label b{color:var(--fg);font-weight:500}
+.recommend-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.recommend-item{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:10px 11px;
+  background:rgba(184,76,40,0.04);
+  border:1px solid rgba(184,76,40,0.2);
+  border-radius:9px;
+  cursor:pointer;
+  transition:all .15s;
+}
+.recommend-item:active{transform:scale(.985);opacity:.85}
+.recommend-letter{
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  background:rgba(184,76,40,0.18);
+  border:1px solid rgba(184,76,40,0.45);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  font-family:var(--mono);
+  font-size:10px;
+  color:#B84C28;
+  font-weight:700;
+}
+.recommend-content{flex:1;min-width:0}
+.recommend-title{
+  font-size:12.5px;
+  color:var(--fg);
+  font-weight:500;
+  letter-spacing:-0.2px;
+}
+.recommend-sub{
+  font-size:10.5px;
+  color:var(--fg-faint);
+  margin-top:2px;
+}
+.recommend-badge{
+  font-family:var(--mono);
+  font-size:8.5px;
+  color:#D87838;
+  padding:3px 7px;
+  background:rgba(216,120,56,0.12);
+  border:1px solid rgba(216,120,56,0.3);
+  border-radius:99px;
+  letter-spacing:0.1em;
+  font-weight:700;
+  flex-shrink:0;
+}
+.recommend-arrow{
+  color:var(--fg-deep);
+  font-size:14px;
+  flex-shrink:0;
+}
+
+/* ════ Ch 3 - 시술 경로별 tag 박스 (1공정/탈색의 약한 버전) ════ */
+.route-tag-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  margin-bottom:14px;
+  background:rgba(184,76,40,0.06);
+  border-left:2px solid #B84C28;
+  border-radius:4px;
+}
+.route-tag-row.hidden{display:none}
+.route-tag-label{
+  font-family:var(--mono);
+  font-size:11px;
+  color:#B84C28;
+  letter-spacing:0.1em;
+  font-weight:700;
+}
+.route-tag-divider{
+  color:rgba(212,168,96,0.4);
+  font-size:11px;
+}
+.route-tag-desc{
+  font-size:11.5px;
+  color:var(--fg-dim);
+  letter-spacing:-0.1px;
+}
+
+/* ════ Ch 3 - 두 단계 인디케이터 (경로 C용) ════ */
+.ch3-step-indicator{
+  position:absolute;
+  bottom:50px;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  gap:4px;
+  pointer-events:none;
+}
+.ch3-step-indicator.hidden{display:none}
+.ch3-step-indicator .ind-dot{
+  width:18px;
+  height:2.5px;
+  background:rgba(184,76,40,0.2);
+  border-radius:99px;
+  transition:all .4s ease;
+}
+
+/* ════ 메커니즘 - numbered 표시 (1, 2 단계) ════ */
+.mechanism-dot-wrap.numbered{
+  font-family:var(--mono);
+  font-size:9px;
+  color:#B84C28;
+  font-weight:700;
+}
+.mechanism-dot-wrap.numbered .mechanism-dot{display:none}
+
+/* ════ 노이즈 ════ */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  z-index:1;pointer-events:none;
+  opacity:0.025;
+  mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+/* ══════════════════════════════════════════════════════════
+   양피지 디자인 시스템 v6 (visual override)
+   기존 모든 컴포넌트의 시각 속성을 잉크/양피지 톤으로
+   ══════════════════════════════════════════════════════════ */
+
+:root{
+  --ink-black:#0F0804;
+  --ink-dark:#2A1808;
+  --ink-mid:#4A3018;
+  --ink-soft:#6B4A24;
+  --ink-faint:#8A6F44;
+  --ink-wine:#8A2A1C;
+  --ink-wine-deep:#5A1408;
+  --paper-light:rgba(245,225,180,.18);
+  --paper-mid:rgba(245,225,180,.4);
+  --paper-strong:rgba(245,225,180,.55);
+  --paper-line:rgba(74,32,8,.25);
+  --paper-line-strong:rgba(74,32,8,.4);
+}
+
+html,body{background:#0E0804}
+
+/* ── wrap = 골드 프레임 일체형 양피지 한 장 ── */
+.wrap{
+  background-image:url('/images/color-journey/parchment_main.jpg');
+  background-size:100% 100%;background-repeat:no-repeat;background-position:center top;
+  padding:54px 36px 64px !important;
+  padding-top:max(54px,env(safe-area-inset-top)) !important;
+  padding-bottom:max(64px,env(safe-area-inset-bottom)) !important;
+  box-shadow:0 8px 32px rgba(0,0,0,.6),0 2px 6px rgba(0,0,0,.4);
+  position:relative;
+}
+
+/* ── 상단 nav (잉크 톤) — 골드 프레임 위쪽 켈틱 무늬 침범 안 하게 ── */
+.topbar{
+  margin-top:20px !important;
+  margin-bottom:24px !important;
+  padding-bottom:14px !important;
+  border-bottom:1px solid var(--paper-line);
+}
+.brand .dot{
+  background:var(--ink-wine) !important;
+  width:9px !important;height:9px !important;
+}
+.brand .name{
+  color:var(--ink-black) !important;
+  font-size:17px !important;
+  font-weight:700 !important;
+}
+.brand .name em{color:var(--ink-wine) !important;font-weight:600 !important;font-size:17px !important}
+.step{
+  background:rgba(74,32,8,.22) !important;
+  width:28px !important;height:3px !important;
+}
+.step.active{background:var(--ink-wine) !important}
+
+/* ── 챕터 헤더 (◆ 여정 · I ◆) ── */
+.kicker{
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  font-family:var(--sans) !important;
+  font-size:11px !important;font-weight:700 !important;
+  letter-spacing:.32em !important;
+  color:var(--ink-wine) !important;text-transform:none !important;
+  margin-bottom:14px !important;
+}
+.kicker::before,.kicker::after{
+  content:'◆';font-size:11px;color:var(--ink-soft);letter-spacing:0;
+}
+
+h1.title{
+  color:var(--ink-black) !important;
+  font-size:26px !important;font-weight:500 !important;
+  text-align:center;margin-bottom:12px !important;
+}
+h1.title em{color:var(--ink-wine) !important;font-weight:500 !important}
+
+p.lead{
+  color:var(--ink-dark) !important;
+  font-size:14px !important;line-height:1.7 !important;
+  margin-bottom:22px !important;text-align:center;
+  padding:0 4px;
+}
+p.lead b{color:var(--ink-black) !important;font-weight:700 !important}
+p.lead em{color:var(--ink-wine) !important;font-weight:600 !important;font-style:normal}
+
+/* ── Ch 1 사진 프레임 (폴라로이드 톤) ── */
+.photo-frame{
+  background:rgba(245,225,180,.5) !important;
+  border:1px solid var(--paper-line-strong) !important;
+  border-radius:4px !important;
+  padding:6px 6px 8px !important;
+  box-shadow:0 4px 14px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,250,235,.4) !important;
+  margin-bottom:14px;
+}
+.photo-frame .layer{border-radius:2px}
+.photo-label{
+  background:rgba(15,8,4,.85) !important;
+  color:#F5DCA0 !important;
+  border:1px solid rgba(212,168,96,.32) !important;
+  border-radius:3px !important;
+  font-weight:600 !important;
+}
+.photo-coords{
+  background:rgba(15,8,4,.78) !important;
+  color:#F5DCA0 !important;
+  border:1px solid rgba(212,168,96,.32) !important;
+  border-radius:4px !important;
+}
+.photo-coords b{color:#FAE5B8 !important}
+.photo-bottom{
+  background:rgba(15,8,4,.62) !important;
+  color:#F5DCA0 !important;
+  border:1px solid rgba(212,168,96,.22) !important;
+  font-size:11.5px !important;
+  font-weight:500 !important;
+  text-shadow:0 1px 2px rgba(0,0,0,.6);
+}
+.photo-bottom em{color:#E8A848 !important;font-weight:600 !important;font-style:normal !important}
+.hidden-pigment{
+  background:rgba(15,8,4,.85) !important;
+  border:1px solid rgba(184,72,40,.45) !important;
+  border-radius:4px !important;
+}
+.hidden-pigment .label{color:var(--ink-faint) !important;letter-spacing:.18em}
+.hidden-pigment .swatch-name{color:#F5DCA0 !important;font-weight:500}
+
+/* ── Ch 1 슬라이더 ── */
+.slider-block{margin-bottom:22px !important}
+.lift-slider::-webkit-slider-runnable-track{
+  background:rgba(74,32,8,.3) !important;
+  border:1px solid rgba(74,32,8,.45) !important;
+}
+.lift-slider::-moz-range-track{
+  background:rgba(74,32,8,.3) !important;
+  border:1px solid rgba(74,32,8,.45) !important;
+}
+.lift-slider::-webkit-slider-thumb{
+  background:linear-gradient(180deg,#ECC880,#B08A40) !important;
+  border:2px solid var(--ink-soft) !important;
+  box-shadow:0 2px 4px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,235,180,.4) !important;
+}
+.lift-slider::-moz-range-thumb{
+  background:linear-gradient(180deg,#ECC880,#B08A40) !important;
+  border:2px solid var(--ink-soft) !important;
+}
+.lift-ticks span{color:var(--ink-mid) !important;font-weight:500}
+.lift-ticks .marker{background:var(--ink-soft) !important}
+
+/* ── Ch 1 info-card (슬라이더 패널) ── */
+.info-card{
+  background:rgba(245,225,180,.4) !important;
+  border:1px solid var(--paper-line-strong) !important;
+  border-radius:8px !important;
+  box-shadow:inset 0 1px 0 rgba(255,250,235,.4),0 2px 6px rgba(0,0,0,.18) !important;
+}
+.info-label{color:var(--ink-wine) !important;font-weight:700 !important}
+.info-meta{color:var(--ink-soft) !important;font-weight:500}
+.lvl-num{color:var(--ink-wine) !important;font-weight:700 !important}
+.lvl-name{color:var(--ink-black) !important;font-weight:600}
+.lvl-stage{color:var(--ink-mid) !important}
+
+.melanin-text{color:var(--ink-dark) !important}
+.melanin-text b{color:var(--ink-black) !important;font-weight:600 !important}
+.melanin-power{color:var(--ink-soft) !important;font-weight:600}
+.melanin-dot.eu{background:var(--ink-black) !important;border:1px solid rgba(74,32,8,.4)}
+.melanin-dot.pheo{background:var(--ink-wine) !important}
+
+.insight{
+  background:rgba(74,32,8,.06) !important;
+  border:none !important;
+  border-left:2px solid var(--ink-wine) !important;
+  border-radius:0 !important;
+  color:var(--ink-dark) !important;
+}
+.insight b{color:var(--ink-black) !important;font-weight:700 !important}
+.insight em{color:var(--ink-wine) !important;font-weight:600 !important;font-style:normal}
+
+/* ── CTA (모든 다음 단계 버튼 → 골드 봉인 메달) ── */
+.cta{
+  background:linear-gradient(180deg,#ECC880 0%,#D4A860 50%,#B08A40 100%) !important;
+  color:#1A1208 !important;
+  border:1px solid #6B4A18 !important;
+  border-radius:10px !important;
+  font-family:var(--serif) !important;font-style:italic !important;
+  font-weight:500 !important;font-size:16px !important;
+  text-shadow:0 1px 0 rgba(255,235,180,.4);
+  box-shadow:0 4px 14px rgba(74,48,8,.3),inset 0 1px 0 rgba(255,235,180,.45),inset 0 -2px 4px rgba(74,48,8,.35) !important;
+  position:relative;overflow:hidden;
+}
+.cta::before{
+  content:'';position:absolute;inset:4px;
+  border:1px solid rgba(74,48,8,.42);border-radius:7px;pointer-events:none;
+  box-shadow:inset 0 0 0 1px rgba(255,235,180,.18);
+}
+.cta:hover{filter:brightness(1.05);transform:translateY(-1px)}
+.cta:active{filter:brightness(.9);transform:translateY(2px) !important;opacity:1 !important;box-shadow:0 1px 4px rgba(0,0,0,.5),inset 0 2px 6px rgba(74,48,8,.55),inset 0 -1px 0 rgba(255,235,180,.18) !important}
+.cta .arrow{color:#1A1208 !important;opacity:1 !important;font-size:18px !important}
+
+/* ── Ch 2 step-mini (Step 1 미니 카드) ── */
+.step-mini{
+  background:rgba(245,225,180,.4) !important;
+  border:1px solid var(--paper-line-strong) !important;
+  border-radius:8px !important;
+  box-shadow:inset 0 1px 0 rgba(255,250,235,.4),0 2px 6px rgba(0,0,0,.2) !important;
+}
+.step-mini-photo{
+  border:1px solid rgba(74,32,8,.32) !important;
+  border-radius:3px !important;
+  background:rgba(245,225,180,.5);
+  box-shadow:0 1px 3px rgba(0,0,0,.25) !important;
+}
+.step-tag{
+  background:var(--ink-wine) !important;
+  color:#F5DCA0 !important;
+  border:1px solid var(--ink-wine-deep) !important;
+  border-radius:3px !important;
+  font-weight:700 !important;
+}
+.step-meta{color:var(--ink-mid) !important;font-weight:500 !important}
+.step-mini-info-row,.step-mini-info-bottom{color:var(--ink-dark) !important}
+.step-mini-info-row b,.step-mini-info-bottom b{color:var(--ink-black) !important;font-weight:600 !important}
+.step-mini-edit{color:var(--ink-wine) !important;font-weight:600 !important}
+.mini-swatch{border:1px solid rgba(74,32,8,.4) !important}
+
+/* ── Ch 2 principle-box (염색의 원리) ── */
+.principle-box{
+  background:transparent !important;
+  border:none !important;border-top:1px solid var(--paper-line) !important;border-bottom:1px solid var(--paper-line) !important;
+  border-radius:0 !important;
+  padding:22px 4px !important;
+  box-shadow:none !important;
+}
+.principle-label{
+  color:var(--ink-wine) !important;
+  font-weight:700 !important;
+  letter-spacing:.32em !important;
+}
+.principle-text{color:var(--ink-dark) !important;line-height:1.65 !important}
+.principle-text b{color:var(--ink-black) !important;font-weight:700 !important}
+.principle-text em{color:var(--ink-wine) !important;font-weight:600 !important;font-style:normal}
+.principle-text-sub{color:var(--ink-soft) !important;font-style:italic !important}
+.principle-divider{background:var(--paper-line) !important;height:1px !important}
+
+/* ── Ch 2 zone-card (영역 카드) ── */
+.zone-card{
+  background:rgba(245,225,180,.5) !important;
+  border:1px solid rgba(74,32,8,.42) !important;
+  border-left:3px solid var(--zone-color, var(--ink-wine)) !important;
+  border-radius:8px !important;
+  box-shadow:inset 0 1px 0 rgba(255,250,235,.45),0 2px 6px rgba(0,0,0,.22) !important;
+  padding:18px 16px 16px !important;
+}
+.zone-tag{
+  font-size:11px !important;
+  letter-spacing:.18em !important;
+  color:var(--zone-color, var(--ink-wine)) !important;
+  font-weight:700 !important;
+  text-transform:none !important;
+}
+.zone-title{
+  font-size:18px !important;
+  color:var(--ink-black) !important;
+  font-weight:700 !important;
+  margin-top:4px !important;
+}
+.zone-range{
+  font-size:12.5px !important;
+  color:var(--ink-soft) !important;
+  font-weight:600 !important;
+}
+.zone-desc{
+  background:rgba(255,250,235,.4) !important;
+  border:1px solid rgba(74,32,8,.18) !important;
+  font-size:13px !important;
+  line-height:1.7 !important;
+  color:var(--ink-dark) !important;
+  padding:12px 14px !important;
+  margin-bottom:14px !important;
+}
+.zone-desc b{color:var(--ink-black) !important;font-weight:700 !important}
+.zone-desc em{color:var(--zone-color, var(--ink-wine)) !important;font-weight:600 !important;font-style:normal !important}
+.zone-desc-route{
+  border-left-color:var(--zone-color, var(--ink-wine)) !important;
+  font-size:13px !important;
+  color:var(--ink-dark) !important;
+}
+.zone-warm{
+  background:rgba(74,32,8,.06) !important;
+  border-left:2px solid var(--zone-color, var(--ink-wine)) !important;
+  border-radius:0 4px 4px 0 !important;
+  padding:11px 14px !important;
+}
+.zone-warm-mark{
+  font-size:14px !important;
+  color:var(--zone-color, var(--ink-wine)) !important;
+  font-weight:700 !important;
+}
+.zone-warm-text{
+  font-size:13px !important;
+  color:var(--ink-dark) !important;
+  font-style:normal !important;
+  line-height:1.6 !important;
+}
+.zone-warm-text b{color:var(--ink-black) !important;font-weight:700 !important}
+.zone-warm-text em{color:var(--zone-color, var(--ink-wine)) !important;font-weight:600 !important;font-style:normal !important}
+.axis-end{
+  font-size:11px !important;
+  color:var(--ink-black) !important;
+  font-weight:700 !important;
+  text-transform:none !important;
+  letter-spacing:.04em !important;
+}
+.axis-name{
+  font-size:12px !important;
+  color:var(--ink-black) !important;
+  font-weight:700 !important;
+  text-transform:none !important;
+  letter-spacing:.04em !important;
+}
+.axis-lv-label{
+  color:var(--zone-color, var(--ink-wine)) !important;
+  font-size:11.5px !important;
+  font-weight:700 !important;
+}
+.axis-track{border-color:rgba(74,32,8,.4) !important}
+.axis-thumb{
+  background:#F5EFE2 !important;
+  border-color:var(--zone-color, var(--ink-wine)) !important;
+  box-shadow:0 1px 6px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,250,235,.5) !important;
+}
+
+/* ── routes (시술 경로 카드들) ── */
+.routes-label{
+  font-size:12px !important;
+  color:var(--ink-black) !important;
+  font-weight:700 !important;
+  letter-spacing:.18em !important;
+  text-transform:none !important;
+}
+.route{
+  background:rgba(245,225,180,.5) !important;
+  border:1px solid rgba(74,32,8,.4) !important;
+  border-radius:8px !important;
+  box-shadow:inset 0 1px 0 rgba(255,250,235,.4),0 1px 2px rgba(0,0,0,.12) !important;
+}
+.route-active{
+  border-color:var(--zone-color, var(--ink-wine)) !important;
+  background:rgba(245,225,180,.7) !important;
+  box-shadow:inset 0 1px 0 rgba(255,250,235,.5),0 0 0 1px var(--zone-color, var(--ink-wine)) !important;
+}
+.route-letter{
+  background:radial-gradient(circle at 32% 28%,#C84830,#5A1408 78%) !important;
+  border:1px solid var(--ink-wine) !important;
+  color:#F5DCA0 !important;
+  font-family:var(--serif) !important;font-style:italic !important;
+  font-size:11px !important;font-weight:600 !important;
+  box-shadow:inset 0 1px 0 rgba(255,200,150,.4),inset 0 -1px 2px rgba(0,0,0,.4) !important;
+}
+.route-title{
+  color:var(--ink-black) !important;
+  font-size:13.5px !important;
+  font-weight:600 !important;
+}
+.route-sub{
+  color:var(--ink-mid) !important;
+  font-size:12px !important;
+  line-height:1.55 !important;
+}
+.route-arrow{
+  color:var(--zone-color, var(--ink-wine)) !important;
+  font-size:15px !important;
+  font-weight:600;
+}
+.route-soon{
+  background:rgba(74,32,8,.1) !important;
+  border:1px solid rgba(74,32,8,.32) !important;
+  color:var(--ink-soft) !important;
+  font-size:10.5px !important;
+  font-weight:700 !important;
+}
+
+/* ── 이전 단계로 (모든 챕터 공통) ── */
+.back-btn{
+  background:rgba(245,225,180,.4) !important;
+  color:var(--ink-dark) !important;
+  border:1px solid var(--paper-line-strong) !important;
+  border-radius:8px !important;
+  font-family:var(--sans) !important;
+  font-size:13px !important;font-weight:500 !important;
+  margin-top:20px;
+  padding:13px 14px !important;
+  box-shadow:inset 0 1px 0 rgba(255,250,235,.4),0 1px 3px rgba(0,0,0,.15) !important;
+}
+.back-btn:hover{
+  background:var(--paper-strong) !important;
+  border-color:var(--ink-wine) !important;
+  color:var(--ink-wine) !important;
+}
+
+/* ── Ch 3 step-chip (미니 칩 두 개) ── */
+.step-chip{
+  background:rgba(245,225,180,.42) !important;
+  border:1px solid var(--paper-line-strong) !important;
+  border-radius:5px !important;
+  box-shadow:inset 0 1px 0 rgba(255,250,235,.4) !important;
+}
+.step-chip.step-chip-active{
+  border-color:var(--ink-wine) !important;
+  background:var(--paper-strong) !important;
+  box-shadow:inset 0 1px 0 rgba(255,250,235,.5),0 0 0 1px rgba(138,42,28,.18) !important;
+}
+.step-chip-tag{
+  background:rgba(74,32,8,.85) !important;
+  color:#F5DCA0 !important;
+  border-radius:2px !important;
+  font-weight:700 !important;
+}
+.step-chip.step-chip-active .step-chip-tag{
+  background:var(--ink-wine) !important;
+}
+.step-chip-divider{background:rgba(74,32,8,.32) !important}
+.step-chip-content{color:var(--ink-dark) !important;font-size:12.5px !important}
+.step-chip-content b{color:var(--ink-black) !important;font-weight:700 !important}
+
+/* ── Ch 3 route-tag (1공정 / 탈색의 약한 버전) ── */
+.route-tag-row{
+  background:rgba(245,225,180,.22) !important;
+  border:1px solid var(--paper-line-strong) !important;
+  border-left:2px solid var(--ink-wine) !important;
+  border-radius:0 4px 4px 0 !important;
+}
+.route-tag-label{color:var(--ink-wine) !important;font-weight:700 !important}
+.route-tag-desc{color:var(--ink-dark) !important}
+
+/* ── Ch 3 mechanism-box (시술 원리) ── */
+.mechanism-box{
+  background:transparent !important;
+  border:none !important;border-top:1px solid var(--paper-line) !important;border-bottom:1px solid var(--paper-line) !important;
+  border-radius:0 !important;
+  padding:22px 4px !important;
+  box-shadow:none !important;
+}
+.mechanism-label{
+  color:var(--ink-wine) !important;
+  font-weight:700 !important;
+  letter-spacing:.32em !important;
+}
+.mechanism-item{
+  background:transparent !important;
+  border:none !important;
+  border-bottom:1px dashed rgba(74,32,8,.22) !important;
+  border-radius:0 !important;
+  padding:14px 4px !important;
+}
+.mechanism-item:last-child{border-bottom:none !important}
+.mechanism-title{color:var(--ink-black) !important;font-weight:700 !important;font-size:14.5px !important}
+.mechanism-desc{color:var(--ink-dark) !important;line-height:1.6 !important;font-size:13px !important}
+.mechanism-dot{background:var(--ink-wine) !important}
+.mechanism-dot-wrap.numbered{color:var(--ink-wine) !important;font-weight:700 !important}
+
+.mechanism-limit{
+  background:transparent !important;
+  border-top:1px solid var(--paper-line) !important;
+  padding-top:14px !important;margin-top:14px !important;
+  color:var(--ink-dark) !important;
+}
+.limit-mark{
+  color:var(--ink-wine) !important;
+  background:transparent !important;
+  font-family:var(--serif) !important;font-style:italic !important;font-weight:700 !important;
+  font-size:18px !important;
+}
+.limit-text{color:var(--ink-dark) !important;line-height:1.6}
+.limit-text em{color:var(--ink-wine) !important;font-weight:600 !important;font-style:normal !important}
+
+/* ── Ch 3 warm-tone-ref (✦ 난색 참조) ── */
+.warm-tone-ref{
+  background:rgba(74,32,8,.05) !important;
+  border:none !important;
+  border-left:2px solid var(--ink-wine) !important;
+  border-radius:0 !important;
+  padding:12px 14px !important;
+}
+.warm-tone-mark{color:var(--ink-wine) !important}
+.warm-tone-text{color:var(--ink-dark) !important}
+.warm-tone-text b{color:var(--ink-black) !important;font-weight:700 !important}
+.warm-tone-text em{color:var(--ink-wine) !important;font-weight:600 !important;font-style:normal !important}
+
+/* ── Ch 3 recipe box (zone4.A 전용 — 보색 정보 직접 녹임) ── */
+.ch3-recipe-box{
+  margin-top:14px;
+  background:rgba(245,225,180,.42);
+  border:1px solid var(--paper-line-strong);
+  border-radius:7px;
+  padding:13px;
+}
+.ch3-recipe-context{
+  display:inline-block;
+  font-size:10.5px;font-weight:700;letter-spacing:.12em;
+  color:var(--ink-soft);
+  background:rgba(74,32,8,.08);
+  padding:3px 10px;border-radius:99px;
+  border:1px solid rgba(74,32,8,.22);
+  margin-bottom:8px;
+}
+.ch3-recipe-label{
+  font-size:14px;font-weight:700;
+  color:var(--ink-wine);
+  margin-bottom:6px;
+}
+.ch3-recipe-intro{
+  font-size:12px;color:var(--ink-mid);line-height:1.5;
+  margin-bottom:10px;
+  text-shadow:0 1px 0 rgba(255,250,235,.4);
+}
+.ch3-recipe-intro em{color:var(--ink-wine);font-style:normal;font-weight:600}
+.ch3-recipe-list{display:flex;flex-direction:column;gap:8px}
+.ch3-recipe-row{
+  display:flex;flex-direction:column;gap:5px;
+  font-size:12.5px;color:var(--ink-dark);line-height:1.5;
+  padding:10px 12px;
+  background:rgba(245,225,180,.36);
+  border-radius:6px;
+  border:1px solid rgba(74,32,8,.14);
+  border-left:2px solid #B0843E;
+}
+.ch3-recipe-combo{
+  font-weight:700;color:var(--ink-black);
+  font-size:13px;
+  text-shadow:0 1px 0 rgba(255,250,235,.4);
+}
+.ch3-recipe-desc{
+  color:var(--ink-mid);
+  font-size:12.5px;line-height:1.5;
+}
+.ch3-recipe-desc b{color:var(--ink-black);font-weight:700}
+.ch3-recipe-desc em{
+  color:var(--ink-wine);font-style:normal;font-weight:700;
+  background:rgba(138,42,28,.08);
+  padding:1px 5px;border-radius:3px;
+}
+.ch3-recipe-outro{
+  font-size:11.5px;color:var(--ink-mid);font-style:italic;
+  text-align:right;margin-top:10px;
+  padding-top:7px;border-top:1px dashed var(--paper-line);
+}
+.ch3-recipe-row.clear{
+  border-left:2px solid #B0843E;
+  background:rgba(245,225,180,.5);
+}
+
+/* ── Ch 3 클리어 정의 (zone4.B 전용 — 메커니즘 다음 한 줄) ── */
+.ch3-clear-def{
+  margin-top:10px;
+  padding:11px 13px;
+  background:rgba(245,225,180,.42);
+  border:1px solid var(--paper-line-strong);
+  border-left:3px solid #B0843E;
+  border-radius:6px;
+  font-size:12.5px;
+  color:var(--ink-dark);
+  line-height:1.55;
+  display:flex;gap:8px;align-items:flex-start;
+  text-shadow:0 1px 0 rgba(255,250,235,.4);
+}
+.ch3-clear-def::before{
+  content:'✦';color:#B0843E;font-weight:700;
+  flex:0 0 auto;font-size:13px;line-height:1.4;
+}
+.ch3-clear-def b{color:var(--ink-black);font-weight:700}
+.ch3-clear-def em{
+  color:var(--zone-color-active,#C99840);
+  font-style:normal;font-weight:700;
+  background:rgba(201,152,64,.15);
+  padding:1px 5px;border-radius:3px;
+}
+
+/* ── Ch 3 여정의 끝 (zone4.B 전용 — 끝점 박스) ── */
+.ch3-endpoint{
+  margin-top:18px;
+  padding:16px;
+  background:rgba(245,225,180,.4);
+  border:1px dashed var(--zone-color-active,#C99840);
+  border-radius:8px;
+  text-align:center;
+}
+.ch3-endpoint-mark{
+  font-family:'Fraunces',serif;font-style:italic;
+  color:var(--zone-color-active,#C99840);
+  font-size:18px;font-weight:500;
+  margin-bottom:6px;
+}
+.ch3-endpoint-text{
+  font-size:12.5px;color:var(--ink-mid);
+  line-height:1.6;
+}
+.ch3-endpoint-text em{
+  color:var(--zone-color-active,#C99840);
+  font-style:normal;font-weight:600;
+}
+
+/* ── Ch 3 recommend-box (추천 메뉴) ── */
+.recommend-box{
+  background:transparent !important;
+  border:none !important;
+  border-top:1px solid var(--paper-line) !important;
+  border-radius:0 !important;
+  padding:22px 0 0 !important;
+  box-shadow:none !important;
+}
+.recommend-label{
+  color:var(--ink-soft) !important;
+  font-weight:500 !important;
+  text-align:center;
+}
+.recommend-label b{color:var(--ink-black) !important;font-weight:700 !important}
+
+.recommend-item{
+  background:rgba(245,225,180,.42) !important;
+  border:1px solid var(--paper-line-strong) !important;
+  border-radius:8px !important;
+  box-shadow:inset 0 1px 0 rgba(255,250,235,.4),inset 0 -1px 2px rgba(74,48,8,.15),0 1px 3px rgba(0,0,0,.18) !important;
+}
+.recommend-letter{
+  background:radial-gradient(circle at 32% 28%,#C84830,#5A1408 78%) !important;
+  border:1px solid var(--ink-wine) !important;
+  color:#F5DCA0 !important;
+  font-family:var(--serif) !important;
+  font-style:italic !important;font-weight:500 !important;
+  box-shadow:inset 0 1px 0 rgba(255,200,150,.4),inset 0 -1px 2px rgba(0,0,0,.4),0 1px 2px rgba(0,0,0,.3) !important;
+  position:relative;
+}
+.recommend-letter::after{
+  content:'';position:absolute;inset:3px;
+  border:1px solid rgba(245,220,160,.32);border-radius:50%;pointer-events:none;
+}
+.recommend-title{color:var(--ink-black) !important;font-weight:600 !important}
+.recommend-sub{color:var(--ink-mid) !important}
+.recommend-arrow{color:var(--ink-soft) !important}
+.recommend-badge{
+  background:var(--ink-wine) !important;
+  color:#F5DCA0 !important;
+  border:none !important;
+  font-weight:700 !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   새 컴포넌트
+   ══════════════════════════════════════════════════════════ */
+
+/* 잉크선 디바이더 */
+.ink-line{
+  display:flex;align-items:center;justify-content:center;
+  margin:22px 0;color:var(--ink-soft);
+}
+.ink-line svg{flex:1;height:8px}
+.ink-line-mark{
+  margin:0 14px;font-size:12px;color:var(--ink-soft);
+  letter-spacing:.3em;opacity:.85;
+}
+
+/* 최종 스텝 버튼 (Ch 3 → Ch 4 진입) */
+.final-cta{
+  position:relative;width:100%;display:flex;align-items:center;justify-content:space-between;
+  background:linear-gradient(180deg,#ECC880 0%,#D4A860 50%,#B08A40 100%);
+  border:1px solid #6B4A18;border-radius:10px;
+  padding:16px 18px;margin-top:14px;cursor:pointer;overflow:hidden;
+  box-shadow:0 4px 14px rgba(74,48,8,.3),inset 0 1px 0 rgba(255,235,180,.45),inset 0 -2px 4px rgba(74,48,8,.35);
+  transition:transform .14s,filter .14s,box-shadow .14s;
+}
+.final-cta:hover{filter:brightness(1.05);transform:translateY(-1px);box-shadow:0 7px 22px rgba(74,48,8,.4),inset 0 1px 0 rgba(255,235,180,.5),inset 0 -2px 4px rgba(74,48,8,.4)}
+.final-cta:active{filter:brightness(.9);transform:translateY(2px);box-shadow:0 1px 4px rgba(0,0,0,.5),inset 0 2px 6px rgba(74,48,8,.55),inset 0 -1px 0 rgba(255,235,180,.18)}
+.final-cta::before{
+  content:'';position:absolute;inset:4px;
+  border:1px solid rgba(74,48,8,.42);border-radius:7px;pointer-events:none;
+  box-shadow:inset 0 0 0 1px rgba(255,235,180,.18);
+}
+.final-cta-text{position:relative;z-index:1;display:flex;flex-direction:column;gap:3px}
+.final-cta-kicker{
+  font-family:var(--sans);font-size:11px;font-weight:700;
+  letter-spacing:.22em;color:#4A3008;
+  text-shadow:0 1px 0 rgba(255,235,180,.45);
+}
+.final-cta-title{
+  font-family:var(--serif);font-size:17px;font-style:italic;font-weight:500;
+  color:#1A1208;
+  text-shadow:0 1px 0 rgba(255,235,180,.4);
+}
+.final-cta-arrow{position:relative;z-index:1;font-size:20px;color:#1A1208;text-shadow:0 1px 0 rgba(255,235,180,.4)}
+
+/* ══════════════════════════════════════════════════════════
+   Ch 4 · 보색 추가 컴포넌트 (양피지 톤)
+   ══════════════════════════════════════════════════════════ */
+
+/* step-chip 3개 줄 — 폭 좁아짐 */
+.ch4-chip-row{gap:6px}
+.ch4-chip-row .step-chip{padding:8px 8px}
+.ch4-chip-row .step-chip-tag{font-size:9px;letter-spacing:.16em}
+.ch4-chip-row .step-chip-content{font-size:11.5px !important}
+.ch4-chip-row .step-chip-divider{height:9px}
+
+/* 삼각형 시각화 컨테이너 */
+.cmp-stage{
+  position:relative;width:100%;aspect-ratio:1/1;max-width:320px;
+  margin:18px auto 6px;
+}
+.cmp-stage canvas{width:100%;height:100%;display:block}
+
+/* 보색 라벨 (Three.js 위 absolute) */
+.cmp-label{
+  position:absolute;
+  font-family:var(--sans);font-size:10.5px;font-weight:700;
+  letter-spacing:.18em;
+  padding:4px 10px;border-radius:99px;
+  background:rgba(15,8,4,.86);
+  color:#F5DCA0;
+  border:1px solid rgba(212,168,96,.32);
+  text-shadow:0 1px 2px rgba(0,0,0,.5);
+  box-shadow:0 2px 6px rgba(0,0,0,.28);
+  pointer-events:none;
+  transition:transform .35s,opacity .35s,filter .35s;
+}
+.cmp-label-green {top:5%;left:50%;transform:translateX(-50%)}
+.cmp-label-blue  {bottom:14%;left:6%}
+.cmp-label-violet{bottom:14%;right:6%}
+.cmp-label-center{
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  background:rgba(74,16,12,.92);
+  color:#F5C5A8;
+  border-color:rgba(140,44,28,.55);
+  font-size:10px;letter-spacing:.16em;
+  padding:3px 8px;
+}
+
+/* 라벨 dim 상태 (선택된 보색 외 흐리게) */
+.cmp-stage.has-selection .cmp-label-green,
+.cmp-stage.has-selection .cmp-label-blue,
+.cmp-stage.has-selection .cmp-label-violet{opacity:.32;filter:saturate(.7)}
+.cmp-stage.has-selection .cmp-label-active{opacity:1;filter:saturate(1.15);transform-origin:center}
+.cmp-label-green.cmp-label-active {transform:translateX(-50%) scale(1.08)}
+.cmp-label-blue.cmp-label-active  {transform:scale(1.08)}
+.cmp-label-violet.cmp-label-active{transform:scale(1.08)}
+
+/* 탭 안내 — 시각화 박스 아래 바깥 (보석 영역 침범 방지) */
+.cmp-hint{
+  position:absolute;left:50%;top:100%;
+  transform:translate(-50%, 8px);
+  font-family:var(--sans);font-size:10.5px;font-weight:600;
+  letter-spacing:.04em;line-height:1.4;
+  padding:6px 14px;border-radius:99px;
+  background:rgba(15,8,4,.72);
+  color:#F5DCA0;
+  border:1px solid rgba(212,168,96,.28);
+  text-shadow:0 1px 2px rgba(0,0,0,.5);
+  box-shadow:0 2px 6px rgba(0,0,0,.22);
+  text-align:center;
+  width:max-content;max-width:88vw;
+  pointer-events:none;
+  transition:opacity .35s;
+  animation:cmpHintBlink 2.2s ease-in-out infinite;
+  z-index:5;
+}
+@keyframes cmpHintBlink{
+  0%,100%{opacity:.55;transform:translate(-50%, 8px)}
+  50%   {opacity:1;   transform:translate(-50%, 6px)}
+}
+.cmp-stage.has-selection .cmp-hint{opacity:.7}
+
+/* 보색 본질 카드 리스트 */
+.cmp-essence-list{
+  display:flex;flex-direction:column;gap:8px;
+  margin:14px 0 4px;
+}
+.cmp-essence{
+  position:relative;
+  background:rgba(245,225,180,.42);
+  border:1px solid var(--paper-line-strong);
+  border-left:3px solid var(--cmp-color, var(--ink-wine));
+  border-radius:7px;
+  padding:11px 13px 12px;
+  cursor:pointer;
+  transition:transform .14s,filter .14s,box-shadow .14s,background .2s;
+  box-shadow:inset 0 0 0 1px rgba(255,250,235,.18);
+  animation:cmpCardIdle 2.6s ease-in-out infinite;
+}
+@keyframes cmpCardIdle{
+  0%, 100% {
+    box-shadow:inset 0 0 0 1px rgba(255,250,235,.18);
+    border-left-color:var(--cmp-color, var(--ink-wine));
+  }
+  50%      {
+    box-shadow:inset 0 0 0 1px rgba(255,250,235,.4),0 0 14px var(--cmp-color, var(--ink-wine));
+    border-left-color:var(--cmp-color, var(--ink-wine));
+    filter:brightness(1.04);
+  }
+}
+.cmp-essence::after{
+  content:'';
+  position:absolute;right:13px;top:18px;
+  width:7px;height:7px;border-radius:50%;
+  background:var(--cmp-color, var(--ink-wine));
+  box-shadow:0 0 8px var(--cmp-color, var(--ink-wine));
+  animation:cmpDotPulse 1.6s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes cmpDotPulse{
+  0%, 100% { opacity:.4; transform:scale(1) }
+  50%      { opacity:1;  transform:scale(1.5) }
+}
+.cmp-essence:hover{filter:brightness(1.04);transform:translateY(-1px);box-shadow:0 3px 10px rgba(74,32,8,.18),inset 0 0 0 1px rgba(255,250,235,.22)}
+.cmp-essence:active{filter:brightness(.96);transform:translateY(2px)}
+.cmp-essence-active{
+  background:rgba(245,225,180,.62);
+  box-shadow:0 3px 14px rgba(74,32,8,.24),inset 0 0 0 1px rgba(255,250,235,.3),0 0 0 1px var(--cmp-color, var(--ink-wine));
+  animation:none;
+}
+.cmp-essence-active::after{display:none}
+.cmp-essence-head{
+  display:flex;align-items:baseline;gap:8px;margin-bottom:4px;
+}
+.cmp-essence-name{
+  font-family:var(--serif);font-style:italic;font-weight:500;
+  font-size:17px;color:var(--cmp-color, var(--ink-wine));
+  text-shadow:0 1px 0 rgba(255,250,235,.4);
+}
+.cmp-essence-tag{
+  font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:.16em;
+  color:var(--ink-soft);
+  text-shadow:0 1px 0 rgba(255,250,235,.4);
+}
+.cmp-essence-result{
+  margin-left:auto;font-family:var(--sans);font-size:11px;font-weight:600;
+  color:var(--ink-mid);letter-spacing:.04em;
+  text-shadow:0 1px 0 rgba(255,250,235,.4);
+}
+.cmp-essence-desc{
+  font-family:var(--sans);font-size:13px;color:var(--ink-dark);line-height:1.62;
+  text-shadow:0 1px 0 rgba(255,250,235,.4);
+}
+.cmp-essence-desc em{
+  color:var(--cmp-color, var(--ink-wine));font-style:normal;font-weight:600;
+}
+
+/* 보색의 두 얼굴 박스 */
+.cmp-two-faces{
+  background:rgba(245,225,180,.34);
+  border-left:2px solid var(--ink-wine);
+  border-radius:0 6px 6px 0;
+  padding:11px 14px 12px;margin-top:8px;
+}
+.cmp-face-item{
+  display:flex;gap:10px;align-items:flex-start;
+  font-family:var(--sans);font-size:13px;color:var(--ink-dark);line-height:1.6;
+  margin-bottom:4px;text-shadow:0 1px 0 rgba(255,250,235,.4);
+}
+.cmp-face-item:last-of-type{margin-bottom:8px}
+.cmp-face-num{
+  flex:0 0 auto;font-family:var(--serif);font-size:15px;font-style:italic;
+  color:var(--ink-wine);font-weight:500;line-height:1.4;
+}
+.cmp-face-item b{color:var(--ink-black);font-weight:700}
+.cmp-face-note{
+  font-size:12.5px;color:var(--ink-mid);line-height:1.6;
+  padding-top:8px;border-top:1px solid var(--paper-line);
+  text-shadow:0 1px 0 rgba(255,250,235,.4);
+}
+.cmp-face-note em{color:var(--ink-wine);font-style:normal;font-weight:600}
+
+/* 두 얼굴 박스 — 추천 라인 (✦ 골드 마크) */
+.cmp-face-rec{
+  font-size:12.5px;color:var(--ink-dark);line-height:1.6;
+  padding-top:8px;border-top:1px solid var(--paper-line);
+  margin-top:0;display:flex;gap:6px;align-items:flex-start;
+  text-shadow:0 1px 0 rgba(255,250,235,.4);
+}
+.cmp-face-rec::before{
+  content:'✦';color:#B0843E;font-weight:700;
+  flex:0 0 auto;font-size:13px;line-height:1.5;
+}
+.cmp-face-rec b{color:var(--ink-black);font-weight:700}
+.cmp-face-rec em{color:var(--ink-wine);font-style:normal;font-weight:600}
+
+/* 메커니즘 3슬롯 (밑줄 분할) */
+.cmp-mechanism{
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;
+  background:rgba(245,225,180,.32);
+  border:1px solid var(--paper-line-strong);border-radius:7px;
+  padding:14px 6px;margin-top:4px;
+}
+.cmp-mech-slot{
+  position:relative;text-align:center;padding:0 4px;
+}
+.cmp-mech-slot + .cmp-mech-slot::before{
+  content:'';position:absolute;left:0;top:14%;bottom:14%;
+  width:1px;background:var(--paper-line);
+}
+.cmp-mech-name{
+  font-family:var(--sans);font-size:12.5px;font-weight:700;
+  color:var(--ink-black);line-height:1.35;
+  text-shadow:0 1px 0 rgba(255,250,235,.4);
+  margin-bottom:6px;
+}
+.cmp-mech-divider{
+  width:18px;height:1px;background:var(--paper-line-strong);margin:0 auto 6px;
+}
+.cmp-mech-role{
+  font-family:var(--sans);font-size:10.5px;font-weight:600;
+  letter-spacing:.08em;color:var(--ink-soft);
+  text-shadow:0 1px 0 rgba(255,250,235,.4);
+}
+.cmp-mech-note{
+  font-family:var(--sans);font-size:12px;color:var(--ink-mid);
+  text-align:center;margin-top:8px;line-height:1.55;
+  text-shadow:0 1px 0 rgba(255,250,235,.4);
+}
+.cmp-mech-note b{color:var(--ink-black);font-weight:700}
+
+/* 레시피 설계 예시 */
+.cmp-examples-box{
+  background:rgba(245,225,180,.34);
+  border:1px solid var(--paper-line-strong);border-radius:7px;
+  padding:13px 13px 13px;margin-top:12px;
+}
+.cmp-examples-context{
+  display:inline-block;
+  font-family:var(--sans);font-size:10.5px;font-weight:700;
+  letter-spacing:.12em;color:var(--ink-soft);
+  background:rgba(74,32,8,.08);
+  padding:3px 10px;border-radius:99px;
+  border:1px solid rgba(74,32,8,.22);
+  margin-bottom:8px;
+  text-shadow:0 1px 0 rgba(255,250,235,.4);
+}
+.cmp-examples-label{
+  font-family:var(--sans);font-size:14px;font-weight:700;
+  letter-spacing:.04em;color:var(--ink-wine);
+  text-shadow:0 1px 0 rgba(255,250,235,.4);
+  margin-bottom:10px;
+}
+.cmp-examples-list{display:flex;flex-direction:column;gap:6px}
+.cmp-example-row{
+  display:flex;align-items:center;gap:6px;
+  font-family:var(--sans);font-size:13px;color:var(--ink-dark);
+  text-shadow:0 1px 0 rgba(255,250,235,.4);
+  padding:6px 8px;background:rgba(245,225,180,.28);
+  border-radius:5px;border:1px solid rgba(74,32,8,.14);
+}
+.cmp-example-main{font-weight:700;color:var(--ink-black)}
+.cmp-example-plus{color:var(--ink-faint);font-weight:400;font-size:11px}
+.cmp-example-sub{color:var(--ink-dark);font-weight:600}
+.cmp-example-cc{
+  margin-left:auto;font-size:11.5px;font-weight:700;
+  color:var(--ink-wine);letter-spacing:.04em;
+  background:rgba(138,42,28,.08);padding:3px 8px;border-radius:99px;
+  border:1px solid rgba(138,42,28,.22);
+}
+/* 레시피 — combo → result 형태 (zone1.C, zone2.A) */
+.cmp-examples-intro{
+  font-size:12px;color:var(--ink-mid);margin-bottom:10px;line-height:1.5;
+  text-shadow:0 1px 0 rgba(255,250,235,.4);
+}
+.cmp-examples-outro{
+  font-size:11.5px;color:var(--ink-mid);font-style:italic;text-align:right;
+  margin-top:8px;padding-top:6px;border-top:1px dashed var(--paper-line);
+  text-shadow:0 1px 0 rgba(255,250,235,.4);
+}
+.cmp-example-row.combo-row{gap:8px}
+.cmp-example-combo{
+  flex:0 0 auto;font-weight:700;color:var(--ink-black);font-size:12px;min-width:96px;
+  text-shadow:0 1px 0 rgba(255,250,235,.4);
+}
+.cmp-example-arrow{
+  flex:0 0 auto;color:var(--ink-faint);font-size:11px;
+}
+.cmp-example-result{
+  flex:1;color:var(--ink-wine);font-weight:600;font-size:12px;
+  text-shadow:0 1px 0 rgba(255,250,235,.4);
+}
+
+/* 버진모에서의 풀 */
+.cmp-route-pool{
+  display:flex;flex-direction:column;gap:6px;
+  margin-top:4px;
+}
+.cmp-pool-item{
+  display:flex;gap:9px;align-items:flex-start;
+  font-family:var(--sans);font-size:13px;color:var(--ink-dark);line-height:1.6;
+  background:rgba(245,225,180,.32);
+  border:1px solid rgba(74,32,8,.18);border-radius:6px;
+  padding:8px 12px;
+  text-shadow:0 1px 0 rgba(255,250,235,.4);
+}
+.cmp-pool-mark{
+  flex:0 0 auto;color:var(--ink-wine);font-weight:700;line-height:1.4;
+  font-size:14px;
+}
+.cmp-pool-item b{color:var(--ink-black);font-weight:700}
+.cmp-pool-item em{color:var(--ink-wine);font-style:normal;font-weight:600}
+
+/* 한계 박스 (! 잉크박스) */
+.cmp-limit-box{
+  display:flex;gap:10px;align-items:flex-start;
+  background:rgba(138,42,28,.06);
+  border:1px solid rgba(138,42,28,.32);
+  border-left:3px solid var(--ink-wine);
+  border-radius:6px;
+  padding:11px 13px 12px;margin-top:14px;
+}
+.cmp-limit-box .limit-mark{
+  flex:0 0 auto;
+  width:22px;height:22px;border-radius:50%;
+  background:var(--ink-wine);color:#F5DCA0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-size:14px;font-weight:700;font-style:italic;
+  box-shadow:inset 0 1px 0 rgba(255,235,180,.3),0 1px 3px rgba(74,16,12,.4);
+}
+.cmp-limit-box .limit-text{
+  font-family:var(--sans);font-size:13px;color:var(--ink-dark);line-height:1.6;
+  text-shadow:0 1px 0 rgba(255,250,235,.4);
+}
+.cmp-limit-box .limit-text em{color:var(--ink-wine);font-style:normal;font-weight:600}
+
+/* body의 노이즈는 양피지 위에 너무 강하면 흐려짐 — 약하게 */
+body::before{opacity:.012 !important}
+
+/* ══════════════════════════════════════════════════════════
+   끝 — 양피지 디자인 시스템 v6
+   ══════════════════════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════════════════════
+   가독성 일괄 보강 — 양피지 위 모든 작은 라벨
+   ══════════════════════════════════════════════════════════ */
+
+/* Three.js 두 구 라벨 (언더톤 / 들어오는 색) — 어두운 chip 형태 */
+.orb-label{
+  background:rgba(15,8,4,.88) !important;
+  color:#F5DCA0 !important;
+  border:1px solid rgba(212,168,96,.35) !important;
+  border-radius:99px !important;
+  padding:5px 12px !important;
+  font-size:11px !important;
+  letter-spacing:.16em !important;
+  font-weight:700 !important;
+  text-transform:none !important;
+  text-shadow:0 1px 2px rgba(0,0,0,.5);
+  box-shadow:0 2px 6px rgba(0,0,0,.3);
+}
+.orb-label-l,.orb-label-r{color:#F5DCA0 !important}
+
+/* principle-text-sub (양피지 가죽 같은 부분) */
+.principle-text-sub{
+  color:var(--ink-mid) !important;
+  font-size:12px !important;
+  font-weight:500 !important;
+}
+
+/* info-card 작은 라벨들 */
+.info-meta,.lvl-stage,.melanin-power{
+  color:var(--ink-mid) !important;
+  font-weight:500 !important;
+}
+
+/* hidden-pigment 라벨 (사진 위 작은 영역) — 사진은 어두우니 베이지 그대로 */
+.hidden-pigment .label{color:#C5B89B !important;font-weight:600 !important}
+
+/* 모든 양피지 위 텍스트에 미세한 양각 효과 */
+h1.title,p.lead,.zone-title,.zone-desc,.mechanism-title,.mechanism-desc,
+.limit-text,.principle-text,.warm-tone-text,.recommend-title,.recommend-sub,
+.route-title,.route-sub,.zone-warm-text{
+  text-shadow:0 1px 0 rgba(255,250,235,.4);
+}
+
+/* 작은 mono 라벨류 */
+.kicker,.zone-tag,.zone-range,.principle-label,.mechanism-label,
+.routes-label,.axis-end,.axis-name,.recommend-label,.info-label,
+.step-meta,.step-tag{
+  text-shadow:0 1px 0 rgba(255,250,235,.35);
+}
+
+/* photo-label (사진 위 LV 5 · BLACK) — 사진 위라 그대로 어두운 chip */
+.photo-label{
+  font-size:11.5px !important;
+  font-weight:700 !important;
+}
+
+/* mini-swatch / step-mini 글자 가독성 보강 */
+.step-mini-info-row{font-size:13px !important}
+.step-mini-info-bottom{font-size:12px !important}
+.step-mini-info-row b,.step-mini-info-bottom b{
+  color:var(--ink-black) !important;font-weight:700 !important;
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   여백 줄이기 + principle 글자 키우기 (가독성 보강 v2)
+   ══════════════════════════════════════════════════════════ */
+
+/* Three.js 영역 — 양피지 위 자연스럽게, 여백 줄임 */
+.orbs-container{
+  height:130px !important;
+  margin-bottom:8px !important;
+  background:transparent !important;
+}
+
+/* 염색의 원리 박스 — 글자 키움 + 진하게 */
+.principle-box{
+  padding:18px 4px !important;
+}
+.principle-label{
+  font-size:13px !important;
+  letter-spacing:.28em !important;
+  color:var(--ink-wine) !important;
+  font-weight:800 !important;
+  margin-bottom:12px !important;
+  text-transform:none !important;
+}
+.principle-text{
+  font-size:15px !important;
+  line-height:1.7 !important;
+  color:var(--ink-black) !important;
+  font-weight:500 !important;
+  letter-spacing:0 !important;
+}
+.principle-text b{color:var(--ink-black) !important;font-weight:800 !important}
+.principle-text em{color:var(--ink-wine) !important;font-weight:700 !important;font-style:normal !important}
+.principle-text-sub{
+  font-size:14px !important;
+  color:var(--ink-mid) !important;
+  font-weight:500 !important;
+  font-style:italic !important;
+  margin-top:6px !important;
+  line-height:1.65 !important;
+}
+.principle-divider{
+  background:var(--paper-line-strong) !important;
+  margin:14px 0 !important;
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   step-mini 가독성 풀 보강 (사용자 피드백 v3)
+   ══════════════════════════════════════════════════════════ */
+
+/* step-mini 내부 박스 — 양피지 위 살짝 떠있는 느낌 */
+.step-mini-info{
+  background:rgba(255,250,235,.45) !important;
+  border:1px solid var(--paper-line-strong) !important;
+  border-radius:8px !important;
+}
+
+/* 우측 상단 META (LIFT 1 · 적색 노출) */
+.step-mini-info-top .step-meta{
+  font-size:11.5px !important;
+  color:var(--ink-wine) !important;
+  font-weight:700 !important;
+  letter-spacing:.12em !important;
+}
+
+/* STEP 1 태그 — 살짝 키우고 더 진하게 */
+.step-mini-info-top .step-tag{
+  font-size:11px !important;
+  letter-spacing:.16em !important;
+  font-weight:700 !important;
+  text-transform:uppercase !important;
+  padding:3px 9px !important;
+}
+
+/* 큰 숫자 9 — 와인 적색 (사용자 요청) */
+.step-mini-info-row .lvl{
+  font-size:30px !important;
+  font-weight:700 !important;
+  color:var(--ink-wine) !important;
+  letter-spacing:-.04em !important;
+}
+
+/* 큰 글자 (적색 풀려나옴) — 검정 진하게 */
+.step-mini-info-row .name{
+  font-size:15px !important;
+  font-weight:700 !important;
+  color:var(--ink-black) !important;
+}
+
+/* 부제 (풀려나오는 적색) — 와인 톤으로 */
+.step-mini-info-row .stage{
+  font-size:12.5px !important;
+  color:var(--ink-wine) !important;
+  font-weight:600 !important;
+}
+
+/* 변경 ↗ — 박스 형태 + 와인 잉크, 글자 키움 */
+.step-mini-edit{
+  font-size:12px !important;
+  color:var(--ink-wine) !important;
+  font-weight:700 !important;
+  background:rgba(138,42,28,.08) !important;
+  border:1px solid rgba(138,42,28,.32) !important;
+  border-radius:4px !important;
+  padding:4px 10px !important;
+  letter-spacing:.04em !important;
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   가독성 보강 v4 — Three.js 라벨 + step-chip 잘림
+   ══════════════════════════════════════════════════════════ */
+
+/* Three.js 위 phaseTag (동시 작용 / 동시에 등) — 어두운 chip */
+.ch3-phase-tag{
+  background:rgba(15,8,4,.85) !important;
+  color:#F5DCA0 !important;
+  border:1px solid rgba(212,168,96,.4) !important;
+  font-size:11px !important;
+  font-weight:700 !important;
+  letter-spacing:.14em !important;
+  padding:5px 14px !important;
+  text-shadow:0 1px 2px rgba(0,0,0,.5);
+  box-shadow:0 2px 6px rgba(0,0,0,.3);
+}
+
+/* Three.js 아래 resultLabel (투명한 쿨브라운 등) — 와인 잉크 */
+.ch3-result-label{
+  font-size:14px !important;
+  color:var(--ink-wine) !important;
+  font-weight:700 !important;
+  letter-spacing:.02em !important;
+  text-shadow:0 1px 0 rgba(255,250,235,.4);
+}
+
+/* step-chip 잘림 방지 — 줄바꿈 허용 + 폭 여유 */
+.step-chip{
+  flex:1;min-width:0;
+  padding:9px 12px !important;
+}
+.step-chip-content{
+  white-space:normal !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+  font-size:12px !important;
+  line-height:1.4 !important;
+  color:var(--ink-dark) !important;
+  letter-spacing:0 !important;
+  word-break:keep-all;
+}
+.step-chip-content b{
+  color:var(--ink-black) !important;
+  font-weight:700 !important;
+}
+.step-chip-tag{
+  font-size:9.5px !important;
+  letter-spacing:.14em !important;
+}
+.step-chip-divider{
+  background:rgba(74,32,8,.3) !important;
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   Ch 3 컴팩트 보강 v5 — Three.js 여백·메커니즘 라벨
+   ══════════════════════════════════════════════════════════ */
+
+/* Ch 3 Three.js 컨테이너 — 높이/여백 줄임 */
+.orbs-container.ch3-orbs{
+  height:150px !important;
+  margin-top:6px !important;
+  margin-bottom:4px !important;
+}
+
+/* phaseTag (위) — top 위치 살짝 위로 */
+.ch3-phase-tag{
+  top:6px !important;
+}
+
+/* resultLabel (아래) — bottom 위치 살짝 아래로 (구와 간격 줄임) */
+.ch3-result-label{
+  bottom:6px !important;
+}
+
+/* mechanism-label (메커니즘 헤딩) — 크기 키움 */
+.mechanism-label{
+  font-size:13px !important;
+  letter-spacing:.32em !important;
+  font-weight:700 !important;
+  color:var(--ink-wine) !important;
+  margin-bottom:14px !important;
+}
+
+/* mechanism-box 자체 padding 살짝 줄임 */
+.mechanism-box{
+  padding:18px 4px !important;
+  margin-top:10px !important;
+  margin-bottom:14px !important;
+}
+
+
+</style>
+</head>
+<body>
+<div class="wrap" style="position:relative;">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="dot"></div>
+      <div class="name">COLOR<em> Journey</em></div>
+    </div>
+    <div class="steps" id="stepIndicator">
+      <div class="step active" data-ch="1"></div>
+      <div class="step" data-ch="2"></div>
+      <div class="step" data-ch="3"></div>
+      <div class="step" data-ch="4"></div>
+      <div class="step" data-ch="5"></div>
+    </div>
+  </div>
+
+  <div class="page" id="page-ch1">
+
+  <div class="kicker">Chapter 01 · Lift</div>
+  <h1 class="title">검은 머리 안엔<br><em>적색이 갇혀 있어요.</em></h1>
+  <p class="lead">동양인 자연모는 <b>검은 색소 안에 적색이 갇혀 있어요.</b> 슬라이더를 올리며 적색이 어떻게 풀려나오는지 관찰해보세요.</p>
+
+  <div class="photo-frame" id="photoFrame">
+    <!-- 사진 8장 레이어 -->
+    <img class="layer" data-lv="5"  src="/images/color-journey/lift_05.jpg" alt="Lv 5 검정">
+    <img class="layer" data-lv="7"  src="/images/color-journey/lift_07.jpg" alt="Lv 7 진갈">
+    <img class="layer" data-lv="9"  src="/images/color-journey/lift_09.jpg" alt="Lv 9 적갈">
+    <img class="layer" data-lv="11" src="/images/color-journey/lift_11.jpg" alt="Lv 11 구리">
+    <img class="layer" data-lv="13" src="/images/color-journey/lift_13.jpg" alt="Lv 13 주황">
+    <img class="layer" data-lv="14" src="/images/color-journey/lift_14.jpg" alt="Lv 14 주황 노랑">
+    <img class="layer" data-lv="16" src="/images/color-journey/lift_16.jpg" alt="Lv 16 샛노랑">
+    <img class="layer" data-lv="18" src="/images/color-journey/lift_18.jpg" alt="Lv 18 아이보리">
+
+    <div class="photo-label" id="photoLabel">LV 5 · BLACK</div>
+    <div class="hidden-pigment" id="hiddenPigment">
+      <div class="label">안에 숨은 색</div>
+      <div class="swatch" id="hiddenSwatch" style="background:#2A0806"></div>
+      <div class="swatch-name" id="hiddenName">분해 안 된 적색</div>
+    </div>
+    <div class="photo-coords" id="photoCoords"><b>Virgin</b><br>톤업 시작 전</div>
+    <div class="photo-bottom" id="photoBottom">표면은 검정, 안엔 <em>적색이 응집</em></div>
+  </div>
+
+  <div class="slider-block">
+    <div class="slider-row">
+      <input type="range" id="liftSlider" class="lift-slider" min="0" max="7" step="1" value="0"/>
+    </div>
+    <div class="lift-ticks">
+      <span>5<span class="marker">검정</span></span>
+      <span>7<span class="marker">진갈</span></span>
+      <span>9<span class="marker">적갈</span></span>
+      <span>11<span class="marker">구리</span></span>
+      <span>13<span class="marker">주황</span></span>
+      <span>14<span class="marker">주노</span></span>
+      <span>16<span class="marker">샛노</span></span>
+      <span>18<span class="marker">아이보리</span></span>
+    </div>
+  </div>
+
+  <div class="info-card">
+    <div class="info-head">
+      <div class="info-label">Current Lift</div>
+      <div class="info-meta" id="metaText">Virgin · 톤업 시작 전</div>
+    </div>
+
+    <div class="lvl-row">
+      <div class="lvl-num" id="lvlNum">5</div>
+      <div class="lvl-text">
+        <div class="lvl-name" id="lvlName">검정</div>
+        <div class="lvl-stage" id="lvlStage">자연모 — 검은 색소 가득</div>
+      </div>
+    </div>
+
+    <div class="melanin-row">
+      <div class="melanin-item">
+        <div class="melanin-dot eu" id="dotEu"></div>
+        <div class="melanin-text"><b>검은 색소</b> 먼저 분해됨</div>
+        <div class="melanin-power" id="powerEu">강</div>
+      </div>
+      <div class="melanin-item">
+        <div class="melanin-dot pheo" id="dotPheo"></div>
+        <div class="melanin-text"><b>붉은 색소</b> 끝까지 남음</div>
+        <div class="melanin-power" id="powerPheo">잠재</div>
+      </div>
+    </div>
+
+    <div class="insight" id="insight">
+      동양인 자연모는 <b>검은 색소</b>가 가득해요. 안엔 어둡고 강한 <em>적색이 분해되지 않은 채 응집</em>되어 있어요.
+    </div>
+  </div>
+
+  <button class="cta" id="confirmBtn">
+    <span id="ctaLabel">5레벨로 확정 · 다음 단계</span>
+    <span class="arrow">→</span>
+  </button>
+
+  </div>
+
+  <div class="page hidden" id="page-ch2">
+
+    <div class="step-mini" id="stepBadge1">
+      <div class="step-mini-photo">
+        <img id="miniPhoto" src="" alt="">
+        <div class="mini-swatch" id="miniSwatch"></div>
+      </div>
+      <div class="step-mini-info">
+        <div class="step-mini-info-top">
+          <div class="step-tag">STEP 1</div>
+          <div class="step-meta" id="miniMeta">VIRGIN · 톤업 시작 전</div>
+        </div>
+        <div class="step-mini-info-row">
+          <div class="lvl" id="miniLvl">5</div>
+          <div>
+            <div class="name" id="miniName">검정</div>
+            <div class="stage" id="miniStage">민낯의 적색</div>
+          </div>
+        </div>
+        <div class="step-mini-info-bottom">
+          <div></div>
+          <div class="step-mini-edit">변경 ↗</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kicker">Chapter 02 · 시술 경로</div>
+    <h1 class="title">이 베이스에서<br><em>시도할 수 있는 것.</em></h1>
+
+    <div class="orbs-container" id="orbsContainer">
+      <canvas id="orbCanvas"></canvas>
+      <div class="orb-label orb-label-l" id="labelUndertone">언더톤</div>
+      <div class="orb-label orb-label-r" id="labelIncoming">들어오는 색</div>
+    </div>
+
+    <div class="principle-box">
+      <div class="principle-label">염색의 원리</div>
+      <div class="principle-text">
+        염색은 <b>배경 위에 색을 부어넣는 작업</b>이에요.
+      </div>
+      <div class="principle-text" style="margin-top:6px;">
+        배경이 어두울수록 색이 묻히고, 배경이 비어있을수록 색이 그대로 살아요.
+      </div>
+      <div class="principle-divider"></div>
+      <div class="principle-text">
+        그래서 두 축으로 봐요 — <b>얼마나 어두운가</b> + <b>얼마나 붉은가</b>.
+      </div>
+      <div class="principle-text-sub">
+        자연멜라닌이든, 이전 염색의 인공 색소든 — 잔류량이 핵심이에요.
+      </div>
+    </div>
+
+    <div class="zone-card" id="zoneCard">
+      <div class="zone-head">
+        <div>
+          <div class="zone-tag" id="zoneTag">영역 2</div>
+          <div class="zone-title" id="zoneTitle">한 번 벗긴 배경</div>
+        </div>
+        <div class="zone-range" id="zoneRange">Lv 11~14</div>
+      </div>
+
+      <div class="zone-desc" id="zoneDesc">
+        톤업으로 한 번 벗겨지긴 했지만, <b>여전히 적색은 채워져 있는 상태</b>예요.
+        <span class="zone-desc-line2">하지만 버진모보다는 색감 구현이 훨씬 수월해서 매트브라운, 다크 애쉬 같은 깊이감 있는 색감까지 가능해요.</span>
+      </div>
+
+      <div class="zone-warm" id="zoneWarm">
+        <span class="zone-warm-mark">✦</span>
+        <span class="zone-warm-text"></span>
+      </div>
+
+      <div class="zone-body">
+        <div class="dual-axis">
+          <div class="axis-col">
+            <div class="axis-end">흰색</div>
+            <div class="axis-track brightness">
+              <div class="axis-thumb" id="thumbBrightness" style="bottom:36%;"></div>
+              <div class="axis-lv-label" id="lvLabelBrightness" style="bottom:36%;">Lv 11</div>
+            </div>
+            <div class="axis-end">검정</div>
+            <div class="axis-name">명도</div>
+          </div>
+          <div class="axis-col">
+            <div class="axis-end">아이보리</div>
+            <div class="axis-track residue">
+              <div class="axis-thumb" id="thumbResidue" style="bottom:28%;"></div>
+            </div>
+            <div class="axis-end">적색</div>
+            <div class="axis-name">잔류</div>
+          </div>
+        </div>
+
+        <div class="routes" id="routesContainer">
+          <div class="routes-label">시술 경로</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="back-btn" id="backBtn">← 이전 단계로 (Lv 변경)</button>
+
+  </div>
+
+  <div class="page hidden" id="page-ch3">
+
+    <div class="step-mini-row">
+      <div class="step-chip" id="ch3StepChip1">
+        <div class="step-chip-tag">STEP 1</div>
+        <div class="step-chip-divider"></div>
+        <div class="step-chip-content"><b id="ch3Step1Lv">Lv 11</b> · <span id="ch3Step1Name">민낯의 적색</span></div>
+      </div>
+      <div class="step-chip step-chip-active" id="ch3StepChip2">
+        <div class="step-chip-tag" id="ch3Step2Tag">STEP 2</div>
+        <div class="step-chip-divider"></div>
+        <div class="step-chip-content"><b id="ch3Step2Zone">영역 1</b> · <span id="ch3Step2Route">고명도 테크닉</span></div>
+      </div>
+    </div>
+
+    <div class="kicker">Chapter 03 · 시술 원리</div>
+    <h1 class="title" id="ch3Title">고명도 테크닉이<br><em>어떻게 작동하나.</em></h1>
+
+    <p class="lead" id="ch3Subtitle"><b>배경을 최대한 밝히고</b>, 염료를 강하게 주입하며 색을 부어넣어요.</p>
+
+    <div class="route-tag-row hidden" id="ch3TagRow">
+      <span class="route-tag-label" id="ch3TagLabel"></span>
+      <span class="route-tag-divider">·</span>
+      <span class="route-tag-desc" id="ch3TagDesc"></span>
+    </div>
+
+    <div class="orbs-container ch3-orbs" id="ch3OrbsContainer">
+      <canvas id="ch3OrbCanvas"></canvas>
+      <div class="ch3-phase-tag" id="ch3PhaseTag">동시 작용</div>
+      <div class="ch3-step-indicator hidden" id="ch3StepIndicator">
+        <div class="ind-dot" id="ch3IndDot1"></div>
+        <div class="ind-dot" id="ch3IndDot2"></div>
+      </div>
+      <div class="ch3-result-label" id="ch3ResultLabel">투명한 쿨브라운</div>
+    </div>
+
+    <div class="mechanism-box" id="mechanismBox">
+      <div class="mechanism-label">메커니즘</div>
+      <div class="mechanism-list" id="mechanismList"></div>
+      <div class="mechanism-limit">
+        <span class="limit-mark">!</span>
+        <span class="limit-text" id="mechanismLimit"></span>
+      </div>
+    </div>
+
+    <div class="warm-tone-ref" id="ch3WarmRef">
+      <span class="warm-tone-mark">✦</span>
+      <span class="warm-tone-text" id="ch3WarmText"></span>
+    </div>
+
+    <!-- zone4.B 전용 — 클리어 정의 (메커니즘 다음 한 줄) -->
+    <div class="ch3-clear-def" id="ch3ClearDef" style="display:none"></div>
+
+    <!-- zone4.A/B 전용 — 레시피 읽는 능력 -->
+    <div class="ch3-recipe-box" id="ch3RecipeBox" style="display:none">
+      <div class="ch3-recipe-context" id="ch3RecipeContext">Lv 16 · 노랑 잔류 누르며 염색</div>
+      <div class="ch3-recipe-label" id="ch3RecipeLabel">레시피를 읽는 능력</div>
+      <div class="ch3-recipe-intro" id="ch3RecipeIntro"></div>
+      <div class="ch3-recipe-list" id="ch3RecipeList"></div>
+      <div class="ch3-recipe-outro" id="ch3RecipeOutro"></div>
+    </div>
+
+    <!-- zone4.B 전용 — 여정의 끝 (endpoint) -->
+    <div class="ch3-endpoint" id="ch3Endpoint" style="display:none">
+      <div class="ch3-endpoint-mark" id="ch3EndpointMark"></div>
+      <div class="ch3-endpoint-text" id="ch3EndpointText"></div>
+    </div>
+
+    <!-- 최종 스텝 버튼 (Ch 3 → Ch 4 진입, 자연 진행) -->
+    <div class="ink-line" id="ch3FinalLine">
+      <svg viewBox="0 0 320 8" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 4 Q 80 2 160 4 T 315 4" stroke="rgba(74,32,8,.4)" stroke-width=".8" fill="none" stroke-linecap="round"/></svg>
+      <span class="ink-line-mark">◆ ◇ ◆</span>
+      <svg viewBox="0 0 320 8" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 4 Q 80 6 160 4 T 315 4" stroke="rgba(74,32,8,.4)" stroke-width=".8" fill="none" stroke-linecap="round"/></svg>
+    </div>
+    <div class="final-cta" id="finalCtaCh3">
+      <div class="final-cta-text">
+        <div class="final-cta-kicker">최종 테크닉</div>
+        <div class="final-cta-title">보색으로 색 방향 잡기</div>
+      </div>
+      <div class="final-cta-arrow">→</div>
+    </div>
+
+    <!-- 다른 경로 둘러보기 (경로 변경) -->
+    <div class="recommend-box" id="recommendBox">
+      <div class="recommend-label" id="recommendLabel">조금 더 적색을 완화하고 투명하게 표현하려면</div>
+      <div class="recommend-list" id="recommendList"></div>
+    </div>
+
+    <button class="back-btn" id="backBtnCh3">← 이전 단계로 (시술 경로 변경)</button>
+
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════
+       Ch 4 · 보색 추가 (영역 1 / 경로 A — 버진모 + 보색)
+       ════════════════════════════════════════════════════════════ -->
+  <div class="page hidden" id="page-ch4">
+
+    <div class="step-mini-row ch4-chip-row">
+      <div class="step-chip" id="ch4StepChip1">
+        <div class="step-chip-tag">STEP 1</div>
+        <div class="step-chip-divider"></div>
+        <div class="step-chip-content"><b id="ch4Step1Lv">Lv 5</b> · <span id="ch4Step1Name">검정</span></div>
+      </div>
+      <div class="step-chip" id="ch4StepChip2">
+        <div class="step-chip-tag">STEP 2</div>
+        <div class="step-chip-divider"></div>
+        <div class="step-chip-content"><b id="ch4Step2Zone">영역 1</b> · <span id="ch4Step2Route">버진모 톤업</span></div>
+      </div>
+      <div class="step-chip step-chip-active" id="ch4StepChip3">
+        <div class="step-chip-tag">STEP 3</div>
+        <div class="step-chip-divider"></div>
+        <div class="step-chip-content"><b>보색</b> · <span>색 방향</span></div>
+      </div>
+    </div>
+
+    <div class="kicker">◆ 여 정 · IV ◆</div>
+    <h1 class="title" id="ch4Title">버진모 톤업에<br><em>보색을 더한다.</em></h1>
+    <p class="lead" id="ch4Subtitle">각각의 적색의 보색을 선택해보세요</p>
+
+    <!-- 삼각형 시각화 (Three.js) -->
+    <div class="cmp-stage" id="cmpStage">
+      <canvas id="cmpCanvas"></canvas>
+      <div class="cmp-label cmp-label-green"  id="cmpLabelGreen">GREEN</div>
+      <div class="cmp-label cmp-label-blue"   id="cmpLabelBlue">BLUE</div>
+      <div class="cmp-label cmp-label-violet" id="cmpLabelViolet">VIOLET</div>
+      <div class="cmp-label cmp-label-center" id="cmpLabelCenter">잔류 적색</div>
+    </div>
+
+    <!-- 보색별 본질 -->
+    <div class="cmp-essence-list" id="cmpEssenceList"></div>
+
+    <!-- 보색의 두 얼굴 -->
+    <div class="ink-line">
+      <svg viewBox="0 0 320 8" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 4 Q 80 2 160 4 T 315 4" stroke="rgba(74,32,8,.4)" stroke-width=".8" fill="none" stroke-linecap="round"/></svg>
+      <span class="ink-line-mark">보색의 두 얼굴</span>
+      <svg viewBox="0 0 320 8" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 4 Q 80 6 160 4 T 315 4" stroke="rgba(74,32,8,.4)" stroke-width=".8" fill="none" stroke-linecap="round"/></svg>
+    </div>
+    <div class="cmp-two-faces" id="cmpTwoFaces"></div>
+
+    <!-- 메커니즘 3슬롯 -->
+    <div class="ink-line">
+      <svg viewBox="0 0 320 8" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 4 Q 80 2 160 4 T 315 4" stroke="rgba(74,32,8,.4)" stroke-width=".8" fill="none" stroke-linecap="round"/></svg>
+      <span class="ink-line-mark">메 커 니 즘</span>
+      <svg viewBox="0 0 320 8" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 4 Q 80 6 160 4 T 315 4" stroke="rgba(74,32,8,.4)" stroke-width=".8" fill="none" stroke-linecap="round"/></svg>
+    </div>
+    <div class="cmp-mechanism" id="cmpMechanism"></div>
+    <div class="cmp-mech-note" id="cmpMechNote"></div>
+
+    <!-- 레시피 설계 예시 -->
+    <div class="cmp-examples-box">
+      <div class="cmp-examples-context" id="cmpExamplesContext">Lv 5 · 버진모 톤업</div>
+      <div class="cmp-examples-label" id="cmpExamplesLabel">레시피를 설계하는 능력 예시</div>
+      <div class="cmp-examples-intro" id="cmpExamplesIntro" style="display:none"></div>
+      <div class="cmp-examples-list" id="cmpExamplesList"></div>
+      <div class="cmp-examples-outro" id="cmpExamplesOutro" style="display:none"></div>
+    </div>
+
+    <!-- 버진모에서의 풀 -->
+    <div class="ink-line">
+      <svg viewBox="0 0 320 8" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 4 Q 80 2 160 4 T 315 4" stroke="rgba(74,32,8,.4)" stroke-width=".8" fill="none" stroke-linecap="round"/></svg>
+      <span class="ink-line-mark" id="cmpRoutePoolTitle">버진모에서의 풀</span>
+      <svg viewBox="0 0 320 8" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 4 Q 80 6 160 4 T 315 4" stroke="rgba(74,32,8,.4)" stroke-width=".8" fill="none" stroke-linecap="round"/></svg>
+    </div>
+    <div class="cmp-route-pool" id="cmpRoutePool"></div>
+
+    <!-- 한계 -->
+    <div class="cmp-limit-box">
+      <span class="limit-mark">!</span>
+      <span class="limit-text" id="cmpLimit"></span>
+    </div>
+
+    <button class="back-btn" id="backBtnCh4">← 시술 경로로 돌아가기</button>
+
+  </div>
+
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   8단계 데이터 — 클링 영상 캡처와 1:1 매핑
+   ══════════════════════════════════════════════════════════════ */
+
+const STAGES = [
+  { lv:5,  name:'검정',         shortLabel:'BLACK',         stage:'자연모 — 검은 색소 가득',      eu:'강',     pheo:'잠재',
+    meta:'Virgin · 톤업 시작 전',
+    hidden:'#2A0806',  hiddenName:'분해 안 된 적색',
+    bottom:'표면은 검정, 안엔 <em>적색이 응집</em>',
+    insight:`동양인 자연모는 <b>검은 색소</b>가 가득해요. 안엔 어둡고 강한 <em>적색이 분해되지 않은 채 응집</em>되어 있어요.` },
+
+  { lv:7,  name:'진갈색',       shortLabel:'DARK BROWN',    stage:'적색 분해 직전',                eu:'강',     pheo:'잠재',
+    meta:'Virgin · 약한 톤업',
+    hidden:'#4A100C',  hiddenName:'분해 안 된 적색',
+    bottom:'분해 전 — <em>적색이 짙게 갇혀 있음</em>',
+    insight:`톤업이 살짝 진행되어도 적색은 여전히 분해 전 상태. <em>검은 색소 안에 짙게 갇혀 있어요.</em>` },
+
+  { lv:9,  name:'적갈색',       shortLabel:'RED-BROWN',     stage:'적색 풀려나옴',                  eu:'중',     pheo:'드러남',
+    meta:'Lift 1 · 적색 노출',
+    hidden:'#8C2C1C',  hiddenName:'풀려나오는 적색',
+    bottom:'<em>응집된 적색이 풀려나오는 중</em>',
+    insight:`리프팅으로 검은 색소가 절반쯤 풀렸어요. <em>갇혀 있던 적색이 본격 드러나기 시작.</em>` },
+
+  { lv:11, name:'구리 적색',    shortLabel:'COPPER RED',    stage:'민낯의 적색',                    eu:'약',     pheo:'강',
+    meta:'Lift 2 · 적색 정점',
+    hidden:'#B84C28',  hiddenName:'민낯의 적색',
+    bottom:'<em>적색이 민낯으로 드러난 정점</em> — 동양인 모발의 저항점',
+    insight:`적색이 마침내 <em>민낯으로 드러난 정점</em>. 동양인 모발의 저항점이에요.` },
+
+  { lv:13, name:'주황 앰버',    shortLabel:'ORANGE AMBER',  stage:'적색 분해 시작',                 eu:'약',     pheo:'중강',
+    meta:'Lift 3 · 리프팅 한계',
+    hidden:'#D87838',  hiddenName:'주황',
+    bottom:'<em>주황으로 산화 시작</em>',
+    insight:`적색이 더 분해되며 <em>주황으로 산화</em>되기 시작해요.` },
+
+  { lv:14, name:'주황 노랑',    shortLabel:'YELLOW-ORANGE', stage:'분해 진행',                       eu:'미세',   pheo:'중',
+    meta:'Bleach 1 · 탈색 진입',
+    hidden:'#E8A848',  hiddenName:'주황 노랑',
+    bottom:'<em>분해 진행</em> — 노랑기 등장',
+    insight:`주황이 더 분해되며 <em>노랑기가 등장</em>해요.` },
+
+  { lv:16, name:'샛노랑',       shortLabel:'CANARY YELLOW', stage:'거의 분해 완료',                 eu:'없음',   pheo:'약',
+    meta:'Bleach 2 · 중화 영역',
+    hidden:'#F0CA68',  hiddenName:'샛노랑',
+    bottom:'적색 거의 분해 — <b>샛노랑만 남음</b>',
+    insight:`적색이 거의 다 분해됐어요. 잔류는 <b>샛노랑만 남은 상태</b>.` },
+
+  { lv:18, name:'아이보리',     shortLabel:'IVORY',         stage:'분해 완료 — 거의 백모',          eu:'없음',   pheo:'잠재 흔적',
+    meta:'Change · 백모 가까움',
+    hidden:'#F5E8C8',  hiddenName:'아이보리',
+    bottom:'<b>분해 완료</b> — 백모 가까움',
+    insight:`잔류 거의 없음. <b>분해가 완전히 끝난 영역</b>.` },
+];
+
+const PHEO_OPACITY = {
+  // 적색 멜라닌이 보이는 강도 (시각화용)
+  5: 0.25, 7: 0.40, 9: 0.75, 11: 1.0, 13: 0.90, 14: 0.55, 16: 0.30, 18: 0.10
+};
+const EU_OPACITY = {
+  5: 1.0, 7: 0.95, 9: 0.65, 11: 0.40, 13: 0.20, 14: 0.10, 16: 0.05, 18: 0.05
+};
+
+/* ══════════════════════════════════════════════════════════════
+   DOM
+   ══════════════════════════════════════════════════════════════ */
+const slider = document.getElementById('liftSlider');
+const layers = document.querySelectorAll('.layer');
+const photoLabel = document.getElementById('photoLabel');
+const photoCoords = document.getElementById('photoCoords');
+const photoBottom = document.getElementById('photoBottom');
+const hiddenSwatch = document.getElementById('hiddenSwatch');
+const hiddenName = document.getElementById('hiddenName');
+const lvlNum = document.getElementById('lvlNum');
+const lvlName = document.getElementById('lvlName');
+const lvlStage = document.getElementById('lvlStage');
+const metaText = document.getElementById('metaText');
+const dotEu = document.getElementById('dotEu');
+const dotPheo = document.getElementById('dotPheo');
+const powerEu = document.getElementById('powerEu');
+const powerPheo = document.getElementById('powerPheo');
+const insight = document.getElementById('insight');
+const ctaLabel = document.getElementById('ctaLabel');
+
+let currentIdx = -1;
+
+function update(){
+  const idx = parseInt(slider.value, 10);
+  if (idx === currentIdx) return;
+  currentIdx = idx;
+  const s = STAGES[idx];
+
+  // 사진 swap
+  layers.forEach(l => {
+    if (parseInt(l.dataset.lv, 10) === s.lv) l.classList.add('active');
+    else l.classList.remove('active');
+  });
+
+  // 라벨/카드
+  photoLabel.textContent = `LV ${s.lv} · ${s.shortLabel}`;
+  photoCoords.innerHTML = `<b>${s.meta.split(' · ')[0]}</b><br>${s.meta.split(' · ')[1] || ''}`;
+  photoBottom.innerHTML = s.bottom;
+
+  // 우상단 — 안에 숨은 색
+  hiddenSwatch.style.background = s.hidden;
+  hiddenName.textContent = s.hiddenName;
+
+  lvlNum.textContent = s.lv;
+  lvlName.textContent = s.name;
+  lvlStage.textContent = s.stage;
+  metaText.textContent = s.meta;
+  powerEu.textContent = s.eu;
+  powerPheo.textContent = s.pheo;
+  insight.innerHTML = s.insight;
+  ctaLabel.textContent = `${s.lv}레벨로 확정 · 다음 단계`;
+
+  // 멜라닌 닷 투명도
+  dotEu.style.opacity = (EU_OPACITY[s.lv] || 0).toFixed(2);
+  dotPheo.style.opacity = (PHEO_OPACITY[s.lv] || 0).toFixed(2);
+}
+
+slider.addEventListener('input', update);
+update();
+
+document.getElementById('confirmBtn').addEventListener('click', () => {
+  goToCh2();
+});
+
+/* ══════════════════════════════════════════════════════════════
+   Ch 2 — 영역 매핑 + 시술 경로
+   ══════════════════════════════════════════════════════════════ */
+
+const ZONE_MAP = {
+  5:  'zone1',  7:  'zone1',  9:  'zone1',
+  11: 'zone2',  13: 'zone2',
+  14: 'zone3',
+  16: 'zone4',  18: 'zone4',
+};
+
+const AXIS_POS = {
+  5:  { brightness: 4,  residue: 4 },
+  7:  { brightness: 12, residue: 8 },
+  9:  { brightness: 22, residue: 18 },
+  11: { brightness: 36, residue: 28 },
+  13: { brightness: 52, residue: 48 },
+  14: { brightness: 62, residue: 58 },
+  16: { brightness: 82, residue: 78 },
+  18: { brightness: 95, residue: 92 },
+};
+
+const ZONES = {
+  zone1: {
+    cls: 'zone-1',
+    tag: '영역 1',
+    title: '적색 가득 베이스',
+    range: 'Lv 5~9',
+    desc: `톤업이 거의 안 됐거나 살짝만 진행된 상태예요.<span class="zone-desc-line2"><b>적색이 가득해서 차가운 색·비비드함은 다 뺏겨요</b> (애쉬·그린·블루·바이올렛).</span><span class="zone-desc-route"><b>적색을 억제</b>하면서 → <em>쿨브라운</em> 표현</span><span class="zone-desc-route"><b>고명도 테크닉</b>으로 → 좀 더 적색이 완화되고 <em>투명한 쿨브라운</em></span><span class="zone-desc-route"><b>톤업 후 재염색</b>시 → <em>애쉬브라운·매트브라운</em>까지 표현 가능</span>`,
+    warmTone: `난색 계열은 잔류하는 적색·자연멜라닌이 도와줘서 어둡고 깊게 발색 (와인·레드·로즈 등 난색 계열 + 브라운).`,
+    routes: [
+      { letter:'A', title:'버진모 톤업',                  sub:'가벼운 가미' },
+      { letter:'B', title:'고명도 테크닉',                sub:'한 번에 명도 + 색 (1스텝)' },
+      { letter:'C', title:'한 번 더 톤업 후 재염색',      sub:'두 번 나눠서 깊이감' },
+    ],
+  },
+  zone2: {
+    cls: 'zone-2',
+    tag: '영역 2',
+    title: '적색 노출 베이스',
+    range: 'Lv 11~13',
+    desc: `톤업으로 한 번 벗겨졌지만, <b>여전히 적색은 채워져 있는 상태</b>예요.<span class="zone-desc-line2"><em>애쉬브라운·매트브라운</em> 같은 깊이감 있는 색감 가능. 다만 적색을 완화하며 브라운기가 섞여요.</span><span class="zone-desc-line2">비비드·파스텔 원하면 탈색이 필요해요.</span>`,
+    warmTone: `난색 계열은 잔류와 어울려 깊이감 있게 발색 (와인·레드·로즈 등 난색 계열 + 브라운).`,
+    routes: [
+      { letter:'A', title:'현 베이스 바로 염색',  sub:'적색 위에 보색으로 어우러지게' },
+      { letter:'B', title:'14레벨 이상으로',       sub:'비비드·파스텔은 14+에서 다시 선택' },
+    ],
+  },
+  zone3: {
+    cls: 'zone-3',
+    tag: '영역 3',
+    title: '탈색 진입 베이스',
+    range: 'Lv 14',
+    desc: `<b>염모제 리프팅의 최대 구간</b>이에요.<span class="zone-desc-line2">적색·주황 다 빠지고 <em>주황기가 있는 밝은 브라운</em>만 남는 가장 애매한 구간.</span><span class="zone-desc-line2"><em>청보라 계열 보색</em>이 잘 어울리고, 16~18Lv보다는 한계 있지만 깊이감이 매력.</span>`,
+    warmTone: `난색은 자연 발색. 투명하고 파스텔한 난색은 탈색이 더 필요해요.`,
+    routes: [
+      { letter:'A', title:'14 베이스 보색',           sub:'청보라 계열로 어우러지게' },
+      { letter:'B', title:'16레벨 이상으로',          sub:'비비드·파스텔은 16+에서 다시 선택' },
+    ],
+  },
+  zone4: {
+    cls: 'zone-4',
+    tag: '영역 4',
+    title: '탈색 완료 베이스',
+    range: 'Lv 16~18',
+    desc: `<b>적색이 거의 다 빠진 상태</b>예요.<span class="zone-desc-line2">16Lv은 노랑 잔류를 누르면서 <em>비비드하고 파스텔한 색감</em>.</span><span class="zone-desc-line2">18Lv은 거의 백모처럼 <em>파스텔·극파스텔</em>까지 안전하게 가능해요.</span>`,
+    routes: [
+      { letter:'A', title:'노랑 잔류 누르며 염색',  sub:'비비드 + 파스텔감 (Lv 16)' },
+      { letter:'B', title:'18 베이스 · 극파스텔',   sub:'가장 자유로운 영역 (Lv 18)' },
+    ],
+  },
+};
+
+const pageCh1 = document.getElementById('page-ch1');
+const pageCh2 = document.getElementById('page-ch2');
+const stepIndicator = document.getElementById('stepIndicator');
+const miniPhoto = document.getElementById('miniPhoto');
+const miniSwatch = document.getElementById('miniSwatch');
+const miniMeta = document.getElementById('miniMeta');
+const miniLvl = document.getElementById('miniLvl');
+const miniName = document.getElementById('miniName');
+const miniStage = document.getElementById('miniStage');
+const zoneCard = document.getElementById('zoneCard');
+const zoneTag = document.getElementById('zoneTag');
+const zoneTitle = document.getElementById('zoneTitle');
+const zoneRange = document.getElementById('zoneRange');
+const zoneDesc = document.getElementById('zoneDesc');
+const zoneWarm = document.getElementById('zoneWarm');
+const zoneWarmText = zoneWarm.querySelector('.zone-warm-text');
+const thumbBrightness = document.getElementById('thumbBrightness');
+const thumbResidue = document.getElementById('thumbResidue');
+const lvLabelBrightness = document.getElementById('lvLabelBrightness');
+const routesContainer = document.getElementById('routesContainer');
+
+function renderCh2(){
+  const idx = parseInt(slider.value, 10);
+  const stage = STAGES[idx];
+  const lv = stage.lv;
+  const zoneKey = ZONE_MAP[lv];
+  const zone = ZONES[zoneKey];
+  const pos = AXIS_POS[lv];
+
+  const photoLayer = document.querySelector(`.layer[data-lv="${lv}"]`);
+  if (photoLayer) miniPhoto.src = photoLayer.src;
+  miniSwatch.style.background = stage.hidden;
+  miniMeta.textContent = stage.meta.toUpperCase();
+  miniLvl.textContent = lv;
+  miniName.textContent = stage.stage;
+  miniStage.textContent = stage.hiddenName;
+
+  zoneCard.className = 'zone-card ' + zone.cls;
+  zoneTag.textContent = zone.tag;
+  zoneTitle.textContent = zone.title;
+  zoneRange.textContent = zone.range;
+  zoneDesc.innerHTML = zone.desc;
+
+  if (zone.warmTone) {
+    zoneWarmText.textContent = zone.warmTone;
+    zoneWarm.classList.remove('hidden');
+  } else {
+    zoneWarm.classList.add('hidden');
+  }
+
+  thumbBrightness.style.bottom = pos.brightness + '%';
+  thumbResidue.style.bottom = pos.residue + '%';
+  lvLabelBrightness.style.bottom = pos.brightness + '%';
+  lvLabelBrightness.textContent = `Lv ${lv}`;
+
+  // Lv 7·9에서는 경로 A(버진모 톤업) 자체를 안 보임 — Lv 5만 가능한 시술
+  const visibleRoutes = (zoneKey === 'zone1' && lv !== 5)
+    ? zone.routes.filter(r => r.letter !== 'A')
+    : zone.routes;
+
+  routesContainer.innerHTML = '<div class="routes-label">시술 경로</div>' +
+    visibleRoutes.map(r => {
+      let activeRoutes = [];
+      if (zoneKey === 'zone1') {
+        activeRoutes = (lv === 5 ? ZONE1_LV5_ROUTES : ZONE1_LV79_ROUTES);
+      } else if (zoneKey === 'zone2') {
+        activeRoutes = ZONE2_LV1113_ROUTES;
+      } else if (zoneKey === 'zone3') {
+        activeRoutes = ZONE3_LV14_ROUTES;
+      } else if (zoneKey === 'zone4') {
+        activeRoutes = (lv === 16) ? ZONE4_LV16_ROUTES : (lv === 18 ? ZONE4_LV18_ROUTES : []);
+      }
+      const isActive = activeRoutes.includes(r.letter);
+      const isJump = (zoneKey === 'zone2' || zoneKey === 'zone3') && r.letter === 'B';
+      const isClickable = isActive || isJump;
+      return `
+      <div class="route ${isClickable ? 'route-active' : 'route-coming'}" data-letter="${r.letter}">
+        <div class="route-head">
+          <div class="route-letter">${r.letter}</div>
+          <div class="route-title">${r.title}</div>
+          ${isActive ? '<div class="route-arrow">→</div>' : (isJump ? '<div class="route-arrow">↗</div>' : '<div class="route-soon">곧</div>')}
+        </div>
+        <div class="route-sub">${r.sub}</div>
+      </div>
+      `;
+    }).join('');
+
+  Array.from(stepIndicator.children).forEach((el, i) => {
+    if (i <= 1) el.classList.add('active');
+    else el.classList.remove('active');
+  });
+}
+
+function goToCh2(){
+  renderCh2();
+
+  window.scrollTo({ top: 0, behavior: 'instant' });
+
+  const photoFrame = document.querySelector('#page-ch1 .photo-frame');
+  const infoCard = document.querySelector('#page-ch1 .info-card');
+
+  pageCh2.classList.remove('hidden');
+  pageCh2.style.position = 'absolute';
+  pageCh2.style.top = '0';
+  pageCh2.style.left = '0';
+  pageCh2.style.right = '0';
+  pageCh2.style.visibility = 'hidden';
+  void pageCh2.offsetWidth;
+
+  const stepMini = document.getElementById('stepBadge1');
+  const miniPhotoEl = stepMini.querySelector('.step-mini-photo');
+  const miniInfoEl = stepMini.querySelector('.step-mini-info');
+
+  const photoStart = photoFrame.getBoundingClientRect();
+  const photoEnd = miniPhotoEl.getBoundingClientRect();
+  const infoStart = infoCard.getBoundingClientRect();
+  const infoEnd = miniInfoEl.getBoundingClientRect();
+
+  pageCh2.style.position = '';
+  pageCh2.style.top = '';
+  pageCh2.style.left = '';
+  pageCh2.style.right = '';
+  pageCh2.style.visibility = '';
+  pageCh2.classList.add('hidden');
+
+  const photoClone = photoFrame.cloneNode(true);
+  photoClone.classList.add('morph-clone');
+  photoClone.style.left = photoStart.left + 'px';
+  photoClone.style.top = photoStart.top + 'px';
+  photoClone.style.width = photoStart.width + 'px';
+  photoClone.style.height = photoStart.height + 'px';
+  photoClone.style.margin = '0';
+  photoClone.style.transform = 'scale(1)';
+  photoClone.style.borderRadius = '14px';
+  document.body.appendChild(photoClone);
+
+  const infoClone = infoCard.cloneNode(true);
+  infoClone.classList.add('morph-clone');
+  infoClone.style.left = infoStart.left + 'px';
+  infoClone.style.top = infoStart.top + 'px';
+  infoClone.style.width = infoStart.width + 'px';
+  infoClone.style.height = infoStart.height + 'px';
+  infoClone.style.margin = '0';
+  infoClone.style.transform = 'scale(1)';
+  document.body.appendChild(infoClone);
+
+  pageCh1.classList.add('morphing');
+
+  void photoClone.offsetWidth;
+
+  const photoScale = photoEnd.width / photoStart.width;
+  const photoTx = photoEnd.left - photoStart.left;
+  const photoTy = photoEnd.top - photoStart.top;
+  photoClone.style.transform = `translate(${photoTx}px, ${photoTy}px) scale(${photoScale})`;
+  photoClone.style.opacity = '0.95';
+  photoClone.style.borderRadius = '9px';
+
+  const infoScale = infoEnd.width / infoStart.width;
+  const infoTx = infoEnd.left - infoStart.left;
+  const infoTy = infoEnd.top - infoStart.top;
+  infoClone.style.transform = `translate(${infoTx}px, ${infoTy}px) scale(${infoScale})`;
+  infoClone.style.opacity = '0.95';
+
+  pageCh2.classList.remove('hidden');
+  pageCh2.classList.add('entering');
+
+  setTimeout(() => {
+    window.dispatchEvent(new Event('resize'));
+  }, 50);
+
+  setTimeout(() => {
+    photoClone.style.transition = 'opacity .25s ease';
+    infoClone.style.transition = 'opacity .25s ease';
+    photoClone.style.opacity = '0';
+    infoClone.style.opacity = '0';
+
+    setTimeout(() => {
+      pageCh1.classList.add('hidden');
+      pageCh1.classList.remove('morphing');
+      pageCh2.classList.remove('entering');
+      photoClone.remove();
+      infoClone.remove();
+    }, 250);
+  }, 700);
+}
+
+function goToCh1(){
+  pageCh2.classList.add('exiting');
+  pageCh1.classList.remove('hidden');
+  pageCh1.classList.add('entering');
+
+  Array.from(stepIndicator.children).forEach((el, i) => {
+    if (i === 0) el.classList.add('active');
+    else el.classList.remove('active');
+  });
+
+  setTimeout(() => {
+    pageCh2.classList.add('hidden');
+    pageCh2.classList.remove('exiting');
+    pageCh1.classList.remove('entering');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, 700);
+}
+
+document.getElementById('backBtn').addEventListener('click', goToCh1);
+document.getElementById('stepBadge1').addEventListener('click', goToCh1);
+
+/* ══════════════════════════════════════════════════════════════
+   Ch 3 — 시술 원리 (영역 1 경로 B만 활성)
+   ══════════════════════════════════════════════════════════════ */
+
+const ROUTES_DATA = {
+  zone1: {
+    A: {
+      title: '버진모 톤업으로<br><em>한 번에 들어가요.</em>',
+      subtitle: '<b>브라운과 섞인 미세한 뉘앙스</b>를 만들고 싶을 때, 일반적인 버진모 1공정으로 진행해요.',
+      tag: { label: '1공정', desc: '한 번에 톤업 + 색감 가미' },
+      mechanism: [
+        { title: '일반 염모제',  desc: '원하는 명도의 염모제로 톤업과 색감을 동시에 부여' },
+        { title: '6% 산화제',    desc: '표준 농도 — 가벼운 리프팅과 함께 색을 작용시킴' },
+      ],
+      limit: '일반적인 버진모 톤업이에요 — <em>결과는 적색기가 억제되는 탁한 브라운</em>으로 수렴해요.',
+      warmTone: '난색 계열은 잔류하는 적색·자연멜라닌이 도와줘서 어둡고 깊게 발색 (와인·레드·로즈 등 난색 계열 + 브라운).',
+      resultLabel: '적색기 완화된 탁한 브라운',
+      anim: {
+        type: 'simple',
+        bgColor: 0x1a0805, bgEmissive: 0x080202,
+        colorColor: 0x8a4838, colorEmissive: 0x2a1208,
+        resultColor: 0x5a2818, resultEmissive: 0x1c0806,
+      },
+      recommend: {
+        label: '조금 더 <b>깊이있고 투명한 색감</b>을 원하면',
+        items: [
+          { letter: 'B', title: '고명도 테크닉',         sub: '한 번에 더 깊은 색감' },
+          { letter: 'C', title: '한 번 더 톤업 후 재염색', sub: '두 단계로 나눠서 가장 투명한 결과' },
+        ],
+      },
+      complement: {
+        title: '버진모 톤업에<br><em>보색을 더한다.</em>',
+        subtitle: '각각의 적색의 보색을 선택해보세요',
+        // 보색별 본질 (사용자 본업 통찰)
+        colors: [
+          {
+            key: 'green',  name: '그린',     label: 'GREEN',   tag: '강보색',
+            hex: '#6BAA60', threeColor: 0x6BAA60, threeEmissive: 0x1c2a18,
+            desc: '적색 멜라닌을 가장 직접적으로 눌러요. 버진모 기준에서 <em>가장 청초하고 차분한 다크 브라운</em>으로 수렴해요.',
+            result: '차분한 다크 브라운',
+            // 중앙 적색 구가 수렴되는 결과색 — 가장 밝고 붉은기 가장 빠진 톤
+            convergeColor: 0x504028, convergeEmissive: 0x180E08,
+          },
+          {
+            key: 'blue',   name: '블루',     label: 'BLUE',    tag: '한색 깊이',
+            hex: '#4D7DC9', threeColor: 0x4D7DC9, threeEmissive: 0x182030,
+            desc: '적색·주황을 함께 눌러 <em>어둡고 잿빛</em>인 다크 쿨브라운으로.',
+            result: '다크 쿨브라운',
+            // 어둡고 잿빛인 탁한 브라운
+            convergeColor: 0x3A2E26, convergeEmissive: 0x100A06,
+          },
+          {
+            key: 'violet', name: '바이올렛', label: 'VIOLET',  tag: '중성 자연',
+            hex: '#9D6BB0', threeColor: 0x9D6BB0, threeEmissive: 0x281828,
+            desc: '강하지 않은 자연 중화 — 연모·손상모 권장. <em>버진모는 적보라 위험.</em>',
+            result: '⚠ 적보라 위험',
+            // 적색이 살짝 남은 탁한 브라운 (위험 신호)
+            convergeColor: 0x4A2A22, convergeEmissive: 0x18080A,
+          },
+        ],
+        // 보색의 두 얼굴
+        twoFaces: {
+          title: '보색의 두 얼굴',
+          points: [
+            { num: '①', text: '<b>잔류 적색이 상쇄</b>돼요 — 원하는 효과' },
+            { num: '②', text: '<b>동시에 채도가 떨어져요</b> — 탁해짐' },
+          ],
+          note: '더 투명하고 진한 결과를 원하면 — <em>명도 축</em>으로 가야 해요 (고명도 테크닉 / 톤업 후 재염색 / 탈색).',
+        },
+        // 메커니즘 3슬롯
+        mechanism: {
+          slots: [
+            { name: '메인 염모제', role: '메인 방향' },
+            { name: '부가 염모제', role: '2차 색입힘' },
+            { name: '컨트롤컬러',  role: '2차 색 강조' },
+          ],
+          note: '세 슬롯 모두 <b>방향</b>이에요 — 보색은 어느 슬롯에든 들어갈 수 있어요.',
+        },
+        // 레시피를 설계하는 능력 예시
+        examples: {
+          label: '레시피를 설계하는 능력 예시',
+          items: [
+            { main: '애쉬',      sub: '카키', cc: '그린 CC' },
+            { main: '애쉬·카키', sub: '블루', cc: '애쉬 CC' },
+            { main: '카키',      sub: '블루', cc: '바이올렛 CC' },
+          ],
+        },
+        // 이 경로(버진모)에서의 풀
+        routePool: {
+          title: '버진모에서의 풀',
+          items: [
+            '컨트롤컬러는 <b>소량</b>으로',
+            '<b>메인 염모제</b>는 중간 명도 + <b>부가 염모제</b>는 좀 더 고명도',
+            '또는 차라리 <em>경로 B·C로</em> — 더 투명한 결과',
+          ],
+        },
+        // 한계
+        limit: '버진모는 잔류 적색이 강해서 <em>보색도 강하게 부어야 해요</em> — 그래도 배경이 어두워 결과가 깊어요.',
+      },
+    },
+    B: {
+      title: '고명도 테크닉이<br><em>어떻게 작동하나.</em>',
+      subtitle: '<b>한 통 안에서 셋이 동시에 작용해요</b> — 탈색 없이 베이스를 최대한 밝히면서 색을 깊게 박아넣어요.',
+      mechanism: [
+        { title: '고명도 염모제 (13·15Lv)',         desc: '리프팅력이 강해 베이스를 더 끌어올려요' },
+        { title: '높은 농도의 산화제 (9% · 12%)',    desc: '리프팅을 받쳐주며 적색 멜라닌을 좀 더 많이 분해' },
+        { title: '컨트롤컬러·고채도 염모제',         desc: '끌어올린 베이스에 짙은 색을 동시에 박아 깊이감 확보' },
+      ],
+      limit: '한 번에 두 일이 동시에 일어나기 때문에 한계가 있어요. <em>선명한 잿빛·쿨한 매트 반사빛은 죽어요.</em>',
+      warmTone: '난색 계열은 잔류하는 적색·자연멜라닌이 도와줘서 어둡고 깊게 발색 (와인·레드·로즈 등 난색 계열 + 브라운).',
+      resultLabel: '투명한 쿨브라운',
+      anim: {
+        type: 'particles',
+        bgColor: 0x4a100c, bgEmissive: 0x1a0404,
+        colorColor: 0xc4a8d8, colorEmissive: 0x281828,
+        resultColor: 0x6a4a48, resultEmissive: 0x281a18,
+      },
+      recommend: {
+        label: '조금 더 <b>적색을 완화하고 투명하게</b> 표현하려면',
+        items: [
+          { letter: 'C', title: '한 번 더 톤업 후 재염색', sub: '두 단계로 나눠서 가장 투명한 결과', badge: '권장' },
+        ],
+      },
+      complement: {
+        title: '고명도 테크닉에<br><em>보색을 더한다.</em>',
+        subtitle: '각각의 적색의 보색을 선택해보세요',
+        // 보색별 본질 — 고명도 테크닉 기준 (A보다 한 톤 투명, 위험 해제)
+        colors: [
+          {
+            key: 'green',  name: '그린',     label: 'GREEN',   tag: '강보색',
+            hex: '#6BAA60', threeColor: 0x6BAA60, threeEmissive: 0x1c2a18,
+            desc: '적색 멜라닌을 가장 직접적으로 눌러요. 끌어올린 베이스 위에서 <em>가장 청초하고 차분한 브라운</em>으로 수렴해요.',
+            result: '차분한 브라운',
+            // A의 0x504028보다 한 톤 밝고 투명
+            convergeColor: 0x6A5640, convergeEmissive: 0x201810,
+          },
+          {
+            key: 'blue',   name: '블루',     label: 'BLUE',    tag: '한색 깊이',
+            hex: '#4D7DC9', threeColor: 0x4D7DC9, threeEmissive: 0x182030,
+            desc: '적색·주황을 함께 눌러 <em>어둡고 잿빛</em>인 쿨브라운으로.',
+            result: '쿨브라운',
+            // A의 0x3A2E26보다 밝고 쿨한 톤
+            convergeColor: 0x4A4248, convergeEmissive: 0x181618,
+          },
+          {
+            key: 'violet', name: '바이올렛', label: 'VIOLET',  tag: '중성 자연',
+            hex: '#9D6BB0', threeColor: 0x9D6BB0, threeEmissive: 0x281828,
+            desc: '고명도 염모제가 리프팅을 하며 만들어지는 <em>노랑 브라운을 차분하게 중화</em>해줘요.',
+            result: '차분한 중성 브라운',
+            // A의 적보라 위험(0x4A2A22) → 자연 중화된 따뜻한 중성
+            convergeColor: 0x54453A, convergeEmissive: 0x18120E,
+          },
+        ],
+        // 보색의 두 얼굴 (보편 — A와 동일)
+        twoFaces: {
+          title: '보색의 두 얼굴',
+          points: [
+            { num: '①', text: '<b>잔류 적색이 상쇄</b>돼요 — 원하는 효과' },
+            { num: '②', text: '<b>동시에 채도가 떨어져요</b> — 탁해짐' },
+          ],
+          note: '더 투명하고 진한 결과를 원하면 — <em>한 번 더 톤업 후 재염색</em> (경로 C)으로.',
+        },
+        // 메커니즘 (B 시술 재료 구체화)
+        mechanism: {
+          slots: [
+            { name: '13·15Lv 고명도 염모제', role: '메인 방향' },
+            { name: '고채도 염모제',          role: '2차 색입힘' },
+            { name: '컨트롤컬러',             role: '2차 색 강조' },
+          ],
+          note: '세 슬롯 모두 <b>방향</b>이에요 — 보색은 어느 슬롯에든 들어갈 수 있어요.',
+        },
+        // 레시피 설계 예시 (※ 임시 — 사용자 검수 카피 대기)
+        examples: {
+          label: '레시피를 설계하는 능력 예시',
+          items: [
+            { main: '애쉬',      sub: '카키', cc: '그린 CC' },
+            { main: '애쉬·카키', sub: '블루', cc: '애쉬 CC' },
+            { main: '카키',      sub: '블루', cc: '바이올렛 CC' },
+          ],
+        },
+        // 고명도 테크닉에서의 풀
+        routePool: {
+          title: '고명도 테크닉에서의 풀',
+          items: [
+            '<b>11·13·15Lv 고명도 염모제</b> + <b>염료량이 많은 염모제</b> + <b>컨트롤컬러</b>',
+            '<em>가장 투명</em>한 결과를 원하면 경로 C로',
+          ],
+        },
+        // 한계 (※ 임시 — 사용자 검수 카피 대기)
+        limit: '한 통 안에서 베이스와 색이 동시에 작용해서 — <em>선명한 매트·쿨 반사빛</em>은 살짝 묻힐 수 있어요.',
+      },
+    },
+    C: {
+      title: '한 번 더 톤업 후<br><em>재염색해요.</em>',
+      subtitle: '<b>두 단계로 나눠서</b> — 먼저 베이스를 한 번 더 밝히고, 그 위에 색을 부어넣어요.',
+      tag: { label: '탈색의 약한 버전', desc: '잔류하는 브라운을 활용하는 메커니즘' },
+      mechanism: [
+        { title: '한 번 더 베이스를 밝힘',  desc: '일반 염모제로 톤업 — 살짝 더 밝은 베이스 만들기',     numbered: '1' },
+        { title: '밝아진 베이스에 착색',     desc: '염모제로 색감 안착, 컨트롤컬러도 함께 사용 가능',     numbered: '2' },
+      ],
+      limit: '두 번 시술하니 <em>모발 손상이 늘어나고, 시간도 두 배</em> 들어요.',
+      warmTone: '난색 계열은 잔류하는 적색·자연멜라닌이 도와줘서 어둡고 깊게 발색 (와인·레드·로즈 등 난색 계열 + 브라운).',
+      resultLabel: '투명한 쿨브라운',
+      anim: {
+        type: 'two-step',
+        bgColor: 0x4a100c, bgEmissive: 0x1a0404,
+        tonedColor: 0x8a4030, tonedEmissive: 0x301410,
+        colorColor: 0xc4a8d8, colorEmissive: 0x281828,
+        resultColor: 0xa8908c, resultEmissive: 0x4a3838,
+      },
+      recommend: {
+        label: '조금 더 <b>가벼운 시술</b>을 원하면',
+        items: [
+          { letter: 'B', title: '고명도 테크닉', sub: '한 번에 깊이감 있는 색감' },
+        ],
+      },
+      complement: {
+        title: '톤업 후 재염색에<br><em>보색을 더한다.</em>',
+        subtitle: '두 단계로 나눠서 — <b>베이스를 한 번 더 밝힌 위에</b> 보색이 작용해요',
+        // 보색별 본질 — 톤업 후 재염색 (사용자 검수 카피 적용)
+        colors: [
+          {
+            key: 'green',  name: '그린',     label: 'GREEN',   tag: '강보색',
+            hex: '#6BAA60', threeColor: 0x6BAA60, threeEmissive: 0x1c2a18,
+            desc: '베이스가 한 번 더 밝아진 위에 그린이 작용해 — <em>가장 자연스러운 매트 브라운</em>으로 안착해요.',
+            result: '매트 브라운',
+            // 따뜻한 매트 갈색 (그린 기 없는)
+            convergeColor: 0x6E5945, convergeEmissive: 0x1F1810,
+          },
+          {
+            key: 'blue',   name: '블루',     label: 'BLUE',    tag: '한색 깊이',
+            hex: '#4D7DC9', threeColor: 0x4D7DC9, threeEmissive: 0x182030,
+            desc: '잔류 적색이 거의 빠진 베이스라 — <em>잿빛이 깊게 묻어나는</em> 애쉬 브라운으로.',
+            result: '잿빛 애쉬 브라운',
+            // 회색감 강한 애쉬 브라운 (네이비 X)
+            convergeColor: 0x4A4A48, convergeEmissive: 0x161818,
+          },
+          {
+            key: 'violet', name: '바이올렛', label: 'VIOLET',  tag: '중성 자연',
+            hex: '#9D6BB0', threeColor: 0x9D6BB0, threeEmissive: 0x281828,
+            desc: '두 번 시술로 노랑·잔류까지 정리된 베이스 위에 — <em>가장 자연스러운 차분한 중성</em>으로 수렴. 적보라 위험 해제.',
+            result: '차분한 쿨 중성',
+            convergeColor: 0x504845, convergeEmissive: 0x18141A,
+          },
+        ],
+        // 보색의 두 얼굴
+        twoFaces: {
+          title: '보색의 두 얼굴',
+          points: [
+            { num: '①', text: '<b>잔류 적색이 상쇄</b>돼요 — 원하는 효과' },
+            { num: '②', text: '<b>색감이 브라운과 어우러져 살기 시작해요</b> — 애쉬 브라운·매트 브라운 같은 깊이감' },
+          ],
+          note: '두 단계 시술이라 — 베이스가 한 번 더 밝아진 위에서 <em>보색이 자연스럽게 어우러져요</em>.',
+        },
+        // 메커니즘 — Step 2 착색 단계
+        mechanism: {
+          slots: [
+            { name: '일반 염모제', role: '메인 방향' },
+            { name: '부가 염모제', role: '2차 색입힘' },
+            { name: '컨트롤컬러',  role: '2차 색 강조' },
+          ],
+          note: '베이스가 이미 밝아 — <b>중간 명도의 일반 염모제로도 충분</b>해요. 보색은 어느 슬롯에든.',
+        },
+        // 레시피를 읽는 능력 (사용자 카피)
+        examples: {
+          label: '레시피를 읽는 능력',
+          intro: '색감의 뉘앙스에 따라 선택해요',
+          outro: '…등 다양하게 조절 가능해요',
+          items: [
+            { combo: '카키 + 그린',          result: '매트 브라운' },
+            { combo: '블루 + 애쉬',          result: '잿빛 애쉬 브라운' },
+            { combo: '애쉬 + 애쉬',          result: '애쉬 브라운' },
+            { combo: '애쉬 + 바이올렛',      result: '보라기 있는 애쉬 브라운' },
+            { combo: '애쉬·카키 + 블루 CC',  result: '잿빛에 매트·청초함이 살아숨쉬는 오묘한 톤' },
+          ],
+        },
+        // 톤업 후 재염색에서의 풀
+        routePool: {
+          title: '톤업 후 재염색에서의 풀',
+          items: [
+            '<b>풀이 가장 자유로워요</b> — 두 단계로 나누니 <em>채도 살아있는 색</em>까지',
+            '<b>6~9Lv 일반 염모제</b> + 부가 염모제 + 컨트롤컬러',
+            '<em>가장 자연스러운</em> 어우러짐 — 어떤 보색도 깨끗하게',
+          ],
+        },
+        // 한계
+        limit: '두 번 시술해서 — <em>모발 손상이 늘어나고, 시간도 두 배</em> 들어요.',
+      },
+    },
+  },
+  zone2: {
+    A: {
+      // ch3 시술 원리 — 한 단계, 적색 위 직접 작용
+      title: '11~13 베이스에<br><em>보색을 직접 작용시켜요.</em>',
+      subtitle: '이미 <b>적색이 노출된 베이스</b>라 — 보색이 직접 어우러져요.',
+      mechanism: [
+        { title: '일반 염모제',  desc: '원하는 색감 방향의 염모제로 바로 착색' },
+        { title: '6% 산화제',    desc: '표준 농도 — 적색 위에 색을 안착' },
+      ],
+      limit: '적색 위에 보색이 직접 작용해 — <em>채도와 투명도에는 한계</em>가 있어요.',
+      warmTone: '난색 계열은 잔류와 어울려 깊이감 있게 발색 (와인·레드·로즈 등 + 브라운).',
+      resultLabel: '깊이감 있는 어우러짐',
+      anim: {
+        type: 'simple',
+        bgColor: 0xb84c28, bgEmissive: 0x40160a,
+        colorColor: 0x8a4838, colorEmissive: 0x2a1208,
+        resultColor: 0x6a4838, resultEmissive: 0x1c0806,
+      },
+      recommend: {
+        label: '더 <b>투명하고 채도 있게</b> 가려면',
+        items: [
+          { letter: 'B', title: '탈색', sub: '한 번 더 벗기고 영역 4로' },
+        ],
+      },
+      complement: {
+        title: '11~13 언더톤에<br><em>보색을 더한다.</em>',
+        subtitle: '이미 <b>적색이 노출된 베이스</b>에서, <em>보색이 직접 어우러지며 반사빛도 서서히 드러나요</em>',
+        colors: [
+          {
+            key: 'green',  name: '그린',     label: 'GREEN',   tag: '강보색',
+            hex: '#6BAA60', threeColor: 0x6BAA60, threeEmissive: 0x1c2a18,
+            desc: '적색 위에 그린이 직접 작용해 — <em>매트 브라운으로 자연스럽게 어우러져요</em>.',
+            result: '매트 브라운',
+            convergeColor: 0x6E5945, convergeEmissive: 0x1F1810,
+          },
+          {
+            key: 'blue',   name: '블루',     label: 'BLUE',    tag: '한색 깊이',
+            hex: '#4D7DC9', threeColor: 0x4D7DC9, threeEmissive: 0x182030,
+            desc: '노출된 적색에 블루가 직접 작용해 — <em>잿빛이 깊게 묻어나는</em> 애쉬 브라운으로.',
+            result: '잿빛 애쉬 브라운',
+            convergeColor: 0x4A4A48, convergeEmissive: 0x161818,
+          },
+          {
+            key: 'violet', name: '바이올렛', label: 'VIOLET',  tag: '중성 자연',
+            hex: '#9D6BB0', threeColor: 0x9D6BB0, threeEmissive: 0x281828,
+            desc: '11~13 베이스 위에 — <em>차분한 쿨 중성</em>으로 수렴해요.',
+            result: '차분한 쿨 중성',
+            convergeColor: 0x504845, convergeEmissive: 0x18141A,
+          },
+        ],
+        twoFaces: {
+          title: '보색의 두 얼굴',
+          points: [
+            { num: '①', text: '<b>잔류 적색이 상쇄</b>돼요 — 원하는 효과' },
+            { num: '②', text: '<b>색감이 브라운과 어우러져 살기 시작해요</b> — 애쉬 브라운·매트 브라운 같은 깊이감' },
+          ],
+          note: '적색 위에 보색이 직접 작용해 — <em>자연스러운 깊이감</em>으로 어우러져요.',
+        },
+        mechanism: {
+          slots: [
+            { name: '일반 염모제', role: '메인 방향' },
+            { name: '부가 염모제', role: '2차 색입힘' },
+            { name: '컨트롤컬러',  role: '2차 색 강조' },
+          ],
+          note: '11~13 베이스에서 — <b>중간 명도의 일반 염모제</b>로 충분해요. 보색은 어느 슬롯에든.',
+        },
+        examples: {
+          label: '레시피를 읽는 능력',
+          intro: '색감의 뉘앙스에 따라 선택해요',
+          outro: '…등 다양하게 조절 가능해요',
+          items: [
+            { combo: '카키 + 그린',          result: '매트 브라운' },
+            { combo: '블루 + 애쉬',          result: '잿빛 애쉬 브라운' },
+            { combo: '애쉬 + 애쉬',          result: '애쉬 브라운' },
+            { combo: '애쉬 + 바이올렛',      result: '보라기 있는 애쉬 브라운' },
+            { combo: '애쉬·카키 + 블루 CC',  result: '잿빛에 매트·청초함이 살아숨쉬는 오묘한 톤' },
+          ],
+        },
+        routePool: {
+          title: '11~13에서의 풀',
+          items: [
+            '<b>풀이 자유로워요</b> — 적색 노출 베이스라 <em>채도 살아있는 색</em>까지',
+            '<b>일반 염모제</b> + 부가 염모제 + 컨트롤컬러',
+            '보색이 직접 어우러져 — 깊이감 있는 결과',
+          ],
+        },
+        limit: '더욱 <em>투명하고 채도 있게</em> 가려면 탈색이 필요해요.',
+      },
+    },
+  },
+  zone3: {
+    A: {
+      // ch3 시술 원리 — 14 베이스, 한 단계, 일반 염모제
+      title: '14 베이스에<br><em>보색을 직접 작용시켜요.</em>',
+      subtitle: '<b>염모제 리프팅의 최대 구간</b> — 주황기 밝은 브라운에 보색이 직접 어우러져요.',
+      mechanism: [
+        { title: '일반 염모제',  desc: '원하는 색감 방향의 염모제로 바로 착색' },
+        { title: '6% 산화제',    desc: '표준 농도 — 끌어올린 베이스에 색을 안착' },
+      ],
+      limit: '리프팅 한계라 — <em>비비드·파스텔·플래티넘은 16~18에서</em> 가능해요.',
+      warmTone: '난색은 자연 발색. 투명·파스텔 난색은 탈색이 더 필요해요.',
+      resultLabel: '깊이감 있는 어우러짐',
+      anim: {
+        type: 'simple',
+        bgColor: 0xC8945A, bgEmissive: 0x402814,
+        colorColor: 0x6E5945, colorEmissive: 0x1F1810,
+        resultColor: 0x685E3C, resultEmissive: 0x1E1C10,
+      },
+      recommend: {
+        label: '더 <b>비비드·파스텔하게</b> 가려면',
+        items: [
+          { letter: 'B', title: '16레벨 이상으로', sub: '탈색해서 영역 4로' },
+        ],
+      },
+      complement: {
+        title: '14 베이스에<br><em>보색을 더한다.</em>',
+        subtitle: '<b>염모제 리프팅의 최대 구간</b> — 적색·주황 다 빠지고 <em>주황기가 있는 밝은 브라운</em>만 남아요. 가장 애매한 구간이라 — <em>청보라 계열 보색</em>이 잘 어울려요',
+        colors: [
+          {
+            key: 'green',  name: '그린',     label: 'GREEN',   tag: '강보색',
+            hex: '#6BAA60', threeColor: 0x6BAA60, threeEmissive: 0x1c2a18,
+            desc: '잔류가 거의 빠진 베이스 위에 그린이 작용해 — <em>채도가 짙게 살아나는 카키 브라운</em>으로 발색해요.',
+            result: '짙은 카키 브라운',
+            convergeColor: 0x685E3C, convergeEmissive: 0x1E1C10,
+          },
+          {
+            key: 'blue',   name: '블루',     label: 'BLUE',    tag: '한색 깊이',
+            hex: '#4D7DC9', threeColor: 0x4D7DC9, threeEmissive: 0x182030,
+            desc: '주황기가 남은 밝은 브라운에 블루가 작용해 — <em>회청색 스모키</em>로 깊이 있게 발색.',
+            result: '스모키',
+            convergeColor: 0x44505E, convergeEmissive: 0x141820,
+          },
+          {
+            key: 'violet', name: '바이올렛', label: 'VIOLET',  tag: '중성 자연',
+            hex: '#9D6BB0', threeColor: 0x9D6BB0, threeEmissive: 0x281828,
+            desc: '주황기 밝은 브라운 위에 — <em>와인 퍼플기가 살아있는</em> 바이올렛 브라운으로.',
+            result: '와인 퍼플 브라운',
+            convergeColor: 0x6A4858, convergeEmissive: 0x1E1018,
+          },
+        ],
+        twoFaces: {
+          title: '보색의 두 얼굴',
+          points: [
+            { num: '①', text: '<b>잔류 주황·노랑이 상쇄</b>돼요 — 원하는 효과' },
+            { num: '②', text: '<b>색이 본격적으로 채도와 깊이를 가져요</b> — 카키·스모키·와인 퍼플 같은 반사빛 등장' },
+          ],
+          rec: '이 베이스에선 노랑·주황을 동시에 억제하는 — <em>청보라 계열 염모제</em>가 보색에 탁월해요',
+          note: '리프팅의 한계라 — <em>여기서 더 채도·투명도를 가려면 탈색</em>이 필요해요 (16~18로).',
+        },
+        mechanism: {
+          slots: [
+            { name: '일반 염모제', role: '메인 방향' },
+            { name: '부가 염모제', role: '2차 색입힘' },
+            { name: '컨트롤컬러',  role: '2차 색 강조' },
+          ],
+          note: '베이스가 거의 분해된 영역이라 — <b>일반 염모제로 충분</b>해요. 보색 선택이 결과를 좌우.',
+        },
+        examples: {
+          label: '레시피를 읽는 능력',
+          intro: '반사빛이 드러나는 영역이라 — 보색 본질이 더 살아나요',
+          outro: '…등 채도와 깊이를 조절',
+          items: [
+            { combo: '카키 + 그린',                   result: '짙은 카키 브라운' },
+            { combo: '블루 + 그레이',                 result: '스모키' },
+            { combo: '바이올렛 + 핑크 CC',            result: '와인 퍼플 브라운' },
+            { combo: '블루 + 바이올렛 + 그레이 CC',   result: '더스티 네이비' },
+            { combo: '카키 + 블루 + 그린 CC',         result: '매트 깊이의 스모키 카키' },
+          ],
+        },
+        routePool: {
+          title: '14 베이스에서의 풀',
+          items: [
+            '<b>일반 염모제로 충분</b> — 채도와 반사빛이 살아나는 영역',
+            '<b>청보라 계열이 가장 잘 어울려요</b> — 가장 애매한 구간이라',
+            '더 비비드·파스텔하면 → <em>16~18 탈색 분기로</em>',
+          ],
+        },
+        limit: '리프팅 한계라 — <em>비비드·파스텔·플래티넘은 16~18에서</em> 가능해요.',
+      },
+    },
+  },
+  zone4: {
+    A: {
+      // ch3 시술 원리 — Lv 16, 노랑 잔류 누르며 염색 (ch4 안 만듦, 보색까지 ch3에 녹임)
+      title: '16 베이스에<br><em>비비드·파스텔로 체인지</em>',
+      subtitle: '노랑이 많이 남은 베이스에 — <em>약한 바이올렛을 섞으며</em> 비비드·파스텔한 색감으로 체인지해요',
+      mechanism: [
+        { title: '일반 염모제',  desc: '원하는 <em>비비드·파스텔 색감</em> 방향' },
+        { title: '약한 바이올렛', desc: '노랑 잔류를 누르며 — 색감이 <em>깨끗하게 발색</em>' },
+      ],
+      limit: '<b>파스텔+파스텔 뉘앙스</b>를 극대화하려면 — <em>Lv 18 이상</em>이 필요해요.',
+      warmTone: '난색 계열도 베이스 영향 적음 — 비비드는 본래 채도로.',
+      resultLabel: '노랑 억제된 연베이지로 수렴',
+      ch3Tag: undefined,
+      tag: { label: '탈색 완료 진입', desc: '노랑 잔류만 약한 바이올렛으로 누름' },
+      anim: {
+        type: 'simple',
+        bgColor: 0xECC848, bgEmissive: 0x483818,
+        colorColor: 0x9C7AC8, colorEmissive: 0x281828,
+        resultColor: 0xD8C088, resultEmissive: 0x382818,
+      },
+      // ch3 페이지 안에 직접 표시되는 레시피 박스 (zone4.A 전용)
+      recipes: {
+        label: '레시피를 읽는 능력',
+        intro: '<em>명도에 맞는 약한 바이올렛</em>으로 노랑을 누르며 원하는 색감으로 — 다만 <em>16에선 보색 작용에 한계</em>가 있어요',
+        items: [
+          { combo: '핑크 + 바이올렛 + 핑크 컨트롤러', desc: '<b>퍼플 핑크</b>로 연출 · <em>파스텔한 연분홍 핑크</em>는 Lv 18 이상' },
+          { combo: '블루 + 바이올렛',                 desc: '블루를 <b>그냥 쓰면</b> <em>매트 변질</em> · 바이올렛을 섞어 <b>딥네이비·네이비블루</b>로 연출' },
+          { combo: '애쉬그레이 + 바이올렛',           desc: '애쉬그레이를 <b>그냥 쓰면</b> <em>매트 변질</em> · 바이올렛을 섞어 <b>애쉬그레이</b>를 연출' },
+          { combo: '라벤더애쉬',                       desc: '언더톤의 노랑기가 <em>라벤더함을 빼앗아</em> — 애쉬에 가까운 색으로 수렴' },
+        ],
+        outro: '…약한 바이올렛이 노랑을 누르며 본래 색감 발색',
+      },
+      recommend: {
+        label: '<b>파스텔+파스텔 뉘앙스</b> 또는 <b>플래티넘</b>으로 가려면',
+        items: [
+          { letter: 'B', title: '18레벨로', sub: '극파스텔·플래티넘 (Lv 18)' },
+        ],
+      },
+      // complement 없음 — ch4 보색 페이지 만들지 않음
+    },
+    B: {
+      // ch3 시술 원리 — Lv 18, 18 베이스 극파스텔 (ch4 안 만듦, 클리어 + 레시피 ch3에 녹임)
+      title: '18 베이스에<br><em>본래 색을 그대로 발색</em>',
+      subtitle: '잔류가 거의 없는 베이스 — <em>비비드·파스텔·플래티넘</em>까지 자유로워요. 백모·클리어로 갈 땐 미세 중화',
+      mechanism: [
+        { title: '일반 염모제', desc: '원하는 색감 — 비비드·파스텔·플래티넘 <em>모두 자유</em>' },
+        { title: '컨트롤컬러',  desc: '미세 톤 조정 — <em>필요한 경우</em>에만' },
+      ],
+      // 한계 자리에 클리어 정의 — ✦ 한 줄
+      limit: '<b>탈색이 누적된 모발</b> — 트리트먼트 케어가 필수예요. <em>모발 컨디션이 색의 유지력</em>을 좌우.',
+      warmTone: '모든 색이 본래 채도로 — 난색·한색 가리지 않고 가장 자유로운 영역.',
+      resultLabel: '화이트 블론드로 발색 (예시)',
+      tag: { label: '탈색 완료 끝점', desc: '가장 자유로운 영역' },
+      anim: {
+        type: 'simple',
+        bgColor: 0xECDD9C, bgEmissive: 0x483818,
+        colorColor: 0xF0CACE, colorEmissive: 0x3A2820,
+        resultColor: 0xF0E0CC, resultEmissive: 0x3A2C20,
+      },
+      // 클리어 정의 — 메커니즘 다음 한 줄 (✦ 박스)
+      clearDef: '<b>클리어</b> — 아이보리·연노랑 베이스에서 색을 <em>좀 더 파스텔로 만들기 위한 색소 희석제</em>',
+      // 레시피 4개 (플래티넘 단독 항목 제거됨)
+      recipes: {
+        label: '레시피를 읽는 능력',
+        intro: '잔류 색소가 거의 없어 — <em>보색 작용 없이도 본래 색감이 그대로 발색</em>해요. 16에서 못한 색까지 깨끗하게',
+        items: [
+          { combo: '실버애쉬',              desc: '16에서 <em>매트 변질</em>되던 톤 — 18에서 <b>깨끗한 실버애쉬</b>로 발색' },
+          { combo: '라벤더애쉬',            desc: '16에서 <em>노랑에 빼앗기던 라벤더감</em>이 — 18에서 <b>본래 라벤더감 살아있는 애쉬</b>로' },
+          { combo: '파스텔 핑크 (연분홍)',  desc: '16에서 <em>퍼플 핑크 한계</em>였던 — 18에서 <b>깨끗한 파스텔 연분홍 핑크</b>로' },
+          { combo: '플래티넘·화이트 블론드·백모 등', desc: '전부 아이보리 18레벨 이상 베이스에서 — <em>연노랑</em>을 <b>연분홍·연핑크</b> 등으로 미세하게 중화하며 연출 (잿빛 느낌의 백모면 <b>고명도 애쉬 염모제</b>를 살짝 가미). <em>클리어까지 다량 희석</em>하세요', clear: true },
+        ],
+        outro: '…16에서 못한 모든 색이 깨끗하게 · 백모는 미세 중화로',
+      },
+      // recommend 없음 — 끝점 (endpoint 박스로 대체)
+      endpoint: {
+        title: '— 여정의 끝 —',
+        text: '검정에서 시작해 — <em>보색·탈색·반사빛·클리어</em>까지. 색의 모든 길을 지나왔어요',
+      },
+    },
+  },
+};
+
+const ZONE1_LV5_ROUTES = ['A', 'B', 'C'];
+const ZONE1_LV79_ROUTES = ['B', 'C'];
+const ZONE2_LV1113_ROUTES = ['A'];
+const ZONE3_LV14_ROUTES = ['A'];
+const ZONE4_LV16_ROUTES = ['A'];
+const ZONE4_LV18_ROUTES = ['B'];
+const ZONE4_LV1618_ROUTES = ['A', 'B'];  // Lv 별로 다름 — Lv 16: A, Lv 18: B
+
+const pageCh3 = document.getElementById('page-ch3');
+const ch3Step1Lv = document.getElementById('ch3Step1Lv');
+const ch3Step1Name = document.getElementById('ch3Step1Name');
+const ch3Step2Zone = document.getElementById('ch3Step2Zone');
+const ch3Step2Route = document.getElementById('ch3Step2Route');
+const ch3Title = document.getElementById('ch3Title');
+const ch3Subtitle = document.getElementById('ch3Subtitle');
+const mechanismList = document.getElementById('mechanismList');
+const mechanismLimit = document.getElementById('mechanismLimit');
+const ch3WarmText = document.getElementById('ch3WarmText');
+const recommendLabel = document.getElementById('recommendLabel');
+const recommendList = document.getElementById('recommendList');
+
+const ch3TagRow = document.getElementById('ch3TagRow');
+const ch3TagLabel = document.getElementById('ch3TagLabel');
+const ch3TagDesc = document.getElementById('ch3TagDesc');
+const ch3ResultLabel = document.getElementById('ch3ResultLabel');
+
+let currentCh3Route = null;
+
+function renderCh3(zoneKey, routeLetter){
+  const idx = parseInt(slider.value, 10);
+  const stage = STAGES[idx];
+  const zone = ZONES[zoneKey];
+  const route = ROUTES_DATA[zoneKey] && ROUTES_DATA[zoneKey][routeLetter];
+
+  if (!route) return;
+  currentCh3Route = route;
+
+  ch3Step1Lv.textContent = `Lv ${stage.lv}`;
+  ch3Step1Name.textContent = stage.name;
+  ch3Step2Zone.textContent = zone.tag;
+  const routeInfo = zone.routes.find(r => r.letter === routeLetter);
+  ch3Step2Route.textContent = routeInfo ? routeInfo.title : '';
+
+  ch3Title.innerHTML = route.title;
+  ch3Subtitle.innerHTML = route.subtitle;
+
+  if (route.tag) {
+    ch3TagLabel.textContent = route.tag.label;
+    ch3TagDesc.textContent = route.tag.desc;
+    ch3TagRow.classList.remove('hidden');
+  } else {
+    ch3TagRow.classList.add('hidden');
+  }
+
+  ch3ResultLabel.textContent = route.resultLabel || '';
+
+  mechanismList.innerHTML = route.mechanism.map(m => {
+    const wrapClass = m.numbered ? 'mechanism-dot-wrap numbered' : 'mechanism-dot-wrap';
+    const inner = m.numbered ? m.numbered : '<div class="mechanism-dot"></div>';
+    return `
+      <div class="mechanism-item">
+        <div class="${wrapClass}">${inner}</div>
+        <div class="mechanism-content">
+          <div class="mechanism-title">${m.title}</div>
+          <div class="mechanism-desc">${m.desc}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  mechanismLimit.innerHTML = route.limit;
+  ch3WarmText.textContent = route.warmTone;
+
+  recommendLabel.innerHTML = route.recommend.label;
+  recommendList.innerHTML = route.recommend.items.map(item => `
+    <div class="recommend-item" data-route="${item.letter}">
+      <div class="recommend-letter">${item.letter}</div>
+      <div class="recommend-content">
+        <div class="recommend-title">${item.title}</div>
+        <div class="recommend-sub">${item.sub}</div>
+      </div>
+      ${item.badge ? `<div class="recommend-badge">${item.badge}</div>` : ''}
+      <div class="recommend-arrow">→</div>
+    </div>
+  `).join('');
+
+  // zone4.A/B — 레시피 박스 표시 + finalCtaCh3 숨김 (보색 페이지 안 만들고 ch3에서 끝)
+  const recipeBox  = document.getElementById('ch3RecipeBox');
+  const clearDef   = document.getElementById('ch3ClearDef');
+  const endpoint   = document.getElementById('ch3Endpoint');
+  const recommendBox = document.getElementById('recommendBox');
+  const finalCta   = document.getElementById('finalCtaCh3');
+  const finalLine  = document.getElementById('ch3FinalLine');
+
+  // 클리어 정의 (zone4.B만)
+  if (route.clearDef) {
+    clearDef.innerHTML = `<span>${route.clearDef}</span>`;
+    clearDef.style.display = '';
+  } else {
+    clearDef.style.display = 'none';
+  }
+
+  // 레시피 박스
+  if (route.recipes) {
+    document.getElementById('ch3RecipeContext').textContent = `Lv ${stage.lv} · ${zone.routes.find(r => r.letter === routeLetter).title}`;
+    document.getElementById('ch3RecipeLabel').textContent   = route.recipes.label;
+    document.getElementById('ch3RecipeIntro').innerHTML     = route.recipes.intro || '';
+    document.getElementById('ch3RecipeIntro').style.display = route.recipes.intro ? '' : 'none';
+    document.getElementById('ch3RecipeOutro').innerHTML     = route.recipes.outro || '';
+    document.getElementById('ch3RecipeOutro').style.display = route.recipes.outro ? '' : 'none';
+    document.getElementById('ch3RecipeList').innerHTML = route.recipes.items.map(it => `
+      <div class="ch3-recipe-row${it.clear ? ' clear' : ''}">
+        <div class="ch3-recipe-combo">${it.combo}</div>
+        <div class="ch3-recipe-desc">${it.desc}</div>
+      </div>
+    `).join('');
+    recipeBox.style.display = '';
+    // 보색 페이지 없음 — finalCta + 그 위 ink-line 숨김
+    if (finalCta)  finalCta.style.display  = 'none';
+    if (finalLine) finalLine.style.display = 'none';
+  } else {
+    recipeBox.style.display = 'none';
+    if (finalCta)  finalCta.style.display  = '';
+    if (finalLine) finalLine.style.display = '';
+  }
+
+  // 끝점 박스 (zone4.B만)
+  if (route.endpoint) {
+    document.getElementById('ch3EndpointMark').textContent = route.endpoint.title;
+    document.getElementById('ch3EndpointText').innerHTML   = route.endpoint.text;
+    endpoint.style.display = '';
+    // recommend 박스도 숨김 (끝점이라)
+    if (recommendBox) recommendBox.style.display = 'none';
+  } else {
+    endpoint.style.display = 'none';
+    if (recommendBox) recommendBox.style.display = '';
+  }
+
+  if (window.ch3UpdateAnim) window.ch3UpdateAnim(route.anim);
+}
+
+function goToCh3(zoneKey, routeLetter){
+  renderCh3(zoneKey, routeLetter);
+
+  pageCh2.classList.add('exiting');
+  pageCh3.classList.remove('hidden');
+  pageCh3.classList.add('entering');
+
+  Array.from(stepIndicator.children).forEach((el, i) => {
+    el.classList.toggle('active', i <= 2);
+  });
+
+  setTimeout(() => {
+    window.dispatchEvent(new Event('resize'));
+  }, 50);
+
+  setTimeout(() => {
+    pageCh2.classList.add('hidden');
+    pageCh2.classList.remove('exiting');
+    pageCh3.classList.remove('entering');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, 700);
+}
+
+function goToCh2FromCh3(){
+  pageCh3.classList.add('exiting');
+  pageCh2.classList.remove('hidden');
+  pageCh2.classList.add('entering');
+
+  Array.from(stepIndicator.children).forEach((el, i) => {
+    el.classList.toggle('active', i <= 1);
+  });
+
+  setTimeout(() => {
+    pageCh3.classList.add('hidden');
+    pageCh3.classList.remove('exiting');
+    pageCh2.classList.remove('entering');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, 700);
+}
+
+document.getElementById('backBtnCh3').addEventListener('click', goToCh2FromCh3);
+
+recommendList.addEventListener('click', (e) => {
+  const item = e.target.closest('.recommend-item');
+  if (!item) return;
+  const letter = item.dataset.route;
+  const idx = parseInt(slider.value, 10);
+  const lv = STAGES[idx].lv;
+  const zoneKey = ZONE_MAP[lv];
+
+  let isActive = false;
+  if (zoneKey === 'zone1') {
+    isActive = (lv === 5 ? ZONE1_LV5_ROUTES : ZONE1_LV79_ROUTES).includes(letter);
+  } else if (zoneKey === 'zone2') {
+    isActive = ZONE2_LV1113_ROUTES.includes(letter);
+  } else if (zoneKey === 'zone3') {
+    isActive = ZONE3_LV14_ROUTES.includes(letter);
+  } else if (zoneKey === 'zone4') {
+    isActive = (lv === 16) ? ZONE4_LV16_ROUTES.includes(letter) : (lv === 18 ? ZONE4_LV18_ROUTES.includes(letter) : false);
+  }
+
+  // zone4.A의 recommend 'B' 클릭 → Lv 18로 점프 + Ch2로 돌아가기
+  if (zoneKey === 'zone4' && lv === 16 && letter === 'B') {
+    const targetIdx = STAGES.findIndex(s => s.lv === 18);
+    if (targetIdx !== -1) {
+      slider.value = targetIdx;
+      update();
+      // Ch2 페이지로 돌아가서 18에서 다시 선택하게
+      goToCh2FromCh3();
+    }
+    return;
+  }
+
+  if (isActive && ROUTES_DATA[zoneKey] && ROUTES_DATA[zoneKey][letter]) {
+    renderCh3(zoneKey, letter);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+});
+
+routesContainer.addEventListener('click', (e) => {
+  const routeEl = e.target.closest('.route');
+  if (!routeEl) return;
+  const letter = routeEl.dataset.letter;
+  const idx = parseInt(slider.value, 10);
+  const lv = STAGES[idx].lv;
+  const zoneKey = ZONE_MAP[lv];
+
+  // 다음 영역으로 점프 — zone2.B → Lv 14, zone3.B → Lv 16
+  if ((zoneKey === 'zone2' && letter === 'B') || (zoneKey === 'zone3' && letter === 'B')) {
+    const targetLv = (zoneKey === 'zone2') ? 14 : 16;
+    const targetIdx = STAGES.findIndex(s => s.lv === targetLv);
+    if (targetIdx !== -1) {
+      slider.value = targetIdx;
+      update();       // Ch1 사진/카드 갱신
+      renderCh2();    // Ch2 영역 페이지 갱신
+      // 시각적 피드백 — 부드러운 스크롤 톱
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    return;
+  }
+
+  let isActive = false;
+  if (zoneKey === 'zone1') {
+    isActive = (lv === 5 ? ZONE1_LV5_ROUTES : ZONE1_LV79_ROUTES).includes(letter);
+  } else if (zoneKey === 'zone2') {
+    isActive = ZONE2_LV1113_ROUTES.includes(letter);
+  } else if (zoneKey === 'zone3') {
+    isActive = ZONE3_LV14_ROUTES.includes(letter);
+  } else if (zoneKey === 'zone4') {
+    isActive = (lv === 16) ? ZONE4_LV16_ROUTES.includes(letter) : (lv === 18 ? ZONE4_LV18_ROUTES.includes(letter) : false);
+  }
+
+  if (isActive) {
+    goToCh3(zoneKey, letter);
+  } else {
+    routeEl.classList.add('route-pending');
+    setTimeout(() => routeEl.classList.remove('route-pending'), 600);
+  }
+});
+
+/* ══════════════════════════════════════════════════════════════
+   Ch 4 · 보색 추가 (영역 1 / 경로 A — 버진모 + 보색)
+   ══════════════════════════════════════════════════════════════ */
+
+const pageCh4 = document.getElementById('page-ch4');
+const ch4Step1Lv = document.getElementById('ch4Step1Lv');
+const ch4Step1Name = document.getElementById('ch4Step1Name');
+const ch4Step2Zone = document.getElementById('ch4Step2Zone');
+const ch4Step2Route = document.getElementById('ch4Step2Route');
+const ch4Title = document.getElementById('ch4Title');
+const ch4Subtitle = document.getElementById('ch4Subtitle');
+const cmpEssenceList = document.getElementById('cmpEssenceList');
+const cmpTwoFaces = document.getElementById('cmpTwoFaces');
+const cmpMechanism = document.getElementById('cmpMechanism');
+const cmpMechNote = document.getElementById('cmpMechNote');
+const cmpExamplesLabel = document.getElementById('cmpExamplesLabel');
+const cmpExamplesContext = document.getElementById('cmpExamplesContext');
+const cmpExamplesList = document.getElementById('cmpExamplesList');
+const cmpRoutePoolTitle = document.getElementById('cmpRoutePoolTitle');
+const cmpRoutePool = document.getElementById('cmpRoutePool');
+const cmpLimit = document.getElementById('cmpLimit');
+const cmpStage = document.getElementById('cmpStage');
+
+let ch4Context = null;  // { zoneKey, routeLetter }
+
+function renderCh4(zoneKey, routeLetter){
+  const idx = parseInt(slider.value, 10);
+  const stage = STAGES[idx];
+  const zone = ZONES[zoneKey];
+  const route = ROUTES_DATA[zoneKey] && ROUTES_DATA[zoneKey][routeLetter];
+  if (!route || !route.complement) return;
+
+  ch4Context = { zoneKey, routeLetter };
+  const cmp = route.complement;
+
+  ch4Step1Lv.textContent = `Lv ${stage.lv}`;
+  ch4Step1Name.textContent = stage.name;
+  ch4Step2Zone.textContent = zone.tag;
+  const routeInfo = zone.routes.find(r => r.letter === routeLetter);
+  ch4Step2Route.textContent = routeInfo ? routeInfo.title : '';
+
+  ch4Title.innerHTML = cmp.title;
+  ch4Subtitle.innerHTML = cmp.subtitle;
+
+  // 보색별 본질
+  cmpEssenceList.innerHTML = cmp.colors.map(c => `
+    <div class="cmp-essence" data-cmp="${c.key}" style="--cmp-color:${c.hex}">
+      <div class="cmp-essence-head">
+        <span class="cmp-essence-name">${c.name}</span>
+        <span class="cmp-essence-tag">${c.tag}</span>
+        <span class="cmp-essence-result">${c.result}</span>
+      </div>
+      <div class="cmp-essence-desc">${c.desc}</div>
+    </div>
+  `).join('');
+
+  // 보색의 두 얼굴
+  cmpTwoFaces.innerHTML = `
+    ${cmp.twoFaces.points.map(p => `
+      <div class="cmp-face-item">
+        <span class="cmp-face-num">${p.num}</span>
+        <span>${p.text}</span>
+      </div>
+    `).join('')}
+    ${cmp.twoFaces.rec ? `<div class="cmp-face-rec"><span>${cmp.twoFaces.rec}</span></div>` : ''}
+    <div class="cmp-face-note">${cmp.twoFaces.note}</div>
+  `;
+
+  // 메커니즘 3슬롯
+  cmpMechanism.innerHTML = cmp.mechanism.slots.map(s => `
+    <div class="cmp-mech-slot">
+      <div class="cmp-mech-name">${s.name}</div>
+      <div class="cmp-mech-divider"></div>
+      <div class="cmp-mech-role">${s.role}</div>
+    </div>
+  `).join('');
+  cmpMechNote.innerHTML = cmp.mechanism.note;
+
+  // 레시피 설계 예시
+  cmpExamplesContext.textContent = `Lv ${stage.lv} · ${routeInfo ? routeInfo.title : ''}`;
+  cmpExamplesLabel.textContent = cmp.examples.label;
+  const introEl = document.getElementById('cmpExamplesIntro');
+  const outroEl = document.getElementById('cmpExamplesOutro');
+  if (cmp.examples.intro) {
+    introEl.textContent = cmp.examples.intro;
+    introEl.style.display = '';
+  } else {
+    introEl.style.display = 'none';
+  }
+  if (cmp.examples.outro) {
+    outroEl.textContent = cmp.examples.outro;
+    outroEl.style.display = '';
+  } else {
+    outroEl.style.display = 'none';
+  }
+  cmpExamplesList.innerHTML = cmp.examples.items.map(it => {
+    if (it.combo) {
+      return `
+      <div class="cmp-example-row combo-row">
+        <span class="cmp-example-combo">${it.combo}</span>
+        <span class="cmp-example-arrow">→</span>
+        <span class="cmp-example-result">${it.result}</span>
+      </div>
+      `;
+    }
+    return `
+    <div class="cmp-example-row">
+      <span class="cmp-example-main">${it.main}</span>
+      <span class="cmp-example-plus">+</span>
+      <span class="cmp-example-sub">${it.sub}</span>
+      <span class="cmp-example-cc">${it.cc}</span>
+    </div>
+    `;
+  }).join('');
+
+  // 이 경로에서의 풀
+  cmpRoutePoolTitle.textContent = cmp.routePool.title;
+  cmpRoutePool.innerHTML = cmp.routePool.items.map(t => `
+    <div class="cmp-pool-item">
+      <span class="cmp-pool-mark">·</span>
+      <span>${t}</span>
+    </div>
+  `).join('');
+
+  // 한계
+  cmpLimit.innerHTML = cmp.limit;
+
+  // 시각화 데이터 업데이트
+  if (window.cmpUpdateColors) window.cmpUpdateColors(cmp.colors);
+  if (window.cmpSelectColor) window.cmpSelectColor(null);  // 중앙 구 적색으로 리셋
+  cmpStage.classList.remove('has-selection');
+  document.querySelectorAll('.cmp-label').forEach(el => {
+    el.classList.remove('cmp-label-active');
+    el.style.opacity = '';
+  });
+  document.querySelectorAll('.cmp-essence').forEach(el => el.classList.remove('cmp-essence-active'));
+  const centerLabel = document.getElementById('cmpLabelCenter');
+  if (centerLabel) centerLabel.textContent = '잔류 적색';
+}
+
+function goToCh4(zoneKey, routeLetter){
+  renderCh4(zoneKey, routeLetter);
+
+  pageCh3.classList.add('exiting');
+  pageCh4.classList.remove('hidden');
+  pageCh4.classList.add('entering');
+
+  Array.from(stepIndicator.children).forEach((el, i) => {
+    el.classList.toggle('active', i <= 3);
+  });
+
+  setTimeout(() => {
+    window.dispatchEvent(new Event('resize'));
+  }, 50);
+
+  setTimeout(() => {
+    pageCh3.classList.add('hidden');
+    pageCh3.classList.remove('exiting');
+    pageCh4.classList.remove('entering');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, 700);
+}
+
+function goToCh3FromCh4(){
+  pageCh4.classList.add('exiting');
+  pageCh3.classList.remove('hidden');
+  pageCh3.classList.add('entering');
+
+  Array.from(stepIndicator.children).forEach((el, i) => {
+    el.classList.toggle('active', i <= 2);
+  });
+
+  setTimeout(() => {
+    pageCh4.classList.add('hidden');
+    pageCh4.classList.remove('exiting');
+    pageCh3.classList.remove('entering');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, 700);
+}
+
+document.getElementById('backBtnCh4').addEventListener('click', goToCh3FromCh4);
+
+// Ch 3 → Ch 4 진입 (최종 스텝 버튼)
+document.getElementById('finalCtaCh3').addEventListener('click', () => {
+  if (!currentCh3Route) return;
+  // 현재 Ch 3 컨텍스트 (zoneKey + routeLetter) 알아내기 — currentCh3Route만으로는 부족하니 슬라이더에서 다시 도출
+  const idx = parseInt(slider.value, 10);
+  const lv = STAGES[idx].lv;
+  const zoneKey = ZONE_MAP[lv];
+  // ch3Step2Route의 텍스트로 letter 역추적
+  const routeTitle = ch3Step2Route.textContent;
+  const zone = ZONES[zoneKey];
+  const routeInfo = zone && zone.routes.find(r => r.title === routeTitle);
+  const letter = routeInfo ? routeInfo.letter : 'A';
+
+  // 현재 zone1.A에만 complement 박혀 있음 — A 외 경로면 부드럽게 안내
+  const route = ROUTES_DATA[zoneKey] && ROUTES_DATA[zoneKey][letter];
+  if (!route || !route.complement) {
+    // 경로 B·C는 아직 complement 없음 — 우선 임시로 A의 complement 사용 (또는 막기)
+    // → 사용자 경험을 위해 fallback: A의 complement로
+    if (ROUTES_DATA.zone1 && ROUTES_DATA.zone1.A && ROUTES_DATA.zone1.A.complement) {
+      goToCh4('zone1', 'A');
+    }
+    return;
+  }
+  goToCh4(zoneKey, letter);
+});
+
+// 보색 카드 클릭 (essence) → 시각화 동기화
+cmpEssenceList.addEventListener('click', (e) => {
+  const card = e.target.closest('.cmp-essence');
+  if (!card) return;
+  const key = card.dataset.cmp;
+  selectComplement(key);
+});
+
+function selectComplement(key){
+  cmpStage.classList.add('has-selection');
+  document.querySelectorAll('.cmp-essence').forEach(el => {
+    el.classList.toggle('cmp-essence-active', el.dataset.cmp === key);
+  });
+  document.querySelectorAll('.cmp-label').forEach(el => {
+    el.classList.remove('cmp-label-active');
+  });
+  const labelMap = { green: 'cmpLabelGreen', blue: 'cmpLabelBlue', violet: 'cmpLabelViolet' };
+  const labelEl = document.getElementById(labelMap[key]);
+  if (labelEl) labelEl.classList.add('cmp-label-active');
+
+  // 중앙 라벨도 결과로 동기화
+  const centerLabel = document.getElementById('cmpLabelCenter');
+  if (centerLabel && ch4Context) {
+    const route = ROUTES_DATA[ch4Context.zoneKey] && ROUTES_DATA[ch4Context.zoneKey][ch4Context.routeLetter];
+    const colorData = route && route.complement && route.complement.colors.find(c => c.key === key);
+    if (colorData) centerLabel.textContent = colorData.result;
+  }
+
+  if (window.cmpSelectColor) window.cmpSelectColor(key);
+}
+window.selectComplement = selectComplement;
+
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  if (typeof THREE === 'undefined') return;
+
+  const canvas = document.getElementById('orbCanvas');
+  const container = document.getElementById('orbsContainer');
+  const labelUndertone = document.getElementById('labelUndertone');
+  const labelIncoming = document.getElementById('labelIncoming');
+
+  let w = container.clientWidth || 360, h = container.clientHeight || 160;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, w/h, 0.1, 100);
+  camera.position.set(0, 0, 6.5);
+
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setSize(w, h);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  const k = new THREE.DirectionalLight(0xffffff, 0.95);
+  k.position.set(2, 3, 4);
+  scene.add(k);
+  const f = new THREE.DirectionalLight(0xD4A860, 0.4);
+  f.position.set(-3, -1, 2);
+  scene.add(f);
+  const r = new THREE.DirectionalLight(0xffffff, 0.4);
+  r.position.set(0, -2, -3);
+  scene.add(r);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.18));
+
+  const baseGeometry = new THREE.SphereGeometry(0.75, 96, 96);
+
+  const orbL = new THREE.Mesh(baseGeometry.clone(), new THREE.MeshStandardMaterial({
+    color: 0x1a0805, roughness: 0.3, metalness: 0.2,
+    emissive: 0x0a0202, emissiveIntensity: 0.45,
+  }));
+  scene.add(orbL);
+
+  const orbR = new THREE.Mesh(baseGeometry.clone(), new THREE.MeshStandardMaterial({
+    color: 0xE0CFE8, roughness: 0.25, metalness: 0.15,
+    emissive: 0x281828, emissiveIntensity: 0.5,
+    transparent: true, opacity: 0,
+  }));
+  scene.add(orbR);
+
+  const baseLPos = orbL.geometry.attributes.position.array.slice();
+  const lPos = orbL.geometry.attributes.position.array;
+  const baseRPos = orbR.geometry.attributes.position.array.slice();
+  const rPos = orbR.geometry.attributes.position.array;
+  const vCount = lPos.length / 3;
+
+  const undertonePhases = [
+    { color: 0x1a0805, emissive: 0x0a0202, dur: 600 },
+    { color: 0x4a100c, emissive: 0x1a0404, dur: 550 },
+    { color: 0x8c2c1c, emissive: 0x2a0a06, dur: 550 },
+    { color: 0xb84c28, emissive: 0x40160a, dur: 550 },
+    { color: 0xd87838, emissive: 0x4a200c, dur: 550 },
+    { color: 0xe8a848, emissive: 0x4a3010, dur: 550 },
+    { color: 0xf0ca68, emissive: 0x483612, dur: 550 },
+    { color: 0xf5e8c8, emissive: 0x3c3220, dur: 800 },
+  ];
+
+  const LILAC_COLOR = new THREE.Color(0xE0CFE8);
+  const LILAC_EMISSIVE = new THREE.Color(0x281828);
+
+  let state = 'lifting';
+  let phaseIdx = 0;
+  let phaseStart = performance.now();
+  let stateStart = performance.now();
+  const fromColor = new THREE.Color(undertonePhases[0].color);
+  const toColor = new THREE.Color(undertonePhases[1].color);
+  const fromEmissive = new THREE.Color(undertonePhases[0].emissive);
+  const toEmissive = new THREE.Color(undertonePhases[1].emissive);
+
+  function easeInOutCubic(t){
+    return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2;
+  }
+
+  function deformOrb(positions, basePositions, time, amp, speed, freq){
+    for (let i = 0; i < vCount; i++){
+      const ix = i*3, iy = i*3+1, iz = i*3+2;
+      const bx = basePositions[ix], by = basePositions[iy], bz = basePositions[iz];
+      const noise =
+        Math.sin(bx*freq + time*speed) *
+        Math.cos(by*freq + time*speed*0.8) *
+        Math.sin(bz*freq + time*speed*1.2) +
+        Math.sin(bx*freq*0.5 + time*speed*1.5) * 0.5;
+      const offset = 1 + noise * amp;
+      positions[ix] = bx * offset;
+      positions[iy] = by * offset;
+      positions[iz] = bz * offset;
+    }
+  }
+
+  function animate(now){
+    const time = now * 0.001;
+
+    if (state === 'lifting') {
+      const phase = undertonePhases[phaseIdx];
+      const elapsed = now - phaseStart;
+      const t = Math.min(elapsed / phase.dur, 1);
+      const eased = easeInOutCubic(t);
+
+      orbL.material.color.copy(fromColor).lerp(toColor, eased);
+      orbL.material.emissive.copy(fromEmissive).lerp(toEmissive, eased);
+
+      orbL.position.x = -1.6;
+      labelUndertone.style.left = '26%';
+      labelIncoming.style.opacity = '0';
+
+      if (t >= 1) {
+        phaseIdx++;
+        if (phaseIdx >= undertonePhases.length - 1) {
+          orbL.material.color.setHex(0xf5e8c8);
+          orbL.material.emissive.setHex(0x3c3220);
+          state = 'incoming-appear';
+          stateStart = now;
+        } else {
+          const nIdx = phaseIdx + 1;
+          fromColor.setHex(undertonePhases[phaseIdx].color);
+          toColor.setHex(undertonePhases[nIdx].color);
+          fromEmissive.setHex(undertonePhases[phaseIdx].emissive);
+          toEmissive.setHex(undertonePhases[nIdx].emissive);
+          phaseStart = now;
+        }
+      }
+    }
+    else if (state === 'incoming-appear') {
+      const elapsed = now - stateStart;
+      const t = Math.min(elapsed / 700, 1);
+      const eased = easeInOutCubic(t);
+
+      orbR.material.opacity = eased;
+      orbR.position.x = 1.6;
+      orbR.position.y = 0;
+
+      labelIncoming.style.opacity = eased.toString();
+      labelIncoming.style.right = '20%';
+
+      if (t >= 1) {
+        state = 'converging';
+        stateStart = now;
+      }
+    }
+    else if (state === 'converging') {
+      const elapsed = now - stateStart;
+      const t = Math.min(elapsed / 1300, 1);
+      const eased = easeInOutCubic(t);
+
+      orbR.position.x = 1.6 - eased * 1.4;
+      orbL.position.x = -1.6 + eased * 1.4;
+
+      labelUndertone.style.left = (26 + eased * 22) + '%';
+      labelIncoming.style.right = (20 + eased * 22) + '%';
+
+      if (t >= 1) {
+        state = 'merge';
+        stateStart = now;
+      }
+    }
+    else if (state === 'merge') {
+      const elapsed = now - stateStart;
+      const t = Math.min(elapsed / 900, 1);
+      const eased = easeInOutCubic(t);
+
+      orbL.material.color.lerp(LILAC_COLOR, 0.04);
+      orbL.material.emissive.lerp(LILAC_EMISSIVE, 0.04);
+
+      orbR.material.opacity = 1 - eased;
+      orbR.position.x = orbL.position.x;
+
+      labelIncoming.style.opacity = (1 - eased).toString();
+
+      if (t >= 1) {
+        state = 'hold';
+        stateStart = now;
+      }
+    }
+    else if (state === 'hold') {
+      const elapsed = now - stateStart;
+      const t = Math.min(elapsed / 900, 1);
+
+      if (t >= 1) {
+        state = 'reset';
+        stateStart = now;
+      }
+    }
+    else if (state === 'reset') {
+      const elapsed = now - stateStart;
+      const t = Math.min(elapsed / 600, 1);
+      const eased = easeInOutCubic(t);
+
+      orbL.material.color.lerp(new THREE.Color(0x1a0805), eased * 0.3);
+      orbL.material.emissive.lerp(new THREE.Color(0x0a0202), eased * 0.3);
+      orbL.position.x = orbL.position.x * (1 - eased);
+
+      if (t >= 1) {
+        orbL.material.color.setHex(0x1a0805);
+        orbL.material.emissive.setHex(0x0a0202);
+        orbL.position.x = -1.6;
+        orbR.position.x = 1.6;
+        orbR.material.opacity = 0;
+        orbR.material.color.setHex(0xE0CFE8);
+        orbR.material.emissive.setHex(0x281828);
+
+        phaseIdx = 0;
+        fromColor.setHex(undertonePhases[0].color);
+        toColor.setHex(undertonePhases[1].color);
+        fromEmissive.setHex(undertonePhases[0].emissive);
+        toEmissive.setHex(undertonePhases[1].emissive);
+        phaseStart = now;
+        state = 'lifting';
+
+        labelUndertone.style.left = '26%';
+        labelIncoming.style.opacity = '0';
+        labelIncoming.style.right = '20%';
+      }
+    }
+
+    deformOrb(lPos, baseLPos, time, 0.06, 3.5, 4.5);
+    orbL.geometry.attributes.position.needsUpdate = true;
+    orbL.geometry.computeVertexNormals();
+    orbL.rotation.y = time * 0.45;
+    orbL.rotation.x = Math.sin(time * 0.6) * 0.18;
+
+    deformOrb(rPos, baseRPos, time, 0.04, 2.0, 3.5);
+    orbR.geometry.attributes.position.needsUpdate = true;
+    orbR.geometry.computeVertexNormals();
+    orbR.rotation.y = time * 0.3;
+    orbR.rotation.x = Math.sin(time * 0.5) * 0.12;
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+
+  window.addEventListener('resize', () => {
+    w = container.clientWidth; h = container.clientHeight;
+    if (w > 0 && h > 0) {
+      camera.aspect = w/h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    }
+  });
+
+  if (typeof ResizeObserver !== 'undefined') {
+    const ro = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const cr = entry.contentRect;
+        if (cr.width > 0 && cr.height > 0) {
+          w = cr.width; h = cr.height;
+          camera.aspect = w/h;
+          camera.updateProjectionMatrix();
+          renderer.setSize(w, h);
+        }
+      }
+    });
+    ro.observe(container);
+  }
+})();
+</script>
+
+<script>
+(function(){
+  if (typeof THREE === 'undefined') return;
+  const canvas = document.getElementById('ch3OrbCanvas');
+  const container = document.getElementById('ch3OrbsContainer');
+  const phaseTag = document.getElementById('ch3PhaseTag');
+  const resultLabel = document.getElementById('ch3ResultLabel');
+  const stepIndicator = document.getElementById('ch3StepIndicator');
+  const indDot1 = document.getElementById('ch3IndDot1');
+  const indDot2 = document.getElementById('ch3IndDot2');
+  if (!canvas || !container) return;
+
+  let w = container.clientWidth || 360, h = container.clientHeight || 200;
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, w/h, 0.1, 100);
+  camera.position.set(0, 0, 7);
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setSize(w, h);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  const k = new THREE.DirectionalLight(0xffffff, 0.95); k.position.set(2, 3, 4); scene.add(k);
+  const f = new THREE.DirectionalLight(0xD4A860, 0.4); f.position.set(-3, -1, 2); scene.add(f);
+  const r = new THREE.DirectionalLight(0xffffff, 0.4); r.position.set(0, -2, -3); scene.add(r);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.18));
+
+  const baseGeometry = new THREE.SphereGeometry(0.7, 80, 80);
+
+  const orbBg = new THREE.Mesh(baseGeometry.clone(), new THREE.MeshStandardMaterial({
+    color: 0x4a100c, roughness: 0.3, metalness: 0.2,
+    emissive: 0x1a0404, emissiveIntensity: 0.5,
+  }));
+  scene.add(orbBg);
+
+  const orbColor = new THREE.Mesh(baseGeometry.clone(), new THREE.MeshStandardMaterial({
+    color: 0xc4a8d8, roughness: 0.25, metalness: 0.15,
+    emissive: 0x281828, emissiveIntensity: 0.55,
+    transparent: true, opacity: 1,
+  }));
+  scene.add(orbColor);
+
+  const particleCount = 14;
+  const particles = [];
+  for (let i = 0; i < particleCount; i++) {
+    const p = new THREE.Mesh(new THREE.SphereGeometry(0.06, 16, 16),
+      new THREE.MeshStandardMaterial({ color: 0xD87838, emissive: 0xB84C28, emissiveIntensity: 1.2, transparent: true, opacity: 0 }));
+    scene.add(p);
+    particles.push({ mesh: p, offset: Math.random() * 1.5, yOffset: (Math.random() - 0.5) * 0.6, side: i % 2 === 0 ? -1 : 1 });
+  }
+
+  const baseBgPos = orbBg.geometry.attributes.position.array.slice();
+  const bgPos = orbBg.geometry.attributes.position.array;
+  const baseColorPos = orbColor.geometry.attributes.position.array.slice();
+  const colorPos = orbColor.geometry.attributes.position.array;
+  const vCount = bgPos.length / 3;
+
+  let anim = {
+    type: 'particles',
+    bgColor: 0x4a100c, bgEmissive: 0x1a0404,
+    colorColor: 0xc4a8d8, colorEmissive: 0x281828,
+    resultColor: 0x6a4a48, resultEmissive: 0x281a18,
+    tonedColor: 0x8a4030, tonedEmissive: 0x301410,
+  };
+  let state = 'init';
+  let stateStart = performance.now();
+
+  function easeInOutCubic(t){ return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2; }
+
+  function deform(positions, basePositions, time, amp, speed, freq){
+    for (let i = 0; i < vCount; i++){
+      const ix = i*3, iy = i*3+1, iz = i*3+2;
+      const bx = basePositions[ix], by = basePositions[iy], bz = basePositions[iz];
+      const noise = Math.sin(bx*freq + time*speed) * Math.cos(by*freq + time*speed*0.8) * Math.sin(bz*freq + time*speed*1.2);
+      const offset = 1 + noise * amp;
+      positions[ix] = bx * offset; positions[iy] = by * offset; positions[iz] = bz * offset;
+    }
+  }
+
+  function resetToStart(){
+    orbBg.material.color.setHex(anim.bgColor);
+    orbBg.material.emissive.setHex(anim.bgEmissive);
+    orbColor.material.color.setHex(anim.colorColor);
+    orbColor.material.emissive.setHex(anim.colorEmissive);
+    orbColor.material.opacity = 1;
+    particles.forEach(p => { p.mesh.material.opacity = 0; });
+    resultLabel.style.opacity = '0';
+
+    if (anim.type === 'particles') {
+      orbBg.position.x = -1.8; orbColor.position.x = 1.8;
+      stepIndicator.classList.add('hidden');
+      state = 'separate';
+    } else if (anim.type === 'simple') {
+      orbBg.position.x = -1.6; orbColor.position.x = 1.6;
+      stepIndicator.classList.add('hidden');
+      state = 'simple-separate';
+    } else if (anim.type === 'two-step') {
+      orbBg.position.x = -1.6; orbColor.position.x = 1.8;
+      orbColor.material.opacity = 0;
+      stepIndicator.classList.remove('hidden');
+      state = 'step1-tone';
+    }
+    stateStart = performance.now();
+  }
+
+  window.ch3UpdateAnim = function(newAnim){
+    anim = Object.assign({}, anim, newAnim);
+    resetToStart();
+  };
+
+  resetToStart();
+
+  function animate(now){
+    const time = now * 0.001;
+    const elapsed = now - stateStart;
+    let bgAmp = 0.05, colorAmp = 0.04;
+
+    if (anim.type === 'particles') {
+      if (state === 'separate') {
+        const t = Math.min(elapsed / 1200, 1);
+        orbBg.position.x = -1.8; orbColor.position.x = 1.8;
+        particles.forEach((p) => { p.mesh.material.opacity = 0; });
+        phaseTag.textContent = '준비 단계';
+        phaseTag.style.background = 'rgba(184,76,40,0.12)';
+        phaseTag.style.color = '#B84C28';
+        phaseTag.style.borderColor = 'rgba(184,76,40,0.35)';
+        if (t >= 1) { state = 'particles-out'; stateStart = now; }
+      }
+      else if (state === 'particles-out') {
+        const t = Math.min(elapsed / 1500, 1);
+        const eased = easeInOutCubic(t);
+        particles.forEach((p, i) => {
+          const phase = (t * 2 - p.offset) % 1.5;
+          if (phase > 0 && phase < 1) {
+            const localT = phase;
+            p.mesh.position.x = p.side * (1.8 - localT * 1.8);
+            p.mesh.position.y = p.yOffset * Math.sin(localT * Math.PI);
+            p.mesh.material.opacity = Math.sin(localT * Math.PI) * 0.9;
+            if (p.side > 0) { p.mesh.material.color.setHex(0xc4a8d8); p.mesh.material.emissive.setHex(0x7a5ba8); }
+            else { p.mesh.material.color.setHex(0xD87838); p.mesh.material.emissive.setHex(0xB84C28); }
+          } else { p.mesh.material.opacity = 0; }
+        });
+        phaseTag.textContent = '동시 작용';
+        phaseTag.style.background = 'rgba(216,120,56,0.18)';
+        phaseTag.style.color = '#D87838';
+        phaseTag.style.borderColor = 'rgba(216,120,56,0.4)';
+        orbBg.position.x = -1.8 + eased * 1.5;
+        orbColor.position.x = 1.8 - eased * 1.5;
+        if (t >= 1) { state = 'merge'; stateStart = now; }
+      }
+      else if (state === 'merge') {
+        const t = Math.min(elapsed / 1100, 1);
+        const eased = easeInOutCubic(t);
+        orbBg.position.x = -0.3 + eased * 0.3;
+        orbColor.position.x = 0.3 - eased * 0.3;
+        orbColor.material.opacity = 1 - eased;
+        const c = new THREE.Color().setHex(anim.bgColor).lerp(new THREE.Color(anim.resultColor), eased);
+        const e = new THREE.Color().setHex(anim.bgEmissive).lerp(new THREE.Color(anim.resultEmissive), eased);
+        orbBg.material.color.copy(c); orbBg.material.emissive.copy(e);
+        particles.forEach(p => { p.mesh.material.opacity *= 0.9; });
+        bgAmp = 0.05 - eased * 0.025; colorAmp = 0.04 - eased * 0.02;
+        phaseTag.textContent = '결과 안착';
+        phaseTag.style.background = 'rgba(106,74,72,0.25)';
+        phaseTag.style.color = '#C5B89B';
+        phaseTag.style.borderColor = 'rgba(212,168,96,0.3)';
+        resultLabel.style.opacity = eased.toString();
+        if (t >= 1) { state = 'hold'; stateStart = now; }
+      }
+      else if (state === 'hold') {
+        const t = Math.min(elapsed / 1500, 1);
+        bgAmp = 0.025;
+        orbColor.material.opacity = 0;
+        orbBg.material.color.setHex(anim.resultColor);
+        orbBg.material.emissive.setHex(anim.resultEmissive);
+        orbBg.position.x = 0;
+        if (t >= 1) { state = 'reset'; stateStart = now; }
+      }
+      else if (state === 'reset') {
+        const t = Math.min(elapsed / 700, 1);
+        const eased = easeInOutCubic(t);
+        const c = new THREE.Color().setHex(anim.resultColor).lerp(new THREE.Color(anim.bgColor), eased);
+        const e = new THREE.Color().setHex(anim.resultEmissive).lerp(new THREE.Color(anim.bgEmissive), eased);
+        orbBg.material.color.copy(c); orbBg.material.emissive.copy(e);
+        orbBg.position.x = -eased * 1.8;
+        resultLabel.style.opacity = (1 - eased).toString();
+        bgAmp = 0.025 + eased * 0.025;
+        if (t >= 1) {
+          orbBg.material.color.setHex(anim.bgColor); orbBg.material.emissive.setHex(anim.bgEmissive);
+          orbColor.material.opacity = 1; orbBg.position.x = -1.8; orbColor.position.x = 1.8;
+          orbColor.material.color.setHex(anim.colorColor);
+          orbColor.material.emissive.setHex(anim.colorEmissive);
+          resultLabel.style.opacity = '0';
+          state = 'separate'; stateStart = now;
+        }
+      }
+    }
+    else if (anim.type === 'simple') {
+      bgAmp = 0.04; colorAmp = 0.035;
+      if (state === 'simple-separate') {
+        const t = Math.min(elapsed / 1000, 1);
+        orbBg.position.x = -1.6; orbColor.position.x = 1.6; orbColor.material.opacity = 1;
+        phaseTag.textContent = '한 번에 시술';
+        phaseTag.style.background = 'rgba(184,76,40,0.18)';
+        phaseTag.style.color = '#B84C28';
+        phaseTag.style.borderColor = 'rgba(184,76,40,0.4)';
+        if (t >= 1) { state = 'simple-merge'; stateStart = now; }
+      }
+      else if (state === 'simple-merge') {
+        const t = Math.min(elapsed / 1400, 1);
+        const eased = easeInOutCubic(t);
+        orbBg.position.x = -1.6 + eased * 1.6;
+        orbColor.position.x = 1.6 - eased * 1.6;
+        orbColor.material.opacity = 1 - eased;
+        const c = new THREE.Color().setHex(anim.bgColor).lerp(new THREE.Color(anim.resultColor), eased);
+        const e = new THREE.Color().setHex(anim.bgEmissive).lerp(new THREE.Color(anim.resultEmissive), eased);
+        orbBg.material.color.copy(c); orbBg.material.emissive.copy(e);
+        bgAmp = 0.04 - eased * 0.018; colorAmp = 0.035 - eased * 0.015;
+        phaseTag.textContent = '결과 안착';
+        phaseTag.style.color = '#C5B89B';
+        phaseTag.style.background = 'rgba(90,40,24,0.3)';
+        phaseTag.style.borderColor = 'rgba(184,76,40,0.35)';
+        resultLabel.style.opacity = eased.toString();
+        if (t >= 1) { state = 'simple-hold'; stateStart = now; }
+      }
+      else if (state === 'simple-hold') {
+        const t = Math.min(elapsed / 1400, 1);
+        bgAmp = 0.022;
+        orbColor.material.opacity = 0;
+        orbBg.material.color.setHex(anim.resultColor);
+        orbBg.material.emissive.setHex(anim.resultEmissive);
+        orbBg.position.x = 0;
+        if (t >= 1) { state = 'simple-reset'; stateStart = now; }
+      }
+      else if (state === 'simple-reset') {
+        const t = Math.min(elapsed / 700, 1);
+        const eased = easeInOutCubic(t);
+        const c = new THREE.Color().setHex(anim.resultColor).lerp(new THREE.Color(anim.bgColor), eased);
+        const e = new THREE.Color().setHex(anim.resultEmissive).lerp(new THREE.Color(anim.bgEmissive), eased);
+        orbBg.material.color.copy(c); orbBg.material.emissive.copy(e);
+        orbBg.position.x = -eased * 1.6;
+        resultLabel.style.opacity = (1 - eased).toString();
+        bgAmp = 0.022 + eased * 0.018;
+        if (t >= 1) {
+          orbBg.material.color.setHex(anim.bgColor); orbBg.material.emissive.setHex(anim.bgEmissive);
+          orbBg.position.x = -1.6; orbColor.position.x = 1.6; orbColor.material.opacity = 1;
+          orbColor.material.color.setHex(anim.colorColor);
+          orbColor.material.emissive.setHex(anim.colorEmissive);
+          resultLabel.style.opacity = '0';
+          state = 'simple-separate'; stateStart = now;
+        }
+      }
+    }
+    else if (anim.type === 'two-step') {
+      if (state === 'step1-tone') {
+        const t = Math.min(elapsed / 1800, 1);
+        const eased = easeInOutCubic(t);
+        orbBg.position.x = -1.6 + eased * 1.6;
+        const c = new THREE.Color().setHex(anim.bgColor).lerp(new THREE.Color(anim.tonedColor), eased);
+        const e = new THREE.Color().setHex(anim.bgEmissive).lerp(new THREE.Color(anim.tonedEmissive), eased);
+        orbBg.material.color.copy(c); orbBg.material.emissive.copy(e);
+        orbColor.material.opacity = 0;
+        phaseTag.textContent = 'Step 1 · 톤업';
+        phaseTag.style.background = 'rgba(184,76,40,0.18)';
+        phaseTag.style.color = '#B84C28';
+        phaseTag.style.borderColor = 'rgba(184,76,40,0.4)';
+        indDot1.style.background = '#B84C28'; indDot1.style.width = '24px';
+        indDot2.style.background = 'rgba(184,76,40,0.2)'; indDot2.style.width = '18px';
+        if (t >= 1) { state = 'step1-pause'; stateStart = now; }
+      }
+      else if (state === 'step1-pause') {
+        const t = Math.min(elapsed / 700, 1);
+        orbBg.material.color.setHex(anim.tonedColor);
+        orbBg.material.emissive.setHex(anim.tonedEmissive);
+        orbBg.position.x = 0;
+        bgAmp = 0.04;
+        phaseTag.textContent = '베이스 정돈';
+        phaseTag.style.color = '#8A7B5E';
+        phaseTag.style.background = 'rgba(138,123,94,0.12)';
+        phaseTag.style.borderColor = 'rgba(138,123,94,0.3)';
+        if (t >= 1) { state = 'step2-color-in'; stateStart = now; }
+      }
+      else if (state === 'step2-color-in') {
+        const t = Math.min(elapsed / 1100, 1);
+        const eased = easeInOutCubic(t);
+        orbColor.material.opacity = eased;
+        orbColor.position.x = 1.8;
+        orbBg.position.x = -eased * 0.8;
+        phaseTag.textContent = 'Step 2 · 착색';
+        phaseTag.style.color = '#D4A860';
+        phaseTag.style.background = 'rgba(212,168,96,0.16)';
+        phaseTag.style.borderColor = 'rgba(212,168,96,0.35)';
+        indDot1.style.background = 'rgba(184,76,40,0.4)'; indDot1.style.width = '18px';
+        indDot2.style.background = '#D4A860'; indDot2.style.width = '24px';
+        if (t >= 1) { state = 'step2-merge'; stateStart = now; }
+      }
+      else if (state === 'step2-merge') {
+        const t = Math.min(elapsed / 1100, 1);
+        const eased = easeInOutCubic(t);
+        orbBg.position.x = -0.8 + eased * 0.8;
+        orbColor.position.x = 1.8 - eased * 1.8;
+        orbColor.material.opacity = 1 - eased;
+        const c = new THREE.Color().setHex(anim.tonedColor).lerp(new THREE.Color(anim.resultColor), eased);
+        const e = new THREE.Color().setHex(anim.tonedEmissive).lerp(new THREE.Color(anim.resultEmissive), eased);
+        orbBg.material.color.copy(c); orbBg.material.emissive.copy(e);
+        bgAmp = 0.04 - eased * 0.018; colorAmp = 0.04 - eased * 0.02;
+        phaseTag.textContent = '결과 안착';
+        phaseTag.style.color = '#C5B89B';
+        phaseTag.style.background = 'rgba(168,144,140,0.2)';
+        phaseTag.style.borderColor = 'rgba(212,168,96,0.3)';
+        resultLabel.style.opacity = eased.toString();
+        if (t >= 1) { state = 'two-step-hold'; stateStart = now; }
+      }
+      else if (state === 'two-step-hold') {
+        const t = Math.min(elapsed / 1500, 1);
+        bgAmp = 0.022;
+        orbColor.material.opacity = 0;
+        orbBg.material.color.setHex(anim.resultColor);
+        orbBg.material.emissive.setHex(anim.resultEmissive);
+        orbBg.position.x = 0;
+        if (t >= 1) { state = 'two-step-reset'; stateStart = now; }
+      }
+      else if (state === 'two-step-reset') {
+        const t = Math.min(elapsed / 700, 1);
+        const eased = easeInOutCubic(t);
+        const c = new THREE.Color().setHex(anim.resultColor).lerp(new THREE.Color(anim.bgColor), eased);
+        const e = new THREE.Color().setHex(anim.resultEmissive).lerp(new THREE.Color(anim.bgEmissive), eased);
+        orbBg.material.color.copy(c); orbBg.material.emissive.copy(e);
+        orbBg.position.x = -eased * 1.6;
+        resultLabel.style.opacity = (1 - eased).toString();
+        bgAmp = 0.022 + eased * 0.028;
+        if (t >= 1) {
+          orbBg.material.color.setHex(anim.bgColor); orbBg.material.emissive.setHex(anim.bgEmissive);
+          orbBg.position.x = -1.6; orbColor.position.x = 1.8;
+          orbColor.material.opacity = 0;
+          orbColor.material.color.setHex(anim.colorColor);
+          orbColor.material.emissive.setHex(anim.colorEmissive);
+          resultLabel.style.opacity = '0';
+          state = 'step1-tone'; stateStart = now;
+        }
+      }
+    }
+
+    deform(bgPos, baseBgPos, time, bgAmp, 2.4, 3.5);
+    orbBg.geometry.attributes.position.needsUpdate = true;
+    orbBg.geometry.computeVertexNormals();
+    orbBg.rotation.y = time * 0.32;
+    orbBg.rotation.x = Math.sin(time * 0.5) * 0.13;
+
+    if (orbColor.material.opacity > 0.05) {
+      deform(colorPos, baseColorPos, time, colorAmp, 2.0, 3.2);
+      orbColor.geometry.attributes.position.needsUpdate = true;
+      orbColor.geometry.computeVertexNormals();
+      orbColor.rotation.y = time * 0.28;
+      orbColor.rotation.x = Math.sin(time * 0.5) * 0.1;
+    }
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(entries => {
+      const cr = entries[0].contentRect;
+      if (cr.width > 0 && cr.height > 0) {
+        camera.aspect = cr.width / cr.height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(cr.width, cr.height);
+      }
+    }).observe(container);
+  }
+  window.addEventListener('resize', () => {
+    const w2 = container.clientWidth, h2 = container.clientHeight;
+    if (w2 > 0 && h2 > 0) {
+      camera.aspect = w2/h2; camera.updateProjectionMatrix(); renderer.setSize(w2, h2);
+    }
+  });
+})();
+</script>
+
+<!-- ════════════════════════════════════════════════════════════
+     Ch 4 · 보색 삼각형 시각화 (Three.js)
+     중앙 적색 구 + 3꼭지점 보석 (그린·블루·바이올렛) + 보석 펄스
+     ════════════════════════════════════════════════════════════ -->
+<script>
+(function(){
+  if (typeof THREE === 'undefined') return;
+
+  const canvas = document.getElementById('cmpCanvas');
+  const stage = document.getElementById('cmpStage');
+  if (!canvas || !stage) return;
+
+  let w = stage.clientWidth || 320, h = stage.clientHeight || 320;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, w/h, 0.1, 100);
+  camera.position.set(0, 0, 7);
+
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setSize(w, h);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  // 양피지 톤 라이팅
+  const k = new THREE.DirectionalLight(0xffffff, 0.95);
+  k.position.set(2, 3, 4);
+  scene.add(k);
+  const f = new THREE.DirectionalLight(0xD4A860, 0.4);
+  f.position.set(-3, -1, 2);
+  scene.add(f);
+  const r = new THREE.DirectionalLight(0xffffff, 0.4);
+  r.position.set(0, -2, -3);
+  scene.add(r);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.22));
+
+  // ── 중앙 적색 구 (잔류 적색)
+  const centerGeom = new THREE.SphereGeometry(0.7, 64, 64);
+  const centerMat = new THREE.MeshStandardMaterial({
+    color: 0x8C2C1C, roughness: 0.4, metalness: 0.18,
+    emissive: 0x2A0806, emissiveIntensity: 0.55,
+  });
+  const center = new THREE.Mesh(centerGeom, centerMat);
+  scene.add(center);
+
+  // 중앙 적색 살짝 펄스
+  const baseCenterPos = centerGeom.attributes.position.array.slice();
+  const centerPos = centerGeom.attributes.position.array;
+  const cVCount = centerPos.length / 3;
+
+  // ── 3 꼭지점 보석 (그린 위 / 블루 좌하 / 바이올렛 우하)
+  // 정삼각형 배치 — 위(0, +R), 좌하(-R*sin60, -R*cos60), 우하(+R*sin60, -R*cos60)
+  const R = 2.45;
+  const gemPositions = {
+    green:  { x: 0,                       y: R,          z: 0 },
+    blue:   { x: -R * Math.sin(Math.PI/3), y: -R * Math.cos(Math.PI/3), z: 0 },
+    violet: { x:  R * Math.sin(Math.PI/3), y: -R * Math.cos(Math.PI/3), z: 0 },
+  };
+
+  // ── 흰 할로 텍스처 (보석 뒤 강한 빛)
+  function createHaloTexture(){
+    const c = document.createElement('canvas');
+    c.width = c.height = 256;
+    const ctx = c.getContext('2d');
+    const g = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+    g.addColorStop(0,    'rgba(255,255,255,0.9)');
+    g.addColorStop(0.18, 'rgba(255,250,235,0.55)');
+    g.addColorStop(0.45, 'rgba(255,245,210,0.22)');
+    g.addColorStop(0.75, 'rgba(255,235,180,0.06)');
+    g.addColorStop(1,    'rgba(255,235,180,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 256, 256);
+    return new THREE.CanvasTexture(c);
+  }
+  const haloTex = createHaloTexture();
+
+  const gems = {};
+  ['green', 'blue', 'violet'].forEach((key) => {
+    const pos = gemPositions[key];
+    const geom = new THREE.SphereGeometry(0.42, 48, 48);
+    const defaults = {
+      green:  { color: 0x6BAA60, emissive: 0x1c2a18 },
+      blue:   { color: 0x4D7DC9, emissive: 0x182030 },
+      violet: { color: 0x9D6BB0, emissive: 0x281828 },
+    };
+    const mat = new THREE.MeshStandardMaterial({
+      color: defaults[key].color, roughness: 0.28, metalness: 0.32,
+      emissive: defaults[key].emissive, emissiveIntensity: 0.55,
+      transparent: true, opacity: 1.0,
+    });
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.position.set(pos.x, pos.y, pos.z);
+    scene.add(mesh);
+
+    // 하얀 할로 sprite (보석 뒤 부드러운 빛 — 더 크고 강하게)
+    const haloMat = new THREE.SpriteMaterial({
+      map: haloTex, transparent: true, opacity: 1.0,
+      depthWrite: false, blending: THREE.AdditiveBlending,
+    });
+    const halo = new THREE.Sprite(haloMat);
+    halo.scale.set(2.3, 2.3, 1);
+    halo.position.set(pos.x, pos.y, pos.z - 0.05);
+    scene.add(halo);
+
+    gems[key] = {
+      mesh, mat, halo, haloMat,
+      basePos: new THREE.Vector3(pos.x, pos.y, pos.z),
+      targetPos: new THREE.Vector3(pos.x, pos.y, pos.z),
+      phase: 'rest',
+      absorbProgress: 0,
+    };
+  });
+
+  // ── 점선 삼각형 (잉크선 톤)
+  const triGeom = new THREE.BufferGeometry();
+  const triVerts = [
+    gemPositions.green.x,  gemPositions.green.y,  gemPositions.green.z,
+    gemPositions.blue.x,   gemPositions.blue.y,   gemPositions.blue.z,
+    gemPositions.violet.x, gemPositions.violet.y, gemPositions.violet.z,
+    gemPositions.green.x,  gemPositions.green.y,  gemPositions.green.z,
+  ];
+  triGeom.setAttribute('position', new THREE.Float32BufferAttribute(triVerts, 3));
+  const triMat = new THREE.LineDashedMaterial({
+    color: 0x4A3018,
+    dashSize: 0.18, gapSize: 0.14,
+    transparent: true, opacity: 0.55,
+    linewidth: 1,
+  });
+  const triLine = new THREE.Line(triGeom, triMat);
+  triLine.computeLineDistances();
+  scene.add(triLine);
+
+  // ── 외부 API
+  let selectedKey = null;
+  const convergeData = { green: null, blue: null, violet: null };
+  // 중앙 구의 색상 transition 상태 (lerp)
+  const centerOrigColor    = new THREE.Color(0x8C2C1C);
+  const centerOrigEmissive = new THREE.Color(0x2A0806);
+  const centerCurColor     = new THREE.Color(0x8C2C1C);
+  const centerCurEmissive  = new THREE.Color(0x2A0806);
+  const centerTargetColor    = new THREE.Color(0x8C2C1C);
+  const centerTargetEmissive = new THREE.Color(0x2A0806);
+
+  window.cmpUpdateColors = function(colors){
+    colors.forEach(c => {
+      if (gems[c.key]) {
+        gems[c.key].mat.color.setHex(c.threeColor);
+        gems[c.key].mat.emissive.setHex(c.threeEmissive);
+      }
+      if (c.convergeColor !== undefined) {
+        convergeData[c.key] = {
+          color: c.convergeColor,
+          emissive: (c.convergeEmissive !== undefined ? c.convergeEmissive : 0x100804),
+        };
+      }
+    });
+  };
+
+  window.cmpSelectColor = function(key){
+    const prevKey = selectedKey;
+    selectedKey = key;
+
+    // 이전에 선택된 보석은 원위치로 복귀
+    if (prevKey && gems[prevKey]) {
+      gems[prevKey].phase = 'returning';
+    }
+    // 새로 선택된 보석은 중앙으로 흡수
+    if (key && gems[key]) {
+      gems[key].phase = 'absorbing';
+    }
+
+    // 중앙 구 색상 transition 타겟
+    if (key && convergeData[key]) {
+      centerTargetColor.setHex(convergeData[key].color);
+      centerTargetEmissive.setHex(convergeData[key].emissive);
+    } else {
+      centerTargetColor.copy(centerOrigColor);
+      centerTargetEmissive.copy(centerOrigEmissive);
+      // 모든 보석 원위치
+      Object.keys(gems).forEach(k => {
+        if (gems[k].phase !== 'rest') gems[k].phase = 'returning';
+      });
+    }
+  };
+
+  // ── 클릭/탭으로 보석 직접 선택 (Raycasting)
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+
+  function onTap(ev){
+    const rect = canvas.getBoundingClientRect();
+    const cx = (ev.touches ? ev.touches[0].clientX : ev.clientX);
+    const cy = (ev.touches ? ev.touches[0].clientY : ev.clientY);
+    mouse.x = ((cx - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((cy - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const meshes = ['green', 'blue', 'violet'].map(k => gems[k].mesh);
+    const hits = raycaster.intersectObjects(meshes);
+    if (hits.length > 0) {
+      const hit = hits[0].object;
+      const key = Object.keys(gems).find(k => gems[k].mesh === hit);
+      if (key && window.selectComplement) window.selectComplement(key);
+    }
+  }
+  canvas.addEventListener('click', onTap);
+
+  // ── 애니메이션 — 보석 펄스 (1.5s 사이클, 시간차 0.45s)
+  const startTime = performance.now();
+  const PULSE_PERIOD = 1500;
+  const PULSE_OFFSETS = { green: 0, blue: 450, violet: 900 };
+
+  function animate(){
+    const t = performance.now() - startTime;
+
+    // 중앙 적색 구 — 미세 펄스 (회전 + 표면 살짝 흔들림)
+    center.rotation.y += 0.003;
+    center.rotation.x += 0.0015;
+    const cAmp = 0.018 + 0.012 * Math.sin(t * 0.0018);
+    for (let i = 0; i < cVCount; i++) {
+      const i3 = i * 3;
+      const bx = baseCenterPos[i3], by = baseCenterPos[i3+1], bz = baseCenterPos[i3+2];
+      const len = Math.sqrt(bx*bx + by*by + bz*bz);
+      const nx = bx/len, ny = by/len, nz = bz/len;
+      const wave = Math.sin(t * 0.0014 + len * 4 + bx * 2) * cAmp;
+      centerPos[i3]   = bx + nx * wave;
+      centerPos[i3+1] = by + ny * wave;
+      centerPos[i3+2] = bz + nz * wave;
+    }
+    centerGeom.attributes.position.needsUpdate = true;
+
+    // 중앙 구 색상 transition (선택된 보색 결과로 부드럽게 수렴)
+    centerCurColor.lerp(centerTargetColor, 0.06);
+    centerCurEmissive.lerp(centerTargetEmissive, 0.06);
+    centerMat.color.copy(centerCurColor);
+    centerMat.emissive.copy(centerCurEmissive);
+    // 선택 시 살짝 더 빛남 (수렴 강조)
+    centerMat.emissiveIntensity = (selectedKey !== null) ? 0.7 : 0.55;
+
+    // 보석 — 흡수/복귀 + floating + 펄스
+    Object.keys(gems).forEach(key => {
+      const g = gems[key];
+      const cyclePhase = ((t - PULSE_OFFSETS[key]) % PULSE_PERIOD) / PULSE_PERIOD;
+      const pulse = 0.5 + 0.5 * Math.sin(cyclePhase * Math.PI * 2 - Math.PI/2); // 0..1
+      const isSelected = (selectedKey === key);
+      const isOther = (selectedKey !== null && selectedKey !== key);
+
+      // 흡수 진행도 (0 = basePos, 1 = center)
+      if (g.phase === 'absorbing') {
+        g.absorbProgress += (1 - g.absorbProgress) * 0.07;
+        if (g.absorbProgress > 0.985) g.absorbProgress = 1;
+      } else if (g.phase === 'returning') {
+        g.absorbProgress += (0 - g.absorbProgress) * 0.12;
+        if (g.absorbProgress < 0.015) {
+          g.absorbProgress = 0;
+          g.phase = 'rest';
+        }
+      }
+      const ap = g.absorbProgress;
+
+      // floating Y 모션 (공중에 떠있는 느낌, 시간차) — 흡수 중엔 약화
+      const floatY = Math.sin(t * 0.0014 + PULSE_OFFSETS[key] * 0.003) * 0.07 * (1 - ap);
+
+      // 위치: basePos → center (lerp) + floating
+      const px = g.basePos.x * (1 - ap);
+      const py = g.basePos.y * (1 - ap) + floatY;
+      const pz = g.basePos.z * (1 - ap);
+      g.mesh.position.set(px, py, pz);
+
+      // scale
+      const baseScale = isOther ? 0.78 : 1.0;
+      const pulseAmp = isOther ? 0.025 : 0.06;
+      const absorbScale = 1 - ap * 0.85;
+      const scale = (baseScale + pulse * pulseAmp) * absorbScale;
+      g.mesh.scale.set(scale, scale, scale);
+
+      // opacity
+      const absorbAlpha = ap > 0.6 ? 1 - (ap - 0.6) / 0.4 : 1;
+      const baseAlpha = isOther ? 0.55 : 1.0;
+      g.mat.opacity = baseAlpha * absorbAlpha;
+
+      // emissive — 더 강하게
+      const absorbGlow = ap > 0 ? (1 + ap * 0.8) : 1;
+      g.mat.emissiveIntensity = (isSelected
+        ? 0.9 + pulse * 0.6
+        : (isOther ? 0.3 + pulse * 0.15 : 0.75 + pulse * 0.45)) * absorbGlow;
+
+      // 회전
+      g.mesh.rotation.y += 0.005;
+      g.mesh.rotation.x += 0.0025;
+
+      // ── 흰 할로 — 강하게 살아 숨쉬듯
+      g.halo.position.set(px, py, pz - 0.05);
+      const haloBase = isOther ? 1.7 : 2.3;
+      const haloPulse = isOther ? 0.2 : 0.55;  // 펄스 진폭 강화
+      const haloScale = (haloBase + pulse * haloPulse) * absorbScale;
+      g.halo.scale.set(haloScale, haloScale, 1);
+      const haloAlphaBase = isOther ? 0.45 : 1.0;
+      const haloAlphaPulse = isOther ? 0.15 : 0.45;
+      g.haloMat.opacity = (haloAlphaBase + pulse * haloAlphaPulse) * absorbAlpha;
+    });
+
+    // 라벨도 흡수 중인 보석은 페이드아웃
+    Object.keys(gems).forEach(key => {
+      const labelMap = { green: 'cmpLabelGreen', blue: 'cmpLabelBlue', violet: 'cmpLabelViolet' };
+      const labelEl = document.getElementById(labelMap[key]);
+      if (labelEl) {
+        const ap = gems[key].absorbProgress;
+        labelEl.style.opacity = String(1 - ap * 0.92);
+      }
+    });
+
+    // 삼각형 — 선택 시 약간 흐려짐
+    triMat.opacity = (selectedKey !== null) ? 0.32 : 0.55;
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+  animate();
+
+  // 리사이즈
+  function resize(){
+    const w2 = stage.clientWidth, h2 = stage.clientHeight;
+    if (w2 > 0 && h2 > 0) {
+      camera.aspect = w2/h2;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w2, h2);
+    }
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(resize).observe(stage);
+  }
+  window.addEventListener('resize', resize);
+})();
+</script>
+
+
+</body>
+</html>
