@@ -4236,14 +4236,15 @@ recommendList.addEventListener('click', (e) => {
     isActive = (lv === 16) ? ZONE4_LV16_ROUTES.includes(letter) : (lv === 18 ? ZONE4_LV18_ROUTES.includes(letter) : false);
   }
 
-  // zone4.A의 recommend 'B' 클릭 → Lv 18로 점프 + Ch2로 돌아가기
+  // zone4.A의 recommend 'B' 클릭 → Lv 18로 점프하며 ch3 18 베이스 페이지 직접 갱신 (Ch2 우회 없음)
   if (zoneKey === 'zone4' && lv === 16 && letter === 'B') {
     const targetIdx = STAGES.findIndex(s => s.lv === 18);
     if (targetIdx !== -1) {
       slider.value = targetIdx;
-      update();
-      // Ch2 페이지로 돌아가서 18에서 다시 선택하게
-      goToCh2FromCh3();
+      update();        // ch1 사진/슬라이더 갱신
+      renderCh2();     // ch2 mini photo + zone card 갱신 (백그라운드에서)
+      renderCh3('zone4', 'B');  // ch3 페이지 내용을 18 베이스로 갱신 (페이지 전환 없음)
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
     return;
   }
