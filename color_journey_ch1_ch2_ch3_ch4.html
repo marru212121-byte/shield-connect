@@ -4255,26 +4255,29 @@ routesContainer.addEventListener('click', (e) => {
   const lv = STAGES[idx].lv;
   const zoneKey = ZONE_MAP[lv];
 
-  // 다음 영역으로 점프 — zone2.B → Lv 14, zone3.B → Lv 16, zone4.B → Lv 18 + ch3 직진
+  // zone4.B (Lv 16) → Lv 18로 점프하며 ch3 18 베이스 페이지 직진
+  if (zoneKey === 'zone4' && lv === 16 && letter === 'B') {
+    const targetIdx = STAGES.findIndex(s => s.lv === 18);
+    if (targetIdx !== -1) {
+      slider.value = targetIdx;
+      update();   // ch1 사진/슬라이더 표시만 갱신 (ch2는 그대로 둠 — ch3로 갈 거니)
+    }
+    goToCh3('zone4', 'B');
+    return;
+  }
+
+  // zone2.B → Lv 14, zone3.B → Lv 16 — 점프 후 ch2에 머무르며 다음 영역 보여주기
   if (
     (zoneKey === 'zone2' && letter === 'B') ||
-    (zoneKey === 'zone3' && letter === 'B') ||
-    (zoneKey === 'zone4' && lv === 16 && letter === 'B')
+    (zoneKey === 'zone3' && letter === 'B')
   ) {
-    const targetLv = (zoneKey === 'zone2') ? 14 : (zoneKey === 'zone3') ? 16 : 18;
+    const targetLv = (zoneKey === 'zone2') ? 14 : 16;
     const targetIdx = STAGES.findIndex(s => s.lv === targetLv);
     if (targetIdx !== -1) {
       slider.value = targetIdx;
-      update();       // Ch1 사진/카드 갱신
-      renderCh2();    // Ch2 영역 페이지 갱신
-
-      if (zoneKey === 'zone4') {
-        // zone4 B는 한 번 클릭으로 18 베이스 ch3 페이지까지 직진
-        goToCh3('zone4', 'B');
-      } else {
-        // zone2/zone3는 ch2에 머무르며 다음 영역 보여주기
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
+      update();
+      renderCh2();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
     return;
   }
