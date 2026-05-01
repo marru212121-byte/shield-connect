@@ -3339,7 +3339,8 @@ function renderCh2(){
       const isActive = activeRoutes.includes(r.letter);
       const isJump = (
         ((zoneKey === 'zone2' || zoneKey === 'zone3') && r.letter === 'B') ||
-        (zoneKey === 'zone4' && lv === 16 && r.letter === 'B')
+        (zoneKey === 'zone4' && lv === 16 && r.letter === 'B') ||
+        (zoneKey === 'zone4' && lv === 18 && r.letter === 'A')
       );
       const isClickable = isActive || isJump;
       return `
@@ -4009,14 +4010,14 @@ const ROUTES_DATA = {
       // 레시피 4개 (플래티넘 단독 항목 제거됨)
       recipes: {
         label: '레시피를 읽는 능력',
-        intro: '잔류 색소가 거의 없어 — <em>보색 작용 없이도 본래 색감이 그대로 발색</em>해요. 16에서 못한 색까지 깨끗하게',
+        intro: '잔류 색소가 거의 없어 — <em>보색 작용 없이도 본래 색감이 그대로 발색</em>해요. Lv 16에서 못한 색까지 깨끗하게',
         items: [
-          { combo: '실버애쉬',              desc: '16에서 <em>매트 변질</em>되던 톤 — 18에서 <b>깨끗한 실버애쉬</b>로 발색' },
-          { combo: '라벤더애쉬',            desc: '16에서 <em>노랑에 빼앗기던 라벤더감</em>이 — 18에서 <b>본래 라벤더감 살아있는 애쉬</b>로' },
-          { combo: '파스텔 핑크 (연분홍)',  desc: '16에서 <em>퍼플 핑크 한계</em>였던 — 18에서 <b>깨끗한 파스텔 연분홍 핑크</b>로' },
-          { combo: '플래티넘·화이트 블론드·백모 등', desc: '전부 아이보리 18레벨 이상 베이스에서 — <em>연노랑</em>을 <b>연분홍·연핑크</b> 등으로 미세하게 중화하며 연출 (잿빛 느낌의 백모면 <b>고명도 애쉬 염모제</b>를 살짝 가미). <em>클리어까지 다량 희석</em>하세요', clear: true },
+          { combo: '실버애쉬',              desc: 'Lv 16에서 <em>매트 변질</em>되던 톤 — Lv 18에서 <b>깨끗한 실버애쉬</b>로 발색 (<b>밝은톤의 블루염모제 + 밝은톤의 애쉬염모제</b>)' },
+          { combo: '라벤더애쉬',            desc: 'Lv 16에서 <em>노랑에 빼앗기던 라벤더감</em>이 — Lv 18에서 <b>본래 라벤더감 살아있는 애쉬</b>로' },
+          { combo: '파스텔 핑크 (연분홍)',  desc: 'Lv 16에서 <em>퍼플 핑크 한계</em>였던 — Lv 18에서 <b>깨끗한 파스텔 연분홍 핑크</b>로 (<b>밝은톤의 핑크염모제 + 핑크 컨트롤컬러 + 클리어 희석</b>)' },
+          { combo: '플래티넘·화이트 블론드·백모 등', desc: '아이보리 Lv 18 이상 베이스에서 — <em>연노랑</em>을 <b>연분홍·연핑크</b> 등으로 미세하게 중화하며 연출 (잿빛 느낌의 백모면 <b>고명도 애쉬 염모제</b>를 살짝 가미). <em>클리어까지 다량 희석</em>하세요', clear: true },
         ],
-        outro: '…16에서 못한 모든 색이 깨끗하게 · 백모는 미세 중화로',
+        outro: '…Lv 16에서 못한 모든 색이 깨끗하게 · 백모는 미세 중화로',
       },
       // recommend 없음 — 끝점 (endpoint 박스로 대체)
       endpoint: {
@@ -4266,9 +4267,20 @@ routesContainer.addEventListener('click', (e) => {
     const targetIdx = STAGES.findIndex(s => s.lv === 18);
     if (targetIdx !== -1) {
       slider.value = targetIdx;
-      update();   // ch1 사진/슬라이더 표시만 갱신 (ch2는 그대로 둠 — ch3로 갈 거니)
+      update();
     }
     goToCh3('zone4', 'B');
+    return;
+  }
+
+  // zone4.A (Lv 18) → Lv 16으로 돌아가며 ch3 16 베이스 페이지 직진
+  if (zoneKey === 'zone4' && lv === 18 && letter === 'A') {
+    const targetIdx = STAGES.findIndex(s => s.lv === 16);
+    if (targetIdx !== -1) {
+      slider.value = targetIdx;
+      update();
+    }
+    goToCh3('zone4', 'A');
     return;
   }
 
