@@ -458,8 +458,8 @@ function doAnalyze(b64, mt){
     '',
     '★★★ 필수 출력 필드 (누락 절대 금지) ★★★',
     '- gender, cut, dry 객체는 모두 필수.',
-    '- cut.customer_guide 객체는 필수. 절대 누락 금지. type / design_summary / care_points 채울 것.',
-    '- cut.customer_guide.type이 "perm"이면 perm_recommendation도 채움. "cut_only"면 빈 문자열 또는 생략.',
+    '- customer_guide 객체는 필수 (최상위 위치). 절대 누락 금지. type / design_summary / care_points 채울 것.',
+    '- customer_guide.type이 "perm"이면 perm_recommendation도 채움. "cut_only"면 빈 문자열 또는 생략.',
     '- 누락 시 디자이너의 고객 상담 기능이 작동 X = 시술 실패 위험.',
     '',
     '{',
@@ -824,7 +824,8 @@ function renderMarkers(r){
 function renderCustomerGuide(r){
   var card = document.getElementById('customerCard');
   if(!card) return;
-  var guide = r && r.cut && r.cut.customer_guide;
+  // customer_guide는 최상위에 오는 게 정석이지만, 모델이 cut 안쪽에 넣는 경우도 방어
+  var guide = r && (r.customer_guide || (r.cut && r.cut.customer_guide));
   if(!guide || typeof guide !== 'object'){
     card.classList.remove('show');
     return;
