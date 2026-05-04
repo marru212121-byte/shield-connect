@@ -1,19 +1,25 @@
 // api/generate-image.js
 // ═══════════════════════════════════════════════════════════════
-// HAIRO 시안 생성 엔드포인트 (Nano Banana 2 호출)
+// HAIRO 사진 생성 엔드포인트 (Nano Banana 2 호출)
 // ═══════════════════════════════════════════════════════════════
 // 호출 주체: hairo.html (프론트)
 // 처리 흐름:
 //   1. 세션 검증 (쿠키에서 member_id 추출)
 //   2. 1크레딧 차감
-//   3. Gemini 3.1 Flash Image (Nano Banana 2) API 호출
-//   4. 응답에서 이미지 추출 → 프론트로 base64 반환
-//   5. 실패 시 크레딧 자동 환불
+//   3. 프롬프트 합성: 인물 코어 + 디자이너 입력 + 해상도 + (앵글)
+//   4. Gemini 3.1 Flash Image (Nano Banana 2) API 호출
+//   5. 응답에서 이미지 추출 → 프론트로 base64 반환
+//   6. 실패 시 크레딧 자동 환불
 //
-// recipe.js와 거의 동일한 구조 — 차이점은:
-//   - Claude API 대신 Gemini API 호출
-//   - 환경변수 HAIRO_NANOBANANA2 사용
-//   - 응답: text가 아니라 imageBase64 반환
+// 입력 payload (프론트 → 백엔드):
+//   {
+//     userPrompt:    string,  // 디자이너가 직접 친 프롬프트
+//     aspectPrompt:  string,  // "vertical 3:4 aspect ratio, ..."
+//     aspectRatio:   "9:16" | "16:9" | "4:5" | "1:1",  // 표시용
+//     anglePrompt?:  string,  // 앵글 켰을 때만, "camera position: yaw ..."
+//     angle?:        { yaw, pitch, frameIdx },
+//     references?:   [{ base64, mimeType }, ...]  // 최대 5장
+//   }
 // ═══════════════════════════════════════════════════════════════
 
 import { getSessionFromRequest } from '../lib/session.js';
@@ -23,15 +29,35 @@ const GEMINI_API_URL =
   'https://generativelanguage.googleapis.com/v1beta/models/' +
   'gemini-3.1-flash-image-preview:generateContent';
 
-// 이미지 1장 생성 = 몇 크레딧 차감할지 (여기 한 줄만 바꾸면 단가 변경됨)
+// 이미지 1장 생성 = 몇 크레딧 차감할지
 const COST_CREDITS = 1;
 
-// Vercel: 이미지 생성은 5~15초 걸리므로 60초 타임아웃 + 6MB body limit
+// 참조 사진 최대 장수 (Nano Banana 2는 14장까지 지원하지만 안정성 위해 5장 제한)
+const MAX_REFERENCES = 5;
+
+// ─── 인물 코어 (항상 자동 적용, 디자이너에게 노출 X) ────────────
+// 충돌 검수 완료된 11줄 다이어트 버전
+const PERSON_CORE = `photorealistic image,
+
+smooth natural skin with very fine pore detail,
+flawless yet realistic skin,
+no plastic doll-like skin,
+no acne, no pimples, no scars, no blemishes,
+
+individual hair strand visibility,
+visible hair gloss and natural shine,
+a few subtle flyaway strands near hairline,
+realistic hair root density,
+
+no AI smoothing artifacts,
+authentic raw photo quality`;
+
+// Vercel 설정
 export const config = {
   maxDuration: 60,
   api: {
     bodyParser: {
-      sizeLimit: '6mb',
+      sizeLimit: '30mb', // 5장 × 최대 6MB 정도까지 여유
     },
   },
 };
@@ -57,20 +83,41 @@ export default async function handler(req, res) {
     return res.status(400).json({ code: 'invalid_body' });
   }
 
-  const { prompt, referenceImageBase64, referenceMimeType, cameraInfo } = body;
-  if (!prompt || typeof prompt !== 'string') {
+  const {
+    userPrompt,
+    aspectPrompt,
+    aspectRatio,
+    anglePrompt,
+    angle,
+    references,
+  } = body;
+
+  if (!userPrompt || typeof userPrompt !== 'string') {
     return res.status(400).json({
       code: 'missing_required_fields',
-      message: 'prompt가 필요합니다.',
+      message: '프롬프트를 입력해주세요.',
     });
   }
 
-  // 너무 큰 이미지 거부 (8MB 이상)
-  if (referenceImageBase64 && referenceImageBase64.length > 8 * 1024 * 1024) {
+  // 참조 사진 검증
+  let refs = Array.isArray(references) ? references : [];
+  if (refs.length > MAX_REFERENCES) {
     return res.status(400).json({
-      code: 'reference_too_large',
-      message: '레퍼런스 이미지가 너무 큽니다.',
+      code: 'too_many_references',
+      message: `참조 사진은 최대 ${MAX_REFERENCES}장까지 첨부 가능합니다.`,
     });
+  }
+  // 각 ref가 너무 크면 거부 (8MB 이상)
+  for (const r of refs) {
+    if (!r?.base64 || typeof r.base64 !== 'string') {
+      return res.status(400).json({ code: 'invalid_reference' });
+    }
+    if (r.base64.length > 8 * 1024 * 1024) {
+      return res.status(400).json({
+        code: 'reference_too_large',
+        message: '참조 사진 중 너무 큰 이미지가 있어요.',
+      });
+    }
   }
 
   // ─── 3. 환경변수 확인 ────────────────────────────────────────
@@ -104,22 +151,12 @@ export default async function handler(req, res) {
   if (!ok) {
     const reason = result?.reason;
     const remaining = Number(result?.credits_remaining ?? 0);
-
     if (reason === 'member_not_found') {
-      return res.status(401).json({
-        code: 'not_authenticated',
-        message: '세션이 만료되었습니다. 다시 로그인해주세요.',
-      });
+      return res.status(401).json({ code: 'not_authenticated', message: '세션이 만료되었습니다. 다시 로그인해주세요.' });
     }
-
     if (reason === 'insufficient_credits' || remaining <= 0) {
-      return res.status(402).json({
-        code: 'insufficient_credits',
-        message: '크레딧이 부족합니다. 충전 후 다시 시도해주세요.',
-        credits_remaining: remaining,
-      });
+      return res.status(402).json({ code: 'insufficient_credits', message: '크레딧이 부족합니다.', credits_remaining: remaining });
     }
-
     console.error('[generate-image] unknown consume reason:', result);
     return res.status(500).json({ code: 'server_error' });
   }
@@ -128,17 +165,36 @@ export default async function handler(req, res) {
     console.log('[generate-image] admin bypass:', memberId);
   }
 
-  // ─── 5. Gemini API 호출 ─────────────────────────────────────
+  // ─── 5. 최종 프롬프트 합성 ──────────────────────────────────
+  // 순서: 인물 코어 → 디자이너 입력 → 해상도 → 앵글(옵션)
+  // 디자이너 자유 입력이 가운데 와야 모델이 "주된 명령"으로 인식
+  const promptParts = [
+    PERSON_CORE,
+    userPrompt.trim(),
+    aspectPrompt || 'vertical 9:16 aspect ratio, portrait orientation',
+  ];
+  if (anglePrompt && typeof anglePrompt === 'string') {
+    promptParts.push(anglePrompt);
+  }
+  const finalPrompt = promptParts.join(',\n\n');
+
+  // ─── 6. Gemini API 호출 ─────────────────────────────────────
+  // parts: 참조 사진들 → 프롬프트 텍스트
   const parts = [];
-  if (referenceImageBase64) {
+  for (const r of refs) {
     parts.push({
       inline_data: {
-        mime_type: referenceMimeType || 'image/jpeg',
-        data: referenceImageBase64,
+        mime_type: r.mimeType || 'image/jpeg',
+        data: r.base64,
       },
     });
   }
-  parts.push({ text: prompt });
+  parts.push({ text: finalPrompt });
+
+  // 해상도는 API 파라미터로 하드 강제 (텍스트 + 파라미터 이중 보장)
+  const aspectForApi = ['9:16', '16:9', '4:5', '1:1'].includes(aspectRatio)
+    ? aspectRatio
+    : '9:16';
 
   let geminiResponse;
   try {
@@ -150,6 +206,11 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         contents: [{ role: 'user', parts: parts }],
+        generationConfig: {
+          imageConfig: {
+            aspectRatio: aspectForApi,
+          },
+        },
       }),
     });
   } catch (err) {
@@ -171,7 +232,7 @@ export default async function handler(req, res) {
     });
   }
 
-  // ─── 6. 응답에서 이미지 추출 ────────────────────────────────
+  // ─── 7. 응답에서 이미지 추출 ────────────────────────────────
   const aiData = await geminiResponse.json();
   const candidate = aiData?.candidates?.[0];
   const responseParts = candidate?.content?.parts || [];
@@ -187,7 +248,6 @@ export default async function handler(req, res) {
   }
 
   if (!imagePart || !imagePart.data) {
-    // 안전 필터, 차단, 빈 응답 등 — 환불
     await refundCredit(supabase, memberId, generationRef, result.is_admin);
     const finishReason = candidate?.finishReason || 'unknown';
     let userMsg = '이미지가 생성되지 않았어요. 크레딧은 복구되었습니다.';
@@ -205,22 +265,22 @@ export default async function handler(req, res) {
     });
   }
 
-  // ─── 7. 성공 응답 ───────────────────────────────────────────
+  // ─── 8. 성공 응답 ───────────────────────────────────────────
   return res.status(200).json({
     imageBase64: imagePart.data,
     mimeType: imagePart.mime_type || imagePart.mimeType || 'image/png',
     credits_remaining: result.credits_remaining,
     is_admin: result.is_admin,
-    cameraInfo: cameraInfo || null,
+    aspectRatio: aspectRatio || '9:16',
+    angle: angle || null,
   });
 }
 
 // ============================================================
-// 크레딧 환불 (recipe.js와 완전히 동일한 패턴)
+// 크레딧 환불 (recipe.js와 동일한 패턴)
 // ============================================================
 async function refundCredit(supabase, memberId, reference, isAdmin) {
   if (isAdmin) return;
-
   try {
     const { data: member } = await supabase
       .from('cafe24_member_credits')
