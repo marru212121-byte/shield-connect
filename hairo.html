@@ -9,6 +9,7 @@
 <title>HAIRO · 헤어 비주얼라이저</title>
 <style>
 :root {
+  color-scheme: dark;
   --bg: #0A0A0A;
   --bg-elevated: #1c1c1c;
   --bg-input: #1F1F1F;
@@ -215,18 +216,32 @@ input, textarea { font-family: inherit; }
   appearance: none;
   border: none;
   color: var(--text);
-  font-size: 14px;
-  line-height: 1.55;
+  -webkit-text-fill-color: var(--text);
+  caret-color: var(--accent);
+  font-size: 16px;
+  line-height: 1.5;
   resize: none;
   min-height: 72px;
   max-height: 200px;
   padding: 8px 0;
   outline: none;
   overflow-y: auto;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 .dock-textarea:focus {
   background-color: var(--bg-elevated);
   outline: none;
+  -webkit-text-fill-color: var(--text);
+}
+.dock-textarea::placeholder {
+  color: var(--text-faint);
+  -webkit-text-fill-color: var(--text-faint);
+  opacity: 1;
+}
+.dock-textarea::-webkit-input-placeholder {
+  color: var(--text-faint);
+  -webkit-text-fill-color: var(--text-faint);
 }
 .dock-textarea::placeholder { color: var(--text-faint); }
 .dock-bottom {
