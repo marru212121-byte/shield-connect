@@ -210,17 +210,23 @@ input, textarea { font-family: inherit; }
 }
 .dock-textarea {
   flex: 1;
-  background: transparent;
+  background-color: var(--bg-elevated);
+  -webkit-appearance: none;
+  appearance: none;
   border: none;
   color: var(--text);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.55;
   resize: none;
-  min-height: 32px;
-  max-height: 120px;
-  padding: 5px 0;
+  min-height: 72px;
+  max-height: 200px;
+  padding: 8px 0;
   outline: none;
   overflow-y: auto;
+}
+.dock-textarea:focus {
+  background-color: var(--bg-elevated);
+  outline: none;
 }
 .dock-textarea::placeholder { color: var(--text-faint); }
 .dock-bottom {
@@ -502,7 +508,7 @@ input, textarea { font-family: inherit; }
         class="dock-textarea"
         id="promptInput"
         placeholder="프롬프트를 자유롭게 입력하세요"
-        rows="1"></textarea>
+        rows="3"></textarea>
     </div>
     <div class="dock-bottom">
       <div class="dock-chips">
@@ -818,7 +824,7 @@ function showToast(msg) {
 const ta = document.getElementById('promptInput');
 ta.addEventListener('input', () => {
   ta.style.height = 'auto';
-  ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+  ta.style.height = Math.max(72, Math.min(ta.scrollHeight, 200)) + 'px';
 });
 
 // ===== Tab switching (UI only for now) =====
