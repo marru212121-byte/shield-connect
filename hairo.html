@@ -485,6 +485,427 @@ input, textarea { font-family: inherit; }
 .toast.show { opacity: 1; }
 
 .hidden { display: none !important; }
+
+/* ===== Empty gallery guide (Higgsfield tone) ===== */
+.guide {
+  padding: 56px 28px 40px;
+  max-width: 360px;
+  margin: 0 auto;
+}
+.guide-eyebrow {
+  font-family: "Times New Roman", "Noto Serif KR", serif;
+  font-style: italic;
+  font-size: 16px;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.guide-sub {
+  font-size: 9.5px;
+  color: var(--text-faint);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 22px;
+}
+.guide-body {
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--text-muted);
+  letter-spacing: 0.1px;
+}
+.guide-body p { margin-bottom: 12px; }
+.guide-body p:last-child { margin-bottom: 0; }
+.guide-divider {
+  width: 24px;
+  height: 0.5px;
+  background: var(--border-strong);
+  margin: 18px 0;
+}
+
+/* ===== Dock chip toggle states ===== */
+.chip.chip-toggle {
+  cursor: pointer;
+  transition: all 0.15s;
+  background: rgba(255,255,255,0.04);
+}
+.chip.chip-toggle.active {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+  color: var(--accent);
+  font-weight: 600;
+}
+.chip.chip-action {
+  cursor: pointer;
+  background: rgba(255,255,255,0.04);
+}
+.chip.chip-action.has-value {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+/* ===== Bottom Sheet ===== */
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 110;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+}
+.sheet-overlay.active {
+  display: flex;
+  animation: fadeIn 0.2s ease;
+}
+.sheet {
+  background: #131313;
+  border: 0.5px solid var(--accent-border);
+  border-bottom: none;
+  border-top-left-radius: 18px;
+  border-top-right-radius: 18px;
+  width: 100%;
+  max-width: 440px;
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom);
+  animation: slideUp 0.25s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(24px); opacity: 0.5; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: rgba(255,255,255,0.18);
+  border-radius: 99px;
+  margin: 8px auto 4px;
+  flex-shrink: 0;
+}
+.sheet-header {
+  padding: 8px 16px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-shrink: 0;
+}
+.sheet-title {
+  font-family: "Times New Roman", "Noto Serif KR", serif;
+  font-style: italic;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  line-height: 1.1;
+}
+.sheet-subtitle {
+  font-size: 10px;
+  color: var(--text-faint);
+  letter-spacing: 0.4px;
+  margin-top: 4px;
+}
+.sheet-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 20px;
+  padding: 0 4px;
+  line-height: 1;
+  cursor: pointer;
+}
+.sheet-body {
+  padding: 0 14px 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* ===== Angle preview (drag area) ===== */
+.angle-preview {
+  background: #1A1814;
+  border-radius: 12px;
+  aspect-ratio: 3/4;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+  touch-action: none;
+}
+.angle-preview.dragging { cursor: grabbing; }
+.angle-frame {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 160ms ease-out;
+  background-size: cover;
+  background-position: center;
+  background-color: #1A1814;
+  pointer-events: none;
+}
+.angle-frame.active { opacity: 1; }
+.angle-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.3);
+  font-size: 11px;
+  pointer-events: none;
+}
+.angle-placeholder.hidden { display: none; }
+.angle-badge {
+  position: absolute;
+  background: rgba(0,0,0,0.65);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  font-size: 10px;
+  padding: 5px 10px;
+  border-radius: 7px;
+  color: var(--text);
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  z-index: 2;
+  pointer-events: none;
+}
+.angle-badge.tl { top: 10px; left: 10px; }
+.angle-badge.tr { top: 10px; right: 10px; }
+
+/* ===== Camera info row ===== */
+.cam-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 4px 14px;
+}
+.cam-dot-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(199,240,80,0.06);
+  border: 0.5px solid var(--accent-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.cam-dot {
+  width: 9px;
+  height: 9px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(199,240,80,0.55);
+}
+.cam-text { flex: 1; min-width: 0; }
+.cam-label {
+  font-size: 9.5px;
+  color: var(--text-faint);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.cam-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  letter-spacing: 0.1px;
+}
+.cam-frame {
+  font-size: 10px;
+  color: var(--text-faint);
+  letter-spacing: 0.3px;
+  margin-top: 2px;
+}
+
+/* ===== Sheet action buttons ===== */
+.sheet-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.sheet-btn {
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid var(--border);
+  border-radius: 11px;
+  padding: 12px;
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.sheet-btn:active { transform: scale(0.98); }
+.sheet-btn.active {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+.sheet-btn-glyph {
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+/* ===== Reference photo strip (multi) ===== */
+.ref-strip {
+  display: flex;
+  gap: 5px;
+  padding: 6px 0 8px;
+  margin-bottom: 2px;
+}
+.ref-slot {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 7px;
+  background-color: rgba(255,255,255,0.03);
+  border: 0.5px dashed rgba(255,255,255,0.15);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-size: cover;
+  background-position: center;
+  transition: all 0.15s;
+  padding: 0;
+}
+.ref-slot.empty:hover { border-color: rgba(255,255,255,0.3); background-color: rgba(255,255,255,0.05); }
+.ref-slot.empty.disabled { opacity: 0.35; cursor: not-allowed; }
+.ref-slot.filled {
+  border: 0.5px solid var(--accent-border);
+  cursor: default;
+}
+.ref-slot-plus {
+  color: var(--text-faint);
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1;
+  pointer-events: none;
+}
+.ref-slot.filled .ref-slot-plus { display: none; }
+.ref-thumb-x {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 15px;
+  height: 15px;
+  background: #131313;
+  border: 0.5px solid var(--border-strong);
+  border-radius: 50%;
+  color: var(--text-muted);
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  line-height: 1;
+  z-index: 2;
+}
+
+/* ===== Model badge (Nano Banana 2) ===== */
+.model-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 2px 8px;
+  font-size: 10.5px;
+  color: var(--text-faint);
+  letter-spacing: 0.3px;
+}
+.model-badge-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px rgba(199,240,80,0.5);
+}
+.model-badge-name {
+  font-family: "Times New Roman", "Noto Serif KR", serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.2px;
+}
+
+/* ===== Aspect popover ===== */
+.aspect-wrap { position: relative; }
+.aspect-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.aspect-chip svg {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.2;
+}
+.aspect-popover {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  background: #1a1a1a;
+  border: 0.5px solid var(--border-strong);
+  border-radius: 12px;
+  padding: 5px;
+  min-width: 200px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.55);
+  display: none;
+  z-index: 60;
+  animation: popUp 0.15s ease-out;
+}
+@keyframes popUp {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.aspect-popover.active { display: block; }
+.aspect-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--text);
+  text-align: left;
+  font-family: inherit;
+}
+.aspect-option:hover { background: rgba(255,255,255,0.05); }
+.aspect-option.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.aspect-option svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.2;
+}
+.aspect-option-ratio {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  min-width: 32px;
+}
+.aspect-option-desc {
+  font-size: 10.5px;
+  color: var(--text-faint);
+  letter-spacing: 0.1px;
+}
+.aspect-option.active .aspect-option-desc { color: rgba(199,240,80,0.7); }
 </style>
 </head>
 <body>
@@ -505,35 +926,154 @@ input, textarea { font-family: inherit; }
 </nav>
 
 <main class="gallery" id="galleryView">
-  <div class="gallery-empty" id="galleryEmpty">
-    <h3>아직 만든 시안이 없어요</h3>
-    <p>아래 입력창에 원하는 헤어를 적고<br>Generate를 눌러 첫 시안을 만들어보세요</p>
+  <div class="guide" id="galleryEmpty">
+    <div class="guide-eyebrow">how to compose</div>
+    <div class="guide-sub">PROMPT GUIDE</div>
+    <div class="guide-body">
+      <p>
+        먼저 자유 프롬프트와 첨부 사진 등으로
+        사진을 자유롭게 생성한 뒤
+      </p>
+      <p>
+        앵글과 무드 모드로
+        디테일을 잡아가는 흐름을 권장합니다.
+      </p>
+      <p>
+        한 번에 적용해도 결과는 잘 나오지만,
+        단계적으로 다듬을수록 의도에 가까워집니다.
+      </p>
+      <div class="guide-divider"></div>
+      <p>
+        참조 사진은 최대 5장까지 첨부할 수 있어요.
+      </p>
+      <p>
+        "이건 헤어, 이건 의상" 처럼
+        역할을 적어주시면 더 정확한 결과가 나옵니다.
+      </p>
+      <div class="guide-divider"></div>
+      <p>
+        같은 사진을 3회 이상 보강하면
+        디테일이 깨질 수 있어요.
+      </p>
+      <p>
+        새 사진으로 다시 시작하시는 것을 권장드려요.
+      </p>
+      <div class="guide-divider"></div>
+      <p>
+        9:16과 4:5는 인물 위주의 좁은 구도,
+      </p>
+      <p>
+        1:1은 정면이나 측면 앵글,
+      </p>
+      <p>
+        16:9는 인물과 배경을 함께 담는
+        와이드 구도가 안정적이에요.
+      </p>
+    </div>
   </div>
   <div class="gallery-grid hidden" id="galleryGrid"></div>
 </main>
 
 <div class="dock">
   <div class="dock-card">
+    <div class="model-badge">
+      <span class="model-badge-dot"></span>
+      <span class="model-badge-name">Nano Banana 2</span>
+    </div>
+
+    <div class="ref-strip" id="refStrip">
+      <button class="ref-slot empty" data-slot="0" type="button"><span class="ref-slot-plus">+</span></button>
+      <button class="ref-slot empty" data-slot="1" type="button"><span class="ref-slot-plus">+</span></button>
+      <button class="ref-slot empty" data-slot="2" type="button"><span class="ref-slot-plus">+</span></button>
+      <button class="ref-slot empty" data-slot="3" type="button"><span class="ref-slot-plus">+</span></button>
+      <button class="ref-slot empty" data-slot="4" type="button"><span class="ref-slot-plus">+</span></button>
+    </div>
+    <input type="file" id="refInput" accept="image/*" multiple hidden>
+
     <div class="dock-input-row">
-      <label class="btn-attach" id="attachBtn" for="refInput" title="참조 사진 첨부">
-        +
-        <input type="file" id="refInput" accept="image/*" hidden>
-      </label>
       <textarea
         class="dock-textarea"
         id="promptInput"
         placeholder="프롬프트를 자유롭게 입력하세요"
-        rows="3"></textarea>
+        rows="3"
+        style="margin-left: 0;"></textarea>
     </div>
+
     <div class="dock-bottom">
       <div class="dock-chips">
-        <span class="chip"><span class="chip-g">G</span>Nano Banana 2</span>
-        <span class="chip">3:4</span>
-        <span class="chip">좌측 ¾ · 눈높이</span>
+        <div class="aspect-wrap">
+          <button class="chip aspect-chip" id="aspectChip" type="button">
+            <svg viewBox="0 0 14 14" id="aspectChipIcon">
+              <rect x="4.5" y="1" width="5" height="12" rx="0.6"/>
+            </svg>
+            <span id="aspectChipLabel">9:16</span>
+          </button>
+          <div class="aspect-popover" id="aspectPopover">
+            <button class="aspect-option active" data-aspect="9:16" type="button">
+              <svg viewBox="0 0 14 14"><rect x="4.5" y="1" width="5" height="12" rx="0.6"/></svg>
+              <span class="aspect-option-ratio">9:16</span>
+              <span class="aspect-option-desc">릴스·스토리</span>
+            </button>
+            <button class="aspect-option" data-aspect="4:5" type="button">
+              <svg viewBox="0 0 14 14"><rect x="3" y="2" width="8" height="10" rx="0.6"/></svg>
+              <span class="aspect-option-ratio">4:5</span>
+              <span class="aspect-option-desc">피드 세로</span>
+            </button>
+            <button class="aspect-option" data-aspect="1:1" type="button">
+              <svg viewBox="0 0 14 14"><rect x="2" y="2" width="10" height="10" rx="0.6"/></svg>
+              <span class="aspect-option-ratio">1:1</span>
+              <span class="aspect-option-desc">피드 정사각</span>
+            </button>
+            <button class="aspect-option" data-aspect="16:9" type="button">
+              <svg viewBox="0 0 14 14"><rect x="1" y="4.5" width="12" height="5" rx="0.6"/></svg>
+              <span class="aspect-option-ratio">16:9</span>
+              <span class="aspect-option-desc">가로 와이드</span>
+            </button>
+          </div>
+        </div>
+        <button class="chip chip-action" id="angleChip" type="button">앵글</button>
       </div>
       <button class="btn-generate" id="generateBtn" type="button">
-        <span class="spark">✦</span>Generate
+        <span class="spark">✦</span>생성
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Angle Sheet ===== -->
+<div class="sheet-overlay" id="angleSheet">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title">angle</div>
+        <div class="sheet-subtitle">CAMERA POSITION · 15 FRAMES</div>
+      </div>
+      <button class="sheet-close" onclick="closeAngleSheet()" type="button" aria-label="닫기">×</button>
+    </div>
+    <div class="sheet-body">
+      <div class="angle-preview" id="anglePreview">
+        <div class="angle-badge tl" id="angleBadgeFrame">FRAME 08 / 15</div>
+        <div class="angle-badge tr" id="angleBadgeYaw">YAW −45°</div>
+        <div class="angle-placeholder" id="anglePlaceholder">앵글 미리보기</div>
+        <!-- frames injected here -->
+      </div>
+      <div class="cam-info">
+        <div class="cam-dot-wrap"><div class="cam-dot"></div></div>
+        <div class="cam-text">
+          <div class="cam-label">CAMERA</div>
+          <div class="cam-name" id="camName">left ¾, eye level</div>
+          <div class="cam-frame" id="camFrame">FRAME 08 / 15</div>
+        </div>
+      </div>
+      <div class="sheet-actions">
+        <button class="sheet-btn" id="btnFront" type="button">
+          정면 <span class="sheet-btn-glyph">◉</span>
+        </button>
+        <button class="sheet-btn" id="btnAuto" type="button">
+          자동 회전 <span class="sheet-btn-glyph">▶</span>
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -543,7 +1083,7 @@ input, textarea { font-family: inherit; }
   <div class="modal-card">
     <div class="loading-content">
       <div class="loading-spinner"></div>
-      <div class="loading-text">시안 생성 중</div>
+      <div class="loading-text">사진 생성 중</div>
       <div class="loading-sub">약 15~20초 정도 걸려요</div>
     </div>
   </div>
@@ -555,13 +1095,13 @@ input, textarea { font-family: inherit; }
     <div class="modal-header">
       <div class="modal-title">
         <span class="modal-title-icon">✓</span>
-        시안 완성
+        사진 완성
       </div>
       <button class="modal-close" onclick="closeResultModal()" aria-label="닫기">×</button>
     </div>
     <div class="modal-body" style="padding:0;">
       <div class="result-image-wrap">
-        <img id="resultImage" alt="생성된 시안">
+        <img id="resultImage" alt="생성된 사진">
       </div>
       <div class="save-hint">
         <b>저장 방법</b>
@@ -594,9 +1134,97 @@ input, textarea { font-family: inherit; }
 <div class="toast" id="toast"></div>
 
 <script>
-// ===== Session (analyzer 패턴) =====
+/* ═══════════════════════════════════════════════════
+   HAIRO — 클라이언트 로직
+   ─────────────────────────────────────────────────── */
+
+const IMAGE_BASE_URL = 'https://shield-connect.vercel.app/images/hair-model';
+
+/* ===== 앵글 좌표 (yaw 5 × pitch 3 = 15) =====
+   파일명 규칙:
+   - 눈높이 (pitch 0):    1.jpg ~ 5.jpg
+   - 위에서 (pitch +25):  1.5.jpg ~ 5.5.jpg
+   - 아래서 (pitch −25):  0.1.jpg ~ 0.5.jpg
+   yaw 매핑: 1=−90 / 2=−45 / 3=0 / 4=+45 / 5=+90
+*/
+const YAW_MAP = { 1: -90, 2: -45, 3: 0, 4: 45, 5: 90 };
+const FRAME_COORDS = [];
+[1,2,3,4,5].forEach(n => {
+  const yaw = YAW_MAP[n];
+  FRAME_COORDS.push({ yaw, pitch:  25, file: `${n}.5.jpg`, url: `${IMAGE_BASE_URL}/${n}.5.jpg` });
+  FRAME_COORDS.push({ yaw, pitch:   0, file: `${n}.jpg`,   url: `${IMAGE_BASE_URL}/${n}.jpg` });
+  FRAME_COORDS.push({ yaw, pitch: -25, file: `0.${n}.jpg`, url: `${IMAGE_BASE_URL}/0.${n}.jpg` });
+});
+// 렌더 순서: 위 → 가운데 → 아래, 좌→우
+FRAME_COORDS.sort((a, b) => {
+  if (b.pitch !== a.pitch) return b.pitch - a.pitch;
+  return a.yaw - b.yaw;
+});
+
+const YAW_RANGE = 90;
+const PITCH_RANGE = 25;
+
+/* ===== 앵글 → 영어 프롬프트 ===== */
+function describeCamera(yaw, pitch) {
+  let y = '';
+  if (yaw <= -75) y = 'left profile';
+  else if (yaw <= -25) y = 'left ¾';
+  else if (yaw < 25) y = 'front';
+  else if (yaw < 75) y = 'right ¾';
+  else y = 'right profile';
+  const h = pitch > 10 ? 'high cam' : pitch < -10 ? 'low cam' : 'eye level';
+  return `${y}, ${h}`;
+}
+
+function buildAnglePrompt(yaw, pitch) {
+  const dir =
+    yaw <= -75 ? 'left profile view, full left side of face visible' :
+    yaw <= -25 ? 'left three-quarter view, left cheek prominent' :
+    yaw  <  25 ? 'front view, both eyes equally visible, symmetrical framing' :
+    yaw  <  75 ? 'right three-quarter view, right cheek prominent' :
+                 'right profile view, full right side of face visible';
+  const height =
+    pitch >  10 ? 'high camera angle, camera positioned above eye level looking down at subject, top of head and crown visible' :
+    pitch < -10 ? 'low camera angle, camera positioned below eye level looking up at subject, jawline and underside of chin emphasized' :
+                  'eye-level camera angle, camera at subject\'s eye height, neutral perspective';
+  return `camera position: yaw ${yaw>0?'+':''}${yaw}°, pitch ${pitch>0?'+':''}${pitch}°, ${dir}, ${height}`;
+}
+
+/* ===== 해상도 → 영어 프롬프트 ===== */
+function buildAspectPrompt(aspect) {
+  if (aspect === '9:16') return 'vertical 9:16 aspect ratio, portrait orientation, tall narrow frame';
+  if (aspect === '16:9') return 'horizontal 16:9 aspect ratio, landscape orientation, wide cinematic frame';
+  if (aspect === '1:1')  return 'square 1:1 aspect ratio, centered composition';
+  if (aspect === '4:5')  return 'vertical 4:5 aspect ratio, portrait orientation, instagram feed format';
+  return 'vertical 9:16 aspect ratio, portrait orientation';
+}
+
+/* 해상도 라벨/아이콘 (popover에서 칩으로 동기화) */
+const ASPECT_META = {
+  '9:16': { label: '9:16', desc: '릴스·스토리', svg: '<rect x="4.5" y="1" width="5" height="12" rx="0.6"/>' },
+  '4:5':  { label: '4:5',  desc: '피드 세로',   svg: '<rect x="3" y="2" width="8" height="10" rx="0.6"/>' },
+  '1:1':  { label: '1:1',  desc: '피드 정사각', svg: '<rect x="2" y="2" width="10" height="10" rx="0.6"/>' },
+  '16:9': { label: '16:9', desc: '가로 와이드', svg: '<rect x="1" y="4.5" width="12" height="5" rx="0.6"/>' },
+};
+
+/* ═══════════════════════════════════════════════════
+   STATE
+   ─────────────────────────────────────────────────── */
+const state = {
+  aspect: '9:16',  // 디폴트 = 인스타 릴스
+  angleEnabled: false,
+  yaw: 0,
+  pitch: 0,
+  frameIdx: -1,
+  isDragging: false,
+  isPlaying: false,
+  refFiles: [],   // {base64, mimeType, name, previewUrl}[] — 최대 5장
+};
 window.SESSION = { ok: false, member: null };
 
+/* ═══════════════════════════════════════════════════
+   세션
+   ─────────────────────────────────────────────────── */
 async function loadSession() {
   try {
     const res = await fetch('/api/customer/me', { credentials: 'include' });
@@ -605,66 +1233,114 @@ async function loadSession() {
       window.SESSION.ok = true;
       window.SESSION.member = data.member || data;
       renderLoggedIn();
-    } else {
-      renderLoggedOut();
-    }
-  } catch (e) {
-    renderLoggedOut();
-  }
+    } else renderLoggedOut();
+  } catch (e) { renderLoggedOut(); }
 }
-
 function renderLoggedIn() {
   const credits = window.SESSION.member?.credits_remaining ?? 0;
   document.getElementById('headerRight').innerHTML = `
     <button class="credit-pill" onclick="openCreditModal()" type="button">
-      <span class="credit-dot"></span>
-      <span>${credits} 크레딧</span>
+      <span class="credit-dot"></span><span>${credits} 크레딧</span>
     </button>
     <button class="btn-link" onclick="doLogout()" type="button">로그아웃</button>
   `;
 }
-
 function renderLoggedOut() {
-  document.getElementById('headerRight').innerHTML = `
-    <a class="btn-link" href="/" style="text-decoration:none;">로그인</a>
-  `;
+  document.getElementById('headerRight').innerHTML = `<a class="btn-link" href="/" style="text-decoration:none;">로그인</a>`;
 }
-
 function updateCreditBadge(remaining) {
   if (window.SESSION.member) {
     window.SESSION.member.credits_remaining = remaining;
     renderLoggedIn();
   }
 }
-
 async function doLogout() {
   await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
   location.href = '/';
 }
+function openCreditModal() { location.href = '/#charge'; }
 
-function openCreditModal() {
-  location.href = '/#charge';
-}
+/* ═══════════════════════════════════════════════════
+   참조 사진 (빈 슬롯 5칸)
+   ─────────────────────────────────────────────────── */
+const MAX_REFS = 5;
+const refStrip = document.getElementById('refStrip');
+const refInput = document.getElementById('refInput');
 
-// ===== 참조 이미지 처리 =====
-let referenceBase64 = null;
+// 빈 슬롯 클릭 → 파일 선택창 열기
+refStrip.addEventListener('click', (e) => {
+  const slot = e.target.closest('.ref-slot');
+  if (!slot) return;
+  if (slot.classList.contains('filled')) return;
+  if (slot.classList.contains('disabled')) return;
+  refInput.click();
+});
 
-document.getElementById('refInput').addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  if (file.size > 10 * 1024 * 1024) {
-    showToast('파일이 너무 커요 (10MB 이하)');
+refInput.addEventListener('change', async (e) => {
+  const files = Array.from(e.target.files || []);
+  if (!files.length) return;
+
+  const remaining = MAX_REFS - state.refFiles.length;
+  if (remaining <= 0) {
+    showToast(`참조 사진은 최대 ${MAX_REFS}장까지`);
     e.target.value = '';
     return;
   }
-  try {
-    referenceBase64 = await compressAndConvertToBase64(file);
-    document.getElementById('attachBtn').classList.add('has-file');
-    showToast('참조 사진 첨부됨');
-  } catch (err) {
-    showToast('이미지 처리 실패');
+  const toAdd = files.slice(0, remaining);
+  if (files.length > remaining) {
+    showToast(`최대 ${MAX_REFS}장 — ${toAdd.length}장만 추가됩니다`);
   }
+
+  for (const file of toAdd) {
+    if (file.size > 10 * 1024 * 1024) {
+      showToast(`${file.name} 너무 커요 (10MB 이하)`);
+      continue;
+    }
+    try {
+      const base64 = await compressAndConvertToBase64(file);
+      state.refFiles.push({
+        base64,
+        mimeType: 'image/jpeg',
+        name: file.name,
+        previewUrl: 'data:image/jpeg;base64,' + base64,
+      });
+    } catch (err) {
+      showToast(`${file.name} 처리 실패`);
+    }
+  }
+  e.target.value = '';
+  renderRefSlots();
 });
+
+function renderRefSlots() {
+  const slots = refStrip.querySelectorAll('.ref-slot');
+  slots.forEach((slot, i) => {
+    const ref = state.refFiles[i];
+    if (ref) {
+      slot.classList.remove('empty', 'disabled');
+      slot.classList.add('filled');
+      slot.style.backgroundImage = `url(${ref.previewUrl})`;
+      // 기존 X 버튼 제거 후 다시 추가
+      const oldX = slot.querySelector('.ref-thumb-x');
+      if (oldX) oldX.remove();
+      const x = document.createElement('span');
+      x.className = 'ref-thumb-x';
+      x.textContent = '×';
+      x.onclick = (e) => {
+        e.stopPropagation();
+        state.refFiles.splice(i, 1);
+        renderRefSlots();
+      };
+      slot.appendChild(x);
+    } else {
+      slot.classList.remove('filled', 'disabled');
+      slot.classList.add('empty');
+      slot.style.backgroundImage = '';
+      const oldX = slot.querySelector('.ref-thumb-x');
+      if (oldX) oldX.remove();
+    }
+  });
+}
 
 async function compressAndConvertToBase64(file) {
   return new Promise((resolve, reject) => {
@@ -675,11 +1351,9 @@ async function compressAndConvertToBase64(file) {
       let w = img.width, h = img.height;
       if (w > maxDim || h > maxDim) {
         const r = Math.min(maxDim / w, maxDim / h);
-        w = Math.round(w * r);
-        h = Math.round(h * r);
+        w = Math.round(w * r); h = Math.round(h * r);
       }
-      canvas.width = w;
-      canvas.height = h;
+      canvas.width = w; canvas.height = h;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, w, h);
       const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
@@ -691,7 +1365,227 @@ async function compressAndConvertToBase64(file) {
   });
 }
 
-// ===== Generate =====
+/* ═══════════════════════════════════════════════════
+   해상도 popover (위로 펼침, 4가지)
+   ─────────────────────────────────────────────────── */
+const aspectChip = document.getElementById('aspectChip');
+const aspectChipLabel = document.getElementById('aspectChipLabel');
+const aspectChipIcon = document.getElementById('aspectChipIcon');
+const aspectPopover = document.getElementById('aspectPopover');
+
+aspectChip.addEventListener('click', (e) => {
+  e.stopPropagation();
+  aspectPopover.classList.toggle('active');
+});
+
+aspectPopover.querySelectorAll('.aspect-option').forEach(opt => {
+  opt.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const a = opt.dataset.aspect;
+    state.aspect = a;
+    // 옵션 active 갱신
+    aspectPopover.querySelectorAll('.aspect-option').forEach(x => x.classList.remove('active'));
+    opt.classList.add('active');
+    // 칩 라벨 + 아이콘 갱신
+    const meta = ASPECT_META[a];
+    aspectChipLabel.textContent = meta.label;
+    aspectChipIcon.innerHTML = meta.svg;
+    aspectPopover.classList.remove('active');
+  });
+});
+
+// 외부 클릭 시 popover 닫기
+document.addEventListener('click', (e) => {
+  if (!aspectChip.contains(e.target) && !aspectPopover.contains(e.target)) {
+    aspectPopover.classList.remove('active');
+  }
+});
+
+/* ═══════════════════════════════════════════════════
+   앵글 시트
+   ─────────────────────────────────────────────────── */
+const angleChip = document.getElementById('angleChip');
+const angleSheet = document.getElementById('angleSheet');
+const anglePreview = document.getElementById('anglePreview');
+const anglePlaceholder = document.getElementById('anglePlaceholder');
+const angleBadgeFrame = document.getElementById('angleBadgeFrame');
+const angleBadgeYaw = document.getElementById('angleBadgeYaw');
+const camName = document.getElementById('camName');
+const camFrame = document.getElementById('camFrame');
+const btnFront = document.getElementById('btnFront');
+const btnAuto = document.getElementById('btnAuto');
+
+let frameEls = []; // angle-frame 엘리먼트 배열
+let prefetchStarted = false;
+
+function buildFrameElements() {
+  if (frameEls.length) return;
+  FRAME_COORDS.forEach((coord) => {
+    const el = document.createElement('div');
+    el.className = 'angle-frame';
+    el.style.backgroundImage = `url(${coord.url})`;
+    anglePreview.appendChild(el);
+    frameEls.push(el);
+  });
+}
+
+function prefetchFrames() {
+  if (prefetchStarted) return;
+  prefetchStarted = true;
+  FRAME_COORDS.forEach(c => {
+    const img = new Image();
+    img.src = c.url;
+  });
+}
+
+function findClosestFrame(yaw, pitch) {
+  let bestIdx = 0, bestDist = Infinity;
+  FRAME_COORDS.forEach((c, i) => {
+    const dy = c.yaw - yaw;
+    const dp = (c.pitch - pitch) * 3.5; // pitch 가중치
+    const d = dy * dy + dp * dp;
+    if (d < bestDist) { bestDist = d; bestIdx = i; }
+  });
+  return bestIdx;
+}
+
+function fmtAngle(v) {
+  const r = Math.round(v);
+  const sign = r > 0 ? '+' : (r < 0 ? '−' : '');
+  return sign + Math.abs(r) + '°';
+}
+
+function setFrame(i) {
+  i = Math.max(0, Math.min(FRAME_COORDS.length - 1, i));
+  if (i !== state.frameIdx) {
+    if (state.frameIdx >= 0 && frameEls[state.frameIdx]) {
+      frameEls[state.frameIdx].classList.remove('active');
+    }
+    if (frameEls[i]) frameEls[i].classList.add('active');
+    state.frameIdx = i;
+  }
+  const c = FRAME_COORDS[i];
+  state.yaw = c.yaw;
+  state.pitch = c.pitch;
+  const frameLabel = `FRAME ${String(i + 1).padStart(2, '0')} / 15`;
+  angleBadgeFrame.textContent = frameLabel;
+  angleBadgeYaw.textContent = `YAW ${fmtAngle(c.yaw)}`;
+  camName.textContent = describeCamera(c.yaw, c.pitch);
+  camFrame.textContent = frameLabel;
+  anglePlaceholder.classList.add('hidden');
+}
+
+function snapToFront() {
+  const idx = FRAME_COORDS.findIndex(c => c.yaw === 0 && c.pitch === 0);
+  setFrame(idx >= 0 ? idx : 0);
+}
+
+/* --- 앵글 시트 열기/닫기 --- */
+angleChip.addEventListener('click', openAngleSheet);
+function openAngleSheet() {
+  buildFrameElements();
+  prefetchFrames();
+  if (state.frameIdx < 0) snapToFront();
+  else setFrame(state.frameIdx);
+  angleSheet.classList.add('active');
+}
+function closeAngleSheet() {
+  stopAuto();
+  angleSheet.classList.remove('active');
+  // 칩 상태 갱신
+  state.angleEnabled = true;
+  angleChip.classList.add('has-value');
+  angleChip.textContent = `앵글 · ${describeCamera(state.yaw, state.pitch)}`;
+}
+window.closeAngleSheet = closeAngleSheet;
+
+// 시트 외부 영역 클릭 시 닫기
+angleSheet.addEventListener('click', (e) => {
+  if (e.target === angleSheet) closeAngleSheet();
+});
+
+/* --- 미리보기 영역 드래그 (yaw/pitch 동시 조절) --- */
+let dragStartX = 0, dragStartY = 0, dragStartYaw = 0, dragStartPitch = 0;
+const DRAG_YAW_SENS = 0.6;
+const DRAG_PITCH_SENS = 0.5;
+
+function onPointerDown(e) {
+  if (state.isPlaying) stopAuto();
+  state.isDragging = true;
+  anglePreview.classList.add('dragging');
+  const p = e.touches ? e.touches[0] : e;
+  dragStartX = p.clientX;
+  dragStartY = p.clientY;
+  dragStartYaw = state.yaw;
+  dragStartPitch = state.pitch;
+  e.preventDefault();
+}
+function onPointerMove(e) {
+  if (!state.isDragging) return;
+  const p = e.touches ? e.touches[0] : e;
+  const dx = p.clientX - dragStartX;
+  const dy = p.clientY - dragStartY;
+  const yaw = Math.max(-YAW_RANGE, Math.min(YAW_RANGE, dragStartYaw + dx * DRAG_YAW_SENS));
+  const pitch = Math.max(-PITCH_RANGE, Math.min(PITCH_RANGE, dragStartPitch - dy * DRAG_PITCH_SENS));
+  const idx = findClosestFrame(yaw, pitch);
+  if (idx !== state.frameIdx) setFrame(idx);
+  e.preventDefault();
+}
+function onPointerUp() {
+  if (!state.isDragging) return;
+  state.isDragging = false;
+  anglePreview.classList.remove('dragging');
+}
+anglePreview.addEventListener('mousedown', onPointerDown);
+anglePreview.addEventListener('touchstart', onPointerDown, { passive: false });
+window.addEventListener('mousemove', onPointerMove);
+window.addEventListener('touchmove', onPointerMove, { passive: false });
+window.addEventListener('mouseup', onPointerUp);
+window.addEventListener('touchend', onPointerUp);
+
+/* --- 정면 / 자동 회전 --- */
+btnFront.addEventListener('click', () => {
+  stopAuto();
+  snapToFront();
+});
+
+let autoTimer = null;
+let autoOrder = [];
+let autoStep = 0;
+
+function buildAutoOrder() {
+  // 위 띠 좌→우 → 가운데 띠 우→좌 → 아래 띠 좌→우 (살랑살랑)
+  const top = FRAME_COORDS.map((c,i)=>({c,i})).filter(o=>o.c.pitch===25).sort((a,b)=>a.c.yaw-b.c.yaw).map(o=>o.i);
+  const mid = FRAME_COORDS.map((c,i)=>({c,i})).filter(o=>o.c.pitch===0).sort((a,b)=>b.c.yaw-a.c.yaw).map(o=>o.i);
+  const bot = FRAME_COORDS.map((c,i)=>({c,i})).filter(o=>o.c.pitch===-25).sort((a,b)=>a.c.yaw-b.c.yaw).map(o=>o.i);
+  return [...top, ...mid, ...bot];
+}
+function startAuto() {
+  if (state.isPlaying) return;
+  state.isPlaying = true;
+  btnAuto.classList.add('active');
+  btnAuto.innerHTML = '정지 <span class="sheet-btn-glyph">■</span>';
+  autoOrder = buildAutoOrder();
+  autoStep = 0;
+  autoTimer = setInterval(() => {
+    setFrame(autoOrder[autoStep % autoOrder.length]);
+    autoStep++;
+  }, 280);
+}
+function stopAuto() {
+  if (!state.isPlaying) return;
+  state.isPlaying = false;
+  btnAuto.classList.remove('active');
+  btnAuto.innerHTML = '자동 회전 <span class="sheet-btn-glyph">▶</span>';
+  if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+}
+btnAuto.addEventListener('click', () => {
+  if (state.isPlaying) stopAuto(); else startAuto();
+});
+
+/* ═══════════════════════════════════════════════════
+   Generate
+   ─────────────────────────────────────────────────── */
 let generatedImageUrl = null;
 let generatedImageBlob = null;
 
@@ -702,12 +1596,8 @@ async function generateImage() {
     showError('로그인이 필요해요. 메인 페이지에서 로그인해주세요.');
     return;
   }
-
   const userPrompt = document.getElementById('promptInput').value.trim();
-  if (!userPrompt) {
-    showToast('프롬프트를 입력해주세요');
-    return;
-  }
+  if (!userPrompt) { showToast('프롬프트를 입력해주세요'); return; }
 
   const credits = window.SESSION.member?.credits_remaining ?? 0;
   if (credits < 1) {
@@ -715,8 +1605,23 @@ async function generateImage() {
     return;
   }
 
-  // 디폴트 프롬프트 조립 (S2에서 옵션 시트로 변경 가능)
-  const fullPrompt = userPrompt + ', vertical 3:4 aspect ratio, portrait orientation, left three-quarter view, eye level, chest-line crop, modern instagram aesthetic, natural daylight, smartphone snapshot';
+  // 백엔드로 보낼 데이터: 프롬프트는 디자이너 입력만 보내고
+  // aspect/angle은 별도 필드로 → 백엔드에서 인물 코어 + 합성
+  const payload = {
+    userPrompt: userPrompt,
+    aspectRatio: state.aspect,
+    aspectPrompt: buildAspectPrompt(state.aspect),
+  };
+  if (state.angleEnabled) {
+    payload.anglePrompt = buildAnglePrompt(state.yaw, state.pitch);
+    payload.angle = { yaw: state.yaw, pitch: state.pitch, frameIdx: state.frameIdx };
+  }
+  if (state.refFiles.length > 0) {
+    payload.references = state.refFiles.map(r => ({
+      base64: r.base64,
+      mimeType: r.mimeType,
+    }));
+  }
 
   document.getElementById('loadingModal').classList.add('active');
 
@@ -725,38 +1630,22 @@ async function generateImage() {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        prompt: fullPrompt,
-        userPrompt: userPrompt,
-        aspectRatio: '3:4',
-        framing: { angle: 'left-three-quarter', height: 'eye-level', cut: 'chest' },
-        mood: 'instagram',
-        referenceBase64: referenceBase64
-      })
+      body: JSON.stringify(payload),
     });
-
     document.getElementById('loadingModal').classList.remove('active');
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      if (res.status === 401) {
-        showError('세션이 만료되었어요. 다시 로그인해주세요.');
-      } else if (res.status === 402) {
-        showError('크레딧이 부족해요.');
-      } else if (res.status === 422) {
-        showError('생성이 거부되었어요. 다른 표현으로 시도해주세요.\n(크레딧은 자동 환불됨)');
-      } else {
-        showError(err.error || err.message || '생성 실패. 잠시 후 다시 시도해주세요.');
-      }
+      if (res.status === 401) showError('세션이 만료되었어요. 다시 로그인해주세요.');
+      else if (res.status === 402) showError('크레딧이 부족해요.');
+      else if (res.status === 422) showError(err.message || '생성이 거부되었어요. 다른 표현으로 시도해주세요.\n(크레딧은 자동 환불됨)');
+      else showError(err.message || err.error || '생성 실패. 잠시 후 다시 시도해주세요.');
       return;
     }
 
     const data = await res.json();
     const imageBase64 = data.imageBase64 || data.image || data.data;
-    if (!imageBase64) {
-      showError('이미지 데이터를 받지 못했어요.');
-      return;
-    }
+    if (!imageBase64) { showError('이미지 데이터를 받지 못했어요.'); return; }
 
     generatedImageUrl = `data:image/png;base64,${imageBase64}`;
     document.getElementById('resultImage').src = generatedImageUrl;
@@ -766,11 +1655,9 @@ async function generateImage() {
     for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
     generatedImageBlob = new Blob([bytes], { type: 'image/png' });
 
-    if (data.creditsRemaining !== undefined) {
-      updateCreditBadge(data.creditsRemaining);
-    } else if (window.SESSION.member) {
-      updateCreditBadge(Math.max(0, credits - 1));
-    }
+    const newCredits = data.credits_remaining ?? data.creditsRemaining;
+    if (newCredits !== undefined) updateCreditBadge(newCredits);
+    else if (window.SESSION.member) updateCreditBadge(Math.max(0, credits - 1));
 
     document.getElementById('resultModal').classList.add('active');
   } catch (e) {
@@ -779,70 +1666,55 @@ async function generateImage() {
   }
 }
 
-// ===== 저장 =====
+/* ═══════════════════════════════════════════════════
+   저장 / 모달 / 토스트
+   ─────────────────────────────────────────────────── */
 async function saveImage() {
-  if (!generatedImageBlob) {
-    showToast('저장할 이미지가 없어요');
-    return;
-  }
+  if (!generatedImageBlob) { showToast('저장할 이미지가 없어요'); return; }
   const fileName = `HAIRO_${new Date().toISOString().slice(0, 10)}_${Date.now()}.png`;
   const file = new File([generatedImageBlob], fileName, { type: 'image/png' });
-
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
-      await navigator.share({ files: [file], title: 'HAIRO 시안' });
-      showToast('저장 완료');
-      return;
-    } catch (e) {
-      if (e.name === 'AbortError') return;
-    }
+      await navigator.share({ files: [file], title: 'HAIRO 사진' });
+      showToast('저장 완료'); return;
+    } catch (e) { if (e.name === 'AbortError') return; }
   }
-
   const a = document.createElement('a');
   a.href = generatedImageUrl;
   a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
   showToast('다운로드 시작');
 }
-
-function saveToGallery() {
-  showToast('보관함은 다음 업데이트에서 추가됩니다');
-}
-
+function saveToGallery() { showToast('보관함은 다음 업데이트에서 추가됩니다'); }
 function closeResultModal() {
   document.getElementById('resultModal').classList.remove('active');
-  generatedImageBlob = null;
-  generatedImageUrl = null;
+  generatedImageBlob = null; generatedImageUrl = null;
   document.getElementById('resultImage').src = '';
 }
-
-function closeErrorModal() {
-  document.getElementById('errorModal').classList.remove('active');
-}
-
+function closeErrorModal() { document.getElementById('errorModal').classList.remove('active'); }
 function showError(msg) {
   document.getElementById('errorText').textContent = msg;
   document.getElementById('errorModal').classList.add('active');
 }
-
 function showToast(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
+  t.textContent = msg; t.classList.add('show');
   clearTimeout(window._toastT);
   window._toastT = setTimeout(() => t.classList.remove('show'), 2200);
 }
+window.saveImage = saveImage;
+window.saveToGallery = saveToGallery;
+window.closeResultModal = closeResultModal;
+window.closeErrorModal = closeErrorModal;
 
-// ===== 텍스트 영역 자동 확장 =====
+/* ===== 텍스트 영역 자동 확장 ===== */
 const ta = document.getElementById('promptInput');
 ta.addEventListener('input', () => {
   ta.style.height = 'auto';
   ta.style.height = Math.max(72, Math.min(ta.scrollHeight, 200)) + 'px';
 });
 
-// ===== Tab switching (UI only for now) =====
+/* ===== Tab switching (UI only) ===== */
 document.querySelectorAll('.tab').forEach(t => {
   t.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
@@ -850,8 +1722,16 @@ document.querySelectorAll('.tab').forEach(t => {
   });
 });
 
-// ===== Init =====
+/* ===== Init ===== */
 loadSession();
+
+/* 페이지 진입 후 idle 시점에 앵글 사진 15장 사전 다운로드
+   → 앵글 시트 누르면 즉시 미리보기 */
+if ('requestIdleCallback' in window) {
+  requestIdleCallback(prefetchFrames, { timeout: 3000 });
+} else {
+  setTimeout(prefetchFrames, 1500);
+}
 </script>
 
 </body>
