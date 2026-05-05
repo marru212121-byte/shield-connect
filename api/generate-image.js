@@ -54,7 +54,7 @@ authentic raw photo quality`;
 
 // Vercel 설정
 export const config = {
-  maxDuration: 60,
+  maxDuration: 180,
   api: {
     bodyParser: {
       sizeLimit: '30mb', // 5장 × 최대 6MB 정도까지 여유
@@ -224,11 +224,41 @@ export default async function handler(req, res) {
 
   if (!geminiResponse.ok) {
     const errorText = await geminiResponse.text();
-    console.error('[generate-image] gemini error:', geminiResponse.status, errorText);
+    const status = geminiResponse.status;
+    console.error('[generate-image] gemini error:', status, errorText);
+
+    // 에러 본문에서 핵심 단서 추출
+    let errDetail = '';
+    let userHint = '';
+    try {
+      const errJson = JSON.parse(errorText);
+      errDetail = errJson?.error?.message || errJson?.error?.status || '';
+    } catch (_) {
+      errDetail = errorText.slice(0, 200);
+    }
+
+    if (status === 400) {
+      userHint = '요청 형식 오류 (모델명/파라미터 확인 필요)';
+    } else if (status === 401 || status === 403) {
+      userHint = 'API 키 인증 실패 (Vercel 환경변수 또는 키 권한)';
+    } else if (status === 404) {
+      userHint = '모델을 찾을 수 없음 (모델명 변경 가능)';
+    } else if (status === 429) {
+      userHint = 'API 사용량 한도 초과 또는 결제 등록 필요';
+    } else if (status >= 500) {
+      userHint = 'Google AI 서버 일시 오류';
+    }
+
     await refundCredit(supabase, memberId, generationRef, result.is_admin);
     return res.status(502).json({
       code: 'gemini_error',
       message: '이미지 생성 중 오류가 발생했습니다. 크레딧은 복구되었습니다.',
+      // 디버깅용 (관리자만 봄, 일반 사용자에겐 안 보임)
+      debug: {
+        status,
+        hint: userHint,
+        detail: errDetail.slice(0, 500),
+      },
     });
   }
 
