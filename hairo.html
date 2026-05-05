@@ -826,9 +826,26 @@ input, textarea { font-family: inherit; }
   position: relative;
   overflow: hidden;
   cursor: pointer;
-  background-size: cover;
-  background-position: center;
   transition: transform 0.15s;
+}
+.gallery-card-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.gallery-card.img-error::before {
+  content: '⚠ 사진 로드 실패';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.03);
 }
 .gallery-card:active { transform: scale(0.98); }
 .gallery-card-fav {
@@ -1184,12 +1201,21 @@ input, textarea { font-family: inherit; }
   justify-content: center;
   position: relative;
   flex-shrink: 0;
+  min-height: 200px;
 }
 .result-sheet-image img {
   max-width: 100%;
   max-height: 60vh;
   display: block;
   -webkit-touch-callout: default;
+}
+.result-sheet-image img[data-err="1"] {
+  display: none;
+}
+.result-sheet-image:has(img[data-err="1"])::before {
+  content: '⚠ 사진을 불러오지 못했어요';
+  color: rgba(255,255,255,0.5);
+  font-size: 12px;
 }
 .result-sheet-meta {
   position: absolute;
@@ -1527,7 +1553,7 @@ input, textarea { font-family: inherit; }
       <div class="sheet-handle"></div>
     </div>
     <div class="result-sheet-image">
-      <img id="resultImage" alt="생성된 사진">
+      <img id="resultImage" alt="생성된 사진" onerror="this.dataset.err='1';">
       <div class="result-sheet-meta" id="resultMeta"></div>
     </div>
     <div class="result-sheet-body">
@@ -1535,10 +1561,7 @@ input, textarea { font-family: inherit; }
         <b>원본은 지금 저장하시는 게 좋아요</b>
         나중에 보관함에서 다시 받으면 압축본 화질입니다.
       </div>
-      <div class="result-notice result-notice-archive hidden" id="resultNoticeArchive">
-        <b>이 사진은 보관함 압축본이에요</b>
-        원본 화질은 생성 직후에만 저장 가능했어요.
-      </div>
+      <div class="result-notice result-notice-archive hidden" id="resultNoticeArchive"></div>
       <div class="result-actions">
         <button class="result-btn-primary" id="btnSaveOriginal" type="button">원본 저장 · 폰에 받기</button>
         <div class="result-btn-row">
@@ -2099,11 +2122,12 @@ const btnDeleteFromArchive = document.getElementById('btnDeleteFromArchive');
 function showResultFresh(url, aspect) {
   state.resultMode = 'fresh';
   state.currentItem = null;
+  resultImage.removeAttribute('data-err'); // 이전 에러 상태 초기화
   resultImage.src = url;
   resultMeta.textContent = aspect ? `· ${aspect}` : '';
   resultNoticeNew.classList.remove('hidden');
   resultNoticeArchive.classList.add('hidden');
-  btnSaveOriginal.textContent = '원본 저장 · 폰에 받기';
+  btnSaveOriginal.textContent = '사진앱에 저장 · 원본';
   btnSaveOriginal.classList.remove('hidden');
   btnDeleteFromArchive.classList.add('hidden');
   resultModal.classList.add('active');
@@ -2112,11 +2136,13 @@ function showResultFresh(url, aspect) {
 function showResultArchive(item) {
   state.resultMode = 'archive';
   state.currentItem = item;
+  resultImage.removeAttribute('data-err'); // 이전 에러 상태 초기화
   resultImage.src = item.image_url;
   resultMeta.textContent = item.aspect_ratio ? `· ${item.aspect_ratio}` : '';
+  // 보관함 모드에서는 안내문 모두 숨김 (압축본 메시지 거슬림)
   resultNoticeNew.classList.add('hidden');
-  resultNoticeArchive.classList.remove('hidden');
-  btnSaveOriginal.textContent = '사진 저장 · 폰에 받기 (압축본)';
+  resultNoticeArchive.classList.add('hidden');
+  btnSaveOriginal.textContent = '사진앱에 저장';
   btnSaveOriginal.classList.remove('hidden');
   btnDeleteFromArchive.classList.remove('hidden');
   resultModal.classList.add('active');
@@ -2213,8 +2239,14 @@ function renderGallery() {
     const time = formatRelativeTime(item.created_at);
     const favClass = item.is_favorite ? 'on' : '';
     const starPath = 'M12 2l3 7 7 .8-5.2 4.7L18 22l-6-3.5L6 22l1.2-7.5L2 9.8 9 9z';
+    // ⭐ background-image 대신 img 태그 사용:
+    //   - 더 안정적 (CORS, 로드 실패 시 디버깅 가능)
+    //   - 압축본 작은 사진도 잘 표시됨
+    //   - signed URL 만료 시에도 onerror로 추적 가능
+    const imgSrc = item.image_url || '';
     return `
-      <div class="gallery-card" data-id="${item.id}" style="background-image:url('${item.image_url}');">
+      <div class="gallery-card" data-id="${item.id}">
+        <img class="gallery-card-img" src="${imgSrc}" alt="" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('img-error');">
         <button class="gallery-card-fav ${favClass}" data-id="${item.id}" type="button" aria-label="즐겨찾기">
           <svg viewBox="0 0 24 24"><path d="${starPath}"/></svg>
         </button>
