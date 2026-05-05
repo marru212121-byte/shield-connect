@@ -1,7 +1,11 @@
 {
+  "regions": ["icn1"],
   "functions": {
     "api/recipe.js": {
       "maxDuration": 60
+    },
+    "api/generate-image.js": {
+      "maxDuration": 180
     }
   },
   "crons": [
