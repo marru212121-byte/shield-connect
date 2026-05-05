@@ -196,30 +196,80 @@ export default async function handler(req, res) {
     ? aspectRatio
     : '9:16';
 
-  let geminiResponse;
-  try {
-    geminiResponse = await fetch(GEMINI_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': geminiKey,
+  const requestBody = JSON.stringify({
+    contents: [{ role: 'user', parts: parts }],
+    generationConfig: {
+      imageConfig: {
+        aspectRatio: aspectForApi,
       },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: parts }],
-        generationConfig: {
-          imageConfig: {
-            aspectRatio: aspectForApi,
-          },
+    },
+  });
+
+  // ─── Gemini 호출 (재시도 + 강제 timeout) ───
+  let geminiResponse = null;
+  let lastError = null;
+  const MAX_RETRIES = 2;
+  const REQUEST_TIMEOUT = 45000; // 45초 — Gemini hang 시 강제 끊기
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+    const startTime = Date.now();
+
+    console.log(`[generate-image] attempt ${attempt}/${MAX_RETRIES}`, {
+      promptLen: finalPrompt.length,
+      refsCount: refs.length,
+      aspectRatio: aspectForApi,
+    });
+
+    try {
+      geminiResponse = await fetch(GEMINI_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': geminiKey,
         },
-      }),
-    });
-  } catch (err) {
-    console.error('[generate-image] gemini fetch failed:', err);
-    await refundCredit(supabase, memberId, generationRef, result.is_admin);
-    return res.status(502).json({
-      code: 'gemini_error',
-      message: 'AI 서버와 연결할 수 없습니다. 크레딧은 복구되었습니다.',
-    });
+        body: requestBody,
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      const elapsed = Date.now() - startTime;
+      console.log(`[generate-image] attempt ${attempt} responded in ${elapsed}ms, status: ${geminiResponse.status}`);
+
+      // 503/504/429이면 재시도 (단, 마지막 시도면 응답 그대로 사용)
+      if ((geminiResponse.status === 503 || geminiResponse.status === 504 || geminiResponse.status === 429)
+          && attempt < MAX_RETRIES) {
+        console.log(`[generate-image] retry triggered for status ${geminiResponse.status}`);
+        await new Promise(r => setTimeout(r, 1500 * attempt));
+        continue;
+      }
+      break; // 성공 또는 재시도 불가능한 에러
+    } catch (err) {
+      clearTimeout(timeoutId);
+      lastError = err;
+      const elapsed = Date.now() - startTime;
+      console.error(`[generate-image] attempt ${attempt} failed in ${elapsed}ms: ${err.name} - ${err.message}`);
+
+      if (attempt < MAX_RETRIES) {
+        // timeout이거나 network error면 재시도
+        await new Promise(r => setTimeout(r, 1500 * attempt));
+        continue;
+      }
+      // 마지막 시도 실패
+      await refundCredit(supabase, memberId, generationRef, result.is_admin);
+      if (err.name === 'AbortError') {
+        return res.status(504).json({
+          code: 'gemini_timeout',
+          message: 'AI 서버 응답이 너무 느려요 (45초 초과). 잠시 후 다시 시도해주세요. 크레딧은 복구되었습니다.',
+        });
+      }
+      return res.status(502).json({
+        code: 'gemini_error',
+        message: 'AI 서버와 연결할 수 없습니다. 크레딧은 복구되었습니다.',
+        debug: { error: err.message },
+      });
+    }
   }
 
   if (!geminiResponse.ok) {
