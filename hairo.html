@@ -252,7 +252,7 @@ input, textarea { font-family: inherit; }
 }
 .dock-chips {
   display: flex;
-  gap: 5px;
+  gap: 8px;
   flex: 1;
   overflow-x: auto;
   scrollbar-width: none;
@@ -262,12 +262,12 @@ input, textarea { font-family: inherit; }
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 10px;
+  gap: 6px;
+  padding: 9px 14px;
   background: rgba(255,255,255,0.05);
   border: 0.5px solid transparent;
   border-radius: 999px;
-  font-size: 10.5px;
+  font-size: 12px;
   color: var(--text-muted);
   white-space: nowrap;
 }
@@ -979,18 +979,24 @@ input, textarea { font-family: inherit; }
 }
 .sheet-handle-area {
   width: 100%;
-  padding: 8px 0 4px;
+  padding: 14px 0 10px;
   display: flex;
   justify-content: center;
   cursor: grab;
   flex-shrink: 0;
+  touch-action: none;
 }
 .sheet-handle-area:active { cursor: grabbing; }
 .sheet-handle {
-  width: 36px;
-  height: 4px;
-  background: rgba(255,255,255,0.18);
+  width: 44px;
+  height: 5px;
+  background: rgba(255,255,255,0.28);
   border-radius: 99px;
+  transition: background 0.15s, width 0.15s;
+}
+.sheet-handle-area:active .sheet-handle {
+  background: rgba(199,240,80,0.55);
+  width: 56px;
 }
 .sheet-header {
   padding: 4px 16px 12px;
@@ -1085,13 +1091,16 @@ input, textarea { font-family: inherit; }
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 160px;
-  height: 160px;
-  margin-left: -80px;
-  margin-top: -80px;
+  width: 180px;
+  height: 180px;
+  margin-left: -90px;
+  margin-top: -90px;
   border-radius: 50%;
-  border: 0.5px solid rgba(199,240,80,0.25);
-  background: radial-gradient(circle at 35% 30%, rgba(199,240,80,0.04), transparent 60%);
+  border: 1.5px solid rgba(199,240,80,0.55);
+  box-shadow:
+    0 0 0 0.5px rgba(199,240,80,0.18),
+    0 0 18px rgba(199,240,80,0.18);
+  background: radial-gradient(circle at 35% 30%, rgba(199,240,80,0.10), transparent 65%);
   pointer-events: none;
   z-index: 2;
 }
@@ -1100,23 +1109,32 @@ input, textarea { font-family: inherit; }
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  border: 0.5px solid rgba(199,240,80,0.12);
-  transform: scale(0.6);
+  border: 1px solid rgba(199,240,80,0.32);
+  transform: scale(0.62);
+}
+.angle-sphere::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 0.5px dashed rgba(199,240,80,0.22);
+  transform: scale(0.85);
 }
 .angle-point {
   position: absolute;
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   background: var(--accent);
   border-radius: 50%;
   box-shadow:
-    0 0 12px rgba(199,240,80,0.7),
-    0 0 24px rgba(199,240,80,0.35);
+    0 0 0 2px rgba(199,240,80,0.25),
+    0 0 14px rgba(199,240,80,0.85),
+    0 0 28px rgba(199,240,80,0.45);
   pointer-events: none;
   z-index: 3;
-  transition: top 200ms ease-out, left 200ms ease-out;
-  margin-left: -6px;
-  margin-top: -6px;
+  transition: top 120ms ease-out, left 120ms ease-out;
+  margin-left: -7px;
+  margin-top: -7px;
 }
 
 /* ===== Camera info row ===== */
@@ -1279,17 +1297,15 @@ input, textarea { font-family: inherit; }
   cursor: pointer;
 }
 .aspect-chip svg {
-  width: 11px;
-  height: 11px;
+  width: 13px;
+  height: 13px;
   flex-shrink: 0;
   stroke: currentColor;
   fill: none;
   stroke-width: 1.2;
 }
 .aspect-popover {
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 0;
+  position: fixed;
   background: #1a1a1a;
   border: 0.5px solid var(--border-strong);
   border-radius: 12px;
@@ -1297,7 +1313,7 @@ input, textarea { font-family: inherit; }
   min-width: 200px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.55);
   display: none;
-  z-index: 60;
+  z-index: 200;
   animation: popUp 0.15s ease-out;
 }
 @keyframes popUp {
@@ -1499,7 +1515,7 @@ input, textarea { font-family: inherit; }
     <div class="loading-content">
       <div class="loading-spinner"></div>
       <div class="loading-text">사진 생성 중</div>
-      <div class="loading-sub">약 15~20초 정도 걸려요</div>
+      <div class="loading-sub">15초~1분 정도 걸려요</div>
     </div>
   </div>
 </div>
@@ -1747,7 +1763,31 @@ const aspectPopover = document.getElementById('aspectPopover');
 
 aspectChip.addEventListener('click', (e) => {
   e.stopPropagation();
-  aspectPopover.classList.toggle('active');
+  const isActive = aspectPopover.classList.contains('active');
+  if (isActive) {
+    aspectPopover.classList.remove('active');
+    return;
+  }
+  // 칩 위치 기준으로 popover 위치 계산 (fixed positioning)
+  const rect = aspectChip.getBoundingClientRect();
+  // 우선 화면 밖에서 보이게 만들고 → 실제 크기 측정
+  aspectPopover.style.visibility = 'hidden';
+  aspectPopover.classList.add('active');
+  const popH = aspectPopover.offsetHeight;
+  const popW = aspectPopover.offsetWidth;
+  // 칩 바로 위에 띄움
+  let top = rect.top - popH - 8;
+  let left = rect.left;
+  // 화면 오른쪽 잘림 방지
+  if (left + popW > window.innerWidth - 12) {
+    left = window.innerWidth - popW - 12;
+  }
+  if (left < 12) left = 12;
+  // 위쪽도 잘림 방지 (도크 위에 공간 부족 시 도크 아래로)
+  if (top < 12) top = rect.bottom + 8;
+  aspectPopover.style.top = top + 'px';
+  aspectPopover.style.left = left + 'px';
+  aspectPopover.style.visibility = '';
 });
 
 aspectPopover.querySelectorAll('.aspect-option').forEach(opt => {
@@ -1875,8 +1915,8 @@ angleSheet.addEventListener('click', (e) => {
 
 /* --- 사진 영역 드래그 (yaw/pitch 동시) --- */
 let dragStartX = 0, dragStartY = 0, dragStartYaw = 0, dragStartPitch = 0;
-const DRAG_YAW_SENS = 0.6;
-const DRAG_PITCH_SENS = 0.5;
+const DRAG_YAW_SENS = 1.1;
+const DRAG_PITCH_SENS = 0.9;
 
 function onPointerDown(e) {
   state.isDragging = true;
@@ -1909,28 +1949,65 @@ window.addEventListener('touchmove', onPointerMove, { passive: false });
 window.addEventListener('mouseup', onPointerUp);
 window.addEventListener('touchend', onPointerUp);
 
-/* --- 시트 핸들로 ↓ 스와이프 닫기 --- */
-function setupSwipeDown(handleEl, closeFn) {
-  let startY = 0, dragging = false;
+/* --- 시트 핸들로 ↓ 스와이프 닫기 (실시간 드래그 + 시각 피드백) --- */
+function setupSwipeDown(handleEl, sheetCardEl, closeFn) {
+  let startY = 0, dragging = false, currentDy = 0;
+
   const onDown = (e) => {
     dragging = true;
     startY = (e.touches ? e.touches[0] : e).clientY;
+    currentDy = 0;
+    if (sheetCardEl) sheetCardEl.style.transition = 'none';
   };
   const onMove = (e) => {
     if (!dragging) return;
     const y = (e.touches ? e.touches[0] : e).clientY;
     const dy = y - startY;
-    if (dy > 60) { dragging = false; closeFn(); }
+    if (dy < 0) {
+      currentDy = 0;
+      if (sheetCardEl) sheetCardEl.style.transform = 'translateY(0)';
+      return;
+    }
+    currentDy = dy;
+    if (sheetCardEl) sheetCardEl.style.transform = `translateY(${dy}px)`;
+    // 가로 방향 스크롤 방지
+    if (e.cancelable) e.preventDefault();
   };
-  const onUp = () => { dragging = false; };
+  const onUp = () => {
+    if (!dragging) return;
+    dragging = false;
+    if (sheetCardEl) {
+      sheetCardEl.style.transition = 'transform 0.22s ease';
+      if (currentDy > 80) {
+        // 충분히 내림 → 닫기
+        sheetCardEl.style.transform = 'translateY(100%)';
+        setTimeout(() => {
+          sheetCardEl.style.transform = '';
+          sheetCardEl.style.transition = '';
+          closeFn();
+        }, 200);
+      } else {
+        // 원위치
+        sheetCardEl.style.transform = 'translateY(0)';
+        setTimeout(() => {
+          sheetCardEl.style.transform = '';
+          sheetCardEl.style.transition = '';
+        }, 220);
+      }
+    } else {
+      if (currentDy > 80) closeFn();
+    }
+    currentDy = 0;
+  };
+
   handleEl.addEventListener('mousedown', onDown);
   handleEl.addEventListener('touchstart', onDown, { passive: true });
   window.addEventListener('mousemove', onMove);
-  window.addEventListener('touchmove', onMove, { passive: true });
+  window.addEventListener('touchmove', onMove, { passive: false });
   window.addEventListener('mouseup', onUp);
   window.addEventListener('touchend', onUp);
 }
-setupSwipeDown(document.getElementById('sheetHandle'), closeAngleSheet);
+setupSwipeDown(document.getElementById('sheetHandle'), document.getElementById('angleSheetCard'), closeAngleSheet);
 
 /* ═══════════════════════════════════════════════════ Generate ═══════════════════════════════════════════════════ */
 let generatedImageUrl = null;
@@ -2102,7 +2179,7 @@ resultModal.addEventListener('click', (e) => {
   if (e.target === resultModal) closeResultModal();
 });
 
-setupSwipeDown(document.getElementById('resultHandle'), closeResultModal);
+setupSwipeDown(document.getElementById('resultHandle'), document.getElementById('resultSheetCard'), closeResultModal);
 
 /* ═══════════════════════════════════════════════════ 갤러리 (Supabase) ═══════════════════════════════════════════════════ */
 const galleryEmpty = document.getElementById('galleryEmpty');
