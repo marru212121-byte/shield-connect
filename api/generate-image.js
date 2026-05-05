@@ -6,37 +6,37 @@
 // 처리 흐름:
 //   1. 세션 검증 (쿠키에서 member_id 추출)
 //   2. 1크레딧 차감
-//   3. 프롬프트 합성: 인물 코어 + 디자이너 입력 + 해상도 + (앵글)
-//   4. Gemini 3.1 Flash Image (Nano Banana 2) API 호출
-//   5. 응답에서 이미지 추출 → 프론트로 base64 반환
-//   6. 실패 시 크레딧 자동 환불
-//
-// 입력 payload (프론트 → 백엔드):
-//   {
-//     userPrompt:    string,  // 디자이너가 직접 친 프롬프트
-//     aspectPrompt:  string,  // "vertical 3:4 aspect ratio, ..."
-//     aspectRatio:   "9:16" | "16:9" | "4:5" | "1:1",  // 표시용
-//     anglePrompt?:  string,  // 앵글 켰을 때만, "camera position: yaw ..."
-//     angle?:        { yaw, pitch, frameIdx },
-//     references?:   [{ base64, mimeType }, ...]  // 최대 5장
-//   }
+//   3. 프롬프트 합성: 인물 코어 → 앵글(가이드) → 디자이너 입력 → 해상도
+//      ⭐ 디자이너 입력이 마지막 = AI에 가장 강하게 인식
+//   4. Gemini 3.1 Flash Image (Nano Banana 2) Streaming API 호출
+//      ⭐ generateContent 대신 streamGenerateContent 사용
+//        - 첫 청크 즉시 받기 시작 → socket hang 방지
+//        - 1차 timeout 후 2차 재시도 패턴 해소
+//   5. Streaming 실패 시 일반 호출로 자동 fallback
+//   6. 응답에서 이미지 추출 → 프론트로 base64 반환
+//   7. 실패 시 크레딧 자동 환불
 // ═══════════════════════════════════════════════════════════════
 
 import { getSessionFromRequest } from '../lib/session.js';
 import { getSupabase } from '../lib/supabase.js';
 
-const GEMINI_API_URL =
+// Streaming 엔드포인트 (alt=sse 추가하면 SSE 형식)
+const GEMINI_STREAM_URL =
+  'https://generativelanguage.googleapis.com/v1beta/models/' +
+  'gemini-3.1-flash-image-preview:streamGenerateContent?alt=sse';
+
+// Fallback: 일반 엔드포인트 (streaming 실패 시)
+const GEMINI_NORMAL_URL =
   'https://generativelanguage.googleapis.com/v1beta/models/' +
   'gemini-3.1-flash-image-preview:generateContent';
 
 // 이미지 1장 생성 = 몇 크레딧 차감할지
 const COST_CREDITS = 1;
 
-// 참조 사진 최대 장수 (Nano Banana 2는 14장까지 지원하지만 안정성 위해 5장 제한)
+// 참조 사진 최대 장수
 const MAX_REFERENCES = 5;
 
 // ─── 인물 코어 (항상 자동 적용, 디자이너에게 노출 X) ────────────
-// 충돌 검수 완료된 11줄 다이어트 버전
 const PERSON_CORE = `photorealistic image,
 
 smooth natural skin with very fine pore detail,
@@ -57,7 +57,7 @@ export const config = {
   maxDuration: 180,
   api: {
     bodyParser: {
-      sizeLimit: '30mb', // 5장 × 최대 6MB 정도까지 여유
+      sizeLimit: '30mb',
     },
   },
 };
@@ -107,7 +107,6 @@ export default async function handler(req, res) {
       message: `참조 사진은 최대 ${MAX_REFERENCES}장까지 첨부 가능합니다.`,
     });
   }
-  // 각 ref가 너무 크면 거부 (8MB 이상)
   for (const r of refs) {
     if (!r?.base64 || typeof r.base64 !== 'string') {
       return res.status(400).json({ code: 'invalid_reference' });
@@ -166,20 +165,25 @@ export default async function handler(req, res) {
   }
 
   // ─── 5. 최종 프롬프트 합성 ──────────────────────────────────
-  // 순서: 인물 코어 → 디자이너 입력 → 해상도 → 앵글(옵션)
-  // 디자이너 자유 입력이 가운데 와야 모델이 "주된 명령"으로 인식
-  const promptParts = [
-    PERSON_CORE,
-    userPrompt.trim(),
-    aspectPrompt || 'vertical 9:16 aspect ratio, portrait orientation',
-  ];
+  // ⭐ 새 순서: 코어 → 앵글(가이드) → 디자이너 입력(MAIN) → 해상도
+  // 디자이너 입력이 "MAIN INSTRUCTION" 라벨로 명시 → AI가 우선시
+  // 앵글은 "guideline"으로 약화 → 디자이너 입력과 충돌 시 디자이너 우선
+  const promptParts = [PERSON_CORE];
+
   if (anglePrompt && typeof anglePrompt === 'string') {
-    promptParts.push(anglePrompt);
+    promptParts.push(
+      `camera angle guideline (this is just a reference; the subject's expression, gaze direction, and emotional state described in the MAIN INSTRUCTION below take priority over this camera angle): ${anglePrompt}`
+    );
   }
-  const finalPrompt = promptParts.join(',\n\n');
+
+  // ⭐ 디자이너 입력 = 가장 강한 위치 + 명시적 라벨
+  promptParts.push(`MAIN INSTRUCTION (highest priority - follow this exactly): ${userPrompt.trim()}`);
+
+  promptParts.push(aspectPrompt || 'vertical 9:16 aspect ratio, portrait orientation');
+
+  const finalPrompt = promptParts.join('\n\n');
 
   // ─── 6. Gemini API 호출 ─────────────────────────────────────
-  // parts: 참조 사진들 → 프롬프트 텍스트
   const parts = [];
   for (const r of refs) {
     parts.push({
@@ -191,7 +195,6 @@ export default async function handler(req, res) {
   }
   parts.push({ text: finalPrompt });
 
-  // 해상도는 API 파라미터로 하드 강제 (텍스트 + 파라미터 이중 보장)
   const aspectForApi = ['9:16', '16:9', '4:5', '1:1'].includes(aspectRatio)
     ? aspectRatio
     : '9:16';
@@ -205,131 +208,64 @@ export default async function handler(req, res) {
     },
   });
 
-  // ─── Gemini 호출 (재시도 + 강제 timeout) ───
-  let geminiResponse = null;
+  console.log(`[generate-image] starting`, {
+    promptLen: finalPrompt.length,
+    refsCount: refs.length,
+    aspectRatio: aspectForApi,
+  });
+
+  // ── 1차: Streaming 시도 ──
+  let imagePart = null;
+  let textPart = null;
+  let finishReason = null;
   let lastError = null;
-  const MAX_RETRIES = 2;
-  const REQUEST_TIMEOUT = 45000; // 45초 — Gemini hang 시 강제 끊기
 
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
-    const startTime = Date.now();
+  try {
+    const streamResult = await callGeminiStream(GEMINI_STREAM_URL, geminiKey, requestBody);
+    imagePart = streamResult.imagePart;
+    textPart = streamResult.textPart;
+    finishReason = streamResult.finishReason;
+    console.log(`[generate-image] streaming success in ${streamResult.elapsedMs}ms`);
+  } catch (streamErr) {
+    lastError = streamErr;
+    console.error(`[generate-image] streaming failed: ${streamErr.name} - ${streamErr.message}`);
 
-    console.log(`[generate-image] attempt ${attempt}/${MAX_RETRIES}`, {
-      promptLen: finalPrompt.length,
-      refsCount: refs.length,
-      aspectRatio: aspectForApi,
-    });
-
+    // ── 2차 fallback: 일반 호출 ──
     try {
-      geminiResponse = await fetch(GEMINI_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': geminiKey,
-        },
-        body: requestBody,
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-
-      const elapsed = Date.now() - startTime;
-      console.log(`[generate-image] attempt ${attempt} responded in ${elapsed}ms, status: ${geminiResponse.status}`);
-
-      // 503/504/429이면 재시도 (단, 마지막 시도면 응답 그대로 사용)
-      if ((geminiResponse.status === 503 || geminiResponse.status === 504 || geminiResponse.status === 429)
-          && attempt < MAX_RETRIES) {
-        console.log(`[generate-image] retry triggered for status ${geminiResponse.status}`);
-        await new Promise(r => setTimeout(r, 1500 * attempt));
-        continue;
-      }
-      break; // 성공 또는 재시도 불가능한 에러
-    } catch (err) {
-      clearTimeout(timeoutId);
-      lastError = err;
-      const elapsed = Date.now() - startTime;
-      console.error(`[generate-image] attempt ${attempt} failed in ${elapsed}ms: ${err.name} - ${err.message}`);
-
-      if (attempt < MAX_RETRIES) {
-        // timeout이거나 network error면 재시도
-        await new Promise(r => setTimeout(r, 1500 * attempt));
-        continue;
-      }
-      // 마지막 시도 실패
+      console.log('[generate-image] falling back to normal endpoint');
+      const fallbackResult = await callGeminiNormal(GEMINI_NORMAL_URL, geminiKey, requestBody);
+      imagePart = fallbackResult.imagePart;
+      textPart = fallbackResult.textPart;
+      finishReason = fallbackResult.finishReason;
+      console.log(`[generate-image] fallback success in ${fallbackResult.elapsedMs}ms`);
+    } catch (fallbackErr) {
+      console.error(`[generate-image] fallback failed: ${fallbackErr.name} - ${fallbackErr.message}`);
       await refundCredit(supabase, memberId, generationRef, result.is_admin);
-      if (err.name === 'AbortError') {
+
+      if (fallbackErr.name === 'AbortError' || streamErr.name === 'AbortError') {
         return res.status(504).json({
           code: 'gemini_timeout',
-          message: 'AI 서버 응답이 너무 느려요 (45초 초과). 잠시 후 다시 시도해주세요. 크레딧은 복구되었습니다.',
+          message: 'AI 서버 응답이 느려요. 잠시 후 다시 시도해주세요. 크레딧은 복구되었습니다.',
+        });
+      }
+      if (fallbackErr.status) {
+        return res.status(502).json({
+          code: 'gemini_error',
+          message: '이미지 생성 중 오류가 발생했습니다. 크레딧은 복구되었습니다.',
+          debug: { status: fallbackErr.status, detail: fallbackErr.detail || '' },
         });
       }
       return res.status(502).json({
         code: 'gemini_error',
         message: 'AI 서버와 연결할 수 없습니다. 크레딧은 복구되었습니다.',
-        debug: { error: err.message },
+        debug: { error: fallbackErr.message },
       });
     }
   }
 
-  if (!geminiResponse.ok) {
-    const errorText = await geminiResponse.text();
-    const status = geminiResponse.status;
-    console.error('[generate-image] gemini error:', status, errorText);
-
-    // 에러 본문에서 핵심 단서 추출
-    let errDetail = '';
-    let userHint = '';
-    try {
-      const errJson = JSON.parse(errorText);
-      errDetail = errJson?.error?.message || errJson?.error?.status || '';
-    } catch (_) {
-      errDetail = errorText.slice(0, 200);
-    }
-
-    if (status === 400) {
-      userHint = '요청 형식 오류 (모델명/파라미터 확인 필요)';
-    } else if (status === 401 || status === 403) {
-      userHint = 'API 키 인증 실패 (Vercel 환경변수 또는 키 권한)';
-    } else if (status === 404) {
-      userHint = '모델을 찾을 수 없음 (모델명 변경 가능)';
-    } else if (status === 429) {
-      userHint = 'API 사용량 한도 초과 또는 결제 등록 필요';
-    } else if (status >= 500) {
-      userHint = 'Google AI 서버 일시 오류';
-    }
-
-    await refundCredit(supabase, memberId, generationRef, result.is_admin);
-    return res.status(502).json({
-      code: 'gemini_error',
-      message: '이미지 생성 중 오류가 발생했습니다. 크레딧은 복구되었습니다.',
-      // 디버깅용 (관리자만 봄, 일반 사용자에겐 안 보임)
-      debug: {
-        status,
-        hint: userHint,
-        detail: errDetail.slice(0, 500),
-      },
-    });
-  }
-
   // ─── 7. 응답에서 이미지 추출 ────────────────────────────────
-  const aiData = await geminiResponse.json();
-  const candidate = aiData?.candidates?.[0];
-  const responseParts = candidate?.content?.parts || [];
-
-  let imagePart = null;
-  let textPart = null;
-  for (const p of responseParts) {
-    if (p.inline_data || p.inlineData) {
-      imagePart = p.inline_data || p.inlineData;
-      break;
-    }
-    if (p.text) textPart = p.text;
-  }
-
   if (!imagePart || !imagePart.data) {
     await refundCredit(supabase, memberId, generationRef, result.is_admin);
-    const finishReason = candidate?.finishReason || 'unknown';
     let userMsg = '이미지가 생성되지 않았어요. 크레딧은 복구되었습니다.';
     if (finishReason === 'SAFETY' || finishReason === 'IMAGE_SAFETY') {
       userMsg = '안전 필터에 걸렸어요. 프롬프트를 조정해주세요. 크레딧은 복구되었습니다.';
@@ -356,9 +292,153 @@ export default async function handler(req, res) {
   });
 }
 
-// ============================================================
-// 크레딧 환불 (recipe.js와 동일한 패턴)
-// ============================================================
+// ════════════════════════════════════════════════════════════
+// Streaming 호출 헬퍼 (SSE 파싱)
+// ════════════════════════════════════════════════════════════
+async function callGeminiStream(url, apiKey, requestBody) {
+  const startTime = Date.now();
+  const controller = new AbortController();
+  // 60초 timeout - streaming은 첫 청크가 빨리 와야 정상
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey,
+        'Accept': 'text/event-stream',
+      },
+      body: requestBody,
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      clearTimeout(timeoutId);
+      const errorText = await response.text();
+      const err = new Error(`stream HTTP ${response.status}`);
+      err.status = response.status;
+      err.detail = errorText.slice(0, 500);
+      throw err;
+    }
+
+    if (!response.body) {
+      clearTimeout(timeoutId);
+      throw new Error('no response body');
+    }
+
+    // SSE 파싱
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let imagePart = null;
+    let textPart = null;
+    let finishReason = null;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+
+      // SSE 형식: "data: {...}\n\n"
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || ''; // 마지막 미완성 줄 보존
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const dataStr = line.slice(6).trim();
+        if (!dataStr || dataStr === '[DONE]') continue;
+
+        try {
+          const chunk = JSON.parse(dataStr);
+          const candidate = chunk?.candidates?.[0];
+          if (candidate?.finishReason) finishReason = candidate.finishReason;
+
+          const chunkParts = candidate?.content?.parts || [];
+          for (const p of chunkParts) {
+            if (p.inline_data || p.inlineData) {
+              imagePart = p.inline_data || p.inlineData;
+            }
+            if (p.text) textPart = (textPart || '') + p.text;
+          }
+        } catch (parseErr) {
+          // 무시 — 일부 청크가 깨질 수 있음
+        }
+      }
+    }
+
+    clearTimeout(timeoutId);
+    return {
+      imagePart,
+      textPart,
+      finishReason,
+      elapsedMs: Date.now() - startTime,
+    };
+  } catch (err) {
+    clearTimeout(timeoutId);
+    throw err;
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// 일반 호출 헬퍼 (Fallback - 45초 timeout)
+// ════════════════════════════════════════════════════════════
+async function callGeminiNormal(url, apiKey, requestBody) {
+  const startTime = Date.now();
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 45000);
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey,
+      },
+      body: requestBody,
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      const err = new Error(`normal HTTP ${response.status}`);
+      err.status = response.status;
+      err.detail = errorText.slice(0, 500);
+      throw err;
+    }
+
+    const aiData = await response.json();
+    const candidate = aiData?.candidates?.[0];
+    const responseParts = candidate?.content?.parts || [];
+
+    let imagePart = null;
+    let textPart = null;
+    for (const p of responseParts) {
+      if (p.inline_data || p.inlineData) {
+        imagePart = p.inline_data || p.inlineData;
+        break;
+      }
+      if (p.text) textPart = p.text;
+    }
+
+    return {
+      imagePart,
+      textPart,
+      finishReason: candidate?.finishReason || null,
+      elapsedMs: Date.now() - startTime,
+    };
+  } catch (err) {
+    clearTimeout(timeoutId);
+    throw err;
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// 크레딧 환불
+// ════════════════════════════════════════════════════════════
 async function refundCredit(supabase, memberId, reference, isAdmin) {
   if (isAdmin) return;
   try {
