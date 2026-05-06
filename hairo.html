@@ -987,6 +987,15 @@ input, textarea { font-family: inherit; }
   border-color: var(--accent-border);
   color: var(--accent);
 }
+.chip.chip-action.chip-disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.chip.chip-action.chip-disabled.has-value {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.08);
+  color: var(--text-faint);
+}
 
 /* ===== Bottom Sheet ===== */
 .sheet-overlay {
@@ -2107,7 +2116,32 @@ function snapToFront() {
   setFrame(idx >= 0 ? idx : 0);
 }
 
-angleChip.addEventListener('click', openAngleSheet);
+angleChip.addEventListener('click', () => {
+  // 전신 프레이밍이면 앵글 사용 X
+  if (state.framing === 'full_body') {
+    showToast('전신 프레이밍에서는 앵글을 사용할 수 없어요. 가슴선/상반신에서만 가능해요.');
+    return;
+  }
+  openAngleSheet();
+});
+
+// 앵글 칩 disable/enable 상태 시각 업데이트
+function updateAngleChipAvailability() {
+  if (state.framing === 'full_body') {
+    angleChip.classList.add('chip-disabled');
+    // 이미 앵글 켜져있으면 자동 해제
+    if (state.angleEnabled) {
+      state.angleEnabled = false;
+      state.frameIdx = -1;
+      state.yaw = 0;
+      state.pitch = 0;
+      angleChip.classList.remove('has-value');
+      angleChip.textContent = '앵글';
+    }
+  } else {
+    angleChip.classList.remove('chip-disabled');
+  }
+}
 
 /* ═══════════════════════════════════════════════════ 무드 sheet ═══════════════════════════════════════════════════ */
 const moodChip = document.getElementById('moodChip');
@@ -2191,6 +2225,7 @@ framingSheet.querySelectorAll('.preset-card').forEach(card => {
       framingChip.classList.remove('has-value');
       framingChip.textContent = '프레이밍';
     }
+    updateAngleChipAvailability();  // ⭐ 전신이면 앵글 비활성화
     closeFramingSheet();
   });
 });
