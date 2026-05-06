@@ -23,13 +23,24 @@
 
 import { getSessionFromRequest } from '../lib/session.js';
 import { getSupabase } from '../lib/supabase.js';
+import { getVertexAccessToken, getProjectId } from '../lib/vertex-auth.js';
 
-// Streaming 엔드포인트 (alt=sse 추가하면 SSE 형식)
+// ─── Vertex AI 엔드포인트 (1차/2차) ──────────────────────────────
+const VERTEX_MODEL = 'gemini-3.1-flash-image-preview';
+
+function buildVertexUrl(region, projectId) {
+  // region: 'asia-northeast3' (서울) | 'global'
+  const host = region === 'global'
+    ? 'aiplatform.googleapis.com'
+    : `${region}-aiplatform.googleapis.com`;
+  return `https://${host}/v1/projects/${projectId}/locations/${region}/publishers/google/models/${VERTEX_MODEL}:streamGenerateContent?alt=sse`;
+}
+
+// ─── Generative Language API (3차 안전망) ───────────────────────
 const GEMINI_STREAM_URL =
   'https://generativelanguage.googleapis.com/v1beta/models/' +
   'gemini-3.1-flash-image-preview:streamGenerateContent?alt=sse';
 
-// Fallback: 일반 엔드포인트 (streaming 실패 시)
 const GEMINI_NORMAL_URL =
   'https://generativelanguage.googleapis.com/v1beta/models/' +
   'gemini-3.1-flash-image-preview:generateContent';
@@ -311,56 +322,90 @@ export default async function handler(req, res) {
     framing: framing || null,
   });
 
-  // ── 1차: Streaming 시도 ──
+  // ── 3단 Fallback 체인 ─────────────────────────────────────
   let imagePart = null;
   let textPart = null;
   let finishReason = null;
   let lastError = null;
+  let route = null; // 어느 경로로 성공했는지 디버그용
 
+  // ── 1차: Vertex AI 서울 (asia-northeast3) Streaming ──
   try {
-    const streamResult = await callGeminiStream(GEMINI_STREAM_URL, geminiKey, requestBody);
-    imagePart = streamResult.imagePart;
-    textPart = streamResult.textPart;
-    finishReason = streamResult.finishReason;
-    console.log(`[generate-image] streaming success in ${streamResult.elapsedMs}ms`);
-  } catch (streamErr) {
-    lastError = streamErr;
-    if (streamErr.firstTokenTimeout) {
-      console.error(`[generate-image] streaming first-token timeout (8s) - Google hang detected, falling back fast`);
-    } else {
-      console.error(`[generate-image] streaming failed: ${streamErr.name} - ${streamErr.message}`);
-    }
+    const accessToken = await getVertexAccessToken();
+    const projectId = getProjectId();
+    const seoulUrl = buildVertexUrl('asia-northeast3', projectId);
+    const r1 = await callVertexStream(seoulUrl, accessToken, requestBody);
+    imagePart = r1.imagePart;
+    textPart = r1.textPart;
+    finishReason = r1.finishReason;
+    route = 'vertex-seoul-stream';
+    console.log(`[generate-image] vertex-seoul stream success in ${r1.elapsedMs}ms`);
+  } catch (e1) {
+    lastError = e1;
+    console.error(`[generate-image] vertex-seoul stream failed: ${e1.name} - ${e1.message}`);
 
-    // ── 2차 fallback: 일반 호출 ──
+    // ── 2차: Vertex AI 글로벌 (global) Streaming ──
     try {
-      console.log('[generate-image] falling back to normal endpoint');
-      const fallbackResult = await callGeminiNormal(GEMINI_NORMAL_URL, geminiKey, requestBody);
-      imagePart = fallbackResult.imagePart;
-      textPart = fallbackResult.textPart;
-      finishReason = fallbackResult.finishReason;
-      console.log(`[generate-image] fallback success in ${fallbackResult.elapsedMs}ms`);
-    } catch (fallbackErr) {
-      console.error(`[generate-image] fallback failed: ${fallbackErr.name} - ${fallbackErr.message}`);
-      await refundCredit(supabase, memberId, generationRef, result.is_admin);
+      const accessToken = await getVertexAccessToken();
+      const projectId = getProjectId();
+      const globalUrl = buildVertexUrl('global', projectId);
+      const r2 = await callVertexStream(globalUrl, accessToken, requestBody);
+      imagePart = r2.imagePart;
+      textPart = r2.textPart;
+      finishReason = r2.finishReason;
+      route = 'vertex-global-stream';
+      console.log(`[generate-image] vertex-global stream success in ${r2.elapsedMs}ms`);
+    } catch (e2) {
+      lastError = e2;
+      console.error(`[generate-image] vertex-global stream failed: ${e2.name} - ${e2.message}`);
 
-      if (fallbackErr.name === 'AbortError' || streamErr.name === 'AbortError') {
-        return res.status(504).json({
-          code: 'gemini_timeout',
-          message: 'AI 서버 응답이 느려요. 잠시 후 다시 시도해주세요. 크레딧은 복구되었습니다.',
-        });
+      // ── 3차 안전망: Generative Language API (Legacy) ──
+      try {
+        console.log('[generate-image] falling back to legacy endpoint (Generative Language API)');
+        const r3 = await callGeminiStream(GEMINI_STREAM_URL, geminiKey, requestBody);
+        imagePart = r3.imagePart;
+        textPart = r3.textPart;
+        finishReason = r3.finishReason;
+        route = 'legacy-stream';
+        console.log(`[generate-image] legacy stream success in ${r3.elapsedMs}ms`);
+      } catch (e3) {
+        lastError = e3;
+        console.error(`[generate-image] legacy stream failed: ${e3.name} - ${e3.message}`);
+
+        // 마지막 시도: legacy normal 호출
+        try {
+          console.log('[generate-image] last resort: legacy normal endpoint');
+          const r4 = await callGeminiNormal(GEMINI_NORMAL_URL, geminiKey, requestBody);
+          imagePart = r4.imagePart;
+          textPart = r4.textPart;
+          finishReason = r4.finishReason;
+          route = 'legacy-normal';
+          console.log(`[generate-image] legacy normal success in ${r4.elapsedMs}ms`);
+        } catch (e4) {
+          console.error(`[generate-image] all fallbacks failed: ${e4.name} - ${e4.message}`);
+          await refundCredit(supabase, memberId, generationRef, result.is_admin);
+
+          if (e4.name === 'AbortError' || e3.name === 'AbortError' ||
+              e2.name === 'AbortError' || e1.name === 'AbortError') {
+            return res.status(504).json({
+              code: 'gemini_timeout',
+              message: 'AI 서버 응답이 느려요. 잠시 후 다시 시도해주세요. 크레딧은 복구되었습니다.',
+            });
+          }
+          if (e4.status) {
+            return res.status(502).json({
+              code: 'gemini_error',
+              message: '이미지 생성 중 오류가 발생했습니다. 크레딧은 복구되었습니다.',
+              debug: { status: e4.status, detail: e4.detail || '' },
+            });
+          }
+          return res.status(502).json({
+            code: 'gemini_error',
+            message: 'AI 서버와 연결할 수 없습니다. 크레딧은 복구되었습니다.',
+            debug: { error: e4.message },
+          });
+        }
       }
-      if (fallbackErr.status) {
-        return res.status(502).json({
-          code: 'gemini_error',
-          message: '이미지 생성 중 오류가 발생했습니다. 크레딧은 복구되었습니다.',
-          debug: { status: fallbackErr.status, detail: fallbackErr.detail || '' },
-        });
-      }
-      return res.status(502).json({
-        code: 'gemini_error',
-        message: 'AI 서버와 연결할 수 없습니다. 크레딧은 복구되었습니다.',
-        debug: { error: fallbackErr.message },
-      });
     }
   }
 
@@ -390,6 +435,7 @@ export default async function handler(req, res) {
     is_admin: result.is_admin,
     aspectRatio: aspectRatio || '9:16',
     angle: angle || null,
+    route: route, // 디버그용: vertex-seoul-stream | vertex-global-stream | legacy-stream | legacy-normal
   });
 }
 
@@ -512,6 +558,123 @@ async function callGeminiStream(url, apiKey, requestBody) {
     // 첫 토큰 timeout으로 abort된 경우 명시
     if (err.name === 'AbortError' && abortReason === 'first_token_timeout') {
       const e = new Error('first token timeout (8s) - Google API hang');
+      e.name = 'AbortError';
+      e.firstTokenTimeout = true;
+      throw e;
+    }
+    throw err;
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// Vertex AI Streaming 호출 헬퍼 (1차/2차 fallback)
+// ════════════════════════════════════════════════════════════
+// callGeminiStream과 동일 구조, 인증만 다름 (Bearer 토큰)
+async function callVertexStream(url, accessToken, requestBody) {
+  const startTime = Date.now();
+  const controller = new AbortController();
+
+  const FIRST_TOKEN_TIMEOUT_MS = 8000;
+  const TOTAL_TIMEOUT_MS = 45000;
+
+  const totalTimeoutId = setTimeout(() => {
+    controller.abort('total_timeout');
+  }, TOTAL_TIMEOUT_MS);
+
+  let firstTokenReceived = false;
+  let abortReason = null;
+  const firstTokenTimeoutId = setTimeout(() => {
+    if (!firstTokenReceived) {
+      abortReason = 'first_token_timeout';
+      controller.abort('first_token_timeout');
+    }
+  }, FIRST_TOKEN_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+        'Accept': 'text/event-stream',
+      },
+      body: requestBody,
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      clearTimeout(totalTimeoutId);
+      clearTimeout(firstTokenTimeoutId);
+      const errorText = await response.text();
+      const err = new Error(`stream HTTP ${response.status}`);
+      err.status = response.status;
+      err.detail = errorText.slice(0, 500);
+      throw err;
+    }
+
+    if (!response.body) {
+      clearTimeout(totalTimeoutId);
+      clearTimeout(firstTokenTimeoutId);
+      throw new Error('no response body');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let imagePart = null;
+    let textPart = null;
+    let finishReason = null;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      if (!firstTokenReceived) {
+        firstTokenReceived = true;
+        clearTimeout(firstTokenTimeoutId);
+        console.log(`[generate-image] vertex first token received in ${Date.now() - startTime}ms`);
+      }
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const dataStr = line.slice(6).trim();
+        if (!dataStr || dataStr === '[DONE]') continue;
+
+        try {
+          const chunk = JSON.parse(dataStr);
+          const candidate = chunk?.candidates?.[0];
+          if (candidate?.finishReason) finishReason = candidate.finishReason;
+
+          const chunkParts = candidate?.content?.parts || [];
+          for (const p of chunkParts) {
+            if (p.inline_data || p.inlineData) {
+              imagePart = p.inline_data || p.inlineData;
+            }
+            if (p.text) textPart = (textPart || '') + p.text;
+          }
+        } catch (parseErr) {
+          // 무시
+        }
+      }
+    }
+
+    clearTimeout(totalTimeoutId);
+    clearTimeout(firstTokenTimeoutId);
+    return {
+      imagePart,
+      textPart,
+      finishReason,
+      elapsedMs: Date.now() - startTime,
+    };
+  } catch (err) {
+    clearTimeout(totalTimeoutId);
+    clearTimeout(firstTokenTimeoutId);
+    if (err.name === 'AbortError' && abortReason === 'first_token_timeout') {
+      const e = new Error('vertex first token timeout (8s)');
       e.name = 'AbortError';
       e.firstTokenTimeout = true;
       throw e;
