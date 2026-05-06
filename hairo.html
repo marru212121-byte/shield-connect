@@ -1079,6 +1079,61 @@ input, textarea { font-family: inherit; }
   flex: 1;
 }
 
+/* ===== Compact sheet (mood/framing) ===== */
+.sheet-compact {
+  max-height: 70vh;
+}
+
+/* ===== Preset cards (mood/framing) ===== */
+.preset-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+}
+.preset-card {
+  background: #1A1814;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 14px 16px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+.preset-card:active { background: #211e18; }
+.preset-card.active {
+  border-color: var(--accent);
+  background: rgba(220, 245, 100, 0.06);
+}
+.preset-card-title {
+  color: #ECECEC;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+.preset-card.active .preset-card-title { color: var(--accent); }
+.preset-card-desc {
+  color: rgba(236, 236, 236, 0.55);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.preset-tip {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: rgba(220, 245, 100, 0.04);
+  border: 1px solid rgba(220, 245, 100, 0.12);
+  border-radius: 10px;
+  color: rgba(236, 236, 236, 0.7);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+.preset-tip b { color: var(--accent); font-weight: 600; }
+
 /* ===== Angle preview (drag area) ===== */
 .angle-preview {
   background: #1A1814;
@@ -1414,6 +1469,61 @@ input, textarea { font-family: inherit; }
   letter-spacing: 0.1px;
 }
 .aspect-option.active .aspect-option-desc { color: rgba(199,240,80,0.7); }
+
+/* ─── simple-popover (무드/프레이밍 공통) ─── */
+.simple-popover {
+  position: fixed;
+  background: #1a1a1a;
+  border: 0.5px solid var(--border-strong);
+  border-radius: 12px;
+  padding: 5px;
+  min-width: 220px;
+  max-width: calc(100vw - 16px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.55);
+  display: none;
+  z-index: 200;
+  visibility: hidden;
+  animation: popUp 0.15s ease-out;
+}
+.simple-popover.active { display: block; }
+.simple-option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--text);
+  text-align: left;
+  font-family: inherit;
+}
+.simple-option:hover { background: rgba(255,255,255,0.05); }
+.simple-option.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.simple-option-name {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+.simple-option-desc {
+  font-size: 11px;
+  color: var(--text-faint);
+  letter-spacing: 0.1px;
+}
+.simple-option.active .simple-option-desc { color: rgba(199,240,80,0.7); }
+.simple-option-clear {
+  border-top: 0.5px solid var(--border-strong);
+  margin-top: 4px;
+  padding-top: 10px;
+}
+.simple-option-clear .simple-option-name {
+  color: var(--text-faint);
+}
 </style>
 </head>
 <body>
@@ -1439,17 +1549,18 @@ input, textarea { font-family: inherit; }
       <div class="guide-eyebrow">how to compose</div>
       <div class="guide-sub">PROMPT GUIDE</div>
       <div class="guide-body">
-        <p>먼저 자유 프롬프트와 첨부 사진 등으로</p>
-        <p>사진을 자유롭게 생성한 뒤</p>
-        <p>앵글과 무드 모드로</p>
-        <p>디테일을 잡아가는 흐름을 권장합니다.</p>
+        <p>무드와 프레이밍은 자유롭게 함께 쓰셔도 됩니다.</p>
+        <p>무드를 안 고르시면 완전 자유 모드로</p>
+        <p>카탈로그·제품 사진도 만드실 수 있어요.</p>
         <div class="guide-divider"></div>
-        <p>참조 사진은 최대 5장까지,</p>
+        <p>앵글까지 정밀 제어를 원하시면,</p>
+        <p>먼저 무드·프레이밍·자유 프롬프트로</p>
+        <p>사진을 만든 뒤 <b>앵글 모드</b>로 다듬는 걸 권장.</p>
+        <p>모든 모드를 한 번에 켜면 충돌이 날 수 있어요.</p>
+        <div class="guide-divider"></div>
+        <p>참조 사진은 최대 5장,</p>
         <p>"이건 헤어, 이건 의상" 처럼</p>
         <p>역할을 적어주시면 더 정확합니다.</p>
-        <div class="guide-divider"></div>
-        <p>같은 사진을 3회 이상 보강하면</p>
-        <p>디테일이 깨질 수 있어요.</p>
       </div>
     </div>
     <div class="gallery-placeholder">
@@ -1521,11 +1632,89 @@ input, textarea { font-family: inherit; }
             </button>
           </div>
         </div>
+        <button class="chip chip-action" id="moodChip" type="button">무드</button>
+        <button class="chip chip-action" id="framingChip" type="button">프레이밍</button>
         <button class="chip chip-action" id="angleChip" type="button">앵글</button>
       </div>
       <button class="btn-generate" id="generateBtn" type="button">
         <span class="spark">✦</span>생성
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Mood Sheet ===== -->
+<div class="sheet-overlay" id="moodSheet">
+  <div class="sheet sheet-compact" id="moodSheetCard">
+    <div class="sheet-handle-area" id="moodHandle">
+      <div class="sheet-handle"></div>
+    </div>
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title">mood</div>
+        <div class="sheet-subtitle">분위기 · 무드 안 고름 = 자유</div>
+      </div>
+      <button class="sheet-close" onclick="closeMoodSheet()" type="button" aria-label="닫기">×</button>
+    </div>
+    <div class="sheet-body">
+      <div class="preset-list">
+        <button class="preset-card" data-mood="" type="button">
+          <div class="preset-card-title">무드 없음 (자유)</div>
+          <div class="preset-card-desc">카탈로그·제품·공간 등 자유로운 사용. 코어 적용 안 됨.</div>
+        </button>
+        <button class="preset-card" data-mood="hair_skin_precision" type="button">
+          <div class="preset-card-title">헤어·피부 정밀</div>
+          <div class="preset-card-desc">살롱 자연광. 모공·머릿결까지 사실적. 시술 검토용.</div>
+        </button>
+        <button class="preset-card" data-mood="editorial_lookbook" type="button">
+          <div class="preset-card-title">화보·룩북</div>
+          <div class="preset-card-desc">잡지 마감 톤. 따뜻 하이라이트·쿨 섀도우. 포트폴리오용.</div>
+        </button>
+        <button class="preset-card" data-mood="y2k" type="button">
+          <div class="preset-card-title">Y2K</div>
+          <div class="preset-card-desc">2000년대 한국 인플루언서 룩. 핑크·피치 톤. 트렌디 SNS용.</div>
+        </button>
+      </div>
+      <div class="preset-tip">
+        <b>팁.</b> 무드를 안 고르면 코어가 빠져 자유 프롬프트만 작동해요.
+        헤어 시뮬레이션엔 무드 선택이 권장돼요.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Framing Sheet ===== -->
+<div class="sheet-overlay" id="framingSheet">
+  <div class="sheet sheet-compact" id="framingSheetCard">
+    <div class="sheet-handle-area" id="framingHandle">
+      <div class="sheet-handle"></div>
+    </div>
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title">framing</div>
+        <div class="sheet-subtitle">프레이밍 · 화면에 담을 범위</div>
+      </div>
+      <button class="sheet-close" onclick="closeFramingSheet()" type="button" aria-label="닫기">×</button>
+    </div>
+    <div class="sheet-body">
+      <div class="preset-list">
+        <button class="preset-card" data-framing="" type="button">
+          <div class="preset-card-title">자동 (안 고름)</div>
+          <div class="preset-card-desc">디자이너 프롬프트가 결정. 따로 박지 않음.</div>
+        </button>
+        <button class="preset-card" data-framing="chest_up" type="button">
+          <div class="preset-card-title">가슴선까지</div>
+          <div class="preset-card-desc">상체 가슴 윗부분까지. 헤어 시뮬레이션 표준.</div>
+        </button>
+        <button class="preset-card" data-framing="upper_body" type="button">
+          <div class="preset-card-title">상반신</div>
+          <div class="preset-card-desc">허리부터 머리까지. 어깨 라인 강조.</div>
+        </button>
+        <button class="preset-card" data-framing="full_body" type="button">
+          <div class="preset-card-title">전신</div>
+          <div class="preset-card-desc">머리부터 발끝까지. 룩북·코디 포함.</div>
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -1618,6 +1807,46 @@ input, textarea { font-family: inherit; }
   </div>
 </div>
 
+<!-- 무드 popover -->
+<div class="simple-popover" id="moodPopover">
+  <button class="simple-option" data-mood="precision" type="button">
+    <span class="simple-option-name">🦴 헤어·피부 정밀</span>
+    <span class="simple-option-desc">살롱 환경, 시술 검토용</span>
+  </button>
+  <button class="simple-option" data-mood="editorial" type="button">
+    <span class="simple-option-name">📷 화보·룩북</span>
+    <span class="simple-option-desc">스튜디오 컨셉, 포트폴리오</span>
+  </button>
+  <button class="simple-option" data-mood="y2k" type="button">
+    <span class="simple-option-name">🌸 Y2K</span>
+    <span class="simple-option-desc">트렌디 SNS, 인플루언서 룩</span>
+  </button>
+  <button class="simple-option simple-option-clear" data-mood="" type="button">
+    <span class="simple-option-name">무드 선택 해제</span>
+    <span class="simple-option-desc">완전 자유 (카탈로그·제품)</span>
+  </button>
+</div>
+
+<!-- 프레이밍 popover -->
+<div class="simple-popover" id="framingPopover">
+  <button class="simple-option" data-framing="chest" type="button">
+    <span class="simple-option-name">가슴선</span>
+    <span class="simple-option-desc">쇄골·가슴 ~ 머리</span>
+  </button>
+  <button class="simple-option" data-framing="upper" type="button">
+    <span class="simple-option-name">상반신</span>
+    <span class="simple-option-desc">허리 ~ 머리</span>
+  </button>
+  <button class="simple-option" data-framing="full" type="button">
+    <span class="simple-option-name">전신</span>
+    <span class="simple-option-desc">머리 ~ 발</span>
+  </button>
+  <button class="simple-option simple-option-clear" data-framing="" type="button">
+    <span class="simple-option-name">프레이밍 해제</span>
+    <span class="simple-option-desc">자유 프롬프트가 결정</span>
+  </button>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1691,6 +1920,8 @@ const state = {
   frameIdx: -1,
   isDragging: false,
   refFiles: [],
+  mood: null,        // ⭐ 'hair_skin_precision' | 'editorial_lookbook' | 'y2k' | null(자유)
+  framing: null,     // ⭐ 'chest_up' | 'upper_body' | 'full_body' | null
   // 결과 모달 모드: 'fresh' (방금 생성) | 'archive' (보관함 재열람)
   resultMode: 'fresh',
   currentItem: null, // 보관함 모드일 때 보고있는 아이템
@@ -1972,6 +2203,98 @@ function snapToFront() {
 }
 
 angleChip.addEventListener('click', openAngleSheet);
+
+/* ═══════════════════════════════════════════════════ 무드 sheet ═══════════════════════════════════════════════════ */
+const moodChip = document.getElementById('moodChip');
+const moodSheet = document.getElementById('moodSheet');
+
+const MOOD_LABELS = {
+  hair_skin_precision: '🦴 헤어·피부 정밀',
+  editorial_lookbook: '📷 화보·룩북',
+  y2k: '🌸 Y2K',
+};
+
+function openMoodSheet() {
+  // 현재 선택된 무드 카드에 active 표시
+  moodSheet.querySelectorAll('.preset-card').forEach(card => {
+    const v = card.dataset.mood || '';
+    if (v === (state.mood || '')) card.classList.add('active');
+    else card.classList.remove('active');
+  });
+  moodSheet.classList.add('active');
+}
+function closeMoodSheet() {
+  moodSheet.classList.remove('active');
+}
+window.closeMoodSheet = closeMoodSheet;
+
+moodChip.addEventListener('click', openMoodSheet);
+
+moodSheet.querySelectorAll('.preset-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const m = card.dataset.mood || null;
+    state.mood = m;
+    if (m) {
+      moodChip.classList.add('has-value');
+      moodChip.textContent = MOOD_LABELS[m] || '무드';
+    } else {
+      moodChip.classList.remove('has-value');
+      moodChip.textContent = '무드';
+    }
+    closeMoodSheet();
+  });
+});
+
+// 외부 클릭/배경 클릭으로 닫기
+moodSheet.addEventListener('click', (e) => {
+  if (e.target === moodSheet) closeMoodSheet();
+});
+
+/* ═══════════════════════════════════════════════════ 프레이밍 sheet ═══════════════════════════════════════════════════ */
+const framingChip = document.getElementById('framingChip');
+const framingSheet = document.getElementById('framingSheet');
+
+const FRAMING_LABELS = {
+  chest_up: '가슴선',
+  upper_body: '상반신',
+  full_body: '전신',
+};
+
+function openFramingSheet() {
+  framingSheet.querySelectorAll('.preset-card').forEach(card => {
+    const v = card.dataset.framing || '';
+    if (v === (state.framing || '')) card.classList.add('active');
+    else card.classList.remove('active');
+  });
+  framingSheet.classList.add('active');
+}
+function closeFramingSheet() {
+  framingSheet.classList.remove('active');
+}
+window.closeFramingSheet = closeFramingSheet;
+
+framingChip.addEventListener('click', openFramingSheet);
+
+framingSheet.querySelectorAll('.preset-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const f = card.dataset.framing || null;
+    state.framing = f;
+    if (f) {
+      framingChip.classList.add('has-value');
+      framingChip.textContent = `프레이밍 · ${FRAMING_LABELS[f]}`;
+    } else {
+      framingChip.classList.remove('has-value');
+      framingChip.textContent = '프레이밍';
+    }
+    closeFramingSheet();
+  });
+});
+
+framingSheet.addEventListener('click', (e) => {
+  if (e.target === framingSheet) closeFramingSheet();
+});
+
+
 function openAngleSheet() {
   buildFrameElements();
   prefetchFrames();
@@ -2086,6 +2409,8 @@ function setupSwipeDown(handleEl, sheetCardEl, closeFn) {
   window.addEventListener('touchend', onUp);
 }
 setupSwipeDown(document.getElementById('sheetHandle'), document.getElementById('angleSheetCard'), closeAngleSheet);
+setupSwipeDown(document.getElementById('moodHandle'), document.getElementById('moodSheetCard'), closeMoodSheet);
+setupSwipeDown(document.getElementById('framingHandle'), document.getElementById('framingSheetCard'), closeFramingSheet);
 
 /* ═══════════════════════════════════════════════════ Generate ═══════════════════════════════════════════════════ */
 let generatedImageUrl = null;
@@ -2107,6 +2432,12 @@ async function generateImage() {
     aspectRatio: state.aspect,
     aspectPrompt: buildAspectPrompt(state.aspect),
   };
+  if (state.mood) {
+    payload.mood = state.mood;
+  }
+  if (state.framing) {
+    payload.framing = state.framing;
+  }
   if (state.angleEnabled) {
     payload.anglePrompt = buildAnglePrompt(state.yaw, state.pitch);
     payload.angle = { yaw: state.yaw, pitch: state.pitch, frameIdx: state.frameIdx };
