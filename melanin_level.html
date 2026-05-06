@@ -3,16 +3,19 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="theme-color" content="#0A0A0A"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <title>멜라닌 컬러 가이드</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
-:root{--bg:#0a0a0c;--card:#131316;--border:rgba(255,255,255,0.06);--sub:#999;--dim:#555;--accent:#c4b0e0;--s2color:#c4b0e0}
+:root{color-scheme:dark;--bg:#0A0A0A;--card:#1c1c1c;--border:rgba(255,255,255,0.1);--sub:#999;--dim:#555;--accent:#C7F050;--s2color:#C7F050}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{font-family:'Noto Sans KR','Outfit',sans-serif;background:var(--bg);color:#fff;min-height:100dvh;overflow-x:hidden;display:flex;justify-content:center}
 .app{width:100%;max-width:430px;min-height:100dvh;background:var(--bg);display:flex;flex-direction:column}
 @media(min-width:431px){.app{border-left:1px solid var(--border);border-right:1px solid var(--border)}}
 
-.hdr{display:flex;align-items:center;gap:10px;padding:14px 16px;background:rgba(10,10,12,0.95);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
+.hdr{display:flex;align-items:center;gap:10px;padding:14px 16px;padding-top:max(14px, calc(env(safe-area-inset-top, 0px) + 10px));background:rgba(10,10,10,0.95);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
 .hdr .back-home{
   width:32px;height:32px;border:none;background:rgba(255,255,255,0.06);
   border-radius:8px;display:flex;align-items:center;justify-content:center;
@@ -21,7 +24,7 @@ html,body{font-family:'Noto Sans KR','Outfit',sans-serif;background:var(--bg);co
 .hdr .back-home:active{transform:scale(0.92);background:rgba(255,255,255,0.1)}
 .hdr .back-home svg{width:18px;height:18px}
 .hdr h1{font-size:15px;font-weight:700;flex:1}
-.hdr .pill{font-size:10px;font-weight:600;padding:3px 10px;border-radius:99px;background:rgba(196,176,224,0.1);color:var(--accent);transition:all .3s}
+.hdr .pill{font-size:10px;font-weight:600;padding:3px 10px;border-radius:99px;background:rgba(199,240,80,0.1);color:var(--accent);transition:all .3s}
 .hdr .pill.s2{background:rgba(140,180,232,0.12);color:#8cb4e8}
 .hdr .pill.s3{background:rgba(140,232,160,0.12);color:#8ce8a0}
 .hdr-notice{font-size:9px;color:var(--dim);line-height:1.5;padding:6px 16px 2px;background:var(--bg);text-align:center}
@@ -29,7 +32,7 @@ html,body{font-family:'Noto Sans KR','Outfit',sans-serif;background:var(--bg);co
 /* ── 스텝 프로그레스 바 ── */
 .step-progress{display:flex;align-items:center;gap:0;padding:10px 16px 6px;background:var(--bg)}
 .step-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.1);transition:all .35s;flex-shrink:0}
-.step-dot.active{background:var(--accent);box-shadow:0 0 8px rgba(196,176,224,0.4)}
+.step-dot.active{background:var(--accent);box-shadow:0 0 8px rgba(199,240,80,0.4)}
 .step-dot.done{background:rgba(140,232,160,0.5)}
 .step-line{flex:1;height:2px;background:rgba(255,255,255,0.06);margin:0 4px;transition:background .3s}
 .step-line.done{background:rgba(140,232,160,0.3)}
@@ -39,9 +42,9 @@ html,body{font-family:'Noto Sans KR','Outfit',sans-serif;background:var(--bg);co
 
 /* ── 한색/난색 버튼 클릭 유도 ── */
 @keyframes cwPulse{
-  0%{box-shadow:0 0 0 0 rgba(196,176,224,0.3)}
-  70%{box-shadow:0 0 0 10px rgba(196,176,224,0)}
-  100%{box-shadow:0 0 0 0 rgba(196,176,224,0)}
+  0%{box-shadow:0 0 0 0 rgba(199,240,80,0.3)}
+  70%{box-shadow:0 0 0 10px rgba(199,240,80,0)}
+  100%{box-shadow:0 0 0 0 rgba(199,240,80,0)}
 }
 @keyframes cwShimmer{
   0%{background-position:200% 0}
@@ -49,12 +52,12 @@ html,body{font-family:'Noto Sans KR','Outfit',sans-serif;background:var(--bg);co
 }
 .cw-btn.hint{
   animation:cwPulse 2s infinite;
-  border-color:rgba(196,176,224,0.3);
+  border-color:rgba(199,240,80,0.3);
   position:relative;overflow:hidden;
 }
 .cw-btn.hint::after{
   content:'';position:absolute;inset:0;
-  background:linear-gradient(90deg,transparent 0%,rgba(196,176,224,0.08) 50%,transparent 100%);
+  background:linear-gradient(90deg,transparent 0%,rgba(199,240,80,0.08) 50%,transparent 100%);
   background-size:200% 100%;
   animation:cwShimmer 3s infinite linear;
 }
@@ -189,7 +192,7 @@ html,body{font-family:'Noto Sans KR','Outfit',sans-serif;background:var(--bg);co
   cursor:pointer;text-align:center;transition:all .25s;line-height:1.4;
 }
 .cw-btn:active{transform:scale(0.97)}
-.cw-btn.on{border-color:var(--accent);color:#fff;background:rgba(196,176,224,0.08)}
+.cw-btn.on{border-color:var(--accent);color:#fff;background:rgba(199,240,80,0.08)}
 .cw-btn .tp{font-size:13px;font-weight:800}
 .cw-btn .sub{font-size:8px;color:var(--dim);font-weight:400;margin-top:4px;line-height:1.3}
 
@@ -209,7 +212,7 @@ html,body{font-family:'Noto Sans KR','Outfit',sans-serif;background:var(--bg);co
 .summary .s-value{font-size:14px;font-weight:800;font-family:'Outfit','Noto Sans KR',sans-serif}
 .summary .arrow{color:var(--dim);font-size:16px;flex-shrink:0}
 
-.guide-box{padding:12px;border-radius:10px;background:rgba(196,176,224,0.06);border:1px solid rgba(196,176,224,0.12);display:none;animation:fadeIn .3s}
+.guide-box{padding:12px;border-radius:10px;background:rgba(199,240,80,0.06);border:1px solid rgba(199,240,80,0.12);display:none;animation:fadeIn .3s}
 .guide-box.show{display:block}
 .g-tag{display:inline-block;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;margin-bottom:6px}
 .g-tag.up{background:rgba(232,140,140,0.15);color:#e88c8c}
@@ -226,11 +229,11 @@ html,body{font-family:'Noto Sans KR','Outfit',sans-serif;background:var(--bg);co
 .s3-hd{display:flex;align-items:center;justify-content:space-between}
 .s3-ti{font-size:14px;font-weight:800}
 .s3-nav{display:flex;gap:6px}
-.s3-bk{font-size:11px;color:var(--accent);cursor:pointer;font-weight:600;padding:5px 10px;border-radius:6px;background:rgba(196,176,224,0.06);border:1px solid rgba(196,176,224,0.15);transition:all .15s}
-.s3-bk:active{transform:scale(0.96);background:rgba(196,176,224,0.12)}
+.s3-bk{font-size:11px;color:var(--accent);cursor:pointer;font-weight:600;padding:5px 10px;border-radius:6px;background:rgba(199,240,80,0.06);border:1px solid rgba(199,240,80,0.15);transition:all .15s}
+.s3-bk:active{transform:scale(0.96);background:rgba(199,240,80,0.12)}
 .s3-bk.reset{color:var(--sub);background:rgba(255,255,255,0.04);border-color:var(--border)}
 .s3-proc{font-size:12px;color:#fff;line-height:1.7;padding:12px;border-radius:10px;background:var(--card);border:1px solid var(--border);white-space:pre-line}
-.s3-sub{font-size:11px;color:var(--accent);line-height:1.6;padding:8px 12px;border-radius:8px;background:rgba(196,176,224,0.06);margin-top:-4px}
+.s3-sub{font-size:11px;color:var(--accent);line-height:1.6;padding:8px 12px;border-radius:8px;background:rgba(199,240,80,0.06);margin-top:-4px}
 .s3-sub:empty{display:none}
 .s3-det{font-size:11px;color:var(--sub);line-height:1.7;padding:10px 12px;border-radius:8px;background:rgba(255,255,255,0.03);white-space:pre-line}
 .s3-det:empty{display:none}
