@@ -7,57 +7,46 @@
 // 처리 흐름:
 //   1. 세션 검증 (쿠키에서 member_id 추출)
 //   2. 1크레딧 차감
-//   3. 프롬프트 합성: 인물 코어 → 앵글(가이드) → 디자이너 입력 → 해상도
-//      ⭐ 디자이너 입력이 마지막 = AI에 가장 강하게 인식
+//   3. 프롬프트 합성 (4축 직교):
+//      [무드] → [프레이밍] → [앵글(가이드)] → [디자이너 MAIN] → [해상도]
+//      ⭐ 무드 = 'hair_skin_precision'/'editorial_lookbook'/'y2k'/null(자유)
+//      ⭐ 프레이밍 = 'chest_up'/'upper_body'/'full_body'/null
+//      ⭐ 무드 null = 코어 X = 카탈로그/제품 자유 모드
+//      ⭐ 디자이너 MAIN = 가장 강한 위치 (시선/표정 우선)
 //   4. 3단 Fallback 체인 호출:
 //      ① Vertex AI 서울 (asia-northeast3) Streaming     ← 1차
 //      ② Vertex AI 글로벌 (global) Streaming             ← 2차
 //      ③ Generative Language API (HAIRO_NANOBANANA2)     ← 3차 안전망
-//        ※ 환경변수가 있으면 자동으로 안전망 작동
 //   5. 응답에서 이미지 추출 → 프론트로 base64 반환
 //   6. 모든 fallback 실패 시 크레딧 자동 환불
-//
-// 핵심 변경 (Vertex AI 이전):
-//   - Preview 모델 Dynamic Shared Quota 문제 → Vertex AI dedicated 라인으로 우회
-//   - 인증: API 키 → 서비스 계정 OAuth 토큰 (Bearer)
-//   - 한국 서울 리전 직접 사용 (네트워크 RTT 단축)
-//   - 글로벌 엔드포인트 fallback (Google 권장: 429/hang 줄임)
 // ═══════════════════════════════════════════════════════════════
 
 import { getSessionFromRequest } from '../lib/session.js';
 import { getSupabase } from '../lib/supabase.js';
-import { getVertexAccessToken, getProjectId } from '../lib/vertex-auth.js';
 
-// ─── 모델 / 엔드포인트 ──────────────────────────────────────────
-const MODEL_ID = 'gemini-3.1-flash-image-preview';
-
-// Vertex AI 서울 리전
-const VERTEX_SEOUL_REGION = 'asia-northeast3';
-
-// Vertex AI 글로벌 엔드포인트 (서울 fail 시 fallback)
-const VERTEX_GLOBAL_REGION = 'global';
-
-// Vertex AI 엔드포인트 빌더
-function buildVertexUrl(region, projectId, streaming) {
-  const subdomain = region === 'global' ? 'aiplatform' : `${region}-aiplatform`;
-  const action = streaming ? 'streamGenerateContent?alt=sse' : 'generateContent';
-  return `https://${subdomain}.googleapis.com/v1/projects/${projectId}/locations/${region}/publishers/google/models/${MODEL_ID}:${action}`;
-}
-
-// 안전망: 기존 Generative Language API (3차 fallback)
-const LEGACY_STREAM_URL =
+// Streaming 엔드포인트 (alt=sse 추가하면 SSE 형식)
+const GEMINI_STREAM_URL =
   'https://generativelanguage.googleapis.com/v1beta/models/' +
-  `${MODEL_ID}:streamGenerateContent?alt=sse`;
-const LEGACY_NORMAL_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/' +
-  `${MODEL_ID}:generateContent`;
+  'gemini-3.1-flash-image-preview:streamGenerateContent?alt=sse';
 
-// ─── 정책 상수 ──────────────────────────────────────────────────
+// Fallback: 일반 엔드포인트 (streaming 실패 시)
+const GEMINI_NORMAL_URL =
+  'https://generativelanguage.googleapis.com/v1beta/models/' +
+  'gemini-3.1-flash-image-preview:generateContent';
+
+// 이미지 1장 생성 = 몇 크레딧 차감할지
 const COST_CREDITS = 1;
+
+// 참조 사진 최대 장수
 const MAX_REFERENCES = 5;
 
-// ─── 인물 코어 (디자이너에게 노출 X) ───────────────────────────
-const PERSON_CORE = `photorealistic image,
+// ─── 무드 프리셋 ────────────────────────────────────────────────
+// 디자이너가 무드 안 고르면(`null`) 코어 X = 완전 자유 (카탈로그/제품용)
+// 무드 선택 시 해당 프리셋이 코어 역할도 함 (피부/머리 디테일 포함)
+const MOOD_PRESETS = {
+  // 헤어·피부 정밀 — 시술 검토용
+  hair_skin_precision: `photorealistic image,
+authentic raw photo quality,
 
 smooth natural skin with very fine pore detail,
 flawless yet realistic skin,
@@ -69,10 +58,77 @@ visible hair gloss and natural shine,
 a few subtle flyaway strands near hairline,
 realistic hair root density,
 
-no AI smoothing artifacts,
-authentic raw photo quality`;
+natural facial asymmetry,
+realistic catchlight in eyes,
+authentic micro-expressions,
 
-// ─── Vercel 설정 ────────────────────────────────────────────────
+studio or salon natural lighting,
+neutral color tone,
+soft shadows,
+
+no AI smoothing artifacts,
+authentic raw photo grain`,
+
+  // 화보·룩북 — 포트폴리오/매장 비주얼/SNS 마케팅
+  editorial_lookbook: `photorealistic image,
+high-end fashion editorial aesthetic,
+single frame composition,
+
+refined color grading,
+warm highlights with cool shadows,
+balanced contrast with rich blacks,
+soft directional lighting,
+
+clean polished skin,
+editorial-grade skin tone finish,
+defined hair detail with sharp strand separation,
+precise hair texture rendering,
+
+shot on medium format camera with prime lens,
+shallow depth of field with smooth bokeh,
+sharp clear focus on subject,
+
+fine subtle film grain,
+print-quality magazine finish,
+refined studio atmosphere or minimal salon environment,
+professional lighting setup`,
+
+  // Y2K — 트렌디 SNS / 인플루언서 룩
+  y2k: `photorealistic image,
+2000s korean influencer aesthetic,
+single frame composition,
+
+warm peach and pink tones,
+soft pinkish skin glow,
+slightly idealized smooth skin,
+subtle natural blush on cheeks and nose tip,
+glossy lip pearl shine,
+
+pearl highlight on hair strands,
+soft hair sheen,
+gentle flyaway strands,
+
+warm indoor evening lighting,
+yellow-pink ambient warmth,
+soft glow filter,
+
+2000s digital camera nostalgia,
+slight film grain texture,
+vintage digicam color palette,
+
+trendy korean instagram aesthetic,
+influencer-style soft retouch,
+emotional warm atmosphere`,
+};
+
+// ─── 프레이밍 프리셋 ────────────────────────────────────────────
+const FRAMING_PRESETS = {
+  chest_up: 'chest-up framing, subject from upper chest to head, hair fully visible',
+  upper_body: 'upper body framing, subject from waist to head with shoulders fully shown',
+  full_body: 'full body framing, head to feet visible, subject standing or seated naturally',
+};
+
+// Vercel 설정
 export const config = {
   maxDuration: 180,
   api: {
@@ -82,9 +138,6 @@ export const config = {
   },
 };
 
-// ════════════════════════════════════════════════════════════════
-// 메인 핸들러
-// ════════════════════════════════════════════════════════════════
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ code: 'method_not_allowed' });
@@ -112,6 +165,8 @@ export default async function handler(req, res) {
     aspectRatio,
     anglePrompt,
     angle,
+    mood,        // ⭐ NEW: 'hair_skin_precision' | 'editorial_lookbook' | 'y2k' | null
+    framing,     // ⭐ NEW: 'chest_up' | 'upper_body' | 'full_body' | null
     references,
   } = body;
 
@@ -143,10 +198,10 @@ export default async function handler(req, res) {
   }
 
   // ─── 3. 환경변수 확인 ────────────────────────────────────────
-  // GOOGLE_SERVICE_ACCOUNT_JSON 필수 (Vertex AI 인증용)
-  if (!process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
-    console.error('[generate-image] GOOGLE_SERVICE_ACCOUNT_JSON not set');
-    return res.status(500).json({ code: 'server_error', message: '서버 인증 설정이 누락되었습니다.' });
+  const geminiKey = process.env.HAIRO_NANOBANANA2;
+  if (!geminiKey) {
+    console.error('[generate-image] HAIRO_NANOBANANA2 not set');
+    return res.status(500).json({ code: 'server_error' });
   }
 
   // ─── 4. 크레딧 차감 (RPC) ───────────────────────────────────
@@ -188,20 +243,42 @@ export default async function handler(req, res) {
   }
 
   // ─── 5. 최종 프롬프트 합성 ──────────────────────────────────
-  const promptParts = [PERSON_CORE];
+  // 합성 순서: [무드] → [프레이밍] → [앵글(가이드)] → [디자이너 MAIN] → [해상도]
+  //
+  // 정책:
+  //   - 무드 = null (디폴트) → 코어 X = 완전 자유 (카탈로그/제품/공간 등)
+  //   - 무드 선택 시 → 해당 프리셋이 코어 역할 (피부/머리/조명까지 정의)
+  //   - 프레이밍 선택 시 → 가슴선/상반신/전신 한 줄 추가
+  //   - 앵글 = 가이드라인으로 약화 (시선/표정은 MAIN 우선)
+  //   - 디자이너 MAIN = 가장 강한 위치 + 명시적 라벨
+  const promptParts = [];
 
+  // ⭐ 무드 (선택사항, 디폴트 = 무드 X = 자유)
+  if (mood && typeof mood === 'string' && MOOD_PRESETS[mood]) {
+    promptParts.push(MOOD_PRESETS[mood]);
+  }
+
+  // ⭐ 프레이밍 (선택사항)
+  if (framing && typeof framing === 'string' && FRAMING_PRESETS[framing]) {
+    promptParts.push(FRAMING_PRESETS[framing]);
+  }
+
+  // 앵글 가이드라인 (충돌 위험 있어 약화 표현)
   if (anglePrompt && typeof anglePrompt === 'string') {
     promptParts.push(
       `camera angle guideline (this is just a reference; the subject's expression, gaze direction, and emotional state described in the MAIN INSTRUCTION below take priority over this camera angle): ${anglePrompt}`
     );
   }
 
+  // 디자이너 입력 = 가장 강한 위치 + 명시적 라벨
   promptParts.push(`MAIN INSTRUCTION (highest priority - follow this exactly): ${userPrompt.trim()}`);
+
+  // 해상도 비율
   promptParts.push(aspectPrompt || 'vertical 9:16 aspect ratio, portrait orientation');
 
   const finalPrompt = promptParts.join('\n\n');
 
-  // ─── 6. 요청 바디 빌드 ──────────────────────────────────────
+  // ─── 6. Gemini API 호출 ─────────────────────────────────────
   const parts = [];
   for (const r of refs) {
     parts.push({
@@ -230,112 +307,65 @@ export default async function handler(req, res) {
     promptLen: finalPrompt.length,
     refsCount: refs.length,
     aspectRatio: aspectForApi,
+    mood: mood || null,
+    framing: framing || null,
   });
 
-  // ─── 7. 3단 Fallback 체인 호출 ──────────────────────────────
+  // ── 1차: Streaming 시도 ──
   let imagePart = null;
   let textPart = null;
   let finishReason = null;
   let lastError = null;
-  let usedRoute = null;
 
-  // 액세스 토큰 발급 (Vertex AI 1·2차에 필요)
-  let vertexAccessToken = null;
-  let vertexProjectId = null;
   try {
-    vertexAccessToken = await getVertexAccessToken();
-    vertexProjectId = getProjectId();
-  } catch (authErr) {
-    console.error('[generate-image] vertex auth failed:', authErr.message);
-    // 액세스 토큰 못 받으면 바로 3차로 (안전망)
-  }
+    const streamResult = await callGeminiStream(GEMINI_STREAM_URL, geminiKey, requestBody);
+    imagePart = streamResult.imagePart;
+    textPart = streamResult.textPart;
+    finishReason = streamResult.finishReason;
+    console.log(`[generate-image] streaming success in ${streamResult.elapsedMs}ms`);
+  } catch (streamErr) {
+    lastError = streamErr;
+    if (streamErr.firstTokenTimeout) {
+      console.error(`[generate-image] streaming first-token timeout (8s) - Google hang detected, falling back fast`);
+    } else {
+      console.error(`[generate-image] streaming failed: ${streamErr.name} - ${streamErr.message}`);
+    }
 
-  // ─── 1차: Vertex AI 서울 ─────
-  if (vertexAccessToken && vertexProjectId) {
+    // ── 2차 fallback: 일반 호출 ──
     try {
-      const url = buildVertexUrl(VERTEX_SEOUL_REGION, vertexProjectId, true);
-      const r = await callVertexStream(url, vertexAccessToken, requestBody);
-      imagePart = r.imagePart;
-      textPart = r.textPart;
-      finishReason = r.finishReason;
-      usedRoute = 'vertex-seoul-stream';
-      console.log(`[generate-image] vertex-seoul stream success in ${r.elapsedMs}ms`);
-    } catch (e1) {
-      lastError = e1;
-      console.error(`[generate-image] vertex-seoul stream failed: ${e1.name} - ${e1.message}`);
+      console.log('[generate-image] falling back to normal endpoint');
+      const fallbackResult = await callGeminiNormal(GEMINI_NORMAL_URL, geminiKey, requestBody);
+      imagePart = fallbackResult.imagePart;
+      textPart = fallbackResult.textPart;
+      finishReason = fallbackResult.finishReason;
+      console.log(`[generate-image] fallback success in ${fallbackResult.elapsedMs}ms`);
+    } catch (fallbackErr) {
+      console.error(`[generate-image] fallback failed: ${fallbackErr.name} - ${fallbackErr.message}`);
+      await refundCredit(supabase, memberId, generationRef, result.is_admin);
 
-      // ─── 2차: Vertex AI 글로벌 ─────
-      try {
-        const url = buildVertexUrl(VERTEX_GLOBAL_REGION, vertexProjectId, true);
-        const r = await callVertexStream(url, vertexAccessToken, requestBody);
-        imagePart = r.imagePart;
-        textPart = r.textPart;
-        finishReason = r.finishReason;
-        usedRoute = 'vertex-global-stream';
-        console.log(`[generate-image] vertex-global stream success in ${r.elapsedMs}ms`);
-      } catch (e2) {
-        lastError = e2;
-        console.error(`[generate-image] vertex-global stream failed: ${e2.name} - ${e2.message}`);
-        // 3차로 fall through
+      if (fallbackErr.name === 'AbortError' || streamErr.name === 'AbortError') {
+        return res.status(504).json({
+          code: 'gemini_timeout',
+          message: 'AI 서버 응답이 느려요. 잠시 후 다시 시도해주세요. 크레딧은 복구되었습니다.',
+        });
       }
-    }
-  }
-
-  // ─── 3차: Legacy Generative Language API (안전망) ─────
-  if (!imagePart && process.env.HAIRO_NANOBANANA2) {
-    console.log('[generate-image] falling back to legacy Generative Language API');
-    try {
-      const r = await callLegacyStream(LEGACY_STREAM_URL, process.env.HAIRO_NANOBANANA2, requestBody);
-      imagePart = r.imagePart;
-      textPart = r.textPart;
-      finishReason = r.finishReason;
-      usedRoute = 'legacy-stream';
-      console.log(`[generate-image] legacy stream success in ${r.elapsedMs}ms`);
-    } catch (e3) {
-      lastError = e3;
-      console.error(`[generate-image] legacy stream failed: ${e3.name} - ${e3.message}`);
-
-      // 마지막 발악: legacy normal endpoint
-      try {
-        const r = await callLegacyNormal(LEGACY_NORMAL_URL, process.env.HAIRO_NANOBANANA2, requestBody);
-        imagePart = r.imagePart;
-        textPart = r.textPart;
-        finishReason = r.finishReason;
-        usedRoute = 'legacy-normal';
-        console.log(`[generate-image] legacy normal success in ${r.elapsedMs}ms`);
-      } catch (e4) {
-        lastError = e4;
-        console.error(`[generate-image] legacy normal failed: ${e4.name} - ${e4.message}`);
+      if (fallbackErr.status) {
+        return res.status(502).json({
+          code: 'gemini_error',
+          message: '이미지 생성 중 오류가 발생했습니다. 크레딧은 복구되었습니다.',
+          debug: { status: fallbackErr.status, detail: fallbackErr.detail || '' },
+        });
       }
-    }
-  }
-
-  // ─── 8. 모든 경로 실패 ──────────────────────────────────────
-  if (!imagePart) {
-    await refundCredit(supabase, memberId, generationRef, result.is_admin);
-
-    if (lastError?.name === 'AbortError') {
-      return res.status(504).json({
-        code: 'gemini_timeout',
-        message: 'AI 서버 응답이 느려요. 잠시 후 다시 시도해주세요. 크레딧은 복구되었습니다.',
-      });
-    }
-    if (lastError?.status) {
       return res.status(502).json({
         code: 'gemini_error',
-        message: '이미지 생성 중 오류가 발생했습니다. 크레딧은 복구되었습니다.',
-        debug: { status: lastError.status, detail: lastError.detail || '' },
+        message: 'AI 서버와 연결할 수 없습니다. 크레딧은 복구되었습니다.',
+        debug: { error: fallbackErr.message },
       });
     }
-    return res.status(502).json({
-      code: 'gemini_error',
-      message: 'AI 서버와 연결할 수 없습니다. 크레딧은 복구되었습니다.',
-      debug: { error: lastError?.message || 'unknown' },
-    });
   }
 
-  // ─── 9. 응답에 이미지 데이터 없음 (안전 필터 등) ─────────────
-  if (!imagePart.data) {
+  // ─── 7. 응답에서 이미지 추출 ────────────────────────────────
+  if (!imagePart || !imagePart.data) {
     await refundCredit(supabase, memberId, generationRef, result.is_admin);
     let userMsg = '이미지가 생성되지 않았어요. 크레딧은 복구되었습니다.';
     if (finishReason === 'SAFETY' || finishReason === 'IMAGE_SAFETY') {
@@ -352,7 +382,7 @@ export default async function handler(req, res) {
     });
   }
 
-  // ─── 10. 성공 응답 ──────────────────────────────────────────
+  // ─── 8. 성공 응답 ───────────────────────────────────────────
   return res.status(200).json({
     imageBase64: imagePart.data,
     mimeType: imagePart.mime_type || imagePart.mimeType || 'image/png',
@@ -360,50 +390,53 @@ export default async function handler(req, res) {
     is_admin: result.is_admin,
     aspectRatio: aspectRatio || '9:16',
     angle: angle || null,
-    route: usedRoute,  // 디버그용 - 어느 경로로 성공했는지
   });
 }
 
-// ════════════════════════════════════════════════════════════════
-// Vertex AI Streaming 호출 (Bearer 토큰 인증)
-// ════════════════════════════════════════════════════════════════
-async function callVertexStream(url, accessToken, requestBody) {
-  return await callStreamingEndpoint(url, requestBody, {
-    'Authorization': `Bearer ${accessToken}`,
-    'Content-Type': 'application/json',
-    'Accept': 'text/event-stream',
-  }, 60000);
-}
-
-// ════════════════════════════════════════════════════════════════
-// Legacy Streaming 호출 (API 키 인증)
-// ════════════════════════════════════════════════════════════════
-async function callLegacyStream(url, apiKey, requestBody) {
-  return await callStreamingEndpoint(url, requestBody, {
-    'Content-Type': 'application/json',
-    'x-goog-api-key': apiKey,
-    'Accept': 'text/event-stream',
-  }, 60000);
-}
-
-// ════════════════════════════════════════════════════════════════
-// 공통 Streaming 호출 (SSE 파싱)
-// ════════════════════════════════════════════════════════════════
-async function callStreamingEndpoint(url, requestBody, headers, timeoutMs) {
+// ════════════════════════════════════════════════════════════
+// Streaming 호출 헬퍼 (SSE 파싱 + 첫 토큰 timeout)
+// ════════════════════════════════════════════════════════════
+// ⭐ 핵심: "첫 토큰 8초 timeout" + "전체 45초 timeout"
+//   - 첫 토큰 8초 안 오면 = Google API hang으로 판단 → 즉시 abort
+//   - 첫 토큰 받으면 전체 timeout만 적용 (정상 응답은 영향 0)
+//   - hang 케이스의 worst case를 60초 → 8초로 단축
+async function callGeminiStream(url, apiKey, requestBody) {
   const startTime = Date.now();
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  const FIRST_TOKEN_TIMEOUT_MS = 8000;   // 첫 토큰 안 오면 hang으로 판단
+  const TOTAL_TIMEOUT_MS = 45000;        // 첫 토큰 받은 후 전체 응답 timeout
+
+  // 1. 전체 timeout (안전망)
+  const totalTimeoutId = setTimeout(() => {
+    controller.abort('total_timeout');
+  }, TOTAL_TIMEOUT_MS);
+
+  // 2. 첫 토큰 timeout (hang 감지)
+  let firstTokenReceived = false;
+  let abortReason = null;
+  const firstTokenTimeoutId = setTimeout(() => {
+    if (!firstTokenReceived) {
+      abortReason = 'first_token_timeout';
+      controller.abort('first_token_timeout');
+    }
+  }, FIRST_TOKEN_TIMEOUT_MS);
 
   try {
     const response = await fetch(url, {
       method: 'POST',
-      headers: headers,
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey,
+        'Accept': 'text/event-stream',
+      },
       body: requestBody,
       signal: controller.signal,
     });
 
     if (!response.ok) {
-      clearTimeout(timeoutId);
+      clearTimeout(totalTimeoutId);
+      clearTimeout(firstTokenTimeoutId);
       const errorText = await response.text();
       const err = new Error(`stream HTTP ${response.status}`);
       err.status = response.status;
@@ -412,7 +445,8 @@ async function callStreamingEndpoint(url, requestBody, headers, timeoutMs) {
     }
 
     if (!response.body) {
-      clearTimeout(timeoutId);
+      clearTimeout(totalTimeoutId);
+      clearTimeout(firstTokenTimeoutId);
       throw new Error('no response body');
     }
 
@@ -428,11 +462,18 @@ async function callStreamingEndpoint(url, requestBody, headers, timeoutMs) {
       const { done, value } = await reader.read();
       if (done) break;
 
+      // ⭐ 첫 청크 도착 → 첫 토큰 timeout 해제
+      if (!firstTokenReceived) {
+        firstTokenReceived = true;
+        clearTimeout(firstTokenTimeoutId);
+        console.log(`[generate-image] first token received in ${Date.now() - startTime}ms`);
+      }
+
       buffer += decoder.decode(value, { stream: true });
 
       // SSE 형식: "data: {...}\n\n"
       const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
+      buffer = lines.pop() || ''; // 마지막 미완성 줄 보존
 
       for (const line of lines) {
         if (!line.startsWith('data: ')) continue;
@@ -452,12 +493,13 @@ async function callStreamingEndpoint(url, requestBody, headers, timeoutMs) {
             if (p.text) textPart = (textPart || '') + p.text;
           }
         } catch (parseErr) {
-          // 일부 청크 파싱 오류 무시
+          // 무시 — 일부 청크가 깨질 수 있음
         }
       }
     }
 
-    clearTimeout(timeoutId);
+    clearTimeout(totalTimeoutId);
+    clearTimeout(firstTokenTimeoutId);
     return {
       imagePart,
       textPart,
@@ -465,18 +507,26 @@ async function callStreamingEndpoint(url, requestBody, headers, timeoutMs) {
       elapsedMs: Date.now() - startTime,
     };
   } catch (err) {
-    clearTimeout(timeoutId);
+    clearTimeout(totalTimeoutId);
+    clearTimeout(firstTokenTimeoutId);
+    // 첫 토큰 timeout으로 abort된 경우 명시
+    if (err.name === 'AbortError' && abortReason === 'first_token_timeout') {
+      const e = new Error('first token timeout (8s) - Google API hang');
+      e.name = 'AbortError';
+      e.firstTokenTimeout = true;
+      throw e;
+    }
     throw err;
   }
 }
 
-// ════════════════════════════════════════════════════════════════
-// Legacy 일반 호출 (3차의 마지막 발악)
-// ════════════════════════════════════════════════════════════════
-async function callLegacyNormal(url, apiKey, requestBody) {
+// ════════════════════════════════════════════════════════════
+// 일반 호출 헬퍼 (Fallback - 30초 timeout)
+// ════════════════════════════════════════════════════════════
+async function callGeminiNormal(url, apiKey, requestBody) {
   const startTime = Date.now();
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 45000);
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
 
   try {
     const response = await fetch(url, {
@@ -493,7 +543,7 @@ async function callLegacyNormal(url, apiKey, requestBody) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      const err = new Error(`legacy HTTP ${response.status}`);
+      const err = new Error(`normal HTTP ${response.status}`);
       err.status = response.status;
       err.detail = errorText.slice(0, 500);
       throw err;
@@ -525,9 +575,9 @@ async function callLegacyNormal(url, apiKey, requestBody) {
   }
 }
 
-// ════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
 // 크레딧 환불
-// ════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
 async function refundCredit(supabase, memberId, reference, isAdmin) {
   if (isAdmin) return;
   try {
