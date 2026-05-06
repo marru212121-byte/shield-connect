@@ -450,23 +450,15 @@ async function callGeminiStream(url, apiKey, requestBody) {
   const startTime = Date.now();
   const controller = new AbortController();
 
-  const FIRST_TOKEN_TIMEOUT_MS = 8000;   // 첫 토큰 안 오면 hang으로 판단
-  const TOTAL_TIMEOUT_MS = 45000;        // 첫 토큰 받은 후 전체 응답 timeout
+  // 전체 timeout 150초 (Vercel maxDuration 180초 안쪽 안전 마진)
+  // 첫 토큰 timeout 제거 - 정상 응답을 abort하는 부작용 더 큼
+  const TOTAL_TIMEOUT_MS = 150000;
 
-  // 1. 전체 timeout (안전망)
   const totalTimeoutId = setTimeout(() => {
     controller.abort('total_timeout');
   }, TOTAL_TIMEOUT_MS);
 
-  // 2. 첫 토큰 timeout (hang 감지)
-  let firstTokenReceived = false;
-  let abortReason = null;
-  const firstTokenTimeoutId = setTimeout(() => {
-    if (!firstTokenReceived) {
-      abortReason = 'first_token_timeout';
-      controller.abort('first_token_timeout');
-    }
-  }, FIRST_TOKEN_TIMEOUT_MS);
+  let firstTokenLogged = false;
 
   try {
     const response = await fetch(url, {
@@ -482,7 +474,6 @@ async function callGeminiStream(url, apiKey, requestBody) {
 
     if (!response.ok) {
       clearTimeout(totalTimeoutId);
-      clearTimeout(firstTokenTimeoutId);
       const errorText = await response.text();
       const err = new Error(`stream HTTP ${response.status}`);
       err.status = response.status;
@@ -492,7 +483,6 @@ async function callGeminiStream(url, apiKey, requestBody) {
 
     if (!response.body) {
       clearTimeout(totalTimeoutId);
-      clearTimeout(firstTokenTimeoutId);
       throw new Error('no response body');
     }
 
@@ -508,10 +498,9 @@ async function callGeminiStream(url, apiKey, requestBody) {
       const { done, value } = await reader.read();
       if (done) break;
 
-      // ⭐ 첫 청크 도착 → 첫 토큰 timeout 해제
-      if (!firstTokenReceived) {
-        firstTokenReceived = true;
-        clearTimeout(firstTokenTimeoutId);
+      // 첫 청크 도착 로그 (한 번만)
+      if (!firstTokenLogged) {
+        firstTokenLogged = true;
         console.log(`[generate-image] first token received in ${Date.now() - startTime}ms`);
       }
 
@@ -545,7 +534,6 @@ async function callGeminiStream(url, apiKey, requestBody) {
     }
 
     clearTimeout(totalTimeoutId);
-    clearTimeout(firstTokenTimeoutId);
     return {
       imagePart,
       textPart,
@@ -554,14 +542,6 @@ async function callGeminiStream(url, apiKey, requestBody) {
     };
   } catch (err) {
     clearTimeout(totalTimeoutId);
-    clearTimeout(firstTokenTimeoutId);
-    // 첫 토큰 timeout으로 abort된 경우 명시
-    if (err.name === 'AbortError' && abortReason === 'first_token_timeout') {
-      const e = new Error('first token timeout (8s) - Google API hang');
-      e.name = 'AbortError';
-      e.firstTokenTimeout = true;
-      throw e;
-    }
     throw err;
   }
 }
@@ -574,21 +554,15 @@ async function callVertexStream(url, accessToken, requestBody) {
   const startTime = Date.now();
   const controller = new AbortController();
 
-  const FIRST_TOKEN_TIMEOUT_MS = 8000;
-  const TOTAL_TIMEOUT_MS = 45000;
+  // 전체 timeout 150초 (Vercel maxDuration 180초 안쪽 안전 마진)
+  // 첫 토큰 timeout 제거 - 정상 응답을 abort하는 부작용 더 큼
+  const TOTAL_TIMEOUT_MS = 150000;
 
   const totalTimeoutId = setTimeout(() => {
     controller.abort('total_timeout');
   }, TOTAL_TIMEOUT_MS);
 
-  let firstTokenReceived = false;
-  let abortReason = null;
-  const firstTokenTimeoutId = setTimeout(() => {
-    if (!firstTokenReceived) {
-      abortReason = 'first_token_timeout';
-      controller.abort('first_token_timeout');
-    }
-  }, FIRST_TOKEN_TIMEOUT_MS);
+  let firstTokenLogged = false;
 
   try {
     const response = await fetch(url, {
@@ -604,7 +578,6 @@ async function callVertexStream(url, accessToken, requestBody) {
 
     if (!response.ok) {
       clearTimeout(totalTimeoutId);
-      clearTimeout(firstTokenTimeoutId);
       const errorText = await response.text();
       const err = new Error(`stream HTTP ${response.status}`);
       err.status = response.status;
@@ -614,7 +587,6 @@ async function callVertexStream(url, accessToken, requestBody) {
 
     if (!response.body) {
       clearTimeout(totalTimeoutId);
-      clearTimeout(firstTokenTimeoutId);
       throw new Error('no response body');
     }
 
@@ -629,9 +601,8 @@ async function callVertexStream(url, accessToken, requestBody) {
       const { done, value } = await reader.read();
       if (done) break;
 
-      if (!firstTokenReceived) {
-        firstTokenReceived = true;
-        clearTimeout(firstTokenTimeoutId);
+      if (!firstTokenLogged) {
+        firstTokenLogged = true;
         console.log(`[generate-image] vertex first token received in ${Date.now() - startTime}ms`);
       }
 
@@ -663,7 +634,6 @@ async function callVertexStream(url, accessToken, requestBody) {
     }
 
     clearTimeout(totalTimeoutId);
-    clearTimeout(firstTokenTimeoutId);
     return {
       imagePart,
       textPart,
@@ -672,13 +642,6 @@ async function callVertexStream(url, accessToken, requestBody) {
     };
   } catch (err) {
     clearTimeout(totalTimeoutId);
-    clearTimeout(firstTokenTimeoutId);
-    if (err.name === 'AbortError' && abortReason === 'first_token_timeout') {
-      const e = new Error('vertex first token timeout (8s)');
-      e.name = 'AbortError';
-      e.firstTokenTimeout = true;
-      throw e;
-    }
     throw err;
   }
 }
@@ -689,7 +652,7 @@ async function callVertexStream(url, accessToken, requestBody) {
 async function callGeminiNormal(url, apiKey, requestBody) {
   const startTime = Date.now();
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
 
   try {
     const response = await fetch(url, {
