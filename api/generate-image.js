@@ -11,11 +11,8 @@
 //   4. Gemini 3.1 Flash Image (Nano Banana 2) Streaming API 호출
 //      ⭐ generateContent 대신 streamGenerateContent 사용
 //        - 첫 청크 즉시 받기 시작 → socket hang 방지
-//        - "첫 토큰 8초 timeout" 박음 → hang 빠르게 감지 후 fallback
-//          (정상 응답에는 영향 0, hang 케이스만 worst case 단축)
-//        - 첫 토큰 받은 후엔 전체 45초까지 대기
-//   5. Streaming 실패 시 일반 호출로 자동 fallback (30초 timeout)
-//      Worst case: 8 + 30 = 38초 (이전 60+45=105초 대비 ↓↓)
+//        - 1차 timeout 후 2차 재시도 패턴 해소
+//   5. Streaming 실패 시 일반 호출로 자동 fallback
 //   6. 응답에서 이미지 추출 → 프론트로 base64 반환
 //   7. 실패 시 크레딧 자동 환불
 // ═══════════════════════════════════════════════════════════════
@@ -231,11 +228,7 @@ export default async function handler(req, res) {
     console.log(`[generate-image] streaming success in ${streamResult.elapsedMs}ms`);
   } catch (streamErr) {
     lastError = streamErr;
-    if (streamErr.firstTokenTimeout) {
-      console.error(`[generate-image] streaming first-token timeout (8s) - Google hang detected, falling back fast`);
-    } else {
-      console.error(`[generate-image] streaming failed: ${streamErr.name} - ${streamErr.message}`);
-    }
+    console.error(`[generate-image] streaming failed: ${streamErr.name} - ${streamErr.message}`);
 
     // ── 2차 fallback: 일반 호출 ──
     try {
@@ -300,33 +293,13 @@ export default async function handler(req, res) {
 }
 
 // ════════════════════════════════════════════════════════════
-// Streaming 호출 헬퍼 (SSE 파싱 + 첫 토큰 timeout)
+// Streaming 호출 헬퍼 (SSE 파싱)
 // ════════════════════════════════════════════════════════════
-// ⭐ 핵심: "첫 토큰 8초 timeout" + "전체 45초 timeout"
-//   - 첫 토큰 8초 안 오면 = Google API hang으로 판단 → 즉시 abort
-//   - 첫 토큰 받으면 전체 timeout만 적용 (정상 응답은 영향 0)
-//   - hang 케이스의 worst case를 60초 → 8초로 단축
 async function callGeminiStream(url, apiKey, requestBody) {
   const startTime = Date.now();
   const controller = new AbortController();
-
-  const FIRST_TOKEN_TIMEOUT_MS = 8000;   // 첫 토큰 안 오면 hang으로 판단
-  const TOTAL_TIMEOUT_MS = 45000;        // 첫 토큰 받은 후 전체 응답 timeout
-
-  // 1. 전체 timeout (안전망)
-  const totalTimeoutId = setTimeout(() => {
-    controller.abort('total_timeout');
-  }, TOTAL_TIMEOUT_MS);
-
-  // 2. 첫 토큰 timeout (hang 감지)
-  let firstTokenReceived = false;
-  let abortReason = null;
-  const firstTokenTimeoutId = setTimeout(() => {
-    if (!firstTokenReceived) {
-      abortReason = 'first_token_timeout';
-      controller.abort('first_token_timeout');
-    }
-  }, FIRST_TOKEN_TIMEOUT_MS);
+  // 60초 timeout - streaming은 첫 청크가 빨리 와야 정상
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
 
   try {
     const response = await fetch(url, {
@@ -341,8 +314,7 @@ async function callGeminiStream(url, apiKey, requestBody) {
     });
 
     if (!response.ok) {
-      clearTimeout(totalTimeoutId);
-      clearTimeout(firstTokenTimeoutId);
+      clearTimeout(timeoutId);
       const errorText = await response.text();
       const err = new Error(`stream HTTP ${response.status}`);
       err.status = response.status;
@@ -351,8 +323,7 @@ async function callGeminiStream(url, apiKey, requestBody) {
     }
 
     if (!response.body) {
-      clearTimeout(totalTimeoutId);
-      clearTimeout(firstTokenTimeoutId);
+      clearTimeout(timeoutId);
       throw new Error('no response body');
     }
 
@@ -367,13 +338,6 @@ async function callGeminiStream(url, apiKey, requestBody) {
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-
-      // ⭐ 첫 청크 도착 → 첫 토큰 timeout 해제
-      if (!firstTokenReceived) {
-        firstTokenReceived = true;
-        clearTimeout(firstTokenTimeoutId);
-        console.log(`[generate-image] first token received in ${Date.now() - startTime}ms`);
-      }
 
       buffer += decoder.decode(value, { stream: true });
 
@@ -404,8 +368,7 @@ async function callGeminiStream(url, apiKey, requestBody) {
       }
     }
 
-    clearTimeout(totalTimeoutId);
-    clearTimeout(firstTokenTimeoutId);
+    clearTimeout(timeoutId);
     return {
       imagePart,
       textPart,
@@ -413,26 +376,18 @@ async function callGeminiStream(url, apiKey, requestBody) {
       elapsedMs: Date.now() - startTime,
     };
   } catch (err) {
-    clearTimeout(totalTimeoutId);
-    clearTimeout(firstTokenTimeoutId);
-    // 첫 토큰 timeout으로 abort된 경우 명시
-    if (err.name === 'AbortError' && abortReason === 'first_token_timeout') {
-      const e = new Error('first token timeout (8s) - Google API hang');
-      e.name = 'AbortError';
-      e.firstTokenTimeout = true;
-      throw e;
-    }
+    clearTimeout(timeoutId);
     throw err;
   }
 }
 
 // ════════════════════════════════════════════════════════════
-// 일반 호출 헬퍼 (Fallback - 30초 timeout)
+// 일반 호출 헬퍼 (Fallback - 45초 timeout)
 // ════════════════════════════════════════════════════════════
 async function callGeminiNormal(url, apiKey, requestBody) {
   const startTime = Date.now();
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  const timeoutId = setTimeout(() => controller.abort(), 45000);
 
   try {
     const response = await fetch(url, {
