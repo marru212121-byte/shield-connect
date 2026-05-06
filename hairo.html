@@ -370,10 +370,38 @@ input, textarea { font-family: inherit; }
   font-size: 13px;
   color: var(--text-muted);
   margin-bottom: 4px;
+  transition: opacity 0.3s;
 }
 .loading-sub {
   font-size: 11px;
   color: var(--text-faint);
+  margin-bottom: 18px;
+}
+/* 프로그레스 바 */
+.loading-progress {
+  width: 200px;
+  height: 3px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 999px;
+  margin: 0 auto;
+  overflow: hidden;
+  position: relative;
+}
+.loading-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+  width: 0%;
+  transition: width 0.4s ease-out;
+  box-shadow: 0 0 8px rgba(199,240,80,0.5);
+}
+.loading-step {
+  font-size: 10px;
+  color: var(--accent);
+  margin-top: 12px;
+  letter-spacing: 0.3px;
+  font-weight: 500;
+  opacity: 0.85;
 }
 
 /* Result */
@@ -1540,8 +1568,12 @@ input, textarea { font-family: inherit; }
   <div class="modal-card">
     <div class="loading-content">
       <div class="loading-spinner"></div>
-      <div class="loading-text">사진 생성 중</div>
-      <div class="loading-sub">15초~1분 정도 걸려요</div>
+      <div class="loading-text" id="loadingText">사진 생성 중</div>
+      <div class="loading-sub" id="loadingSub">잠시만 기다려주세요</div>
+      <div class="loading-progress">
+        <div class="loading-progress-fill" id="loadingProgress"></div>
+      </div>
+      <div class="loading-step" id="loadingStep">준비 중</div>
     </div>
   </div>
 </div>
@@ -2060,7 +2092,9 @@ async function generateImage() {
     payload.references = state.refFiles.map(r => ({ base64: r.base64, mimeType: r.mimeType }));
   }
 
+  // 로딩 모달 + 프로그레스 시뮬레이션 시작
   document.getElementById('loadingModal').classList.add('active');
+  const progressTimer = startProgressSimulation();
 
   try {
     const res = await fetch('/api/generate-image', {
@@ -2069,6 +2103,7 @@ async function generateImage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
+    stopProgressSimulation(progressTimer);
     document.getElementById('loadingModal').classList.remove('active');
 
     if (!res.ok) {
@@ -2105,9 +2140,66 @@ async function generateImage() {
       state.angleEnabled ? state.yaw : null,
       state.angleEnabled ? state.pitch : null);
   } catch (e) {
+    stopProgressSimulation(progressTimer);
     document.getElementById('loadingModal').classList.remove('active');
     showError('네트워크 오류. 인터넷 연결을 확인해주세요.');
   }
+}
+
+/* ═══════════════════════════════════════════════════
+   프로그레스 시뮬레이션
+   ─────────────────────────────────────────────────
+   진짜 진행도는 받을 수 없음 (이미지 생성은 마지막에 한 번에 옴).
+   대신 시간 기반으로 단계 메시지 + 바 채워서 체감 시간 ↓
+   30초 기준으로 설계, 실제 호출 끝나면 즉시 100%로 점프
+   ═══════════════════════════════════════════════════ */
+function startProgressSimulation() {
+  const textEl = document.getElementById('loadingText');
+  const subEl = document.getElementById('loadingSub');
+  const barEl = document.getElementById('loadingProgress');
+  const stepEl = document.getElementById('loadingStep');
+
+  // 초기 상태
+  if (textEl) textEl.textContent = '사진 생성 중';
+  if (subEl) subEl.textContent = '잠시만 기다려주세요';
+  if (barEl) barEl.style.width = '0%';
+  if (stepEl) stepEl.textContent = '준비 중';
+
+  // 단계 정의: [시간(초), 진행률(%), 단계 메시지]
+  const stages = [
+    { t: 0,    pct: 5,   step: '프롬프트 분석' },
+    { t: 2,    pct: 18,  step: '스타일 이해' },
+    { t: 5,    pct: 32,  step: '구도 설계' },
+    { t: 9,    pct: 48,  step: '이미지 생성 시작' },
+    { t: 14,   pct: 62,  step: '디테일 작업' },
+    { t: 20,   pct: 75,  step: '얼굴·머릿결 정밀화' },
+    { t: 27,   pct: 85,  step: '마무리 단계' },
+    { t: 35,   pct: 92,  step: '곧 완성' },
+    { t: 50,   pct: 95,  step: '거의 다 됐어요' },
+  ];
+
+  const startTime = Date.now();
+  const timer = setInterval(() => {
+    const elapsed = (Date.now() - startTime) / 1000;
+    // 현재 시간에 맞는 단계 찾기
+    let current = stages[0];
+    for (const s of stages) {
+      if (elapsed >= s.t) current = s;
+      else break;
+    }
+    if (barEl) barEl.style.width = current.pct + '%';
+    if (stepEl) stepEl.textContent = current.step;
+  }, 200);
+
+  return { timer, barEl, stepEl };
+}
+
+function stopProgressSimulation(ctx) {
+  if (!ctx) return;
+  clearInterval(ctx.timer);
+  // 끝날 때 100% 점프 (살짝 보이게)
+  if (ctx.barEl) ctx.barEl.style.width = '100%';
+  if (ctx.stepEl) ctx.stepEl.textContent = '완성';
 }
 
 /* ═══════════════════════════════════════════════════ 결과 모달 ═══════════════════════════════════════════════════ */
