@@ -1470,60 +1470,6 @@ input, textarea { font-family: inherit; }
 }
 .aspect-option.active .aspect-option-desc { color: rgba(199,240,80,0.7); }
 
-/* ─── simple-popover (무드/프레이밍 공통) ─── */
-.simple-popover {
-  position: fixed;
-  background: #1a1a1a;
-  border: 0.5px solid var(--border-strong);
-  border-radius: 12px;
-  padding: 5px;
-  min-width: 220px;
-  max-width: calc(100vw - 16px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.55);
-  display: none;
-  z-index: 200;
-  visibility: hidden;
-  animation: popUp 0.15s ease-out;
-}
-.simple-popover.active { display: block; }
-.simple-option {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  width: 100%;
-  background: none;
-  border: none;
-  color: var(--text);
-  text-align: left;
-  font-family: inherit;
-}
-.simple-option:hover { background: rgba(255,255,255,0.05); }
-.simple-option.active {
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-.simple-option-name {
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.2px;
-}
-.simple-option-desc {
-  font-size: 11px;
-  color: var(--text-faint);
-  letter-spacing: 0.1px;
-}
-.simple-option.active .simple-option-desc { color: rgba(199,240,80,0.7); }
-.simple-option-clear {
-  border-top: 0.5px solid var(--border-strong);
-  margin-top: 4px;
-  padding-top: 10px;
-}
-.simple-option-clear .simple-option-name {
-  color: var(--text-faint);
-}
 </style>
 </head>
 <body>
@@ -1802,49 +1748,8 @@ input, textarea { font-family: inherit; }
         <div class="error-icon">!</div>
         <div class="error-text" id="errorText"></div>
         <button class="btn-save-primary" style="width:100%;" onclick="closeErrorModal()" type="button">확인</button>
-      </div>
     </div>
   </div>
-</div>
-
-<!-- 무드 popover -->
-<div class="simple-popover" id="moodPopover">
-  <button class="simple-option" data-mood="precision" type="button">
-    <span class="simple-option-name">🦴 헤어·피부 정밀</span>
-    <span class="simple-option-desc">살롱 환경, 시술 검토용</span>
-  </button>
-  <button class="simple-option" data-mood="editorial" type="button">
-    <span class="simple-option-name">📷 화보·룩북</span>
-    <span class="simple-option-desc">스튜디오 컨셉, 포트폴리오</span>
-  </button>
-  <button class="simple-option" data-mood="y2k" type="button">
-    <span class="simple-option-name">🌸 Y2K</span>
-    <span class="simple-option-desc">트렌디 SNS, 인플루언서 룩</span>
-  </button>
-  <button class="simple-option simple-option-clear" data-mood="" type="button">
-    <span class="simple-option-name">무드 선택 해제</span>
-    <span class="simple-option-desc">완전 자유 (카탈로그·제품)</span>
-  </button>
-</div>
-
-<!-- 프레이밍 popover -->
-<div class="simple-popover" id="framingPopover">
-  <button class="simple-option" data-framing="chest" type="button">
-    <span class="simple-option-name">가슴선</span>
-    <span class="simple-option-desc">쇄골·가슴 ~ 머리</span>
-  </button>
-  <button class="simple-option" data-framing="upper" type="button">
-    <span class="simple-option-name">상반신</span>
-    <span class="simple-option-desc">허리 ~ 머리</span>
-  </button>
-  <button class="simple-option" data-framing="full" type="button">
-    <span class="simple-option-name">전신</span>
-    <span class="simple-option-desc">머리 ~ 발</span>
-  </button>
-  <button class="simple-option simple-option-clear" data-framing="" type="button">
-    <span class="simple-option-name">프레이밍 해제</span>
-    <span class="simple-option-desc">자유 프롬프트가 결정</span>
-  </button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -2209,9 +2114,9 @@ const moodChip = document.getElementById('moodChip');
 const moodSheet = document.getElementById('moodSheet');
 
 const MOOD_LABELS = {
-  hair_skin_precision: '🦴 헤어·피부 정밀',
-  editorial_lookbook: '📷 화보·룩북',
-  y2k: '🌸 Y2K',
+  hair_skin_precision: '헤어·피부 정밀',
+  editorial_lookbook: '화보·룩북',
+  y2k: 'Y2K',
 };
 
 function openMoodSheet() {
