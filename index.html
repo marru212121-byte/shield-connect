@@ -115,7 +115,10 @@
       background:#0A0A0A;
       color:#fff;
       min-height:100dvh;
+      overflow-x:hidden;
+      max-width:100%;
     }
+    html, body { overflow-x:hidden; }
 
     /* 상단 계정 바 */
     #page-home .home-account-bar { padding:14px 20px 4px; min-height:34px; }
@@ -176,7 +179,7 @@
     /* 메뉴 그리드 — 4열 → 2열 */
     #page-home .menu-grid {
       grid-template-columns:repeat(2, 1fr) !important;
-      gap:4px !important;
+      gap:3px !important;
       padding:0 12px 8px !important;
     }
 
@@ -258,7 +261,7 @@
       font-size:10px;
       color:rgba(255,255,255,0.5);
       line-height:1.4;
-      margin-top:3px;
+      margin-top:1px;
       text-align:left;
       letter-spacing:-0.01em;
       flex-basis:100%;
@@ -273,7 +276,7 @@
       color:#C7F050;
       opacity:0.75;
       line-height:1.3;
-      margin-top:4px;
+      margin-top:1px;
       text-align:left;
       letter-spacing:0.2px;
       flex-basis:100%;
