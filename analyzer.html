@@ -408,6 +408,120 @@ p, span, div, h1, h2, h3, h4, h5, h6, li {
   color:inherit;
 }
 
+/* ════════ 추가: recipe-tips 영역 (실무 조언 큰 박스) ════════ */
+.recipe-tips {
+  background:#141414 !important;
+  border:1px solid rgba(255,255,255,0.08) !important;
+}
+.recipe-tips-title { color:#C7F050 !important; }
+.recipe-tips-text { color:rgba(255,255,255,0.85) !important; }
+.recipe-tips-text .base-label { color:#fff !important; }
+.recipe-tips-text .mix-label { color:#C7F050 !important; }
+
+/* recipe-from-to 텍스트 */
+.recipe-from-to { color:#fff !important; }
+.recipe-from-to .highlight { color:#C7F050 !important; font-weight:700; }
+
+/* recipe-tab-btn (탭 전환) */
+.recipe-tab-btn {
+  background:#1A1A1A !important;
+  border:1px solid rgba(255,255,255,0.08) !important;
+  color:rgba(255,255,255,0.5) !important;
+}
+.recipe-tab-btn:active { transform:scale(.98) !important; }
+.recipe-tab-btn.active {
+  background:#C7F050 !important;
+  border-color:#C7F050 !important;
+  color:#0A0A0A !important;
+}
+
+/* recipe-reasoning-box (사고 박스) */
+.recipe-reasoning-box {
+  background:#141414 !important;
+  border-left:3px solid #C7F050 !important;
+  color:rgba(255,255,255,0.85) !important;
+}
+
+/* recipe-virgin-box (버진모 박스) */
+.recipe-virgin-box {
+  background:#141414 !important;
+  border:1px solid rgba(255,255,255,0.08) !important;
+}
+.recipe-virgin-title { color:#C7F050 !important; }
+.recipe-virgin-text { color:rgba(255,255,255,0.85) !important; }
+
+/* typing-loader 추가 디테일 */
+.typing-loader-cursor { background:#C7F050 !important; }
+.typing-loader-dots > span { background:#C7F050 !important; }
+
+/* analysis-box 디테일 */
+.analysis-color-name { color:#fff !important; }
+.analysis-color-level { color:rgba(255,255,255,0.55) !important; }
+.analysis-desc { color:rgba(255,255,255,0.85) !important; }
+.analyzing .spinner {
+  border-color:rgba(255,255,255,0.1) !important;
+  border-top-color:#C7F050 !important;
+}
+.analyzing .txt { color:rgba(255,255,255,0.55) !important; }
+
+/* AI 사고 흐름 - thoughts line */
+.thoughts-line-text { color:rgba(255,255,255,0.85) !important; }
+.thoughts-line-dots { color:rgba(255,255,255,0.5) !important; }
+.thoughts-cursor { color:#C7F050 !important; }
+
+/* ════════ rviz 영역 (고객 상담 카드 통째) ════════ */
+.rviz-wrap {
+  border-top:1px solid rgba(255,255,255,0.08) !important;
+}
+.rviz-photo-zone {
+  background:#1F1F1F !important;
+}
+.rviz-stage-indicator {
+  background:rgba(0,0,0,0.75) !important;
+  color:#fff !important;
+}
+
+.rviz-chip-row {
+  background:rgba(255,255,255,0.04) !important;
+  border:1px solid rgba(255,255,255,0.08) !important;
+}
+.rviz-chip-label {
+  color:rgba(255,255,255,0.55) !important;
+}
+.rviz-chip-value,
+.rviz-chip-value-small {
+  color:#fff !important;
+}
+
+.rviz-final-row {
+  background:linear-gradient(135deg, rgba(199,240,80,0.08) 0%, rgba(199,240,80,0.02) 100%) !important;
+  border:1px solid rgba(199,240,80,0.25) !important;
+}
+.rviz-final-label { color:#C7F050 !important; }
+.rviz-final-name { color:#fff !important; }
+.rviz-final-hex { color:rgba(255,255,255,0.55) !important; }
+
+.rviz-base-text {
+  border-top:1px dashed rgba(255,255,255,0.15) !important;
+}
+.rviz-base-main { color:#fff !important; }
+.rviz-base-sub { color:rgba(255,255,255,0.55) !important; }
+
+.rviz-care-note {
+  border-top:1px dashed rgba(255,255,255,0.15) !important;
+  color:rgba(255,255,255,0.85) !important;
+}
+.rviz-care-note b { color:#fff !important; }
+/* .rviz-care-note .care-warn (빨강 #DC3545) — 의미 강조라 그대로 유지 */
+/* .rviz-consult-badge (빨강 라벨) — "고객 상담 카드" 시각적 강조라 그대로 유지 */
+
+/* tips-section 구분선 */
+.tips-section {
+  border-top:1px solid rgba(255,255,255,0.1) !important;
+}
+.tips-section-label { color:#C7F050 !important; }
+.tips-section-body { color:rgba(255,255,255,0.85) !important; }
+
 /* 헤더 로그인 / 크레딧 바 */
 .header-login-link {
   background:#C7F050 !important;
