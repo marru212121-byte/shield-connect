@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <meta name="apple-mobile-web-app-title" content="쉴드 커넥트"/>
-<meta name="theme-color" content="#1C1917"/>
+<meta name="theme-color" content="#0A0A0A"/>
 <meta name="description" content="AI 조색·레시피 가이드 — 동양인 모발 특화"/>
 <link rel="manifest" href="/manifest.json"/>
 <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
@@ -241,6 +241,220 @@ input,select,textarea{font-size:16px!important;-webkit-appearance:none;font-fami
 .rviz-care-note .care-warn{color:#DC3545;font-weight:700}
 .rviz-consult-badge{position:absolute;top:6px;left:6px;z-index:5;background:#DC3545;color:#fff;font-size:9.5px;font-weight:800;padding:3px 8px;border-radius:6px;letter-spacing:-0.1px;box-shadow:0 2px 6px rgba(220,53,69,0.35);white-space:nowrap;line-height:1.3}
 </style>
+<style id="hairo-dark-override">
+/* HAIRO 다크 라임 — analyzer.html 통째 다크 override */
+html, body { background:#0A0A0A !important; color:#fff !important; }
+.app { background:#0A0A0A !important; }
+
+/* 페이지 헤더 */
+.page-header {
+  background:rgba(10,10,10,0.92) !important;
+  border-bottom:1px solid rgba(255,255,255,0.08) !important;
+}
+.page-header h2 { color:#fff !important; }
+.page-header .sub { color:rgba(255,255,255,0.55) !important; }
+.back-btn {
+  background:#1c1c1c !important;
+  border:1px solid rgba(255,255,255,0.1) !important;
+}
+.back-btn svg { stroke:rgba(255,255,255,0.7) !important; color:rgba(255,255,255,0.7) !important; }
+
+/* 카드 공통 */
+.card {
+  background:#141414 !important;
+  border:1px solid rgba(255,255,255,0.06) !important;
+  color:#fff !important;
+}
+.card-title { color:#fff !important; }
+.card-title .badge {
+  background:rgba(199,240,80,0.12) !important;
+  color:#C7F050 !important;
+}
+
+/* 업로드 존 — 점선 제거, 다크 솔리드 */
+.upload-zone {
+  background:#1c1c1c !important;
+  border:1px solid rgba(255,255,255,0.08) !important;
+}
+.upload-zone:active {
+  border-color:#C7F050 !important;
+  background:rgba(199,240,80,0.04) !important;
+}
+.upload-zone .icon { color:rgba(199,240,80,0.7) !important; }
+.upload-zone .txt { color:rgba(255,255,255,0.55) !important; }
+.upload-zone .txt b { color:#C7F050 !important; }
+
+/* 업로드 가이드 박스 */
+.upload-guide-box.tips {
+  background:#1c1c1c !important;
+  border:1px solid rgba(255,255,255,0.08) !important;
+}
+.upload-guide-box.notice {
+  background:#1c1c1c !important;
+  border:1px solid rgba(199,240,80,0.2) !important;
+}
+.upload-guide-box.tips .icon,
+.upload-guide-box.notice .icon { color:#C7F050 !important; }
+.upload-guide-box.tips .title,
+.upload-guide-box.notice .title { color:#C7F050 !important; }
+.upload-guide-box.notice .title + .title {
+  border-top:1px dashed rgba(199,240,80,0.28) !important;
+}
+.upload-guide-box .list,
+.upload-guide-box .desc { color:rgba(255,255,255,0.6) !important; }
+.upload-guide-box.notice .desc { color:#C7F050 !important; }
+.upload-guide-box .list .item::before { color:#C7F050 !important; }
+
+/* 분석 중 */
+.analyzing .spinner {
+  border:3px solid rgba(255,255,255,0.1) !important;
+  border-top-color:#C7F050 !important;
+}
+.analyzing .txt { color:rgba(255,255,255,0.55) !important; }
+
+/* 페이드 타이핑 로더 */
+.typing-loader {
+  background:#141414 !important;
+  border:1px solid rgba(255,255,255,0.08) !important;
+}
+.typing-loader-dots > span { background:#C7F050 !important; }
+.typing-loader-text { color:#fff !important; }
+
+/* 분석 결과 박스 (analysis-box) */
+.analysis-box {
+  background:linear-gradient(135deg, #1A1814, #1F1D14) !important;
+  border:1px solid rgba(199,240,80,0.15) !important;
+}
+.analysis-label { color:#C7F050 !important; }
+
+/* ════════ 레시피 가이드 ════════ */
+/* 레시피 가이드 버튼 (메인 CTA) */
+.recipe-btn {
+  background:#C7F050 !important;
+  color:#0A0A0A !important;
+  font-weight:700 !important;
+}
+.recipe-btn:active { opacity:0.85 !important; }
+.recipe-btn:disabled {
+  background:#1c1c1c !important;
+  color:rgba(255,255,255,0.3) !important;
+  opacity:1 !important;
+}
+
+/* 레시피 헤더 (그라데이션 → 다크 액센트) */
+.recipe-header {
+  background:linear-gradient(135deg, #1A1F14, #14180F) !important;
+  border:1px solid rgba(199,240,80,0.18) !important;
+  color:#fff !important;
+}
+.recipe-header * { color:#fff !important; }
+.recipe-header .recipe-summary-note {
+  background:rgba(199,240,80,0.08) !important;
+  color:#C7F050 !important;
+}
+
+/* 레시피 본문 — 가독성 우선 */
+.recipe-body {
+  background:#141414 !important;
+  border:1px solid rgba(255,255,255,0.08) !important;
+  color:rgba(255,255,255,0.92) !important;
+}
+.recipe-body * { color:rgba(255,255,255,0.92); }
+.recipe-body strong, .recipe-body b { color:#fff !important; font-weight:700; }
+
+/* 레시피 로딩 wrap */
+.recipe-loading-wrap .typing-loader {
+  background:#141414 !important;
+}
+
+/* AI 사고 흐름 */
+.recipe-thoughts {
+  background:rgba(199,240,80,0.06) !important;
+  border:1px solid rgba(199,240,80,0.2) !important;
+}
+.recipe-thoughts-title { color:#C7F050 !important; }
+.recipe-thoughts-list { color:rgba(255,255,255,0.85) !important; }
+.thoughts-cursor { color:#C7F050 !important; }
+
+/* 팁 블록 */
+.tips-block {
+  border-left:3px solid #C7F050 !important;
+}
+.tips-block-label { color:#C7F050 !important; }
+.tips-block-headline { color:#fff !important; }
+.tips-block-body { color:rgba(255,255,255,0.75) !important; }
+
+.tips-section {
+  border-top:1px solid rgba(255,255,255,0.1) !important;
+}
+.tips-section-label { color:#C7F050 !important; }
+.tips-section-body { color:rgba(255,255,255,0.75) !important; }
+
+/* 마커 오버레이 (사진 위 마커 — 라임으로) */
+.marker-line { border-top-color:#C7F050 !important; }
+
+/* 입력 필드, 텍스트영역 */
+input, textarea, select {
+  background:#1A1A1A !important;
+  color:#fff !important;
+  border:1px solid rgba(255,255,255,0.1) !important;
+}
+input::placeholder, textarea::placeholder {
+  color:rgba(255,255,255,0.35) !important;
+}
+
+/* 페이지 본문 텍스트 일반 */
+p, span, div, h1, h2, h3, h4, h5, h6, li {
+  color:inherit;
+}
+
+/* 헤더 로그인 / 크레딧 바 */
+.header-login-link {
+  background:#C7F050 !important;
+  color:#0A0A0A !important;
+  border:none !important;
+  font-weight:600 !important;
+}
+.header-login-link:active {
+  background:#C7F050 !important;
+  color:#0A0A0A !important;
+  opacity:.85;
+}
+.header-account-info { color:#fff !important; }
+#creditCountHeader { color:#C7F050 !important; font-weight:700 !important; }
+
+/* 비로그인 프롬프트 카드 */
+.login-prompt-card {
+  background:transparent !important;
+}
+.login-prompt-icon {
+  background:rgba(199,240,80,0.1) !important;
+  color:#C7F050 !important;
+}
+.login-prompt-title { color:#fff !important; }
+.login-prompt-desc { color:rgba(255,255,255,0.65) !important; }
+.login-prompt-desc b { color:#C7F050 !important; }
+.login-prompt-btn {
+  background:#C7F050 !important;
+  color:#0A0A0A !important;
+}
+.login-prompt-btn:active { opacity:.85 !important; }
+
+/* 크레딧 모달 */
+.credit-modal-overlay,
+#creditModal {
+  background:rgba(0,0,0,0.7) !important;
+}
+.credit-modal-card,
+.credit-modal-content {
+  background:#1A1A1A !important;
+  border:1px solid rgba(255,255,255,0.08) !important;
+  color:#fff !important;
+}
+.credit-modal-card *,
+.credit-modal-content * { color:#fff !important; }
+</style>
+
 </head>
 <body>
 <div class="app">

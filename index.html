@@ -150,12 +150,12 @@
 
     /* 배너 압축 */
     #page-home .home-banner-wrap {
-      max-height:100px !important;
+      max-height:140px !important;
       overflow:hidden !important;
     }
     #page-home .home-banner-wrap img {
       width:100% !important;
-      height:100px !important;
+      height:140px !important;
       object-fit:cover !important;
       object-position:center !important;
       display:block !important;
@@ -264,16 +264,22 @@
       font-weight:400;
     }
 
-    /* HOT 라벨 */
+    /* HOT 라벨 - 아이콘 박스 좌상단에 겹침 (힉스필드 톤) */
     #page-home .menu-hot {
       position:absolute;
-      top:8px; right:6px;
+      top:6px; left:6px;
       background:#C7F050; color:#0A0A0A;
       font-size:8.5px; font-weight:600;
       padding:2px 5px; border-radius:4px;
       letter-spacing:0.4px;
-      z-index:1;
+      z-index:2;
       line-height:1.4;
+      box-shadow:0 0 0 2px #0A0A0A;
+    }
+
+    /* HOT 카드의 아이콘 박스 — 라임 실금 보더 */
+    #page-home .menu-card:has(.menu-hot) .menu-icon {
+      border:1px solid rgba(199,240,80,0.45) !important;
     }
 
     /* 도구 섹션 */
@@ -306,6 +312,277 @@
       font-size:12.5px;
       color:rgba(255,255,255,0.85);
       letter-spacing:-0.2px;
+    }
+
+    /* ════════════════════════════════════════
+       인덱스 안 다른 페이지들 다크 통일
+       (CSS 변수 재정의로 외부 style.css의 var() 자동 다크화)
+       ════════════════════════════════════════ */
+    .page-screen:not(#page-home) {
+      --bg: #0A0A0A;
+      --card: #1A1A1A;
+      --gray-100: #1F1F1F;
+      --gray-200: rgba(255,255,255,0.08);
+      --gray-300: rgba(255,255,255,0.15);
+      --gray-500: rgba(255,255,255,0.5);
+      --gray-700: rgba(255,255,255,0.75);
+      --black: #ffffff;
+      --white: #1A1A1A;
+      --accent: #C7F050;
+      --accent2: #C7F050;
+      background: #0A0A0A !important;
+      color: #fff;
+      min-height: 100dvh;
+    }
+
+    /* 페이지 헤더 / 서브 헤더 */
+    .page-screen:not(#page-home) .page-header,
+    .page-screen:not(#page-home) .sub-header {
+      background:rgba(10,10,10,0.92) !important;
+      border-bottom:1px solid rgba(255,255,255,0.08) !important;
+      backdrop-filter:blur(12px);
+    }
+    .page-screen:not(#page-home) .page-header h2,
+    .page-screen:not(#page-home) .sub-header h2 {
+      color:#fff !important;
+    }
+    .page-screen:not(#page-home) .page-header .sub,
+    .page-screen:not(#page-home) .sub-header .sub {
+      color:rgba(255,255,255,0.55) !important;
+    }
+    .page-screen:not(#page-home) .back-btn {
+      background:#1c1c1c !important;
+      border:1px solid rgba(255,255,255,0.1) !important;
+    }
+    .page-screen:not(#page-home) .back-btn svg {
+      stroke:rgba(255,255,255,0.7) !important;
+      color:rgba(255,255,255,0.7) !important;
+    }
+
+    /* 성분사전 */
+    #page-ingredient .ing-add-btn {
+      background:#C7F050 !important;
+      color:#0A0A0A !important;
+    }
+    #page-ingredient .ing-add-btn svg {
+      stroke:#0A0A0A !important;
+    }
+    #page-ingredient .search-wrap,
+    #page-ingredient .ing-search-bar {
+      background:transparent !important;
+    }
+    #page-ingredient .search-input {
+      background:#1A1A1A !important;
+      color:#fff !important;
+      border:1px solid rgba(255,255,255,0.1) !important;
+    }
+    #page-ingredient .search-input::placeholder {
+      color:rgba(255,255,255,0.4) !important;
+    }
+    #page-ingredient .search-icon {
+      color:rgba(255,255,255,0.5) !important;
+    }
+    #page-ingredient .filter-btn {
+      background:#1A1A1A !important;
+      color:rgba(255,255,255,0.6) !important;
+      border:1px solid rgba(255,255,255,0.08) !important;
+    }
+    #page-ingredient .filter-btn.active {
+      background:#C7F050 !important;
+      color:#0A0A0A !important;
+      border-color:#C7F050 !important;
+    }
+    #page-ingredient .ing-card {
+      background:#1A1A1A !important;
+      border:1px solid rgba(255,255,255,0.06) !important;
+    }
+    #page-ingredient .card-ko,
+    #page-ingredient .card-eng {
+      color:#fff !important;
+    }
+    #page-ingredient .card-eng {
+      color:rgba(255,255,255,0.5) !important;
+    }
+
+    /* 약제 비율 계산기 */
+    #page-calculator .calc-tab-row {
+      background:#1A1A1A !important;
+      border:1px solid rgba(255,255,255,0.08) !important;
+    }
+    #page-calculator .calc-tab {
+      color:rgba(255,255,255,0.5) !important;
+      background:transparent !important;
+    }
+    #page-calculator .calc-tab.active {
+      background:#C7F050 !important;
+      color:#0A0A0A !important;
+    }
+    #page-calculator .bowl-card {
+      background:#1A1A1A !important;
+      border:1px solid rgba(255,255,255,0.08) !important;
+    }
+    #page-calculator .bowl-number {
+      background:#C7F050 !important;
+      color:#0A0A0A !important;
+    }
+    #page-calculator .bowl-title {
+      color:#fff !important;
+    }
+    #page-calculator .bowl-summary {
+      color:rgba(255,255,255,0.5) !important;
+    }
+    #page-calculator .bowl-color-name,
+    #page-calculator .bowl-extra-name {
+      background:#0F0F0F !important;
+      border:1px solid rgba(255,255,255,0.08) !important;
+      color:#fff !important;
+    }
+    #page-calculator .bowl-default-name,
+    #page-calculator .bowl-extra-default-name {
+      color:rgba(255,255,255,0.3) !important;
+    }
+    #page-calculator .bowl-ratio-input,
+    #page-calculator .bowl-extra-pct {
+      background:#0F0F0F !important;
+      border:1px solid rgba(255,255,255,0.12) !important;
+      color:#fff !important;
+    }
+    #page-calculator .bowl-color-gram,
+    #page-calculator .bowl-extra-gram {
+      color:rgba(255,255,255,0.85) !important;
+    }
+    #page-calculator .bowl-extras-divider {
+      background:rgba(255,255,255,0.08) !important;
+    }
+    #page-calculator .bowl-extras-label {
+      color:rgba(255,255,255,0.5) !important;
+    }
+    #page-calculator .bowl-add-extra-btn {
+      background:transparent !important;
+      border:1.5px solid rgba(255,255,255,0.15) !important;
+      color:rgba(255,255,255,0.5) !important;
+    }
+    #page-calculator .bowl-add-btn {
+      background:#1A1A1A !important;
+      border:1.5px solid rgba(255,255,255,0.12) !important;
+      color:rgba(255,255,255,0.7) !important;
+    }
+    #page-calculator .bowl-total-bar {
+      background:#1F1A14 !important;
+      border-top:1px solid rgba(199,240,80,0.2) !important;
+    }
+    #page-calculator .bowl-res-label,
+    #page-calculator .bowl-res-ratio {
+      color:rgba(255,255,255,0.5) !important;
+    }
+    #page-calculator .bowl-res-item .name,
+    #page-calculator .bowl-res-item .gram {
+      color:#fff !important;
+    }
+    #page-calculator .bowl-res-divider {
+      background:rgba(255,255,255,0.08) !important;
+    }
+    #page-calculator .bowl-res-main-total,
+    #page-calculator .bowl-res-oxi {
+      color:#C7F050 !important;
+    }
+    #page-calculator .bowl-res-grand {
+      border-top:2px solid rgba(199,240,80,0.3) !important;
+    }
+    #page-calculator .bowl-res-grand .label,
+    #page-calculator .bowl-res-grand .total {
+      color:#C7F050 !important;
+    }
+    #page-calculator .oxi-btn-row .oxi-btn {
+      background:#1A1A1A !important;
+      color:rgba(255,255,255,0.6) !important;
+      border:1px solid rgba(255,255,255,0.08) !important;
+    }
+    #page-calculator .oxi-btn-row .oxi-btn.active {
+      background:#C7F050 !important;
+      color:#0A0A0A !important;
+      border-color:#C7F050 !important;
+    }
+    #page-calculator .oxi-toggle {
+      background:#1A1A1A !important;
+      border:1.5px dashed rgba(255,255,255,0.15) !important;
+    }
+    #page-calculator .oxi-toggle .oxi-text {
+      color:rgba(255,255,255,0.6) !important;
+    }
+    #page-calculator .oxi-toggle .oxi-arrow {
+      color:rgba(255,255,255,0.3) !important;
+    }
+    #page-calculator .oxi-toggle .oxi-dot {
+      background:#0F0F0F !important;
+      border-color:rgba(255,255,255,0.3) !important;
+    }
+
+    /* 메모장 */
+    #page-memo textarea,
+    #page-memo input[type="text"] {
+      background:#1A1A1A !important;
+      color:#fff !important;
+      border:1px solid rgba(255,255,255,0.08) !important;
+    }
+
+    /* 개선·문의 */
+    #page-feedback textarea,
+    #page-feedback input[type="text"] {
+      background:#1A1A1A !important;
+      color:#fff !important;
+      border:1px solid rgba(255,255,255,0.08) !important;
+    }
+    #page-feedback textarea::placeholder,
+    #page-feedback input::placeholder,
+    #page-memo textarea::placeholder,
+    #page-memo input::placeholder {
+      color:rgba(255,255,255,0.35) !important;
+    }
+
+    /* 설정 페이지 */
+    #page-settings .account-card,
+    #page-settings .settings-card {
+      background:#1A1A1A !important;
+      border:1px solid rgba(255,255,255,0.06) !important;
+    }
+    #page-settings .account-value {
+      color:#fff !important;
+    }
+    #page-settings .account-card-header {
+      color:rgba(255,255,255,0.5) !important;
+    }
+    #page-settings .account-login-btn-big {
+      background:#C7F050 !important;
+      color:#0A0A0A !important;
+    }
+    #page-settings .account-logout-btn {
+      background:transparent !important;
+      border:1.5px solid rgba(255,255,255,0.15) !important;
+      color:rgba(255,255,255,0.6) !important;
+    }
+    #page-settings #creditCountSettings {
+      color:#C7F050 !important;
+    }
+
+    /* ════════════════════════════════════════
+       하단 네비 — 회색 다크 + 흰색 액티브
+       ════════════════════════════════════════ */
+    .bottom-nav {
+      background:#1A1A1A !important;
+      border-top:1px solid rgba(255,255,255,0.06) !important;
+    }
+    .nav-item {
+      color:rgba(255,255,255,0.4) !important;
+    }
+    .nav-item svg {
+      stroke:rgba(255,255,255,0.4) !important;
+    }
+    .nav-item.active {
+      color:#fff !important;
+    }
+    .nav-item.active svg {
+      stroke:#fff !important;
     }
   </style>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-82LSVB4T6K"></script>
