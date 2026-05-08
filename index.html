@@ -693,19 +693,73 @@
       stroke:#fff !important;
     }
 
-    /* === 홈 메뉴 — 아이콘 박스만 키움 (B안 최소판) — 2026-05-09 === */
-    /* 폰트/패딩/간격/HOT 위치 모두 원본 유지, 아이콘 박스만 54px */
-    #page-home .menu-card {
-      grid-template-columns:54px 1fr !important;
+    /* === 약제비율계산기 사진 시각화 (라이브 그람) — 2026-05-09 === */
+    #page-calculator .bowl-photo-viz { margin-top:6px; }
+    #page-calculator .bowl-photo-viz .photo-area {
+      position:relative;
+      width:100%;
+      aspect-ratio:1636/1112;
+      background:#1A1A1A url('./images/calc-hero.jpeg') center/cover no-repeat;
+      border-radius:10px;
+      overflow:hidden;
+      margin-bottom:8px;
     }
-    #page-home .menu-icon {
-      width:54px !important;
-      height:54px !important;
-      border-radius:12px !important;
+    #page-calculator .bowl-photo-viz .photo-area svg {
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
     }
-    #page-home .menu-icon svg {
-      width:26px !important;
-      height:26px !important;
+    #page-calculator .bowl-photo-viz .photo-summary {
+      padding:11px 13px;
+      background:#141414;
+      border:0.5px solid rgba(199,240,80,0.15);
+      border-radius:8px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    #page-calculator .bowl-photo-viz .ps-row {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      font-size:12.5px;
+      color:rgba(255,255,255,0.85);
+      letter-spacing:-0.01em;
+    }
+    #page-calculator .bowl-photo-viz .ps-row span:last-child {
+      font-weight:700;
+      color:#fff;
+    }
+    #page-calculator .bowl-photo-viz .ps-subtotal,
+    #page-calculator .bowl-photo-viz .ps-subtotal span:last-child {
+      color:#C7F050 !important;
+      font-weight:700;
+    }
+    #page-calculator .bowl-photo-viz .ps-divider {
+      height:1px;
+      background:rgba(199,240,80,0.18);
+      margin:1px 0;
+    }
+    #page-calculator .bowl-photo-viz .ps-grand {
+      font-size:13.5px;
+      font-weight:800;
+      color:#fff;
+      padding-top:1px;
+    }
+    #page-calculator .bowl-photo-viz .ps-grand span:last-child {
+      font-size:16px;
+      color:#C7F050;
+    }
+    /* 기존 결과 텍스트 숨김 (사진 viz가 대체) */
+    #page-calculator .bowl-total-bar > .bowl-res-label,
+    #page-calculator .bowl-total-bar > .bowl-res-ratio,
+    #page-calculator .bowl-total-bar > .bowl-res-divider,
+    #page-calculator .bowl-total-bar > .bowl-res-item,
+    #page-calculator .bowl-total-bar > .bowl-res-main-total,
+    #page-calculator .bowl-total-bar > .bowl-res-oxi,
+    #page-calculator .bowl-total-bar > .bowl-res-grand {
+      display:none !important;
     }
   </style>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-82LSVB4T6K"></script>
@@ -1761,6 +1815,153 @@
       else renderLoggedOut();
     })
     .catch(function(){ renderLoggedOut(); });
+})();
+</script>
+
+<!-- ════════════ 약제비율계산기 사진 시각화 (라이브 그람) ════════════ -->
+<script>
+(function(){
+  var COLORS=['#C7F050','#9DCC3D','#6B8E2A','#E8B14C','#DC8852','#A88E62'];
+  function init(){
+    document.querySelectorAll('.bowl-total-bar').forEach(setup);
+    ['dye-bowls-container','perm-bowls-container'].forEach(function(id){
+      var c=document.getElementById(id);
+      if(!c)return;
+      new MutationObserver(function(ms){
+        ms.forEach(function(m){
+          (m.addedNodes||[]).forEach(function(n){
+            if(n.querySelectorAll)n.querySelectorAll('.bowl-total-bar').forEach(setup);
+          });
+        });
+      }).observe(c,{childList:true,subtree:true});
+    });
+  }
+  function setup(bar){
+    if(bar._pvz)return;bar._pvz=true;
+    var lastH='';
+    function chk(){
+      var d=parse(bar);
+      if(!d){
+        var ex=bar.querySelector(':scope > .bowl-photo-viz');
+        if(ex)ex.remove();
+        lastH='';return;
+      }
+      var h=JSON.stringify(d);
+      if(h===lastH)return;
+      lastH=h;
+      render(bar,d);
+    }
+    new MutationObserver(chk).observe(bar,{childList:true,subtree:true,characterData:true});
+    chk();
+  }
+  function parse(bar){
+    if(bar.querySelector(':scope > .bowl-total-empty'))return null;
+    var mt=bar.querySelector(':scope > .bowl-res-main-total');
+    if(!mt)return null;
+    var d={dyes:[],extras:[],dyeT:0,exT:0,oneT:0,oxG:0,oxR:'1:1',gd:0,perm:!!bar.closest('#calc-perm-tab')};
+    var mtm=(mt.textContent||'').match(/(\d+(?:\.\d+)?)\s*g/);
+    if(mtm)d.dyeT=parseFloat(mtm[1]);
+    var found=false;
+    Array.prototype.forEach.call(bar.children,function(c){
+      if(c===mt){found=true;return;}
+      if(!c.classList||!c.classList.contains('bowl-res-item'))return;
+      var ne=c.querySelector('.name'),ge=c.querySelector('.gram');
+      if(!ne||!ge)return;
+      var g=parseFloat((ge.textContent||'').replace(/g/g,''));
+      if(isNaN(g))return;
+      if(found){
+        var rn=ne.textContent||'';
+        var cn=rn.replace(/\s*\([^)]*\)\s*/g,'').replace(/산화제포함/g,'').trim();
+        d.extras.push({n:cn||'추가제',g:g});
+      }else{
+        d.dyes.push({n:(ne.textContent||'').trim(),g:g});
+      }
+    });
+    d.exT=d.extras.reduce(function(a,e){return a+e.g;},0);
+    d.oneT=d.dyeT+d.exT;
+    var oe=bar.querySelector(':scope > .bowl-res-oxi');
+    if(oe){
+      var ot=oe.textContent||'';
+      var rm=ot.match(/(1:[\d.]+)/);
+      var sl=oe.querySelector('span:last-child');
+      var ogt=sl?sl.textContent:ot;
+      var ogm=ogt.match(/(\d+(?:\.\d+)?)\s*g/);
+      if(rm)d.oxR=rm[1];
+      if(ogm)d.oxG=parseFloat(ogm[1]);
+    }
+    var ge=bar.querySelector(':scope > .bowl-res-grand .total');
+    if(ge){
+      var gm=(ge.textContent||'').match(/(\d+(?:\.\d+)?)\s*g/);
+      if(gm)d.gd=parseFloat(gm[1]);
+    }
+    return d;
+  }
+  function render(bar,d){
+    var ex=bar.querySelector(':scope > .bowl-photo-viz');
+    if(ex)ex.remove();
+    var items=[];
+    d.dyes.forEach(function(dy,i){if(dy.g>0)items.push({n:dy.n,g:dy.g,c:COLORS[i]});});
+    d.extras.forEach(function(e,i){if(e.g>0)items.push({n:e.n,g:e.g,c:COLORS[3+i]});});
+    var pT=d.oneT;
+    var PCX=645,PCY=460,PR=290,PIR=130;
+    var sv='';
+    if(pT>0){
+      var sd=0;
+      items.forEach(function(it){
+        var ang=(it.g/pT)*360;
+        var ed=sd+ang;
+        var tc=it.c===COLORS[2]?'#fff':'#0A0A0A';
+        sv+='<path d="'+wedge(PCX,PCY,PR,sd,ed)+'" fill="'+it.c+'"/>';
+        var lr=PR*0.62,md=(sd+ed)/2;
+        var rad=(md-90)*Math.PI/180;
+        var lx=PCX+lr*Math.cos(rad),ly=PCY+lr*Math.sin(rad);
+        if(ang>=30){
+          sv+='<text x="'+lx.toFixed(0)+'" y="'+(ly-8).toFixed(0)+'" text-anchor="middle" fill="'+tc+'" font-size="34" font-weight="600">'+esc(short(it.n))+'</text>';
+          sv+='<text x="'+lx.toFixed(0)+'" y="'+(ly+34).toFixed(0)+'" text-anchor="middle" fill="'+tc+'" font-size="46" font-weight="800">'+it.g+'g</text>';
+        }else if(ang>=15){
+          sv+='<text x="'+lx.toFixed(0)+'" y="'+(ly+12).toFixed(0)+'" text-anchor="middle" fill="'+tc+'" font-size="40" font-weight="800">'+it.g+'g</text>';
+        }
+        sd=ed;
+      });
+      sv+='<circle cx="'+PCX+'" cy="'+PCY+'" r="'+PIR+'" fill="#0A0A0A"/>';
+      sv+='<circle cx="'+PCX+'" cy="'+PCY+'" r="'+PIR+'" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2"/>';
+    }
+    if(d.oxG>0){
+      var olx=1170,oly=44,lw=290,lh=130;
+      sv+='<g><rect x="'+(olx-lw/2)+'" y="'+oly+'" width="'+lw+'" height="'+lh+'" rx="22" fill="#C7F050" stroke="#0A0A0A" stroke-width="6"/>';
+      sv+='<text x="'+olx+'" y="'+(oly+44)+'" text-anchor="middle" fill="#0A0A0A" font-size="34" font-weight="600">산화제 ('+d.oxR+')</text>';
+      sv+='<text x="'+olx+'" y="'+(oly+102)+'" text-anchor="middle" fill="#0A0A0A" font-size="56" font-weight="800">'+d.oxG+'g</text></g>';
+    }
+    var rows=[];
+    rows.push('<div class="ps-row"><span>'+(d.perm?'펌제 총량':'염모제 총량')+'</span><span>'+d.dyeT+'g</span></div>');
+    if(d.exT>0){
+      rows.push('<div class="ps-row"><span>추가제 총량</span><span>'+d.exT+'g</span></div>');
+      rows.push('<div class="ps-divider"></div>');
+      rows.push('<div class="ps-row ps-subtotal"><span>1제 총량</span><span>'+d.oneT+'g</span></div>');
+    }
+    if(d.oxG>0){
+      rows.push('<div class="ps-row"><span>산화제 ('+d.oxR+')</span><span>'+d.oxG+'g</span></div>');
+    }
+    rows.push('<div class="ps-divider"></div>');
+    rows.push('<div class="ps-row ps-grand"><span>바울 합계</span><span>'+d.gd+'g</span></div>');
+    var html='<div class="photo-area"><svg viewBox="0 0 1636 1112" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">'+sv+'</svg></div><div class="photo-summary">'+rows.join('')+'</div>';
+    var w=document.createElement('div');
+    w.className='bowl-photo-viz';
+    w.innerHTML=html;
+    bar.appendChild(w);
+  }
+  function wedge(cx,cy,R,sd,ed){
+    if(Math.abs(ed-sd-360)<0.01)return 'M '+cx+' '+(cy-R)+' A '+R+' '+R+' 0 1 1 '+(cx-0.01)+' '+(cy-R)+' Z';
+    var s=(sd-90)*Math.PI/180,e=(ed-90)*Math.PI/180;
+    var x1=cx+R*Math.cos(s),y1=cy+R*Math.sin(s);
+    var x2=cx+R*Math.cos(e),y2=cy+R*Math.sin(e);
+    var L=(ed-sd)>180?1:0;
+    return 'M '+cx+' '+cy+' L '+x1.toFixed(0)+' '+y1.toFixed(0)+' A '+R+' '+R+' 0 '+L+' 1 '+x2.toFixed(0)+' '+y2.toFixed(0)+' Z';
+  }
+  function short(n){return n&&n.length>6?n.substring(0,6):(n||'');}
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
+  else init();
 })();
 </script>
 </body>
