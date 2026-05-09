@@ -1,1095 +1,1982 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#1f7a6e">
-<title>HANDS — 한국 생활 동반자</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
-<style>
-:root {
-  --teal-50:#e8f3f1;--teal-500:#1f7a6e;--teal-600:#176158;--teal-700:#114841;
-  --orange-200:#ffd2a8;--orange-500:#e87b35;
-  --rose-100:#ffe1e1;--rose-500:#d04848;
-  --sand-50:#faf6f1;--sand-100:#f4ede3;--sand-200:#e8ddcd;
-  --ink-900:#0f1f1d;--ink-700:#1a3633;--ink-500:#4a6260;--ink-400:#6f8682;--ink-300:#9aaba8;--ink-200:#c4cfcd;
-  --display:'Manrope','Pretendard',system-ui,sans-serif;
-  --body:'Pretendard','Manrope',system-ui,sans-serif;
-}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overscroll-behavior:none}
-body{font-family:var(--body);background:var(--sand-50);color:var(--ink-900);font-weight:400;-webkit-font-smoothing:antialiased;letter-spacing:-0.01em}
-button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
-input,select,textarea{font-family:inherit;color:inherit}
-input:focus,select:focus,textarea:focus{outline:none}
-.app{position:relative;width:100%;max-width:480px;min-height:100vh;margin:0 auto;background:var(--sand-50);overflow-x:hidden}
-.screen{display:none !important;flex-direction:column;min-height:100vh;position:relative}
-.screen.active{display:flex !important}
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="쉴드 커넥트"/>
+<meta name="theme-color" content="#0A0A0A"/>
+<link rel="manifest" href="./manifest.json"/>
+<link rel="apple-touch-icon" href="./images/icon.png"/>
+<title>쉴드 디자이너 커넥트</title>
+<link rel="stylesheet" href="./style.css"/>
+  <style>
+    /* iOS Safari 즉시 적용 — 레이아웃 깨짐 방지 */
+    *{-webkit-box-sizing:border-box;box-sizing:border-box}
+    html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+    body{margin:0;padding:0;overflow-x:hidden}
+    input,select,textarea{font-size:16px!important;-webkit-appearance:none}
+    .page-screen{display:none}
+    #page-home{display:block}
+    .modal-view-val{font-size:15px;font-weight:600;color:#1A1814;margin-left:auto;}
 
-.lang-switcher{position:fixed;top:18px;right:18px;z-index:100;border-radius:999px;padding:4px;display:flex;gap:2px;transition:all 0.2s}
-.lang-switcher.on-dark{background:rgba(255,255,255,0.15);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.18)}
-.lang-switcher.on-light{background:white;box-shadow:0 2px 8px rgba(15,31,29,0.06)}
-.lang-btn{padding:5px 11px;font-size:11px;font-weight:700;letter-spacing:0.02em;border-radius:999px;transition:all 0.15s;background:transparent;border:none;cursor:pointer}
-.lang-switcher.on-dark .lang-btn{color:rgba(255,255,255,0.75)}
-.lang-switcher.on-dark .lang-btn.active{background:rgba(255,255,255,0.95);color:var(--teal-700)}
-.lang-switcher.on-light .lang-btn{color:var(--ink-400)}
-.lang-switcher.on-light .lang-btn.active{background:var(--teal-500);color:white}
+    /* 계산기 탭 */
+    .calc-tab-row{display:flex;gap:0;margin-bottom:12px;background:#fff;border-radius:10px;border:1.5px solid #e5e5e0;overflow:hidden}
+    .calc-tab{flex:1;padding:11px;text-align:center;font-size:13px;font-weight:600;color:#888;cursor:pointer;border:none;background:none;transition:all .15s;-webkit-tap-highlight-color:transparent}
+    .calc-tab.active{background:#1A1814;color:#fff}
 
-#welcome{background:linear-gradient(165deg,#114841 0%,#1f7a6e 60%,#2d8d7b 100%);color:white;padding:60px 28px 32px;position:relative;overflow:hidden}
-#welcome::before{content:"";position:absolute;top:-80px;right:-80px;width:280px;height:280px;background:radial-gradient(circle,rgba(232,123,53,0.45),transparent 65%);border-radius:50%;pointer-events:none}
-#welcome::after{content:"";position:absolute;bottom:-120px;left:-80px;width:280px;height:280px;background:radial-gradient(circle,rgba(255,255,255,0.08),transparent 60%);border-radius:50%;pointer-events:none}
-.welcome-inner{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;min-height:calc(100vh - 92px)}
-.logo-row{display:flex;align-items:center;gap:12px;margin-bottom:auto;opacity:0;animation:fadeUp 0.7s ease-out 0.1s forwards}
-.logo-mark{width:44px;height:44px;background:rgba(255,255,255,0.18);backdrop-filter:blur(10px);border-radius:14px;display:grid;place-items:center;border:1px solid rgba(255,255,255,0.25);font-size:22px}
-.logo-text{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:-0.03em;line-height:1}
-.logo-tag{font-size:10px;font-weight:600;letter-spacing:0.12em;opacity:0.7;margin-top:3px}
-.welcome-headline{margin-top:56px;opacity:0;animation:fadeUp 0.7s ease-out 0.3s forwards}
-.welcome-title{font-family:var(--display);font-weight:800;font-size:40px;line-height:1.05;letter-spacing:-0.035em;margin-bottom:14px}
-.welcome-title .accent{color:var(--orange-200);font-style:italic;font-weight:700}
-.welcome-sub{font-size:14px;line-height:1.55;opacity:0.85;max-width:320px}
-.lang-grid{margin-top:auto;padding-top:28px;display:grid;grid-template-columns:1fr 1fr;gap:10px;opacity:0;animation:fadeUp 0.7s ease-out 0.5s forwards}
-.lang-card{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:16px;padding:18px 12px;text-align:center;transition:all 0.2s;color:white}
-.lang-card.selected{background:rgba(255,255,255,0.95);border-color:rgba(255,255,255,0.95);border-width:2px;color:var(--teal-700);padding:17px 11px}
-.lang-card-name{font-family:var(--display);font-size:22px;font-weight:800;letter-spacing:-0.02em;margin-bottom:4px}
-.lang-card-en{font-size:10px;opacity:0.6;font-weight:600;letter-spacing:0.06em}
-.welcome-cta{margin-top:18px;width:100%;background:white;color:var(--teal-700);padding:17px;border-radius:14px;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s;box-shadow:0 8px 24px rgba(0,0,0,0.15);opacity:0;animation:fadeUp 0.7s ease-out 0.7s forwards}
-.welcome-cta:active{transform:scale(0.98)}
+    /* 바울 카드 */
+    .bowl-card{background:#fff;border:1.5px solid #e5e5e0;border-radius:14px;padding:14px 12px 0;margin-bottom:10px}
+    .bowl-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+    .bowl-number{width:24px;height:24px;background:#1A1814;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+    .bowl-title{font-size:15px;font-weight:700;color:#1A1814}
+    .bowl-summary{margin-left:auto;font-size:10px;color:#888;white-space:nowrap}
+    .bowl-remove-btn{background:none;border:none;color:#ccc;font-size:13px;cursor:pointer;margin-left:8px;padding:4px 6px}
+    .bowl-color-row{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+    .bowl-color-name{flex:1;min-width:0;background:#f5f5f2;border:1.5px solid #e5e5e0;border-radius:8px;padding:8px 10px;font-size:14px;color:#1A1814}
+    .bowl-default-name{color:#bbb!important}
+    .bowl-ratio-wrap{display:flex;align-items:center;gap:1px;flex-shrink:0}
+    .bowl-ratio-sep{font-size:13px;color:#bbb;font-weight:600;width:8px;text-align:center}
+    .bowl-ratio-input{width:44px;text-align:center;background:#fff;border:1.5px solid #d5d5d0;border-radius:7px;padding:8px 2px;font-size:14px;font-weight:600;color:#1A1814}
+    .bowl-color-gram{font-size:12px;width:38px;text-align:right;font-weight:500;flex-shrink:0}
+    .bowl-extras-divider{height:1px;background:#e5e5e0;margin:10px 0 8px}
+    .bowl-extras-label{font-size:10px;color:#888;margin-bottom:6px}
+    .bowl-extra-row{margin-bottom:8px}
+    .bowl-extra-row-top{display:flex;align-items:center;gap:5px}
+    .bowl-extra-name{flex:1;min-width:0;background:#f5f5f2;border:1.5px solid #e5e5e0;border-radius:8px;padding:8px 10px;font-size:14px;color:#1A1814}
+    .bowl-extra-default-name{color:#bbb!important}
+    .bowl-extra-pct-wrap{display:flex;align-items:center;gap:1px;flex-shrink:0}
+    .bowl-extra-pct{width:44px;text-align:center;background:#fff;border:1.5px solid #d5d5d0;border-radius:7px;padding:8px 2px;font-size:14px;font-weight:600;color:#1A1814}
+    .bowl-extra-pct-label{font-size:11px;color:#999}
+    .bowl-extra-gram{font-size:12px;width:38px;text-align:right;font-weight:500;color:#1A1814;flex-shrink:0}
+    .bowl-extra-remove{width:22px;height:22px;border:none;background:none;color:#ccc;font-size:16px;cursor:pointer;padding:0}
+    .bowl-add-extra-btn{width:100%;padding:7px;border:1.5px dashed #d5d5d0;border-radius:8px;background:none;font-size:11px;color:#999;cursor:pointer;margin-top:4px}
+    .bowl-add-btn{width:100%;padding:12px;border:1.5px dashed #d0d0cb;border-radius:12px;background:#fafaf8;font-size:13px;font-weight:600;color:#999;cursor:pointer;margin-bottom:12px;text-align:center}
 
-#consent,#signup{background:var(--sand-50);padding:60px 24px 24px;min-height:100vh}
-.back-btn{width:40px;height:40px;border-radius:50%;background:white;box-shadow:0 2px 8px rgba(15,31,29,0.06);display:grid;place-items:center;margin-bottom:18px;font-size:18px;color:var(--ink-700);font-weight:600}
-.consent-eyebrow{display:inline-block;background:var(--teal-50);color:var(--teal-700);padding:5px 12px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:0.08em;margin-bottom:12px}
-.section-title{font-family:var(--display);font-weight:800;font-size:28px;line-height:1.15;letter-spacing:-0.025em;color:var(--ink-900);margin-bottom:8px}
-.section-sub{font-size:13px;line-height:1.5;color:var(--ink-500);margin-bottom:24px}
-.benefit-list{display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
-.benefit{background:white;border-radius:14px;padding:14px;display:flex;gap:12px;align-items:center;border:1px solid var(--sand-200)}
-.benefit-icon{width:40px;height:40px;border-radius:11px;flex-shrink:0;display:grid;place-items:center;font-size:20px}
-.benefit-icon.orange{background:#fff2e6}
-.benefit-icon.teal{background:var(--teal-50)}
-.benefit-icon.rose{background:var(--rose-100)}
-.benefit-text{flex:1;min-width:0}
-.benefit-title{font-size:13.5px;font-weight:700;color:var(--ink-900);margin-bottom:2px;letter-spacing:-0.01em}
-.benefit-desc{font-size:12px;color:var(--ink-500);line-height:1.45}
-.cta-row{display:flex;gap:10px;margin-top:auto;padding-top:20px}
-.cta-secondary{padding:16px 20px;background:white;color:var(--ink-500);border:1px solid var(--sand-200);border-radius:14px;font-weight:600;font-size:13px}
-.cta-primary{flex:1;padding:16px;background:var(--teal-500);color:white;border-radius:14px;font-weight:800;font-size:14px;letter-spacing:0.01em;transition:all 0.15s;box-shadow:0 6px 18px rgba(31,122,110,0.25)}
-.cta-primary:active{transform:scale(0.98)}
-.cta-primary:disabled{background:var(--ink-200);box-shadow:none;cursor:not-allowed}
+    /* 산화제 포함 토글 */
+    .oxi-toggle{display:flex;align-items:center;gap:6px;margin:5px 0 0 0;padding:5px 10px;border:1.5px dashed #ddd;border-radius:20px;background:#fafafa;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .2s}
+    .oxi-toggle:active{transform:scale(0.97)}
+    .oxi-toggle .oxi-dot{width:16px;height:16px;border-radius:50%;border:2px solid #ccc;background:#fff;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+    .oxi-toggle .oxi-dot svg{opacity:0;transition:opacity .15s}
+    .oxi-toggle .oxi-text{font-size:11px;color:#999;transition:color .2s}
+    .oxi-toggle .oxi-arrow{margin-left:auto;font-size:10px;color:#ccc;transition:all .2s}
+    .oxi-toggle.active{border:1.5px solid rgba(192,57,43,0.3);background:rgba(192,57,43,0.04)}
+    .oxi-toggle.active .oxi-dot{border-color:#C0392B;background:#C0392B}
+    .oxi-toggle.active .oxi-dot svg{opacity:1}
+    .oxi-toggle.active .oxi-text{color:#C0392B;font-weight:600}
+    .oxi-toggle.active .oxi-arrow{color:#C0392B}
 
-.field-group{margin-bottom:12px}
-.field-row{display:flex;gap:10px}
-.field-row .field-group{flex:1}
-.field-label{display:block;font-size:11px;font-weight:700;color:var(--ink-700);margin-bottom:6px;letter-spacing:0.02em}
-.field-input,.field-select{width:100%;background:white;border:1.5px solid var(--sand-200);border-radius:12px;padding:14px;font-size:14px;color:var(--ink-900);transition:all 0.15s}
-.field-input::placeholder{color:var(--ink-300)}
-.field-input:focus,.field-select:focus{border-color:var(--teal-500);box-shadow:0 0 0 4px rgba(31,122,110,0.08)}
-.field-input.passport{text-transform:uppercase;letter-spacing:0.05em}
-.field-select{appearance:none;background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="%234a6260" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>');background-repeat:no-repeat;background-position:right 16px center;padding-right:40px}
+    /* 합계 바 */
+    .bowl-total-bar{margin:10px -12px 0;padding:12px;background:#fef8f7;border-radius:0 0 12px 12px;border-top:1.5px solid #f0d5d0}
+    .bowl-total-empty{text-align:center;padding:6px 0;font-size:12px;color:#bbb}
+    .bowl-res-label{font-size:10px;color:#888;margin-bottom:4px}
+    .bowl-res-ratio{font-size:11px;color:#888;margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid #f0e0dd}
+    .bowl-res-item{display:flex;justify-content:space-between;padding:3px 0;font-size:13px}
+    .bowl-res-item .name{color:#1A1814;font-weight:500}
+    .bowl-res-item .gram{color:#1A1814;font-weight:700}
+    .bowl-res-divider{height:1px;background:#f0e0dd;margin:4px 0}
+    .bowl-res-main-total{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:15px;font-weight:700;color:#D35B5B}
+    .bowl-res-oxi{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:14px;font-weight:600;color:#D35B5B}
+    .bowl-res-oxi-tag{font-size:9px;color:#C0392B;background:rgba(192,57,43,0.08);border:1px solid rgba(192,57,43,0.15);padding:1px 4px;border-radius:3px;margin-left:4px;font-weight:600}
+    .bowl-res-grand{display:flex;justify-content:space-between;align-items:flex-end;padding:6px 0 0;margin-top:4px;border-top:2px solid #e8c0c0}
+    .bowl-res-grand .label{font-size:13px;font-weight:700;color:#B71C1C}
+    .bowl-res-grand .total{font-size:22px;font-weight:800;color:#B71C1C}
 
-.photo-section{margin-bottom:14px}
-.photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.photo-slot{position:relative;background:white;border:1.5px dashed var(--sand-200);border-radius:12px;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;overflow:hidden;transition:all 0.15s}
-.photo-slot:hover{border-color:var(--teal-500)}
-.photo-slot.filled{border-style:solid;border-color:var(--teal-500);padding:0}
-.photo-slot.filled .photo-icon,.photo-slot.filled .photo-label,.photo-slot.filled .photo-hint{display:none}
-.photo-slot img{width:100%;height:100%;object-fit:cover}
-.photo-slot input{display:none}
-.photo-icon{font-size:28px;opacity:0.5}
-.photo-label{font-size:12px;font-weight:700;color:var(--ink-700)}
-.photo-hint{font-size:10px;color:var(--ink-400)}
-.photo-retake{position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);color:white;font-size:10px;padding:4px 8px;border-radius:6px;font-weight:700;display:none;z-index:2}
-.photo-slot.filled .photo-retake{display:block}
+    /* ════════════ 쉴드커넥트 계정 UI ════════════ */
+    /* 홈 상단 계정 바 */
+    .home-account-bar{display:flex;justify-content:flex-end;align-items:center;padding:14px 20px 4px;min-height:34px}
+    .account-login-link{font-size:13px;color:#1A1814;font-weight:600;text-decoration:none;padding:7px 18px;border:1.5px solid #1A1814;border-radius:18px;transition:all .15s;-webkit-tap-highlight-color:transparent;letter-spacing:-0.2px}
+    .account-login-link:active{background:#1A1814;color:#fff;transform:scale(.97)}
+    .account-info{display:flex;align-items:center;gap:10px;font-size:13px;color:#1A1814;letter-spacing:-0.2px}
+    .account-credit{font-weight:600}
+    .account-credit strong{font-weight:700;color:#1A1814}
+    .account-divider{color:#d0d0cb;font-weight:400}
+    .account-logout{color:#999;text-decoration:none;font-weight:500;cursor:pointer;transition:color .15s;-webkit-tap-highlight-color:transparent}
+    .account-logout:active{color:#1A1814}
 
-.consent-card{background:white;border:1.5px solid var(--sand-200);border-radius:12px;padding:14px;margin-bottom:14px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;transition:all 0.15s}
-.consent-card.checked{border-color:var(--teal-500);background:var(--teal-50)}
-.check-box{width:20px;height:20px;border:1.5px solid var(--ink-200);border-radius:6px;flex-shrink:0;margin-top:1px;display:grid;place-items:center;background:white;color:white;font-size:13px;font-weight:800}
-.consent-card.checked .check-box{background:var(--teal-500);border-color:var(--teal-500)}
-.consent-card.checked .check-box::before{content:"✓"}
-.consent-text-main{font-size:12.5px;font-weight:600;color:var(--ink-700);line-height:1.45}
-.consent-link{font-size:11px;color:var(--teal-500);font-weight:700;text-decoration:underline;cursor:pointer}
+    /* 설정 페이지 계정 카드 */
+    .account-card-header{padding:4px 0 10px;font-size:11px;color:#999;font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+    .account-value{font-size:14px;font-weight:600;color:#1A1814;letter-spacing:-0.2px}
+    .account-value.muted{font-size:12px;color:#888;font-weight:500}
+    .account-id-display{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#888;letter-spacing:0}
+    .account-logged-out-wrap{padding:28px 16px;text-align:center}
+    .account-logged-out-msg{font-size:13px;color:#888;margin-bottom:16px;line-height:1.6}
+    .account-login-btn-big{display:inline-block;padding:12px 40px;background:#1A1814;color:#fff;text-decoration:none;border-radius:14px;font-size:14px;font-weight:700;letter-spacing:-0.2px;transition:all .15s;-webkit-tap-highlight-color:transparent}
+    .account-login-btn-big:active{opacity:.85;transform:scale(.98)}
+    .account-logout-btn{padding:8px 18px;background:transparent;color:#888;border:1.5px solid #e5e5e0;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;-webkit-tap-highlight-color:transparent}
+    .account-logout-btn:active{border-color:#1A1814;color:#1A1814}
+  </style>
 
-.signup-info{background:var(--sand-100);border-radius:10px;padding:12px 14px;margin-top:14px;font-size:11.5px;color:var(--ink-500);line-height:1.55;text-align:center}
+  <style id="hairo-dark-override">
+    /* HAIRO 다크 라임 — #page-home 안에서만 적용 (다른 페이지 영향 0) */
+    html, body {
+      background:#0A0A0A !important;
+      background-color:#0A0A0A !important;
+    }
+    html { min-height:100%; }
+    #page-home {
+      background:#0A0A0A;
+      color:#fff;
+      min-height:100vh;
+      min-height:100dvh;
+      overflow-x:hidden;
+      max-width:100%;
+    }
+    html, body { overflow-x:hidden; }
 
-.guide-modal{position:fixed;inset:0;background:rgba(15,31,29,0.7);backdrop-filter:blur(8px);z-index:1000;display:none;align-items:flex-end;justify-content:center;padding:0}
-.guide-modal.show{display:flex}
-.guide-content{background:white;width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:24px 24px 40px;animation:slideUp 0.3s ease-out}
-.guide-icon{font-size:48px;text-align:center;margin-bottom:12px}
-.guide-title{font-family:var(--display);font-weight:800;font-size:20px;text-align:center;margin-bottom:8px;letter-spacing:-0.02em}
-.guide-desc{font-size:13px;color:var(--ink-500);text-align:center;line-height:1.6;margin-bottom:18px}
-.guide-tips{background:var(--sand-100);border-radius:12px;padding:14px;margin-bottom:18px}
-.guide-tip{font-size:12px;color:var(--ink-700);padding:4px 0;display:flex;gap:8px}
-.guide-tip::before{content:"✓";color:var(--teal-500);font-weight:800}
-.guide-warn{background:#fff5f5;color:var(--rose-500);border-radius:10px;padding:10px 12px;font-size:11px;line-height:1.5;margin-bottom:18px}
+    /* 상단 계정 바 */
+    #page-home .home-account-bar { padding:14px 20px 4px; min-height:34px; }
+    #page-home .account-login-link {
+      background:#C7F050 !important; color:#0A0A0A !important;
+      border:none !important; padding:9px 22px !important;
+      border-radius:18px !important; font-size:13px !important;
+      font-weight:600 !important; letter-spacing:-0.2px;
+      text-decoration:none; -webkit-tap-highlight-color:transparent;
+      transition:all .15s;
+    }
+    #page-home .account-login-link:active { background:#C7F050 !important; color:#0A0A0A !important; opacity:.85; transform:scale(.97); }
+    #page-home .account-info { color:#fff !important; font-size:13px; }
+    #page-home .account-credit { color:rgba(255,255,255,0.85) !important; }
+    #page-home .account-credit strong#creditCountHome { color:#C7F050 !important; font-weight:700 !important; }
+    #page-home .account-divider { color:rgba(255,255,255,0.2) !important; }
+    #page-home .account-logout { color:rgba(255,255,255,0.5) !important; }
+    #page-home .account-logout:active { color:#fff !important; }
 
-.loading-overlay{position:fixed;inset:0;background:rgba(15,31,29,0.85);backdrop-filter:blur(8px);z-index:2000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;color:white}
-.loading-overlay.show{display:flex}
-.spinner{width:48px;height:48px;border:4px solid rgba(255,255,255,0.2);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite}
-.loading-text{font-size:14px;font-weight:600}
+    /* 태그라인 */
+    #page-home .home-tagline-row { background:transparent !important; border:none !important; padding:8px 16px 14px; }
+    #page-home .home-tagline-line1 { color:#fff !important; font-size:12px !important; line-height:1.45 !important; letter-spacing:-0.2px; }
+    #page-home .home-tagline-line2 { color:rgba(255,255,255,0.4) !important; font-size:10.5px !important; margin-top:3px !important; }
+    #page-home .home-insta-pill {
+      background:transparent !important;
+      border:1px solid rgba(255,255,255,0.12) !important;
+      color:rgba(255,255,255,0.7) !important;
+      font-size:10.5px !important; padding:5px 10px !important;
+      border-radius:14px !important;
+    }
+    #page-home .home-insta-pill:active { background:rgba(255,255,255,0.05) !important; }
 
-#main{background:var(--sand-50);flex-direction:column;min-height:100vh;padding-bottom:80px}
-.main-header{background:linear-gradient(165deg,#114841 0%,#1f7a6e 70%,#2d8d7b 100%);color:white;padding:56px 24px 80px;border-radius:0 0 32px 32px;position:relative;overflow:hidden}
-.main-header::before{content:"";position:absolute;top:-50px;right:-80px;width:240px;height:240px;background:radial-gradient(circle,rgba(232,123,53,0.35),transparent 60%);border-radius:50%;pointer-events:none}
-.main-greet-hi{font-size:13px;opacity:0.8;font-weight:500;margin-bottom:4px;position:relative;z-index:1}
-.main-greet-name{font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:-0.025em;margin-bottom:14px;position:relative;z-index:1}
-.meta-row{display:flex;gap:8px;flex-wrap:wrap;position:relative;z-index:1}
-.meta-pill{background:rgba(255,255,255,0.15);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.2);padding:6px 12px;border-radius:999px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
-.live-dot{width:6px;height:6px;background:#7ee8a0;border-radius:50%;box-shadow:0 0 8px #7ee8a0;animation:pulse 1.6s ease-in-out infinite}
-.main-content{padding:0 20px;margin-top:-50px;position:relative;z-index:2;flex:1}
-.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
-.menu-card{background:white;border-radius:16px;padding:18px;border:1px solid var(--sand-200);box-shadow:0 4px 16px rgba(15,31,29,0.04);cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden}
-.menu-card:active{transform:scale(0.98)}
-.menu-card-emoji{font-size:24px;margin-bottom:8px}
-.menu-card-title{font-family:var(--display);font-weight:800;font-size:14px;letter-spacing:-0.01em;color:var(--ink-900);margin-bottom:2px}
-.menu-card-desc{font-size:11px;color:var(--ink-500)}
-.menu-card-soon{position:absolute;top:10px;right:10px;background:var(--sand-100);color:var(--ink-400);font-size:9px;padding:3px 7px;border-radius:6px;font-weight:700;letter-spacing:0.05em}
-.menu-card.full{grid-column:1/-1;background:linear-gradient(135deg,#e87b35 0%,#f0a065 100%);color:white;border:none}
-.menu-card.full .menu-card-title,.menu-card.full .menu-card-desc{color:white}
-.menu-card.full .menu-card-desc{opacity:0.9}
+    /* 배너 - 캐릭터 일러스트에 맞춰 위 정렬 */
+    #page-home .home-banner-wrap {
+      max-height:220px !important;
+      overflow:hidden !important;
+      border-radius:14px !important;
+      margin:0 16px 14px !important;
+    }
+    #page-home .home-banner-wrap img {
+      width:100% !important;
+      height:220px !important;
+      object-fit:cover !important;
+      object-position:center top !important;
+      display:block !important;
+    }
 
-.action-row{display:flex;gap:10px;margin-bottom:18px}
-.action-btn{flex:1;background:white;border-radius:14px;padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;border:1px solid var(--sand-200);cursor:pointer}
-.action-btn.sos{background:linear-gradient(135deg,#ff6b6b 0%,#d04848 100%);border-color:transparent;color:white}
-.action-emoji{font-size:20px}
-.action-label{font-size:11.5px;font-weight:700}
+    /* 섹션 라벨 */
+    #page-home .section-label {
+      color:rgba(255,255,255,0.4) !important;
+      text-transform:none !important;
+      letter-spacing:0.03em !important;
+      font-weight:500 !important;
+      font-size:11px !important;
+      padding:10px 18px 6px !important;
+    }
 
-.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:rgba(255,255,255,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--sand-200);padding:10px 0 22px;display:flex;justify-content:space-around;z-index:100}
-.nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 12px;color:var(--ink-300);font-size:10px;font-weight:700}
-.nav-item.active{color:var(--teal-500)}
-.nav-emoji{font-size:18px}
+    /* 메뉴 그리드 — 4열 → 2열 */
+    #page-home .menu-grid {
+      grid-template-columns:repeat(2, 1fr) !important;
+      column-gap:2px !important;
+      row-gap:6px !important;
+      padding:0 12px 8px !important;
+    }
 
-#board{background:var(--sand-50);flex-direction:column;min-height:100vh;padding:60px 0 80px}
-#board.active{display:flex !important}
-.board-header{padding:0 20px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center}
-.board-title{font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:-0.02em}
-.board-write-btn{background:var(--teal-500);color:white;padding:10px 16px;border-radius:999px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(31,122,110,0.3)}
-.post-list{padding:0 20px;display:flex;flex-direction:column;gap:10px}
-.post-card{background:white;border-radius:14px;padding:16px;border:1px solid var(--sand-200);cursor:pointer;transition:all 0.15s}
-.post-card:active{transform:scale(0.99)}
-.post-cat{display:inline-block;background:var(--teal-50);color:var(--teal-700);padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:0.05em;margin-bottom:8px}
-.post-cat.question{background:#fff2e6;color:var(--orange-500)}
-.post-cat.tip{background:#e8f0ff;color:#3050a0}
-.post-cat.event{background:var(--rose-100);color:var(--rose-500)}
-.post-title{font-size:14px;font-weight:700;color:var(--ink-900);margin-bottom:4px;line-height:1.35}
-.post-body{font-size:12px;color:var(--ink-500);line-height:1.5;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.post-meta{font-size:10px;color:var(--ink-400);display:flex;gap:8px}
-.post-empty{text-align:center;padding:60px 20px;color:var(--ink-400);font-size:13px}
+    /* 메뉴 카드 — 칸 없애기 (힉스필드 톤, 가로형 컴팩트) */
+    #page-home .menu-card {
+      background:transparent !important;
+      border:none !important;
+      border-radius:10px !important;
+      box-shadow:none !important;
+      padding:6px 6px !important;
+      display:grid !important;
+      grid-template-columns:36px 1fr !important;
+      column-gap:10px !important;
+      row-gap:0 !important;
+      align-items:center !important;
+      min-height:auto !important;
+      color:#fff !important;
+      position:relative !important;
+      animation:none !important;
+    }
+    /* 텍스트들이 grid 두번째 컬럼에 자동 stack — align-self:start로 grid의 center 정렬 무력화 */
+    #page-home .menu-card .menu-label,
+    #page-home .menu-card .menu-engine,
+    #page-home .menu-card .menu-sub {
+      grid-column:2 !important;
+      align-self:start !important;
+    }
+    /* 첫 텍스트 줄(menu-label)은 아이콘과 같은 위치(중앙)에 시작하지 않고, 카드 맨 위부터 시작 */
+    #page-home .menu-card .menu-icon {
+      grid-row:1 / span 3 !important;
+      align-self:center !important;
+    }
+    #page-home .menu-card:active {
+      background:rgba(255,255,255,0.05) !important;
+      transform:scale(.98) !important;
+    }
 
-#post-write{background:var(--sand-50);flex-direction:column;min-height:100vh;padding:60px 24px 24px}
-#post-write.active{display:flex !important}
-.cat-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-.cat-pill{padding:8px 14px;background:white;border:1px solid var(--sand-200);border-radius:999px;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink-500)}
-.cat-pill.active{background:var(--teal-500);color:white;border-color:var(--teal-500)}
+    /* 영상 보기 wide — 가로형 풀폭 */
+    #page-home .menu-card.wide {
+      flex-direction:row !important;
+      align-items:center !important;
+      padding:12px 8px !important;
+      gap:0 !important;
+      grid-column:span 2 !important;
+      flex-wrap:nowrap !important;
+    }
+    #page-home .menu-card.wide .menu-text-wrap {
+      flex:1; min-width:0;
+      display:flex; flex-direction:column;
+    }
+    #page-home .menu-card.wide .menu-label {
+      text-align:left !important; font-size:13.5px !important;
+      flex:none !important; align-self:auto !important;
+    }
+    #page-home .menu-card.wide .menu-sub {
+      font-size:10.5px !important; margin-top:5px !important;
+      padding-left:0 !important; flex-basis:auto !important;
+    }
 
-textarea.field-input{resize:vertical;min-height:200px;line-height:1.5}
+    /* 메뉴 아이콘 박스 */
+    #page-home .menu-icon {
+      width:36px !important; height:36px !important;
+      background:#1F1F1F !important;
+      border:1px solid rgba(255,255,255,0.06) !important;
+      border-radius:10px !important;
+      flex-shrink:0 !important;
+      margin-right:10px !important;
+    }
+    #page-home .menu-icon svg {
+      width:18px !important; height:18px !important;
+      stroke:#fff !important; stroke-width:1.6 !important;
+      color:#fff !important;
+    }
 
-@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-</style>
+    /* 메뉴 라벨 */
+    #page-home .menu-label {
+      font-size:13px !important;
+      font-weight:600 !important;
+      text-align:left !important;
+      letter-spacing:-0.01em !important;
+      color:#fff !important;
+      line-height:1.15 !important;
+      margin:0 !important;
+      padding:0 !important;
+      min-width:0;
+    }
+
+    /* 메뉴 부제 — grid 두번째 컬럼에 자동 들여쓰기 */
+    #page-home .menu-sub {
+      display:block !important;
+      font-size:10.5px !important;
+      color:rgba(255,255,255,0.5) !important;
+      line-height:1.2 !important;
+      margin-top:1px !important;
+      padding:0 !important;
+      text-align:left !important;
+      letter-spacing:-0.01em !important;
+      font-weight:400 !important;
+    }
+
+    /* 메뉴 엔진 라벨 (모델명, HAIRO 카드용) */
+    #page-home .menu-engine {
+      display:block !important;
+      font-size:9.5px !important;
+      color:#C7F050 !important;
+      opacity:0.75 !important;
+      line-height:1.3 !important;
+      margin-top:1px !important;
+      padding:0 !important;
+      text-align:left !important;
+      letter-spacing:0.2px !important;
+      font-weight:500 !important;
+    }
+
+    /* HOT 라벨 - 아이콘 박스 좌상단에 겹침 (힉스필드 톤) */
+    #page-home .menu-hot {
+      position:absolute;
+      top:-2px; left:-2px;
+      background:#C7F050; color:#0A0A0A;
+      font-size:8.5px; font-weight:700;
+      padding:2px 5px; border-radius:4px;
+      letter-spacing:0.4px;
+      z-index:2;
+      line-height:1.4;
+      box-shadow:0 0 0 2px #0A0A0A;
+    }
+
+    /* HOT 카드의 아이콘 박스 — 라임 실금 보더 */
+    #page-home .menu-card:has(.menu-hot) .menu-icon {
+      border:1px solid rgba(199,240,80,0.45) !important;
+    }
+
+    /* 도구 섹션 */
+    #page-home .tool-grid {
+      display:grid;
+      grid-template-columns:repeat(2, 1fr);
+      gap:4px;
+      padding:0 12px 8px;
+    }
+    #page-home .tool-card {
+      display:flex; align-items:center; gap:10px;
+      padding:10px 8px;
+      background:transparent;
+      border:none;
+      border-radius:10px;
+      text-decoration:none;
+      color:#fff;
+      cursor:pointer;
+      -webkit-tap-highlight-color:transparent;
+      transition:all .15s;
+      font-family:inherit;
+    }
+    #page-home .tool-card:active { background:rgba(255,255,255,0.05); transform:scale(.98); }
+    #page-home .tool-card svg {
+      width:18px; height:18px;
+      stroke:#fff; stroke-width:1.6;
+      flex-shrink:0;
+    }
+    #page-home .tool-card span {
+      font-size:12.5px;
+      color:rgba(255,255,255,0.85);
+      letter-spacing:-0.2px;
+    }
+
+    /* ════════════════════════════════════════
+       인덱스 안 다른 페이지들 다크 통일
+       (CSS 변수 재정의로 외부 style.css의 var() 자동 다크화)
+       ════════════════════════════════════════ */
+    .page-screen:not(#page-home) {
+      --bg: #0A0A0A;
+      --card: #1A1A1A;
+      --gray-100: #1F1F1F;
+      --gray-200: rgba(255,255,255,0.08);
+      --gray-300: rgba(255,255,255,0.15);
+      --gray-500: rgba(255,255,255,0.5);
+      --gray-700: rgba(255,255,255,0.75);
+      --black: #ffffff;
+      --white: #1A1A1A;
+      --accent: #C7F050;
+      --accent2: #C7F050;
+      background: #0A0A0A !important;
+      color: #fff;
+      min-height: 100dvh;
+    }
+
+    /* 페이지 헤더 / 서브 헤더 */
+    .page-screen:not(#page-home) .page-header,
+    .page-screen:not(#page-home) .sub-header {
+      background:rgba(10,10,10,0.92) !important;
+      border-bottom:1px solid rgba(255,255,255,0.08) !important;
+      backdrop-filter:blur(12px);
+    }
+    .page-screen:not(#page-home) .page-header h2,
+    .page-screen:not(#page-home) .sub-header h2 {
+      color:#fff !important;
+    }
+    .page-screen:not(#page-home) .page-header .sub,
+    .page-screen:not(#page-home) .sub-header .sub {
+      color:rgba(255,255,255,0.55) !important;
+    }
+    .page-screen:not(#page-home) .back-btn {
+      background:#1c1c1c !important;
+      border:1px solid rgba(255,255,255,0.1) !important;
+    }
+    .page-screen:not(#page-home) .back-btn svg {
+      stroke:rgba(255,255,255,0.7) !important;
+      color:rgba(255,255,255,0.7) !important;
+    }
+
+    /* 성분사전 */
+    #page-ingredient .ing-add-btn {
+      background:#C7F050 !important;
+      color:#0A0A0A !important;
+    }
+    #page-ingredient .ing-add-btn svg {
+      stroke:#0A0A0A !important;
+    }
+    /* 검색바 sticky 정상 동작 위해 다크 솔리드 배경 (transparent 금지) */
+    #page-ingredient .ing-search-bar {
+      background:#0A0A0A !important;
+      border-bottom:1px solid rgba(255,255,255,0.08) !important;
+    }
+    #page-ingredient .search-wrap {
+      background:transparent !important;
+    }
+    #page-ingredient .search-input {
+      background:#1A1A1A !important;
+      color:#fff !important;
+      border:1px solid rgba(255,255,255,0.1) !important;
+    }
+    #page-ingredient .search-input::placeholder {
+      color:rgba(255,255,255,0.4) !important;
+    }
+    #page-ingredient .search-icon {
+      color:rgba(255,255,255,0.5) !important;
+    }
+    #page-ingredient .filter-btn {
+      background:#1A1A1A !important;
+      color:rgba(255,255,255,0.6) !important;
+      border:1px solid rgba(255,255,255,0.08) !important;
+    }
+    #page-ingredient .filter-btn.active {
+      background:#C7F050 !important;
+      color:#0A0A0A !important;
+      border-color:#C7F050 !important;
+    }
+    #page-ingredient .ing-card {
+      background:#1A1A1A !important;
+      border:1px solid rgba(255,255,255,0.06) !important;
+    }
+    #page-ingredient .card-ko,
+    #page-ingredient .card-eng {
+      color:#fff !important;
+    }
+    #page-ingredient .card-eng {
+      color:rgba(255,255,255,0.5) !important;
+    }
+
+    /* 약제 비율 계산기 */
+    #page-calculator .calc-tab-row {
+      background:#1A1A1A !important;
+      border:1px solid rgba(255,255,255,0.08) !important;
+    }
+    #page-calculator .calc-tab {
+      color:rgba(255,255,255,0.5) !important;
+      background:transparent !important;
+    }
+    #page-calculator .calc-tab.active {
+      background:#C7F050 !important;
+      color:#0A0A0A !important;
+    }
+    #page-calculator .bowl-card {
+      background:#1A1A1A !important;
+      border:1px solid rgba(255,255,255,0.08) !important;
+    }
+    #page-calculator .bowl-number {
+      background:#C7F050 !important;
+      color:#0A0A0A !important;
+    }
+    #page-calculator .bowl-title {
+      color:#fff !important;
+    }
+    #page-calculator .bowl-summary {
+      color:rgba(255,255,255,0.5) !important;
+    }
+    #page-calculator .bowl-color-name,
+    #page-calculator .bowl-extra-name {
+      background:#0F0F0F !important;
+      border:1px solid rgba(255,255,255,0.08) !important;
+      color:#fff !important;
+    }
+    #page-calculator .bowl-default-name,
+    #page-calculator .bowl-extra-default-name {
+      color:rgba(255,255,255,0.3) !important;
+    }
+    #page-calculator .bowl-ratio-input,
+    #page-calculator .bowl-extra-pct {
+      background:#0F0F0F !important;
+      border:1px solid rgba(255,255,255,0.12) !important;
+      color:#fff !important;
+    }
+    #page-calculator .bowl-color-gram,
+    #page-calculator .bowl-extra-gram {
+      color:rgba(255,255,255,0.85) !important;
+    }
+    #page-calculator .bowl-extras-divider {
+      background:rgba(255,255,255,0.08) !important;
+    }
+    #page-calculator .bowl-extras-label {
+      color:rgba(255,255,255,0.5) !important;
+    }
+    #page-calculator .bowl-add-extra-btn {
+      background:transparent !important;
+      border:1.5px solid rgba(255,255,255,0.15) !important;
+      color:rgba(255,255,255,0.5) !important;
+    }
+    #page-calculator .bowl-add-btn {
+      background:#1A1A1A !important;
+      border:1.5px solid rgba(255,255,255,0.12) !important;
+      color:rgba(255,255,255,0.7) !important;
+    }
+    #page-calculator .bowl-total-bar {
+      background:#1F1A14 !important;
+      border-top:1px solid rgba(199,240,80,0.2) !important;
+    }
+    #page-calculator .bowl-res-label,
+    #page-calculator .bowl-res-ratio {
+      color:rgba(255,255,255,0.5) !important;
+    }
+    #page-calculator .bowl-res-item .name,
+    #page-calculator .bowl-res-item .gram {
+      color:#fff !important;
+    }
+    #page-calculator .bowl-res-divider {
+      background:rgba(255,255,255,0.08) !important;
+    }
+    #page-calculator .bowl-res-main-total,
+    #page-calculator .bowl-res-oxi {
+      color:#C7F050 !important;
+    }
+    #page-calculator .bowl-res-grand {
+      border-top:2px solid rgba(199,240,80,0.3) !important;
+    }
+    #page-calculator .bowl-res-grand .label,
+    #page-calculator .bowl-res-grand .total {
+      color:#C7F050 !important;
+    }
+    #page-calculator .oxi-btn-row .oxi-btn {
+      background:#1A1A1A !important;
+      color:rgba(255,255,255,0.6) !important;
+      border:1px solid rgba(255,255,255,0.08) !important;
+    }
+    #page-calculator .oxi-btn-row .oxi-btn.active {
+      background:#C7F050 !important;
+      color:#0A0A0A !important;
+      border-color:#C7F050 !important;
+    }
+    #page-calculator .oxi-toggle {
+      background:#1A1A1A !important;
+      border:1.5px dashed rgba(255,255,255,0.15) !important;
+    }
+    #page-calculator .oxi-toggle .oxi-text {
+      color:rgba(255,255,255,0.6) !important;
+    }
+    #page-calculator .oxi-toggle .oxi-arrow {
+      color:rgba(255,255,255,0.3) !important;
+    }
+    #page-calculator .oxi-toggle .oxi-dot {
+      background:#0F0F0F !important;
+      border-color:rgba(255,255,255,0.3) !important;
+    }
+
+    /* 총량 버튼 (숏/미디움/롱/울트라) - 활성 흰색 → 라임 */
+    #page-calculator .gram-btn {
+      background:#1A1A1A !important;
+      border:1px solid rgba(255,255,255,0.08) !important;
+      color:rgba(255,255,255,0.7) !important;
+    }
+    #page-calculator .gram-btn span {
+      color:rgba(255,255,255,0.5) !important;
+    }
+    #page-calculator .gram-btn.active {
+      background:#C7F050 !important;
+      border-color:#C7F050 !important;
+      color:#0A0A0A !important;
+    }
+    #page-calculator .gram-btn.active span {
+      color:rgba(10,10,10,0.65) !important;
+    }
+
+    /* 반올림 버튼 (0.5g/1g) - 활성 흰색 → 라임 */
+    #page-calculator .round-btn {
+      background:#1A1A1A !important;
+      border:1px solid rgba(255,255,255,0.08) !important;
+      color:rgba(255,255,255,0.7) !important;
+    }
+    #page-calculator .round-btn.active {
+      background:#C7F050 !important;
+      border-color:#C7F050 !important;
+      color:#0A0A0A !important;
+    }
+
+    /* 직접입력 input + 인라인 라벨 */
+    #page-calculator .custom-gram-input {
+      background:#0F0F0F !important;
+      border:1px solid rgba(255,255,255,0.1) !important;
+      color:#fff !important;
+    }
+    #page-calculator .custom-gram-label,
+    #page-calculator .calc-inline-label {
+      color:rgba(255,255,255,0.55) !important;
+    }
+    #page-calculator .custom-gram-unit {
+      color:rgba(255,255,255,0.55) !important;
+    }
+
+    /* 약제 입력 안내 박스 (펌제) - 라이트 블루 → 다크 */
+    #page-calculator .addons-note-box {
+      background:#1A1A1A !important;
+      border:1px solid rgba(199,240,80,0.15) !important;
+    }
+    #page-calculator .addons-note-top {
+      border-bottom:1px solid rgba(255,255,255,0.08) !important;
+    }
+    #page-calculator .addons-note-title {
+      color:#C7F050 !important;
+    }
+    #page-calculator .addons-note-body {
+      color:rgba(255,255,255,0.85) !important;
+    }
+    #page-calculator .addons-note-body strong {
+      background:#0F0F0F !important;
+      color:#fff !important;
+    }
+    #page-calculator .addons-note {
+      background:#1A1A1A !important;
+      color:rgba(255,255,255,0.7) !important;
+    }
+
+    /* 메모장 */
+    #page-memo textarea,
+    #page-memo input[type="text"] {
+      background:#1A1A1A !important;
+      color:#fff !important;
+      border:1px solid rgba(255,255,255,0.08) !important;
+    }
+
+    /* 개선·문의 */
+    #page-feedback textarea,
+    #page-feedback input[type="text"] {
+      background:#1A1A1A !important;
+      color:#fff !important;
+      border:1px solid rgba(255,255,255,0.08) !important;
+    }
+    #page-feedback textarea::placeholder,
+    #page-feedback input::placeholder,
+    #page-memo textarea::placeholder,
+    #page-memo input::placeholder {
+      color:rgba(255,255,255,0.35) !important;
+    }
+
+    /* 설정 페이지 */
+    #page-settings .account-card,
+    #page-settings .settings-card {
+      background:#1A1A1A !important;
+      border:1px solid rgba(255,255,255,0.06) !important;
+    }
+    #page-settings .account-value {
+      color:#fff !important;
+    }
+    #page-settings .account-card-header {
+      color:rgba(255,255,255,0.5) !important;
+    }
+    #page-settings .account-login-btn-big {
+      background:#C7F050 !important;
+      color:#0A0A0A !important;
+    }
+    #page-settings .account-logout-btn {
+      background:transparent !important;
+      border:1.5px solid rgba(255,255,255,0.15) !important;
+      color:rgba(255,255,255,0.6) !important;
+    }
+    #page-settings #creditCountSettings {
+      color:#C7F050 !important;
+    }
+
+    /* ════════════════════════════════════════
+       하단 네비 — 회색 다크 + 흰색 액티브
+       ════════════════════════════════════════ */
+    .bottom-nav {
+      background:#1A1A1A !important;
+      border-top:1px solid rgba(255,255,255,0.06) !important;
+    }
+    .nav-item {
+      color:rgba(255,255,255,0.4) !important;
+    }
+    .nav-item svg {
+      stroke:rgba(255,255,255,0.4) !important;
+    }
+    .nav-item.active {
+      color:#fff !important;
+    }
+    .nav-item.active svg {
+      stroke:#fff !important;
+    }
+
+    /* === 홈 메뉴 — 아이콘 박스만 키움 (B안) — 2026-05-09 === */
+    #page-home .menu-card {
+      grid-template-columns:54px 1fr !important;
+    }
+    #page-home .menu-icon {
+      width:54px !important;
+      height:54px !important;
+      border-radius:12px !important;
+    }
+    #page-home .menu-icon svg {
+      width:26px !important;
+      height:26px !important;
+    }
+
+    /* === 약제비율계산기 사진 시각화 (라이브 그람) — 2026-05-09 === */
+    #page-calculator .bowl-photo-viz { margin-top:6px; }
+    #page-calculator .bowl-photo-viz .photo-area {
+      position:relative;
+      width:100%;
+      aspect-ratio:1636/1112;
+      background:#1A1A1A url('./images/calc-hero.jpeg') center/cover no-repeat;
+      border-radius:10px;
+      overflow:hidden;
+      margin-bottom:8px;
+    }
+    #page-calculator .bowl-photo-viz .photo-area svg {
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+    }
+    #page-calculator .bowl-photo-viz .photo-summary {
+      padding:11px 13px;
+      background:#141414;
+      border:0.5px solid rgba(199,240,80,0.15);
+      border-radius:8px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    #page-calculator .bowl-photo-viz .ps-row {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      font-size:12.5px;
+      color:rgba(255,255,255,0.85);
+      letter-spacing:-0.01em;
+    }
+    #page-calculator .bowl-photo-viz .ps-row span:last-child {
+      font-weight:700;
+      color:#fff;
+    }
+    #page-calculator .bowl-photo-viz .ps-subtotal,
+    #page-calculator .bowl-photo-viz .ps-subtotal span:last-child {
+      color:#C7F050 !important;
+      font-weight:700;
+    }
+    #page-calculator .bowl-photo-viz .ps-divider {
+      height:1px;
+      background:rgba(199,240,80,0.18);
+      margin:1px 0;
+    }
+    #page-calculator .bowl-photo-viz .ps-grand {
+      font-size:13.5px;
+      font-weight:800;
+      color:#fff;
+      padding-top:1px;
+    }
+    #page-calculator .bowl-photo-viz .ps-grand span:last-child {
+      font-size:16px;
+      color:#C7F050;
+    }
+    /* 기존 결과 텍스트 숨김 (사진 viz가 대체) */
+    #page-calculator .bowl-total-bar > .bowl-res-label,
+    #page-calculator .bowl-total-bar > .bowl-res-ratio,
+    #page-calculator .bowl-total-bar > .bowl-res-divider,
+    #page-calculator .bowl-total-bar > .bowl-res-item,
+    #page-calculator .bowl-total-bar > .bowl-res-main-total,
+    #page-calculator .bowl-total-bar > .bowl-res-oxi,
+    #page-calculator .bowl-total-bar > .bowl-res-grand {
+      display:none !important;
+    }
+  </style>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-82LSVB4T6K"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-82LSVB4T6K');
+</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-82LSVB4T6K"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-82LSVB4T6K');
+</script>
 </head>
 <body>
 
-<div class="lang-switcher on-dark" id="langSwitcher">
-  <button class="lang-btn active" data-lang="ko">한</button>
-  <button class="lang-btn" data-lang="en">EN</button>
-  <button class="lang-btn" data-lang="vi">VI</button>
-  <button class="lang-btn" data-lang="id">ID</button>
+<!-- ════════════════════════════════
+     PAGE: HOME
+════════════════════════════════ -->
+<div id="page-home" class="page-screen page">
+
+  <!-- 쉴드커넥트 계정 바 -->
+  <div class="home-account-bar">
+    <!-- 비로그인 상태 -->
+    <a href="/api/auth/cafe24" class="account-login-link" id="loginLinkHome">로그인</a>
+    <!-- 로그인 상태 -->
+    <div class="account-info" id="accountInfoHome" style="display:none">
+      <span class="account-credit"><strong id="creditCountHome">0</strong> 크레딧</span>
+      <span class="account-divider">·</span>
+      <a class="account-logout" id="logoutLinkHome">로그아웃</a>
+    </div>
+  </div>
+
+  <!-- 배너 (가로 full) -->
+  <div class="home-banner-wrap">
+    <img src="./images/banner.jpeg" alt="배너" style="width:100%;height:auto;display:block;">
+  </div>
+
+  <!-- 사명 + 인스타 (한 줄 컴팩트) -->
+  <div class="home-tagline-row">
+    <div class="home-tagline-text">
+      <p class="home-tagline-line1">미용인을 위한 실사 기반 시각화 콘텐츠</p>
+      <p class="home-tagline-line2">계속 업데이트됩니다 · 팔로우로 함께해요</p>
+    </div>
+    <a class="home-insta-pill" href="https://www.instagram.com/shieldclinic.yong/" target="_blank" rel="noopener noreferrer">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="2" width="20" height="20" rx="5"/>
+        <circle cx="12" cy="12" r="4"/>
+        <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/>
+      </svg>
+      팔로우 @shieldclinic.yong
+    </a>
+  </div>
+
+  <!-- 메뉴 -->
+  <p class="section-label">주요 기능</p>
+  <div class="menu-grid">
+
+    <!-- HAIRO 살롱 스튜디오 -->
+    <a class="menu-card" href="./hairo.html">
+      <div class="menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2C8 2 6 5 6 9c0 3 1 5 2 7 0 0-1 2-1 4h10c0-2-1-4-1-4 1-2 2-4 2-7 0-4-2-7-6-7z"/>
+          <circle cx="9.5" cy="11" r="0.6" fill="currentColor" stroke="none"/>
+          <circle cx="14.5" cy="11" r="0.6" fill="currentColor" stroke="none"/>
+          <path d="M10 14c.5.4 1.2.6 2 .6s1.5-.2 2-.6"/>
+        </svg>
+      </div>
+      <span class="menu-label">HAIRO 살롱 스튜디오</span>
+      <span class="menu-engine">나노바나나2</span>
+      <span class="menu-sub">살롱에 필요한 모든 사진</span>
+      <span class="menu-hot">HOT</span>
+    </a>
+
+    <!-- 컬러 레시피 -->
+    <a class="menu-card" href="./analyzer.html">
+      <div class="menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a4 4 0 0 0-4 4c0 2 1 3.5 4 5.5C15 9.5 16 8 16 6a4 4 0 0 0-4-4z"/>
+          <path d="M8.5 14l-4 6.5h15l-4-6.5"/>
+          <line x1="12" y1="11.5" x2="12" y2="14"/>
+          <circle cx="5" cy="5" r="1" fill="currentColor" stroke="none"/>
+          <circle cx="19" cy="5" r="1" fill="currentColor" stroke="none"/>
+          <path d="M3 5h2M19 5h2M5 3v2M19 3v2" stroke-width="1"/>
+        </svg>
+      </div>
+      <span class="menu-label">컬러 레시피</span>
+      <span class="menu-sub">정밀 조색 + 고객 상담 카드</span>
+      <span class="menu-hot">HOT</span>
+    </a>
+
+    <!-- 컷 상담 -->
+    <a class="menu-card" href="./cut-analyzer.html">
+      <div class="menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="6" cy="6" r="3"/>
+          <circle cx="6" cy="18" r="3"/>
+          <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+          <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+          <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+        </svg>
+      </div>
+      <span class="menu-label">컷 상담</span>
+      <span class="menu-sub">디자이너 분석 + 고객 상담 카드</span>
+      <span class="menu-hot">HOT</span>
+    </a>
+
+    <!-- Color Journey -->
+    <a class="menu-card" href="./color_journey.html">
+      <div class="menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 3a9 9 0 0 1 0 18"/>
+          <circle cx="8" cy="9" r="1.2" fill="currentColor" stroke="none"/>
+          <circle cx="15" cy="8" r="1.2" fill="currentColor" stroke="none"/>
+          <circle cx="16" cy="14" r="1.2" fill="currentColor" stroke="none"/>
+          <circle cx="9" cy="15" r="1.2" fill="currentColor" stroke="none"/>
+        </svg>
+      </div>
+      <span class="menu-label">Color Journey</span>
+      <span class="menu-sub">여정형 게임으로 배우는<br>컬러레시피 추론능력</span>
+      <span class="menu-hot">HOT</span>
+    </a>
+
+    <!-- 약제 비율 계산기 -->
+    <a class="menu-card" href="#" onclick="navigate('calculator');return false;">
+      <div class="menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="2" width="16" height="20" rx="2"/>
+          <line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/>
+          <line x1="8" y1="14" x2="12" y2="14"/>
+        </svg>
+      </div>
+      <span class="menu-label">약제 비율 계산기</span>
+      <span class="menu-sub">염색약믹스·2제 비율 자동 계산</span>
+      <span class="menu-hot">HOT</span>
+    </a>
+
+    <!-- 언더톤별 염색 이론 (기존 멜라닌 색감분석) -->
+    <a class="menu-card" href="./melanin_level.html">
+      <div class="menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/>
+          <circle cx="12" cy="12" r="5"/>
+          <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+          <line x1="12" y1="3" x2="12" y2="5"/>
+          <line x1="12" y1="19" x2="12" y2="21"/>
+          <line x1="3" y1="12" x2="5" y2="12"/>
+          <line x1="19" y1="12" x2="21" y2="12"/>
+        </svg>
+      </div>
+      <span class="menu-label">언더톤별 염색 이론</span>
+      <span class="menu-sub">룰 매트릭스 기반 가이드</span>
+    </a>
+
+    <!-- 성분사전 -->
+    <a class="menu-card" href="#" onclick="navigate('ingredient');return false;">
+      <div class="menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 3h6"/><path d="M10 9 4.3 18.4a1 1 0 0 0 .87 1.6h13.66a1 1 0 0 0 .87-1.6L14 9"/>
+          <line x1="10" y1="3" x2="10" y2="9"/><line x1="14" y1="3" x2="14" y2="9"/>
+        </svg>
+      </div>
+      <span class="menu-label">성분사전</span>
+      <span class="menu-sub">헤어 화학 성분 레퍼런스</span>
+    </a>
+
+    <!-- 이론 -->
+    <a class="menu-card" href="#" onclick="navigate('theory');return false;">
+      <div class="menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+        </svg>
+      </div>
+      <span class="menu-label">이론</span>
+      <span class="menu-sub">헤어 디자인 기본 이론</span>
+    </a>
+
+    <!-- 영상 보기 (wide — 풀폭) -->
+    <a class="menu-card wide" href="#" onclick="navigate('reels');return false;">
+      <div class="menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polygon points="10,8 16,12 10,16" fill="currentColor" stroke="none"/>
+        </svg>
+      </div>
+      <div class="menu-text-wrap">
+        <span class="menu-label">영상 보기</span>
+        <span class="menu-sub">쉴드걸과 함께하는 쉽게 이해하는 큐티클 유니버스</span>
+      </div>
+    </a>
+
+    <!-- 빈칸 (4열 맞춤) -->
+    <div></div>
+
+    <!-- 매출 관리 (쉴드커넥트에서 비활성화) -->
+    <div class="sales-card-group" style="display:none">
+      <div class="sales-card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3v18h18"/><path d="M7 16v-5"/><path d="M11 16v-8"/><path d="M15 16v-3"/>
+        </svg>
+        매출 관리
+      </div>
+      <div class="sales-btn-row">
+        <button class="sales-btn" onclick="navigate('sales')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          매출
+        </button>
+        <button class="sales-btn" onclick="navigate('stats')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+            <path d="M3 3v18h18"/><path d="M7 16v-5"/><path d="M11 16v-8"/><path d="M15 16v-3"/>
+          </svg>
+          통계
+        </button>
+        <button class="sales-btn" onclick="navigate('settings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          설정
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 도구 섹션 -->
+  <p class="section-label">도구</p>
+  <div class="tool-grid">
+    <a class="tool-card" href="#" onclick="navigate('memo');return false;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+        <line x1="10" y1="9" x2="8" y2="9"/>
+      </svg>
+      <span>메모장</span>
+    </a>
+    <a class="tool-card" href="#" onclick="navigate('feedback');return false;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <span>개선·문의</span>
+    </a>
+  </div>
+
+  <div style="height:calc(var(--nav-h) + 24px + env(safe-area-inset-bottom))"></div>
+</div><!-- /page-home -->
+
+
+<!-- ════════════════════════════════
+     PAGE: INGREDIENT (성분사전)
+════════════════════════════════ -->
+<div id="page-ingredient" class="page-screen" style="display:none;">
+
+  <!-- 서브 헤더 (뒤로가기) -->
+  <div class="sub-header">
+    <button class="back-btn" onclick="navigate('home')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <span class="sub-header-title">성분사전</span>
+    <button class="ing-add-btn" onclick="openAddModal()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+  </div>
+
+  <!-- 검색 + 필터 -->
+  <div class="ing-search-bar">
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="search-input" type="search" id="searchInput"
+        placeholder="성분명 또는 영문명으로 검색..."
+        autocomplete="off" autocorrect="off" spellcheck="false"
+        oninput="renderList()"/>
+    </div>
+    <div class="filter-scroll">
+      <button class="filter-btn active" data-cat="전체"  onclick="setFilter('전체',this)">전체</button>
+      <button class="filter-btn" data-cat="크리닉" onclick="setFilter('크리닉',this)">크리닉</button>
+      <button class="filter-btn" data-cat="펌제"   onclick="setFilter('펌제',this)">펌제</button>
+      <button class="filter-btn" data-cat="염모제" onclick="setFilter('염모제',this)">염모제</button>
+      <button class="filter-btn" data-cat="세정"   onclick="setFilter('세정',this)">세정</button>
+      <button class="filter-btn" data-cat="두피"   onclick="setFilter('두피',this)">두피</button>
+    </div>
+  </div>
+
+  <div style="padding:0 16px 6px;">
+    <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
+      <span class="result-info" id="resultInfo" style="font-size:12px;color:#888;"></span>
+      <span style="font-size:11px;color:#9E7FBF;font-weight:600;">· 성분은 추후 계속 업데이트됩니다</span>
+    </div>
+  </div>
+  <div class="list-wrap" id="listWrap"></div>
+
+</div><!-- /page-ingredient -->
+
+<!-- ════════════════════════════════
+     PAGE: CALCULATOR (약제 비율 계산기 — 염모제/펌제 통합)
+════════════════════════════════ -->
+<div id="page-calculator" class="page-screen page" style="display:none;">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigate('home')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <div><h2>약제 비율 계산기</h2><div class="sub">현장용 레시피 계산 도구</div></div>
+  </div>
+  <div class="calc-wrap">
+    <!-- 탭 -->
+    <div class="calc-tab-row">
+      <button class="calc-tab active" id="calc-tab-dye" onclick="switchCalcTab('dye')">염모제</button>
+      <button class="calc-tab" id="calc-tab-perm" onclick="switchCalcTab('perm')">펌제</button>
+    </div>
+
+    <!-- ══ 염모제 탭 ══ -->
+    <div id="calc-dye-tab">
+      <div class="calc-card">
+        <div class="calc-card-title">총량</div>
+        <div class="gram-btn-row">
+          <button class="gram-btn dye-gram-btn active" data-gram="40">숏<span>40g</span></button>
+          <button class="gram-btn dye-gram-btn" data-gram="60">미디움<span>60g</span></button>
+          <button class="gram-btn dye-gram-btn" data-gram="120">롱<span>120g</span></button>
+          <button class="gram-btn dye-gram-btn" data-gram="240">울트라<span>240g</span></button>
+        </div>
+        <div class="custom-gram-row">
+          <span class="custom-gram-label">직접 입력</span>
+          <div class="custom-gram-input-wrap">
+            <input class="calc-input custom-gram" id="dye-custom-input" type="number" value="40" min="1" inputmode="decimal"/>
+            <span class="gram-unit">g</span>
+          </div>
+        </div>
+        <div class="calc-card-title" style="margin-top:12px;">산화제 비율</div>
+        <div class="oxi-btn-row">
+          <button class="oxi-btn active" data-oxi="1">1:1</button>
+          <button class="oxi-btn" data-oxi="1.5">1:1.5</button>
+          <button class="oxi-btn" data-oxi="2">1:2</button>
+          <button class="oxi-btn" data-oxi="3">1:3</button>
+        </div>
+        <div class="calc-inline-row" style="margin-top:8px;">
+          <span class="calc-inline-label">반올림</span>
+          <div class="round-btn-row">
+            <button class="round-btn dye-round-btn" data-round="0.5">0.5g</button>
+            <button class="round-btn dye-round-btn active" data-round="1">1g</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 바울 컨테이너 -->
+      <div id="dye-bowls-container">
+        <div class="bowl-card" id="dye-bowl-1">
+          <div class="bowl-header">
+            <div class="bowl-number">1</div>
+            <span class="bowl-title">바울 1</span>
+            <span class="bowl-summary" id="dye-bowl-1-summary"></span>
+          </div>
+          <div class="bowl-color-list">
+            <div class="bowl-color-row"><input class="calc-input bowl-color-name bowl-default-name" type="text" value="염모제 1" data-default="염모제 1"/><div class="bowl-ratio-wrap"><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div><span class="bowl-color-gram">—</span></div>
+            <div class="bowl-color-row"><input class="calc-input bowl-color-name bowl-default-name" type="text" value="염모제 2" data-default="염모제 2"/><div class="bowl-ratio-wrap"><span class="bowl-ratio-sep">:</span><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div><span class="bowl-color-gram">—</span></div>
+            <div class="bowl-color-row"><input class="calc-input bowl-color-name bowl-default-name" type="text" value="염모제 3" data-default="염모제 3"/><div class="bowl-ratio-wrap"><span class="bowl-ratio-sep">:</span><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div><span class="bowl-color-gram">—</span></div>
+          </div>
+          <div class="bowl-extras-section" id="dye-bowl-1-exsec" style="display:none;">
+            <div class="bowl-extras-divider"></div>
+            <div class="bowl-extras-label">추가제 (염모제 총량 기준 %)</div>
+            <div class="bowl-extras-list" id="dye-bowl-1-exlist"></div>
+          </div>
+          <button class="bowl-add-extra-btn" onclick="dyeAddExtra(1)">+ (컨트롤컬러, 보조제 등) 추가</button>
+          <div class="bowl-total-bar" id="dye-bowl-1-total"><div class="bowl-total-empty">염모제를 입력하면 실시간으로 계산됩니다</div></div>
+        </div>
+      </div>
+      <button class="bowl-add-btn" id="dye-add-bowl-btn" onclick="dyeAddBowl()">+ 바울 2 추가</button>
+    </div>
+
+    <!-- ══ 펌제 탭 ══ -->
+    <div id="calc-perm-tab" style="display:none;">
+      <div class="calc-card">
+        <div class="calc-card-title">총량</div>
+        <div class="gram-btn-row">
+          <button class="gram-btn perm-gram-btn active" data-gram="40">숏<span>40g</span></button>
+          <button class="gram-btn perm-gram-btn" data-gram="60">미디움<span>60g</span></button>
+          <button class="gram-btn perm-gram-btn" data-gram="120">롱<span>120g</span></button>
+          <button class="gram-btn perm-gram-btn" data-gram="240">울트라<span>240g</span></button>
+        </div>
+        <div class="custom-gram-row">
+          <span class="custom-gram-label">직접 입력</span>
+          <div class="custom-gram-input-wrap">
+            <input class="calc-input custom-gram" id="perm-custom-input" type="number" value="40" min="1" inputmode="decimal"/>
+            <span class="gram-unit">g</span>
+          </div>
+        </div>
+        <div class="calc-inline-row" style="margin-top:8px;">
+          <span class="calc-inline-label">반올림</span>
+          <div class="round-btn-row">
+            <button class="round-btn perm-round-btn" data-round="0.5">0.5g</button>
+            <button class="round-btn perm-round-btn active" data-round="1">1g</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="perm-bowls-container">
+        <div class="bowl-card" id="perm-bowl-1">
+          <div class="bowl-header">
+            <div class="bowl-number">1</div>
+            <span class="bowl-title">바울 1</span>
+            <span class="bowl-summary" id="perm-bowl-1-summary"></span>
+          </div>
+          <div class="addons-note-box" style="margin-bottom:10px;">
+            <div class="addons-note-top"><span class="addons-note-icon">💡</span><span class="addons-note-title">약제 입력 안내</span></div>
+            <div class="addons-note-body">강, 중, 약 / 산성펌, 중성펌제 등<br>혼합할 시 기입하여 사용하세요</div>
+          </div>
+          <div class="bowl-color-list">
+            <div class="bowl-color-row"><input class="calc-input bowl-color-name bowl-default-name" type="text" value="펌제 1" data-default="펌제 1"/><div class="bowl-ratio-wrap"><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div><span class="bowl-color-gram">—</span></div>
+            <div class="bowl-color-row"><input class="calc-input bowl-color-name bowl-default-name" type="text" value="펌제 2" data-default="펌제 2"/><div class="bowl-ratio-wrap"><span class="bowl-ratio-sep">:</span><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div><span class="bowl-color-gram">—</span></div>
+            <div class="bowl-color-row"><input class="calc-input bowl-color-name bowl-default-name" type="text" value="펌제 3" data-default="펌제 3"/><div class="bowl-ratio-wrap"><span class="bowl-ratio-sep">:</span><input class="calc-input bowl-ratio-input" type="number" placeholder="비율" min="0" inputmode="decimal"/></div><span class="bowl-color-gram">—</span></div>
+          </div>
+          <div class="bowl-extras-section" id="perm-bowl-1-exsec" style="display:none;">
+            <div class="bowl-extras-divider"></div>
+            <div class="bowl-extras-label">추가제 (펌제 총량 기준 %)</div>
+            <div class="bowl-extras-list" id="perm-bowl-1-exlist"></div>
+          </div>
+          <button class="bowl-add-extra-btn" onclick="permAddExtra(1)">+ (크리닉, 앰플 등) 추가</button>
+          <div class="bowl-total-bar" id="perm-bowl-1-total"><div class="bowl-total-empty">펌제를 입력하면 실시간으로 계산됩니다</div></div>
+        </div>
+      </div>
+      <button class="bowl-add-btn" id="perm-add-bowl-btn" onclick="permAddBowl()">+ 바울 2 추가</button>
+    </div>
+
+  </div>
 </div>
 
-<div class="loading-overlay" id="loading">
-  <div class="spinner"></div>
-  <div class="loading-text" id="loadingText">처리 중...</div>
+
+<!-- ════════════════════════════════
+     PAGE: TIMER (시술 타이머)
+════════════════════════════════ -->
+<div id="page-timer" class="page-screen" style="display:none;">
+  <div class="sub-header">
+    <button class="back-btn" onclick="navigate('home')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <span class="sub-header-title">시술 타이머</span>
+    <div style="width:34px"></div>
+  </div>
+
+  <div class="timer-wrap">
+    <!-- 분 설정 -->
+    <div class="calc-card" style="margin:16px 16px 0;">
+      <div class="calc-card-title">시간 설정</div>
+      <div class="timer-preset-row">
+        <button class="timer-preset-btn" onclick="setTimerMin(5)">5분</button>
+        <button class="timer-preset-btn" onclick="setTimerMin(10)">10분</button>
+        <button class="timer-preset-btn" onclick="setTimerMin(15)">15분</button>
+        <button class="timer-preset-btn" onclick="setTimerMin(20)">20분</button>
+        <button class="timer-preset-btn" onclick="setTimerMin(30)">30분</button>
+        <button class="timer-preset-btn" onclick="setTimerMin(45)">45분</button>
+      </div>
+      <div class="timer-custom-row">
+        <span style="color:#888;font-size:13px;">직접 입력</span>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <input type="number" id="timerInput" class="calc-input" style="width:70px;text-align:center;" placeholder="분" min="1" max="180" inputmode="numeric"/>
+          <span style="color:#888;font-size:13px;">분</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 타이머 디스플레이 -->
+    <div class="timer-display-wrap">
+      <div class="timer-circle">
+        <svg class="timer-svg" viewBox="0 0 200 200">
+          <circle class="timer-track" cx="100" cy="100" r="88" fill="none" stroke="#222" stroke-width="8"/>
+          <circle id="timerArc" class="timer-arc" cx="100" cy="100" r="88" fill="none" stroke="#fff" stroke-width="8"
+            stroke-dasharray="553" stroke-dashoffset="0" stroke-linecap="round"
+            transform="rotate(-90 100 100)"/>
+        </svg>
+        <div class="timer-time-text" id="timerDisplay">00:00</div>
+      </div>
+    </div>
+
+    <!-- 컨트롤 버튼 -->
+    <div class="timer-btn-row">
+      <button class="timer-ctrl-btn timer-ctrl-reset" onclick="timerReset()">초기화</button>
+      <button class="timer-ctrl-btn timer-ctrl-start" id="timerStartBtn" onclick="timerToggle()">시작</button>
+    </div>
+
+    <!-- 상태 표시 -->
+    <div id="timerStatus" class="timer-status"></div>
+  </div>
+
+  <div style="height:40px"></div>
 </div>
 
-<div class="app">
+<!-- ════════════════════════════════
+     PAGE: MEMO (메모장)
+════════════════════════════════ -->
+<div id="page-memo" class="page-screen" style="display:none;">
+  <div class="sub-header">
+    <button class="back-btn" onclick="navigate('home')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <span class="sub-header-title">메모장</span>
+    <div style="width:34px"></div>
+  </div>
 
-<section class="screen active" id="welcome">
-  <div class="welcome-inner">
-    <div class="logo-row">
-      <div class="logo-mark">✋</div>
+  <div style="padding:16px;">
+    <div class="calc-card">
+      <div class="calc-card-title">새 메모</div>
+      <textarea id="memoInput" class="memo-textarea" placeholder="여기에 메모를 입력하세요..."></textarea>
+      <button class="memo-save-btn" onclick="memoSave()">저장</button>
+    </div>
+
+    <div class="calc-card" style="margin-top:12px;">
+      <div class="calc-card-title">저장된 메모</div>
+      <div id="memoList" class="memo-list"></div>
+    </div>
+  </div>
+
+  <div style="height:40px"></div>
+</div>
+
+<!-- ════════════════════════════════
+     PAGE: FEEDBACK (개선/문의)
+════════════════════════════════ -->
+<div id="page-feedback" class="page-screen" style="display:none;">
+  <div class="sub-header">
+    <button class="back-btn" onclick="navigate('home')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <span class="sub-header-title">개선·문의</span>
+    <div style="width:34px"></div>
+  </div>
+
+  <div style="padding:24px 20px;">
+    <div class="calc-card" style="text-align:center;padding:32px 20px;">
+      <div style="font-size:40px;margin-bottom:16px;">💬</div>
+      <div class="calc-card-title" style="justify-content:center;margin-bottom:12px;">소중한 의견을 들려주세요</div>
+      <p style="color:#888;font-size:14px;line-height:1.7;margin-bottom:24px;">
+        앱 사용 중 불편한 점이나<br>
+        개선사항은 인스타그램 DM으로<br>
+        보내주세요.
+      </p>
+      <a class="home-insta-btn" style="display:inline-flex;margin:0 auto;"
+         href="https://www.instagram.com/shieldclinic.yong/" target="_blank" rel="noopener noreferrer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="2" width="20" height="20" rx="5"/>
+          <circle cx="12" cy="12" r="4"/>
+          <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/>
+        </svg>
+        DM 보내기
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     PAGE: REELS (영상 보기)
+════════════════════════════════ -->
+<div id="page-reels" class="page-screen" style="display:none;background:#0A0A0A;min-height:100dvh;">
+
+  <div style="position:sticky;top:0;z-index:300;">
+    <div class="sub-header" style="background:#111;border-bottom:1px solid #222;">
+      <button class="back-btn" onclick="navigate('home')" style="background:#1A1A1A;border-color:#333;color:#fff;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <span class="sub-header-title" style="color:#fff;">영상 보기</span>
+      <div style="width:34px"></div>
+    </div>
+    <div class="reels-notice" id="reels-notice">
+      <span class="reels-notice-icon">⚠️</span>
+      <div class="reels-notice-text">
+        <strong>원하는 영상이 안 열리나요?</strong><br>
+        인스타그램 앱을 완전히 종료한 후 다시 눌러주세요.
+      </div>
+      <button class="reels-notice-close" onclick="closeReelsNotice()">✕</button>
+    </div>
+  </div>
+
+  <div class="reels-hero">
+    <div class="reels-hero-badge">쉴드크리닉 · 큐티클 유니버스</div>
+    <h1 class="reels-hero-title">쉴드걸의<br>머리카락 탐험</h1>
+    <p class="reels-hero-sub">누구나 쉽게 이해하는<br>재미있는 미용실 이야기</p>
+  </div>
+
+  <div class="reels-grid" id="reels-grid"></div>
+
+  <div style="height:40px"></div>
+</div>
+
+
+<!-- ════════════════════════════════
+     PAGE: SALES (달력)
+════════════════════════════════ -->
+<div id="page-sales" class="page-screen page" style="display:none;">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigate('home')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <div>
+      <h2>매출 입력</h2>
+      <div class="sub">날짜를 눌러 매출을 입력하세요</div>
+    </div>
+  </div>
+  <div class="month-nav">
+    <button class="month-btn" onclick="calPrevMonth()">&#8249;</button>
+    <div class="month-nav-title" id="calMonthTitle"></div>
+    <button class="month-btn" onclick="calNextMonth()">&#8250;</button>
+  </div>
+  <div class="monthly-summary">
+    <div class="ms-row">
+      <div><div class="ms-label">월 총 매출</div><div class="ms-value" id="monthTotalVal">0원</div></div>
+      <div style="text-align:right"><div class="ms-label">목표 매출</div><div class="ms-small" id="monthGoalVal">미설정</div></div>
+    </div>
+    <div class="ms-row" style="margin-bottom:8px">
+      <div><div class="ms-label">평균 매출</div><div class="ms-small" id="monthAvgVal">-</div></div>
+      <div style="text-align:right"><div class="ms-label">입력 일수</div><div class="ms-small" id="monthDaysVal">0일</div></div>
+    </div>
+    <div class="goal-bar-wrap">
+      <div class="goal-bar-bg"><div class="goal-bar-fill" id="goalBarFill" style="width:0%"></div></div>
+      <div class="goal-bar-label"><span id="goalPct">0%</span><span id="goalDiff"></span></div>
+    </div>
+  </div>
+  <div class="calendar-wrap">
+    <div class="calendar-weekdays">
+      <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+    </div>
+    <div class="calendar-grid" id="calGrid"></div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════
+     PAGE: STATS (통계)
+════════════════════════════════ -->
+<div id="page-stats" class="page-screen page" style="display:none;">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigate('home')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <div><h2>매출 통계</h2><div class="sub">월별·항목별 매출 분석</div></div>
+  </div>
+  <div class="stats-month-nav">
+    <button class="stats-month-btn" onclick="statsPrevMonth()">&#8249;</button>
+    <div class="s-title" id="statsMonthTitle"></div>
+    <button class="stats-month-btn" onclick="statsNextMonth()">&#8250;</button>
+  </div>
+  <div class="stats-section">
+    <div class="stats-card">
+      <div class="stats-card-title">📊 월간 요약</div>
+      <div class="summary-grid">
+        <div class="summary-item"><div class="s-label">총 매출</div><div class="s-value" id="statTotal">0원</div></div>
+        <div class="summary-item"><div class="s-label">목표 매출</div><div class="s-value" id="statGoal">미설정</div></div>
+        <div class="summary-item"><div class="s-label">목표 대비</div><div class="s-value" id="statDiff">-</div></div>
+        <div class="summary-item"><div class="s-label">일 평균</div><div class="s-value" id="statAvg">0원</div></div>
+        <div class="summary-item"><div class="s-label">입력 일수</div><div class="s-value" id="statDays">0일</div></div>
+      </div>
+    </div>
+    <div class="stats-card">
+      <div class="stats-card-title">✂️ 항목별 매출</div>
+      <div class="cat-row"><span class="cat-name">컷트</span><div class="cat-bar-wrap"><div class="cat-bar cut" id="bar-cut" style="width:0%"></div></div><span class="cat-pct" id="pct-cut">0%</span><span class="cat-amt" id="amt-cut">0원</span></div>
+      <div class="cat-row"><span class="cat-name">염색</span><div class="cat-bar-wrap"><div class="cat-bar color" id="bar-color" style="width:0%"></div></div><span class="cat-pct" id="pct-color">0%</span><span class="cat-amt" id="amt-color">0원</span></div>
+      <div class="cat-row"><span class="cat-name">펌</span><div class="cat-bar-wrap"><div class="cat-bar perm" id="bar-perm" style="width:0%"></div></div><span class="cat-pct" id="pct-perm">0%</span><span class="cat-amt" id="amt-perm">0원</span></div>
+      <div class="cat-row"><span class="cat-name">크리닉</span><div class="cat-bar-wrap"><div class="cat-bar clinic" id="bar-clinic" style="width:0%"></div></div><span class="cat-pct" id="pct-clinic">0%</span><span class="cat-amt" id="amt-clinic">0원</span></div>
+    </div>
+    <div class="stats-card">
+      <div class="stats-card-title">🎯 항목 비율</div>
+      <div class="chart-wrap"><canvas id="pieChart"></canvas></div>
+      <div class="pie-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#A8C5DA"></div>컷트</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#F2C4CE"></div>염색</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#C8DEC8"></div>펌</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#E8D8C4"></div>크리닉</div>
+      </div>
+    </div>
+    <div class="stats-card">
+      <div class="stats-card-title">📈 일별 매출 흐름</div>
+      <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════
+     PAGE: SETTINGS
+════════════════════════════════ -->
+<div id="page-settings" class="page-screen page" style="display:none;">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigate('home')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <div><h2>설정</h2><div class="sub">계정 정보</div></div>
+  </div>
+  <div class="settings-section">
+
+    <!-- ════ 쉴드커넥트 계정 카드 ════ -->
+    <div class="settings-card">
+      <!-- 비로그인 -->
+      <div id="settingsLoggedOut" class="account-logged-out-wrap">
+        <div class="account-logged-out-msg">로그인하면 크레딧 충전 내역과<br>사용 내역을 확인할 수 있어요</div>
+        <a href="/api/auth/cafe24" class="account-login-btn-big">로그인</a>
+      </div>
+      <!-- 로그인 -->
+      <div id="settingsLoggedIn" style="display:none">
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label">보유 크레딧</div>
+            <div class="settings-row-sub">AI 분석 1회당 1크레딧</div>
+          </div>
+          <div class="account-value"><span id="settingsCreditCount">0</span> 크레딧</div>
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label">로그인 계정</div>
+            <div class="settings-row-sub account-id-display" id="settingsMemberId">—</div>
+          </div>
+        </div>
+        <div class="settings-row" style="border:none">
+          <div>
+            <div class="settings-row-label">로그아웃</div>
+            <div class="settings-row-sub">현재 계정에서 나갑니다</div>
+          </div>
+          <button class="account-logout-btn" id="logoutBtnSettings">로그아웃</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 기존 이름/목표매출 카드 (쉴드커넥트에서 비활성화) -->
+    <div class="settings-card" style="display:none">
+      <div class="settings-row">
+        <div><div class="settings-row-label">이름</div><div class="settings-row-sub">앱 인사말에 표시됩니다</div></div>
+        <input class="settings-input" type="text" id="setOwner" placeholder="홍길동"/>
+      </div>
+      <div class="settings-row">
+        <div><div class="settings-row-label">월 목표 매출</div><div class="settings-row-sub">달성률 계산에 사용됩니다</div></div>
+        <input class="settings-input" type="number" id="setGoal" placeholder="예: 5000000"/>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="saveSettings()" style="display:none">저장</button>
+    <button class="btn-danger"  onclick="clearAllData()" style="display:none">전체 데이터 삭제</button>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════
+     MODAL: 매출 입력
+════════════════════════════════ -->
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalTitle">매출 입력</div>
+    <!-- 보기 모드 -->
+    <div id="modal-view-mode" style="display:none;">
+      <div class="modal-body">
+        <div class="input-row"><div class="input-dot" style="background:#A8C5DA"></div><span class="input-label">컷트</span><span class="modal-view-val" id="view-cut">0원</span></div>
+        <div class="input-row"><div class="input-dot" style="background:#F2C4CE"></div><span class="input-label">염색</span><span class="modal-view-val" id="view-color">0원</span></div>
+        <div class="input-row"><div class="input-dot" style="background:#C8DEC8"></div><span class="input-label">펌</span><span class="modal-view-val" id="view-perm">0원</span></div>
+        <div class="input-row"><div class="input-dot" style="background:#E8D8C4"></div><span class="input-label">크리닉</span><span class="modal-view-val" id="view-clinic">0원</span></div>
+        <div class="modal-total"><span class="modal-total-label">하루 합계</span><span class="modal-total-value" id="viewTotalVal">0원</span></div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn-cancel" onclick="closeModal()">닫기</button>
+        <button class="modal-btn-delete" id="modalDeleteBtn2">삭제</button>
+        <button class="modal-btn-save" onclick="switchToEditMode()">수정</button>
+      </div>
+    </div>
+    <!-- 입력 모드 -->
+    <div id="modal-edit-mode">
+      <div class="modal-body">
+        <div class="input-row"><div class="input-dot" style="background:#A8C5DA"></div><span class="input-label">컷트</span><input class="input-field" type="number" id="inp-cut" placeholder="0" inputmode="numeric"/></div>
+        <div class="input-row"><div class="input-dot" style="background:#F2C4CE"></div><span class="input-label">염색</span><input class="input-field" type="number" id="inp-color" placeholder="0" inputmode="numeric"/></div>
+        <div class="input-row"><div class="input-dot" style="background:#C8DEC8"></div><span class="input-label">펌</span><input class="input-field" type="number" id="inp-perm" placeholder="0" inputmode="numeric"/></div>
+        <div class="input-row"><div class="input-dot" style="background:#E8D8C4"></div><span class="input-label">크리닉</span><input class="input-field" type="number" id="inp-clinic" placeholder="0" inputmode="numeric"/></div>
+        <div class="modal-total"><span class="modal-total-label">하루 합계</span><span class="modal-total-value" id="modalTotalVal">0원</span></div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn-cancel" onclick="closeModal()">취소</button>
+        <button class="modal-btn-delete hidden" id="modalDeleteBtn">삭제</button>
+        <button class="modal-btn-save" id="modalSaveBtn">저장</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════
+     SHEET: 성분 상세
+════════════════════════════════ -->
+<div class="sheet-overlay hidden" id="detailOverlay">
+  <div class="detail-sheet">
+    <div class="sheet-handle"></div>
+    <div class="detail-header">
+      <div class="detail-ko" id="d-ko"></div>
+      <div class="detail-en" id="d-en"></div>
+      <div class="detail-badges" id="d-badges"></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-sec-title">분류 정보</div>
+      <div class="detail-row"><span class="dr-label">대분류</span><span class="dr-value" id="d-cat"></span></div>
+      <div class="detail-row"><span class="dr-label">중분류</span><span class="dr-value" id="d-mid"></span></div>
+      <div class="detail-row"><span class="dr-label">역할</span>  <span class="dr-value" id="d-role"></span></div>
+      <div class="detail-row"><span class="dr-label">강도</span>  <span class="dr-value" id="d-str"></span></div>
+    </div>
+    <div class="detail-section" id="d-feat-section">
+      <div class="detail-sec-title">특징</div>
+      <div class="detail-feature" id="d-feat"></div>
+    </div>
+    <div class="detail-section" id="d-desc-section">
+      <div class="detail-sec-title">상세 설명</div>
+      <div class="detail-desc" id="d-desc"></div>
+    </div>
+    <!-- 수정/삭제 버튼 (custom 성분만 표시) -->
+    <div id="d-actions" style="display:none;gap:10px;padding:8px 20px 0;flex-direction:row;">
+      <button id="d-delete-btn" style="flex:1;padding:12px;background:transparent;border:1.5px solid #E05555;border-radius:14px;color:#E05555;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">삭제</button>
+      <button id="d-edit-btn" style="flex:2;padding:12px;background:#1A1814;color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">수정</button>
+    </div>
+    <button class="sheet-close" onclick="closeDetail()">닫기</button>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════
+     MODAL: 성분 추가
+════════════════════════════════ -->
+<div class="modal-overlay hidden" id="addOverlay">
+  <div class="add-modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-mode-title">성분 추가</div>
+    <div class="form-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">성분명 (한글) *</label><input class="form-input" id="f-ko" type="text" placeholder="예: 케라틴"/></div>
+        <div class="form-group"><label class="form-label">INCI명 (영문)</label><input class="form-input" id="f-en" type="text" placeholder="예: Keratin"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">대분류 *</label>
+          <select class="form-select" id="f-cat"><option value="">선택</option><option>크리닉</option><option>펌제</option><option>염모제</option><option>세정</option><option>두피</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">중분류</label><input class="form-input" id="f-mid" type="text" placeholder="예: 단백질"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">역할</label><input class="form-input" id="f-role" type="text" placeholder="예: 모발 강화"/></div>
+        <div class="form-group"><label class="form-label">강도</label>
+          <select class="form-select" id="f-str"><option value="">선택</option><option>약</option><option>중</option><option>강</option></select>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">특징</label><textarea class="form-textarea" id="f-feat" placeholder="이 성분의 주요 특징..."></textarea></div>
+      <div class="form-group"><label class="form-label">상세 설명</label><textarea class="form-textarea" id="f-desc" placeholder="성분에 대한 상세 설명..."></textarea></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-cancel" onclick="closeAddModal()">취소</button>
+      <button class="btn-save"   onclick="saveIngredient()">저장</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════
+     PAGE: THEORY (이론 메인)
+════════════════════════════════ -->
+<div id="page-theory" class="page-screen" style="display:none;">
+  <div class="sub-header">
+    <button class="back-btn" onclick="navigate('home')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <span class="sub-header-title">이론</span>
+    <div style="width:34px"></div>
+  </div>
+
+  <div style="padding:20px 16px;">
+    <p style="font-size:13px;color:#888;margin:0 0 16px;">미용 이론을 카드 형식으로 학습해요</p>
+
+    <!-- 모발 과학 -->
+    <a class="menu-card" href="#" onclick="navigate('theory-hair');return false;" style="display:flex;flex-direction:row;align-items:center;gap:14px;padding:18px 16px;margin-bottom:12px;width:100%;box-sizing:border-box;">
+      <div class="menu-icon" style="flex-shrink:0;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a5 5 0 0 1 5 5c0 3-2 5-5 8-3-3-5-5-5-8a5 5 0 0 1 5-5z"/>
+          <path d="M12 15v7"/>
+        </svg>
+      </div>
       <div>
-        <div class="logo-text">HANDS</div>
-        <div class="logo-tag" data-i="logoTag">한국 생활 동반자</div>
+        <div style="font-size:15px;font-weight:700;color:var(--gray-900);">모발 과학</div>
+        <div style="font-size:12px;color:#888;margin-top:3px;">큐티클 구조 · pH · 결합 원리</div>
       </div>
-    </div>
-    <div class="welcome-headline">
-      <h1 class="welcome-title">
-        <span data-i="welcomeT1">환영합니다</span><br>
-        <span class="accent" data-i="welcomeT2">한국에 오신 걸</span>
-      </h1>
-      <p class="welcome-sub" data-i="welcomeSub">당신의 언어를 선택하세요. 한국 생활을 함께 도와드립니다.</p>
-    </div>
-    <div class="lang-grid">
-      <button class="lang-card selected" data-langcard="ko">
-        <div class="lang-card-name">한국어</div>
-        <div class="lang-card-en">KOREAN</div>
-      </button>
-      <button class="lang-card" data-langcard="en">
-        <div class="lang-card-name">English</div>
-        <div class="lang-card-en">ENGLISH</div>
-      </button>
-      <button class="lang-card" data-langcard="vi">
-        <div class="lang-card-name">Tiếng Việt</div>
-        <div class="lang-card-en">VIETNAMESE</div>
-      </button>
-      <button class="lang-card" data-langcard="id">
-        <div class="lang-card-name">Bahasa</div>
-        <div class="lang-card-en">INDONESIAN</div>
-      </button>
-    </div>
-    <button class="welcome-cta" id="goConsent">
-      <span data-i="welcomeCta">시작하기</span>
-      <span style="font-size:18px">→</span>
-    </button>
-  </div>
-</section>
+      <span style="margin-left:auto;color:#bbb;font-size:18px;">›</span>
+    </a>
 
-<section class="screen" id="consent">
-  <button class="back-btn" data-back="welcome">←</button>
-  <span class="consent-eyebrow" data-i="consentEyebrow">서비스 이용</span>
-  <h2 class="section-title" data-i="consentTitle">한국에서<br>안전하게 지내요</h2>
-  <p class="section-sub" data-i="consentSub">HANDS가 어떻게 도움드리는지 알려드립니다</p>
-  <div class="benefit-list">
-    <div class="benefit">
-      <div class="benefit-icon orange">💼</div>
-      <div class="benefit-text">
-        <div class="benefit-title" data-i="b1t">근무처 변경</div>
-        <div class="benefit-desc" data-i="b1d">선박 근무 지역 변경</div>
+    <!-- 추후 추가 예정 카드들 (비활성) -->
+    <div style="display:flex;flex-direction:row;align-items:center;gap:14px;padding:18px 16px;margin-bottom:12px;background:#f9f9f7;border-radius:16px;border:1.5px solid #eee;opacity:0.5;">
+      <div class="menu-icon" style="flex-shrink:0;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 3h6"/><path d="M10 9 4.3 18.4a1 1 0 0 0 .87 1.6h13.66a1 1 0 0 0 .87-1.6L14 9"/>
+        </svg>
       </div>
-    </div>
-    <div class="benefit">
-      <div class="benefit-icon orange">🍱</div>
-      <div class="benefit-text">
-        <div class="benefit-title" data-i="b2t">주변 맛집·편의시설</div>
-        <div class="benefit-desc" data-i="b2d">병원·약국·식당·은행을 모국어로 추천</div>
-      </div>
-    </div>
-    <div class="benefit">
-      <div class="benefit-icon teal">💬</div>
-      <div class="benefit-text">
-        <div class="benefit-title" data-i="b3t">관리자와 상시 연결</div>
-        <div class="benefit-desc" data-i="b3d">임금·비자·숙소 문의를 1:1 비공개로</div>
-      </div>
-    </div>
-    <div class="benefit">
-      <div class="benefit-icon rose">🆘</div>
-      <div class="benefit-text">
-        <div class="benefit-title" data-i="b4t">긴급 상황 즉시 도움</div>
-        <div class="benefit-desc" data-i="b4d">SOS 한 번으로 관리자에게 안전 알림</div>
-      </div>
-    </div>
-  </div>
-  <div class="cta-row">
-    <button class="cta-secondary" data-back="welcome" data-i="laterBtn">나중에</button>
-    <button class="cta-primary" id="goSignup" data-i="agreeBtn">동의하고 시작 →</button>
-  </div>
-</section>
-
-<section class="screen" id="signup">
-  <button class="back-btn" data-back="consent">←</button>
-  <h2 class="section-title" data-i="signupTitle">회원가입</h2>
-  <p class="section-sub" data-i="signupSub">한국 생활을 시작합니다</p>
-
-  <div class="field-group">
-    <label class="field-label" data-i="fName">이름</label>
-    <input type="text" class="field-input" id="fName" placeholder="Nguyen Van A">
-  </div>
-  <div class="field-group">
-    <label class="field-label" data-i="fPhone">전화번호</label>
-    <input type="tel" class="field-input" id="fPhone" placeholder="010-1234-5678">
-  </div>
-  <div class="field-group">
-    <label class="field-label" data-i="fPassport">여권번호</label>
-    <input type="text" class="field-input passport" id="fPassport" placeholder="M12345678">
-  </div>
-  <div class="field-group">
-    <label class="field-label" data-i="fCountry">국적</label>
-    <select class="field-select" id="fCountry">
-      <option value="vn">🇻🇳 Vietnam · Việt Nam</option>
-      <option value="th">🇹🇭 Thailand · ไทย</option>
-      <option value="id">🇮🇩 Indonesia</option>
-      <option value="ph">🇵🇭 Philippines · Pilipinas</option>
-      <option value="np">🇳🇵 Nepal · नेपाल</option>
-      <option value="kh">🇰🇭 Cambodia · កម្ពុជា</option>
-      <option value="mm">🇲🇲 Myanmar · မြန်မာ</option>
-      <option value="lk">🇱🇰 Sri Lanka · ශ්‍රී ලංකා</option>
-      <option value="bd">🇧🇩 Bangladesh · বাংলাদেশ</option>
-      <option value="other" data-i="fOther">기타</option>
-    </select>
-  </div>
-
-  <div class="field-row">
-    <div class="field-group">
-      <label class="field-label" data-i="fHeight">키 (cm)</label>
-      <input type="number" class="field-input" id="fHeight" placeholder="170" min="100" max="250">
-    </div>
-    <div class="field-group">
-      <label class="field-label" data-i="fWeight">몸무게 (kg)</label>
-      <input type="number" class="field-input" id="fWeight" placeholder="65" min="30" max="200">
-    </div>
-  </div>
-
-  <div class="photo-section">
-    <label class="field-label" data-i="fPhotos">신분 확인 사진</label>
-    <div class="photo-grid">
-      <label class="photo-slot" id="passportSlot" for="passportInput">
-        <span class="photo-icon">📷</span>
-        <span class="photo-label" data-i="photoPassport">여권 촬영</span>
-        <span class="photo-hint" data-i="photoPassportHint">정보 페이지</span>
-        <input type="file" id="passportInput" accept="image/*" capture="environment">
-        <span class="photo-retake" data-i="photoRetake">다시 찍기</span>
-      </label>
-      <label class="photo-slot" id="selfieSlot" for="selfieInput">
-        <span class="photo-icon">🤳</span>
-        <span class="photo-label" data-i="photoSelfie">본인 얼굴</span>
-        <span class="photo-hint" data-i="photoSelfieHint">셀카</span>
-        <input type="file" id="selfieInput" accept="image/*" capture="user">
-        <span class="photo-retake" data-i="photoRetake">다시 찍기</span>
-      </label>
-    </div>
-  </div>
-
-  <div class="consent-card" id="consentCard">
-    <div class="check-box"></div>
-    <div class="consent-text">
-      <div class="consent-text-main" data-i="consentText">이용약관 및 개인정보·위치정보 처리방침에 동의합니다</div>
-      <a class="consent-link" id="viewTermsLink" data-i="viewTerms">전문 보기</a>
-    </div>
-  </div>
-
-  <button class="cta-primary" id="btnSignup" disabled style="width:100%" data-i="signupBtn">가입하기 →</button>
-
-  <div class="signup-info" data-i="signupInfo">
-    가입 시 위치 권한 요청이 표시됩니다.<br>"허용"을 눌러주세요.
-  </div>
-</section>
-
-<section class="screen" id="main">
-  <header class="main-header">
-    <div class="main-greet-hi" data-i="greetHi">안녕하세요</div>
-    <div class="main-greet-name" id="greetName">—</div>
-    <div class="meta-row">
-      <span class="meta-pill" id="metaCountry">—</span>
-    </div>
-  </header>
-
-  <main class="main-content">
-    <div class="menu-grid">
-      <div class="menu-card full" onclick="alert('곧 오픈 예정')">
-        <div class="menu-card-emoji">💼</div>
-        <div class="menu-card-title" data-i="menuJobs">근무처 변경</div>
-        <div class="menu-card-desc" data-i="menuJobsDesc">선박 근무 지역 변경 안내</div>
-        <div class="menu-card-soon" data-i="soonTag">SOON</div>
-      </div>
-      <div class="menu-card" onclick="alert('곧 오픈 예정')">
-        <div class="menu-card-emoji">🍱</div>
-        <div class="menu-card-title" data-i="menuFood">주변 시설</div>
-        <div class="menu-card-desc" data-i="menuFoodDesc">맛집·병원</div>
-        <div class="menu-card-soon" data-i="soonTag">SOON</div>
-      </div>
-      <div class="menu-card" onclick="alert('곧 오픈 예정')">
-        <div class="menu-card-emoji">📚</div>
-        <div class="menu-card-title" data-i="menuInfo">생활 가이드</div>
-        <div class="menu-card-desc" data-i="menuInfoDesc">비자·임금</div>
-        <div class="menu-card-soon" data-i="soonTag">SOON</div>
+      <div>
+        <div style="font-size:15px;font-weight:700;color:var(--gray-900);">염색 이론</div>
+        <div style="font-size:12px;color:#888;margin-top:3px;">준비 중</div>
       </div>
     </div>
 
-    <div class="action-row">
-      <button class="action-btn" onclick="alert('곧 오픈 예정')">
-        <div class="action-emoji">💬</div>
-        <div class="action-label" data-i="actInquiry">관리자 문의</div>
-      </button>
-      <button class="action-btn sos" onclick="sendSOS()">
-        <div class="action-emoji">🆘</div>
-        <div class="action-label" data-i="actSOS">긴급 도움</div>
-      </button>
-      <button class="action-btn" onclick="logout()">
-        <div class="action-emoji">⚙️</div>
-        <div class="action-label" data-i="actSettings">설정</div>
-      </button>
-    </div>
-  </main>
-
-  <nav class="bottom-nav">
-    <button class="nav-item active" onclick="showMain()">
-      <div class="nav-emoji">🏠</div>
-      <span data-i="navHome">홈</span>
-    </button>
-    <button class="nav-item" onclick="showBoard()">
-      <div class="nav-emoji">📝</div>
-      <span data-i="navBoard">게시판</span>
-    </button>
-    <button class="nav-item" onclick="alert('곧 오픈 예정')">
-      <div class="nav-emoji">📍</div>
-      <span data-i="navMap">지도</span>
-    </button>
-    <button class="nav-item" onclick="alert('곧 오픈 예정')">
-      <div class="nav-emoji">👤</div>
-      <span data-i="navMy">내정보</span>
-    </button>
-  </nav>
-</section>
-
-<section class="screen" id="board">
-  <div class="board-header">
-    <h2 class="board-title" data-i="boardTitle">게시판</h2>
-    <button class="board-write-btn" onclick="showWrite()">
-      <span>✏️</span>
-      <span data-i="writeBtn">글쓰기</span>
-    </button>
-  </div>
-  <div class="post-list" id="postList">
-    <div class="post-empty" data-i="postEmpty">아직 글이 없습니다.<br>첫 글을 작성해보세요!</div>
-  </div>
-  <nav class="bottom-nav">
-    <button class="nav-item" onclick="showMain()">
-      <div class="nav-emoji">🏠</div>
-      <span data-i="navHome">홈</span>
-    </button>
-    <button class="nav-item active">
-      <div class="nav-emoji">📝</div>
-      <span data-i="navBoard">게시판</span>
-    </button>
-    <button class="nav-item" onclick="alert('곧 오픈 예정')">
-      <div class="nav-emoji">📍</div>
-      <span data-i="navMap">지도</span>
-    </button>
-    <button class="nav-item" onclick="alert('곧 오픈 예정')">
-      <div class="nav-emoji">👤</div>
-      <span data-i="navMy">내정보</span>
-    </button>
-  </nav>
-</section>
-
-<section class="screen" id="post-write">
-  <button class="back-btn" onclick="showBoard()">←</button>
-  <h2 class="section-title" data-i="writeTitle">글쓰기</h2>
-  <p class="section-sub" data-i="writeSub">동향 동료들과 정보를 나눠보세요</p>
-
-  <div class="field-group">
-    <label class="field-label" data-i="postCat">카테고리</label>
-    <div class="cat-pills" id="catPills">
-      <div class="cat-pill active" data-cat="general" data-i="catGeneral">일반</div>
-      <div class="cat-pill" data-cat="question" data-i="catQuestion">질문</div>
-      <div class="cat-pill" data-cat="tip" data-i="catTip">꿀팁</div>
-      <div class="cat-pill" data-cat="event" data-i="catEvent">행사</div>
+    <div style="display:flex;flex-direction:row;align-items:center;gap:14px;padding:18px 16px;margin-bottom:12px;background:#f9f9f7;border-radius:16px;border:1.5px solid #eee;opacity:0.5;">
+      <div class="menu-icon" style="flex-shrink:0;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2C6 2 4 6 4 10c0 3 1.5 5.5 4 7v3h8v-3c2.5-1.5 4-4 4-7 0-4-2-8-8-8z"/>
+        </svg>
+      </div>
+      <div>
+        <div style="font-size:15px;font-weight:700;color:var(--gray-900);">펌 이론</div>
+        <div style="font-size:12px;color:#888;margin-top:3px;">준비 중</div>
+      </div>
     </div>
   </div>
-  <div class="field-group">
-    <label class="field-label" data-i="postTitle">제목</label>
-    <input type="text" class="field-input" id="postTitle" maxlength="100">
-  </div>
-  <div class="field-group">
-    <label class="field-label" data-i="postBody">내용</label>
-    <textarea class="field-input" id="postBody" maxlength="2000" rows="8"></textarea>
-  </div>
-  <button class="cta-primary" id="btnPost" style="width:100%" data-i="postSubmit">게시하기</button>
-</section>
-
+  <div style="height:40px"></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-const SUPABASE_URL = 'https://wcugfateeuqfcpimoogo.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjdWdmYXRlZXVxZmNwaW1vb2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMjM5MTAsImV4cCI6MjA5MzY5OTkxMH0.gYMs71Q0c591W5vZ049HzpKcD2ZICsCLt6-rRCsYbJc';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const I18N = {
-  ko: {
-    logoTag:"한국 생활 동반자",welcomeT1:"환영합니다",welcomeT2:"한국에 오신 걸",
-    welcomeSub:"당신의 언어를 선택하세요. 한국 생활을 함께 도와드립니다.",welcomeCta:"시작하기",
-    consentEyebrow:"서비스 이용",consentTitle:"한국에서<br>안전하게 지내요",consentSub:"HANDS가 어떻게 도움드리는지 알려드립니다",
-    b1t:"근무처 변경",b1d:"선박 근무 지역 변경",b2t:"주변 맛집·편의시설",b2d:"병원·약국·식당·은행을 모국어로 추천",
-    b3t:"관리자와 상시 연결",b3d:"임금·비자·숙소 문의를 1:1 비공개로",b4t:"긴급 상황 즉시 도움",b4d:"SOS 한 번으로 관리자에게 안전 알림",
-    laterBtn:"나중에",agreeBtn:"동의하고 시작 →",
-    signupTitle:"회원가입",signupSub:"한국 생활을 시작합니다",
-    fName:"이름",fPhone:"전화번호",fPassport:"여권번호",fCountry:"국적",fOther:"기타",fHeight:"키 (cm)",fWeight:"몸무게 (kg)",
-    fPhotos:"신분 확인 사진",photoPassport:"여권 촬영",photoPassportHint:"정보 페이지",photoSelfie:"본인 얼굴",photoSelfieHint:"셀카",photoRetake:"다시 찍기",
-    consentText:"이용약관 및 개인정보·위치정보 처리방침에 동의합니다",viewTerms:"전문 보기",
-    signupBtn:"가입하기 →",signupInfo:"가입 시 위치 권한 요청이 표시됩니다.<br>\"허용\"을 눌러주세요.",
-    greetHi:"안녕하세요",connected:"연결됨",
-    menuJobs:"근무처 변경",menuJobsDesc:"선박 근무 지역 변경 안내",
-    menuFood:"주변 시설",menuFoodDesc:"맛집·병원",menuInfo:"생활 가이드",menuInfoDesc:"비자·임금",
-    soonTag:"준비중",actInquiry:"관리자 문의",actSOS:"긴급 도움",actSettings:"설정",
-    navHome:"홈",navBoard:"게시판",navMap:"지도",navMy:"내정보",
-    boardTitle:"게시판",writeBtn:"글쓰기",postEmpty:"아직 글이 없습니다.<br>첫 글을 작성해보세요!",
-    writeTitle:"글쓰기",writeSub:"동향 동료들과 정보를 나눠보세요",
-    postCat:"카테고리",postTitle:"제목",postBody:"내용",postSubmit:"게시하기",
-    catGeneral:"일반",catQuestion:"질문",catTip:"꿀팁",catEvent:"행사",
-    loadingSignup:"가입 처리 중...",loadingPhoto:"사진 업로드 중...",loadingPost:"게시 중..."
-  },
-  en: {
-    logoTag:"Your Korea Companion",welcomeT1:"Welcome",welcomeT2:"to Korea",
-    welcomeSub:"Choose your language. We'll help you settle in Korea.",welcomeCta:"Get started",
-    consentEyebrow:"Using HANDS",consentTitle:"Stay safe<br>in Korea",consentSub:"Here's how HANDS helps you",
-    b1t:"Workplace transfer",b1d:"Ship work location changes",b2t:"Food & places nearby",b2d:"Hospitals, pharmacies, restaurants nearby",
-    b3t:"Connect with admin",b3d:"Wages, visa, housing — private 1-on-1",b4t:"Emergency support",b4d:"One-tap SOS alerts the admin instantly",
-    laterBtn:"Later",agreeBtn:"Agree and continue →",
-    signupTitle:"Sign up",signupSub:"Start your life in Korea",
-    fName:"Name",fPhone:"Phone",fPassport:"Passport",fCountry:"Nationality",fOther:"Other",fHeight:"Height (cm)",fWeight:"Weight (kg)",
-    fPhotos:"Identity photos",photoPassport:"Passport photo",photoPassportHint:"Info page",photoSelfie:"Selfie",photoSelfieHint:"Your face",photoRetake:"Retake",
-    consentText:"I agree to terms, privacy & location policies",viewTerms:"View full text",
-    signupBtn:"Sign up →",signupInfo:"Location permission will be requested.<br>Please tap \"Allow\".",
-    greetHi:"Hello",connected:"Connected",
-    menuJobs:"Workplace transfer",menuJobsDesc:"Ship work locations",
-    menuFood:"Nearby",menuFoodDesc:"Food · Hospital",menuInfo:"Life guide",menuInfoDesc:"Visa · Wages",
-    soonTag:"SOON",actInquiry:"Ask admin",actSOS:"Emergency",actSettings:"Settings",
-    navHome:"Home",navBoard:"Board",navMap:"Map",navMy:"Profile",
-    boardTitle:"Community",writeBtn:"Write",postEmpty:"No posts yet.<br>Be the first to write!",
-    writeTitle:"New post",writeSub:"Share with fellow workers",
-    postCat:"Category",postTitle:"Title",postBody:"Body",postSubmit:"Post",
-    catGeneral:"General",catQuestion:"Question",catTip:"Tip",catEvent:"Event",
-    loadingSignup:"Signing up...",loadingPhoto:"Uploading...",loadingPost:"Posting..."
-  },
-  vi: {
-    logoTag:"Đồng hành Hàn Quốc",welcomeT1:"Chào mừng",welcomeT2:"đến Hàn Quốc",
-    welcomeSub:"Chọn ngôn ngữ của bạn.",welcomeCta:"Bắt đầu",
-    consentEyebrow:"Sử dụng HANDS",consentTitle:"An toàn<br>tại Hàn Quốc",consentSub:"HANDS giúp bạn như thế nào",
-    b1t:"Đổi nơi làm việc",b1d:"Thay đổi khu vực làm tàu",b2t:"Quán ăn & tiện ích",b2d:"Bệnh viện, hiệu thuốc gần",
-    b3t:"Kết nối quản trị",b3d:"Lương, visa, nhà ở 1:1",b4t:"Hỗ trợ khẩn cấp",b4d:"SOS một chạm",
-    laterBtn:"Để sau",agreeBtn:"Đồng ý và tiếp tục →",
-    signupTitle:"Đăng ký",signupSub:"Bắt đầu cuộc sống tại Hàn",
-    fName:"Họ tên",fPhone:"Số điện thoại",fPassport:"Hộ chiếu",fCountry:"Quốc tịch",fOther:"Khác",fHeight:"Chiều cao (cm)",fWeight:"Cân nặng (kg)",
-    fPhotos:"Ảnh xác minh",photoPassport:"Ảnh hộ chiếu",photoPassportHint:"Trang thông tin",photoSelfie:"Selfie",photoSelfieHint:"Khuôn mặt",photoRetake:"Chụp lại",
-    consentText:"Tôi đồng ý điều khoản và vị trí",viewTerms:"Xem",
-    signupBtn:"Đăng ký →",signupInfo:"Sẽ yêu cầu quyền vị trí.<br>Nhấn \"Cho phép\".",
-    greetHi:"Xin chào",connected:"Đã kết nối",
-    menuJobs:"Đổi nơi làm việc",menuJobsDesc:"Khu vực tàu",
-    menuFood:"Gần đây",menuFoodDesc:"Ăn uống · BV",menuInfo:"Hướng dẫn",menuInfoDesc:"Visa · Lương",
-    soonTag:"SẮP",actInquiry:"Hỏi admin",actSOS:"Khẩn cấp",actSettings:"Cài đặt",
-    navHome:"Trang chủ",navBoard:"Diễn đàn",navMap:"Bản đồ",navMy:"Hồ sơ",
-    boardTitle:"Diễn đàn",writeBtn:"Viết",postEmpty:"Chưa có bài.<br>Hãy viết đầu tiên!",
-    writeTitle:"Bài mới",writeSub:"Chia sẻ với đồng hương",
-    postCat:"Danh mục",postTitle:"Tiêu đề",postBody:"Nội dung",postSubmit:"Đăng",
-    catGeneral:"Chung",catQuestion:"Hỏi",catTip:"Mẹo",catEvent:"Sự kiện",
-    loadingSignup:"Đang đăng ký...",loadingPhoto:"Đang tải...",loadingPost:"Đang đăng..."
-  },
-  id: {
-    logoTag:"Pendamping Korea",welcomeT1:"Selamat datang",welcomeT2:"ke Korea",
-    welcomeSub:"Pilih bahasa Anda.",welcomeCta:"Mulai",
-    consentEyebrow:"Pakai HANDS",consentTitle:"Aman<br>di Korea",consentSub:"Bagaimana HANDS membantu",
-    b1t:"Pindah tempat kerja",b1d:"Ganti area kerja kapal",b2t:"Makanan & tempat",b2d:"RS, apotek, restoran",
-    b3t:"Hubungi admin",b3d:"Gaji, visa, tempat 1:1",b4t:"Dukungan darurat",b4d:"SOS satu sentuh",
-    laterBtn:"Nanti",agreeBtn:"Setuju dan lanjut →",
-    signupTitle:"Daftar",signupSub:"Mulai di Korea",
-    fName:"Nama",fPhone:"Nomor telepon",fPassport:"Paspor",fCountry:"Kewarganegaraan",fOther:"Lainnya",fHeight:"Tinggi (cm)",fWeight:"Berat (kg)",
-    fPhotos:"Foto identitas",photoPassport:"Foto paspor",photoPassportHint:"Halaman info",photoSelfie:"Selfie",photoSelfieHint:"Wajah",photoRetake:"Ulang",
-    consentText:"Saya setuju ketentuan & lokasi",viewTerms:"Lihat",
-    signupBtn:"Daftar →",signupInfo:"Izin lokasi diminta.<br>Tekan \"Izinkan\".",
-    greetHi:"Halo",connected:"Terhubung",
-    menuJobs:"Pindah tempat kerja",menuJobsDesc:"Area kapal",
-    menuFood:"Sekitar",menuFoodDesc:"Makanan · RS",menuInfo:"Panduan",menuInfoDesc:"Visa · Gaji",
-    soonTag:"SEGERA",actInquiry:"Tanya admin",actSOS:"Darurat",actSettings:"Setting",
-    navHome:"Beranda",navBoard:"Forum",navMap:"Peta",navMy:"Profil",
-    boardTitle:"Forum",writeBtn:"Tulis",postEmpty:"Belum ada postingan.<br>Tulis pertama!",
-    writeTitle:"Tulis baru",writeSub:"Berbagi dengan teman",
-    postCat:"Kategori",postTitle:"Judul",postBody:"Isi",postSubmit:"Kirim",
-    catGeneral:"Umum",catQuestion:"Tanya",catTip:"Tips",catEvent:"Acara",
-    loadingSignup:"Mendaftar...",loadingPhoto:"Upload...",loadingPost:"Mengirim..."
-  }
-};
+<!-- ════════════════════════════════
+     PAGE: THEORY-HAIR (모발 과학)
+════════════════════════════════ -->
+<div id="page-theory-hair" class="page-screen" style="display:none;">
+  <div class="sub-header">
+    <button class="back-btn" onclick="navigate('theory')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <span class="sub-header-title">모발 과학</span>
+    <div style="width:34px"></div>
+  </div>
 
-let currentLang = 'ko';
-let consentChecked = false;
-let passportFile = null;
-let selfieFile = null;
-let currentMember = null;
-let currentCategory = 'general';
-let watchPositionId = null;
+  <!-- 슬라이드 영역 -->
+  <div style="padding:16px 16px 0;">
+    <!-- 페이지 표시 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <span style="font-size:12px;color:#888;" id="theory-page-label">1 / 3</span>
+      <span style="font-size:12px;color:#9E7FBF;font-weight:700;background:rgba(158,127,191,0.1);padding:4px 10px;border-radius:20px;border:1px solid rgba(158,127,191,0.3);">🔍 이미지 탭 시 확대</span>
+    </div>
 
-function applyLang() {
-  const d = I18N[currentLang] || I18N.ko;
-  document.querySelectorAll('[data-i]').forEach(el => {
-    const k = el.dataset.i;
-    if (d[k] !== undefined) el.innerHTML = d[k];
-  });
-  document.documentElement.lang = currentLang;
-}
-
-function setLang(lang) {
-  currentLang = lang;
-  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
-  document.querySelectorAll('.lang-card').forEach(c => c.classList.toggle('selected', c.dataset.langcard === lang));
-  applyLang();
-}
-
-document.querySelectorAll('.lang-btn').forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
-document.querySelectorAll('.lang-card').forEach(c => c.addEventListener('click', () => setLang(c.dataset.langcard)));
-
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  window.scrollTo(0, 0);
-  const sw = document.getElementById('langSwitcher');
-  sw.classList.toggle('on-dark', id === 'welcome');
-  sw.classList.toggle('on-light', id !== 'welcome');
-}
-
-document.getElementById('goConsent').addEventListener('click', () => showScreen('consent'));
-document.getElementById('goSignup').addEventListener('click', () => showScreen('signup'));
-document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => showScreen(b.dataset.back)));
-
-document.getElementById('fPhone').addEventListener('input', (e) => {
-  let v = e.target.value.replace(/\D/g, '');
-  if (v.length > 11) v = v.slice(0, 11);
-  if (v.length > 7) v = v.slice(0,3) + '-' + v.slice(3,7) + '-' + v.slice(7);
-  else if (v.length > 3) v = v.slice(0,3) + '-' + v.slice(3);
-  e.target.value = v;
-});
-document.getElementById('fPassport').addEventListener('input', (e) => {
-  e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
-});
-
-document.getElementById('consentCard').addEventListener('click', () => {
-  consentChecked = !consentChecked;
-  document.getElementById('consentCard').classList.toggle('checked', consentChecked);
-  updateSignupButton();
-});
-document.getElementById('viewTermsLink').addEventListener('click', (e) => {
-  e.stopPropagation();
-  alert('약관 전문은 추후 추가 예정입니다.\nTerms will be added later.');
-});
-
-function compressImage(file, maxWidth = 1280, quality = 0.8) {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        let { width, height } = img;
-        if (width > maxWidth) {
-          height = height * (maxWidth / width);
-          width = maxWidth;
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        canvas.toBlob(resolve, 'image/jpeg', quality);
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-async function handlePhoto(input, slotId, target) {
-  const file = input.files[0];
-  if (!file) return;
-  const blob = await compressImage(file);
-  const url = URL.createObjectURL(blob);
-  const slot = document.getElementById(slotId);
-  let img = slot.querySelector('img');
-  if (!img) {
-    img = document.createElement('img');
-    slot.insertBefore(img, slot.firstChild);
-  }
-  img.src = url;
-  slot.classList.add('filled');
-  if (target === 'passport') passportFile = blob;
-  else selfieFile = blob;
-  updateSignupButton();
-}
-
-document.getElementById('passportInput').addEventListener('change', (e) => handlePhoto(e.target, 'passportSlot', 'passport'));
-document.getElementById('selfieInput').addEventListener('change', (e) => handlePhoto(e.target, 'selfieSlot', 'selfie'));
-
-function updateSignupButton() {
-  const btn = document.getElementById('btnSignup');
-  const name = document.getElementById('fName').value.trim();
-  const phone = document.getElementById('fPhone').value.trim();
-  const passport = document.getElementById('fPassport').value.trim();
-  const valid = consentChecked && name && phone && passport && passportFile && selfieFile;
-  btn.disabled = !valid;
-}
-['fName','fPhone','fPassport','fHeight','fWeight'].forEach(id => {
-  document.getElementById(id).addEventListener('input', updateSignupButton);
-});
-
-function showLoading(text) {
-  document.getElementById('loadingText').textContent = text;
-  document.getElementById('loading').classList.add('show');
-}
-function hideLoading() {
-  document.getElementById('loading').classList.remove('show');
-}
-
-async function uploadPhoto(blob, memberId, type) {
-  const path = `${memberId}_${type}.jpg`;
-  const { data, error } = await sb.storage.from('passports').upload(path, blob, {
-    contentType: 'image/jpeg',
-    upsert: true
-  });
-  if (error) throw error;
-  // 공개 URL 받아서 반환
-  const { data: urlData } = sb.storage.from('passports').getPublicUrl(path);
-  return urlData.publicUrl;
-}
-
-document.getElementById('btnSignup').addEventListener('click', async () => {
-  const d = I18N[currentLang];
-  showLoading(d.loadingSignup);
-  
-  try {
-    const name = document.getElementById('fName').value.trim();
-    const phone = document.getElementById('fPhone').value.trim();
-    const passport_number = document.getElementById('fPassport').value.trim();
-    const country = document.getElementById('fCountry').value;
-    const height = parseInt(document.getElementById('fHeight').value) || null;
-    const weight = parseInt(document.getElementById('fWeight').value) || null;
-    
-    const { data: member, error: memberErr } = await sb.from('members').insert({
-      name, phone, passport_number, country, language: currentLang,
-      height_cm: height, weight_kg: weight,
-      consent_at: new Date().toISOString()
-    }).select().single();
-    
-    if (memberErr) {
-      if (memberErr.code === '23505') {
-        // 이미 등록된 전화번호 → 기존 회원으로 자동 로그인
-        const { data: existing } = await sb.from('members')
-          .select('*').eq('phone', phone).maybeSingle();
-        if (existing) {
-          currentMember = existing;
-          saveSession(existing);
-          hideLoading();
-          alert('이미 가입된 전화번호입니다. 기존 계정으로 로그인합니다.\nAlready registered. Logging in.');
-          enterMain();
-          startLocationTracking();
-          return;
-        }
-        alert('이미 등록된 전화번호입니다.\nPhone already registered.');
-      } else {
-        throw memberErr;
-      }
-      hideLoading();
-      return;
-    }
-    
-    showLoading(d.loadingPhoto);
-    const passportPath = await uploadPhoto(passportFile, member.id, 'passport');
-    const selfiePath = await uploadPhoto(selfieFile, member.id, 'selfie');
-    
-    await sb.from('members').update({
-      passport_photo_url: passportPath,
-      selfie_photo_url: selfiePath
-    }).eq('id', member.id);
-    
-    localStorage.setItem('hands_member_id', member.id);
-    localStorage.setItem('hands_member_name', member.name);
-    localStorage.setItem('hands_member_country', member.country);
-    saveSession(member); // 추가 백업 저장
-    
-    currentMember = member;
-    hideLoading();
-    enterMain();
-    startLocationTracking();
-    
-  } catch (err) {
-    console.error('가입 실패:', err);
-    alert('가입 실패: ' + (err.message || '알 수 없는 오류'));
-    hideLoading();
-  }
-});
-
-/* ====== 세션 3중 저장 (localStorage + sessionStorage + Cookie) ====== */
-function saveSession(member) {
-  try { localStorage.setItem('hands_member_id', member.id); } catch(e){}
-  try { sessionStorage.setItem('hands_member_id', member.id); } catch(e){}
-  try {
-    const exp = new Date(); exp.setFullYear(exp.getFullYear() + 1);
-    document.cookie = `hands_member_id=${member.id};expires=${exp.toUTCString()};path=/;samesite=lax`;
-  } catch(e){}
-}
-function readSession() {
-  try {
-    const ls = localStorage.getItem('hands_member_id'); if(ls) return ls;
-  } catch(e){}
-  try {
-    const ss = sessionStorage.getItem('hands_member_id'); if(ss) return ss;
-  } catch(e){}
-  try {
-    const m = document.cookie.match(/hands_member_id=([^;]+)/);
-    if(m) return m[1];
-  } catch(e){}
-  return null;
-}
-function clearSession() {
-  try {
-    localStorage.removeItem('hands_member_id');
-    localStorage.removeItem('hands_member_name');
-    localStorage.removeItem('hands_member_country');
-  } catch(e){}
-  try { sessionStorage.removeItem('hands_member_id'); } catch(e){}
-  try { document.cookie = 'hands_member_id=;max-age=0;path=/'; } catch(e){}
-}
-
-function enterMain() {
-  if (!currentMember || !currentMember.name) {
-    console.warn('currentMember 없거나 이름 없음, 로그인 화면으로');
-    return;
-  }
-  document.getElementById('greetName').textContent = currentMember.name;
-  const countryNames = {
-    vn:'🇻🇳 Vietnam',th:'🇹🇭 Thailand',id:'🇮🇩 Indonesia',ph:'🇵🇭 Philippines',
-    np:'🇳🇵 Nepal',kh:'🇰🇭 Cambodia',mm:'🇲🇲 Myanmar',lk:'🇱🇰 Sri Lanka',bd:'🇧🇩 Bangladesh',other:'—'
-  };
-  document.getElementById('metaCountry').textContent = countryNames[currentMember.country] || currentMember.country;
-  
-  // 모든 화면 비활성화 후 main만 활성화 - 이중 보장
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('main').classList.add('active');
-  window.scrollTo(0, 0);
-  const sw = document.getElementById('langSwitcher');
-  sw.classList.remove('on-dark');
-  sw.classList.add('on-light');
-}
-
-let lastSavedAt = 0;
-let lastSavedPos = null;
-
-function startLocationTracking() {
-  if (!('geolocation' in navigator)) return;
-  
-  // 1. 앱 켤 때 - 1회 즉시 기록 (app_open 소스)
-  navigator.geolocation.getCurrentPosition(async (pos) => {
-    await saveLocation(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy, 'app_open');
-  }, (err) => console.warn('위치 거부:', err));
-  
-  // 2. 켜져있는 동안 watch (watch 소스)
-  watchPositionId = navigator.geolocation.watchPosition(async (pos) => {
-    const now = Date.now();
-    // 5초 미만 텀이면 스킵
-    if (now - lastSavedAt < 5000) return;
-    // 5m 미만 이동이면 history는 스킵 (현재 위치만 갱신)
-    let saveHistory = true;
-    if (lastSavedPos) {
-      const dist = haversine(lastSavedPos.lat, lastSavedPos.lng, 
-        pos.coords.latitude, pos.coords.longitude);
-      if (dist < 5) saveHistory = false;
-      // 그래도 30초 지났으면 history 강제 기록
-      if (now - lastSavedAt > 30000) saveHistory = true;
-    }
-    await saveLocation(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy, 
-      saveHistory ? 'watch' : null);
-    lastSavedAt = now;
-    lastSavedPos = {lat: pos.coords.latitude, lng: pos.coords.longitude};
-  }, (err) => console.warn('위치 추적 오류:', err), {
-    enableHighAccuracy: true,
-    maximumAge: 5000,
-    timeout: 15000
-  });
-}
-
-function haversine(lat1, lng1, lat2, lng2) {
-  const R = 6371000;
-  const dLat = (lat2-lat1) * Math.PI/180;
-  const dLng = (lng2-lng1) * Math.PI/180;
-  const a = Math.sin(dLat/2)**2 +
-    Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) *
-    Math.sin(dLng/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
-
-async function saveLocation(lat, lng, accuracy, source) {
-  if (!currentMember) return;
-  const now = new Date().toISOString();
-  const acc = Math.round(accuracy || 0);
-  
-  // 현재 위치 upsert (실시간 마커용)
-  await sb.from('locations').upsert({
-    member_id: currentMember.id,
-    lat, lng,
-    accuracy: acc,
-    updated_at: now
-  });
-  
-  // source가 있으면 이력에도 기록
-  if (source) {
-    sb.from('location_history').insert({
-      member_id: currentMember.id,
-      lat, lng,
-      accuracy: acc,
-      source: source,
-      recorded_at: now
-    }).then(() => {}, (err) => console.warn('이력 저장 실패:', err));
-  }
-  
-  // 마지막 접속 시각 갱신
-  sb.from('members').update({last_seen_at: now}).eq('id', currentMember.id)
-    .then(() => {}, () => {});
-}
-
-async function sendSOS() {
-  if (!currentMember) return;
-  if (!confirm('관리자에게 긴급 도움을 요청합니다. 진행하시겠습니까?\nSend SOS to admin?')) return;
-  
-  navigator.geolocation.getCurrentPosition(async (pos) => {
-    const lat = pos.coords.latitude, lng = pos.coords.longitude;
-    const now = new Date().toISOString();
-    
-    await sb.from('sos_alerts').insert({
-      member_id: currentMember.id,
-      lat, lng,
-      status: 'pending'
-    });
-    
-    // 이력에도 SOS 위치 기록
-    sb.from('location_history').insert({
-      member_id: currentMember.id,
-      lat, lng,
-      source: 'sos',
-      recorded_at: now
-    }).then(() => {}, () => {});
-    
-    // 현재 위치도 갱신
-    sb.from('locations').upsert({
-      member_id: currentMember.id,
-      lat, lng,
-      updated_at: now
-    }).then(() => {}, () => {});
-    
-    alert('SOS 전송 완료! 관리자가 곧 연락드립니다.\nSOS sent! Admin will contact you soon.');
-  }, () => alert('위치 정보 없이 SOS 전송 불가\nLocation required for SOS'));
-}
-
-async function logout() {
-  if (!confirm('로그아웃 하시겠습니까?\nLog out?')) return;
-  if (watchPositionId) navigator.geolocation.clearWatch(watchPositionId);
-  clearSession();
-  currentMember = null;
-  location.reload();
-}
-
-function showMain() { showScreen('main'); }
-function showBoard() {
-  showScreen('board');
-  loadPosts();
-}
-function showWrite() { showScreen('post-write'); }
-
-async function loadPosts() {
-  const { data: posts, error } = await sb.from('posts')
-    .select('*, members(name, country)')
-    .order('created_at', { ascending: false })
-    .limit(50);
-  
-  const list = document.getElementById('postList');
-  if (error || !posts || posts.length === 0) {
-    list.innerHTML = `<div class="post-empty" data-i="postEmpty">${I18N[currentLang].postEmpty}</div>`;
-    return;
-  }
-  
-  const catLabels = { general:I18N[currentLang].catGeneral, question:I18N[currentLang].catQuestion, tip:I18N[currentLang].catTip, event:I18N[currentLang].catEvent };
-  
-  list.innerHTML = posts.map(p => {
-    const time = new Date(p.created_at);
-    const ago = timeAgo(time);
-    const author = p.members?.name || '—';
-    return `
-      <div class="post-card">
-        <div class="post-cat ${p.category}">${catLabels[p.category] || p.category}</div>
-        <div class="post-title">${escapeHtml(p.title)}</div>
-        <div class="post-body">${escapeHtml(p.body)}</div>
-        <div class="post-meta"><span>${escapeHtml(author)}</span><span>·</span><span>${ago}</span></div>
+    <!-- 슬라이드 카드 -->
+    <div style="overflow:hidden;border-radius:16px;border:1.5px solid #eee;background:#fff;">
+      <div id="theory-slider" style="display:flex;transition:transform 0.3s ease;will-change:transform;">
+        <!-- JS로 렌더링 -->
       </div>
-    `;
-  }).join('');
-}
+    </div>
 
-function escapeHtml(s) {
-  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
+    <!-- 네비게이션 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;gap:12px;">
+      <button onclick="theoryPrev()" style="flex:1;padding:12px;border-radius:12px;border:1.5px solid #eee;background:#fff;font-size:20px;cursor:pointer;color:#555;">‹</button>
+      <div id="theory-dots" style="display:flex;gap:6px;align-items:center;"></div>
+      <button onclick="theoryNext()" style="flex:1;padding:12px;border-radius:12px;border:1.5px solid #eee;background:#fff;font-size:20px;cursor:pointer;color:#555;">›</button>
+    </div>
+  </div>
+  <div style="height:60px"></div>
+</div>
 
-function timeAgo(date) {
-  const sec = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (sec < 60) return '방금';
-  if (sec < 3600) return Math.floor(sec/60) + '분 전';
-  if (sec < 86400) return Math.floor(sec/3600) + '시간 전';
-  return Math.floor(sec/86400) + '일 전';
-}
 
-document.querySelectorAll('.cat-pill').forEach(p => {
-  p.addEventListener('click', () => {
-    document.querySelectorAll('.cat-pill').forEach(x => x.classList.remove('active'));
-    p.classList.add('active');
-    currentCategory = p.dataset.cat;
-  });
-});
+<!-- ════════════════════════════════
+     MODAL: 이미지 확대
+════════════════════════════════ -->
+<div id="theory-img-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;align-items:center;justify-content:center;flex-direction:column;">
+  <button onclick="closeTheoryImg()" style="position:fixed;top:calc(env(safe-area-inset-top) + 16px);right:16px;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.25);border:2px solid rgba(255,255,255,0.5);color:#fff;font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10000;">✕</button>
+  <img id="theory-img-full" src="" alt="" style="max-width:95vw;max-height:80vh;object-fit:contain;border-radius:8px;"/>
+</div>
 
-document.getElementById('btnPost').addEventListener('click', async () => {
-  const title = document.getElementById('postTitle').value.trim();
-  const body = document.getElementById('postBody').value.trim();
-  if (!title || !body) { alert('제목과 내용을 입력하세요'); return; }
-  if (!currentMember) { alert('로그인 필요'); return; }
-  
-  showLoading(I18N[currentLang].loadingPost);
-  try {
-    await sb.from('posts').insert({
-      author_id: currentMember.id,
-      category: currentCategory,
-      title, body,
-      body_lang: currentLang
-    });
-    document.getElementById('postTitle').value = '';
-    document.getElementById('postBody').value = '';
-    hideLoading();
-    showBoard();
-  } catch (err) {
-    hideLoading();
-    alert('게시 실패: ' + err.message);
+
+<!-- ════════════════════════════════
+     BOTTOM NAV
+════════════════════════════════ -->
+<nav class="bottom-nav" id="bottomNav">
+  <button class="nav-item active" data-page="home" onclick="navigate('home')" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    홈
+  </button>
+  <button class="nav-item" data-page="sales" onclick="navigate('sales')" type="button" style="display:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    매출
+  </button>
+  <button class="nav-item" data-page="stats" onclick="navigate('stats')" type="button" style="display:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-5"/><path d="M11 16v-8"/><path d="M15 16v-3"/></svg>
+    통계
+  </button>
+  <button class="nav-item" data-page="settings" onclick="navigate('settings')" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    설정
+  </button>
+</nav>
+
+<script src="./chart-native.js"></script>
+<script src="./script.js"></script>
+<script src="./ingredient.js"></script>
+<script src="./calculator.js"></script>
+<script src="./reels.js"></script>
+
+<!-- ════════════ 쉴드커넥트 세션/크레딧 ════════════ -->
+<script>
+(function(){
+  'use strict';
+
+  // ── UI 엘리먼트 ──
+  var loginLinkHome   = document.getElementById('loginLinkHome');
+  var accountInfoHome = document.getElementById('accountInfoHome');
+  var creditCountHome = document.getElementById('creditCountHome');
+  var logoutLinkHome  = document.getElementById('logoutLinkHome');
+
+  var settingsLoggedOut = document.getElementById('settingsLoggedOut');
+  var settingsLoggedIn  = document.getElementById('settingsLoggedIn');
+  var settingsCredit    = document.getElementById('settingsCreditCount');
+  var settingsMemberId  = document.getElementById('settingsMemberId');
+  var logoutBtnSettings = document.getElementById('logoutBtnSettings');
+
+  // ── 로그아웃 ──
+  function doLogout(e){
+    if(e) e.preventDefault();
+    // 로그아웃 API 호출 후 홈 새로고침
+    fetch('/api/auth/logout', { method:'POST', credentials:'include' })
+      .catch(function(){})
+      .then(function(){ window.location.reload(); });
   }
-});
+  if(logoutLinkHome)  logoutLinkHome.addEventListener('click', doLogout);
+  if(logoutBtnSettings) logoutBtnSettings.addEventListener('click', doLogout);
 
-async function tryAutoLogin() {
-  const memberId = readSession(); // localStorage + sessionStorage + Cookie 다 시도
-  if (!memberId) return false;
-  
-  try {
-    const { data, error } = await sb.from('members').select('*').eq('id', memberId).single();
-    if (error || !data) {
-      clearSession();
-      return false;
-    }
-    
-    if (!data.name || !data.country) {
-      console.warn('가입 데이터 불완전, 다시 가입 필요');
-      clearSession();
-      return false;
-    }
-    
-    await sb.from('members').update({ 
-      last_login_at: new Date().toISOString() 
-    }).eq('id', memberId);
-    
-    saveSession(data); // 새로고침 (만료 연장)
-    currentMember = data;
-    enterMain();
-    startLocationTracking();
-    return true;
-  } catch (e) {
-    console.error('자동 로그인 오류:', e);
-    return false;
-  }
-}
+  // ── UI 업데이트 ──
+  function renderLoggedIn(data){
+    var credit = 0;
+    if(typeof data.credits_remaining === 'number') credit = data.credits_remaining;
+    else if(typeof data.credits === 'number')      credit = data.credits;
+    else if(typeof data.balance === 'number')      credit = data.balance;
 
-(async () => {
-  applyLang();
-  
-  // URL에 ?reset 있으면 강제 초기화 (응급용)
-  if (location.search.includes('reset')) {
-    clearSession();
-    history.replaceState(null, '', location.pathname);
-    console.log('로컬 데이터 초기화됨');
+    var memberId = data.member_id || data.memberId || '';
+
+    // 홈 상단
+    if(loginLinkHome)   loginLinkHome.style.display   = 'none';
+    if(accountInfoHome) accountInfoHome.style.display = 'flex';
+    if(creditCountHome) creditCountHome.textContent   = credit;
+
+    // 설정 페이지
+    if(settingsLoggedOut) settingsLoggedOut.style.display = 'none';
+    if(settingsLoggedIn)  settingsLoggedIn.style.display  = 'block';
+    if(settingsCredit)    settingsCredit.textContent      = credit;
+    if(settingsMemberId)  settingsMemberId.textContent    = memberId;
   }
-  
-  await tryAutoLogin();
+
+  function renderLoggedOut(){
+    // 이미 기본값이 로그아웃 상태이므로 건드릴 필요 없음
+  }
+
+  // ── 세션 확인 ──
+  fetch('/api/customer/me', { credentials:'include' })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(data){
+      if(!data) { renderLoggedOut(); return; }
+      var loggedIn = !!(data.logged_in || data.loggedIn || data.member_id || data.memberId);
+      if(loggedIn) renderLoggedIn(data);
+      else renderLoggedOut();
+    })
+    .catch(function(){ renderLoggedOut(); });
 })();
 </script>
 
+<!-- ════════════ 약제비율계산기 사진 시각화 (라이브 그람) ════════════ -->
+<script>
+(function(){
+  var COLORS=['#C7F050','#9DCC3D','#6B8E2A','#E8B14C','#DC8852','#A88E62'];
+  function init(){
+    document.querySelectorAll('.bowl-total-bar').forEach(setup);
+    ['dye-bowls-container','perm-bowls-container'].forEach(function(id){
+      var c=document.getElementById(id);
+      if(!c)return;
+      new MutationObserver(function(ms){
+        ms.forEach(function(m){
+          (m.addedNodes||[]).forEach(function(n){
+            if(n.querySelectorAll)n.querySelectorAll('.bowl-total-bar').forEach(setup);
+          });
+        });
+      }).observe(c,{childList:true,subtree:true});
+    });
+  }
+  function setup(bar){
+    if(bar._pvz)return;bar._pvz=true;
+    var lastH='';
+    function chk(){
+      var d=parse(bar);
+      if(!d){
+        var ex=bar.querySelector(':scope > .bowl-photo-viz');
+        if(ex)ex.remove();
+        lastH='';return;
+      }
+      var h=JSON.stringify(d);
+      if(h===lastH)return;
+      lastH=h;
+      render(bar,d);
+    }
+    new MutationObserver(chk).observe(bar,{childList:true,subtree:true,characterData:true});
+    chk();
+  }
+  function parse(bar){
+    if(bar.querySelector(':scope > .bowl-total-empty'))return null;
+    var mt=bar.querySelector(':scope > .bowl-res-main-total');
+    if(!mt)return null;
+    var d={dyes:[],extras:[],dyeT:0,exT:0,oneT:0,oxG:0,oxR:'1:1',gd:0,perm:!!bar.closest('#calc-perm-tab')};
+    var mtm=(mt.textContent||'').match(/(\d+(?:\.\d+)?)\s*g/);
+    if(mtm)d.dyeT=parseFloat(mtm[1]);
+    var found=false;
+    Array.prototype.forEach.call(bar.children,function(c){
+      if(c===mt){found=true;return;}
+      if(!c.classList||!c.classList.contains('bowl-res-item'))return;
+      var ne=c.querySelector('.name'),ge=c.querySelector('.gram');
+      if(!ne||!ge)return;
+      var g=parseFloat((ge.textContent||'').replace(/g/g,''));
+      if(isNaN(g))return;
+      if(found){
+        var rn=ne.textContent||'';
+        var cn=rn.replace(/\s*\([^)]*\)\s*/g,'').replace(/산화제포함/g,'').trim();
+        d.extras.push({n:cn||'추가제',g:g});
+      }else{
+        d.dyes.push({n:(ne.textContent||'').trim(),g:g});
+      }
+    });
+    d.exT=d.extras.reduce(function(a,e){return a+e.g;},0);
+    d.oneT=d.dyeT+d.exT;
+    var oe=bar.querySelector(':scope > .bowl-res-oxi');
+    if(oe){
+      var ot=oe.textContent||'';
+      var rm=ot.match(/(1:[\d.]+)/);
+      var sl=oe.querySelector('span:last-child');
+      var ogt=sl?sl.textContent:ot;
+      var ogm=ogt.match(/(\d+(?:\.\d+)?)\s*g/);
+      if(rm)d.oxR=rm[1];
+      if(ogm)d.oxG=parseFloat(ogm[1]);
+    }
+    var ge=bar.querySelector(':scope > .bowl-res-grand .total');
+    if(ge){
+      var gm=(ge.textContent||'').match(/(\d+(?:\.\d+)?)\s*g/);
+      if(gm)d.gd=parseFloat(gm[1]);
+    }
+    return d;
+  }
+  function render(bar,d){
+    var ex=bar.querySelector(':scope > .bowl-photo-viz');
+    if(ex)ex.remove();
+    var items=[];
+    d.dyes.forEach(function(dy,i){if(dy.g>0)items.push({n:dy.n,g:dy.g,c:COLORS[i]});});
+    d.extras.forEach(function(e,i){if(e.g>0)items.push({n:e.n,g:e.g,c:COLORS[3+i]});});
+    var pT=d.oneT;
+    var PCX=660,PCY=467,PR=230,PIR=95;
+    var sv='';
+    if(pT>0){
+      var sd=0;
+      items.forEach(function(it){
+        var ang=(it.g/pT)*360;
+        var ed=sd+ang;
+        var tc=it.c===COLORS[2]?'#fff':'#0A0A0A';
+        sv+='<path d="'+wedge(PCX,PCY,PR,PIR,sd,ed)+'" fill="'+it.c+'" fill-rule="evenodd" fill-opacity="0.7"/>';
+        var lr=(PR+PIR)/2,md=(sd+ed)/2;
+        var rad=(md-90)*Math.PI/180;
+        var lx=PCX+lr*Math.cos(rad),ly=PCY+lr*Math.sin(rad);
+        if(ang>=30){
+          sv+='<text x="'+lx.toFixed(0)+'" y="'+(ly-8).toFixed(0)+'" text-anchor="middle" fill="'+tc+'" font-size="34" font-weight="700" stroke="rgba(255,255,255,0.5)" stroke-width="0.6" paint-order="stroke fill">'+esc(short(it.n))+'</text>';
+          sv+='<text x="'+lx.toFixed(0)+'" y="'+(ly+34).toFixed(0)+'" text-anchor="middle" fill="'+tc+'" font-size="46" font-weight="800" stroke="rgba(255,255,255,0.5)" stroke-width="0.8" paint-order="stroke fill">'+it.g+'g</text>';
+        }else if(ang>=15){
+          sv+='<text x="'+lx.toFixed(0)+'" y="'+(ly+12).toFixed(0)+'" text-anchor="middle" fill="'+tc+'" font-size="40" font-weight="800" stroke="rgba(255,255,255,0.5)" stroke-width="0.8" paint-order="stroke fill">'+it.g+'g</text>';
+        }
+        sd=ed;
+      });
+    }
+    if(d.oxG>0){
+      var olx=1170,oly=44,lw=290,lh=130;
+      sv+='<g><rect x="'+(olx-lw/2)+'" y="'+oly+'" width="'+lw+'" height="'+lh+'" rx="22" fill="#C7F050" stroke="#0A0A0A" stroke-width="6"/>';
+      sv+='<text x="'+olx+'" y="'+(oly+44)+'" text-anchor="middle" fill="#0A0A0A" font-size="34" font-weight="600">산화제 ('+d.oxR+')</text>';
+      sv+='<text x="'+olx+'" y="'+(oly+102)+'" text-anchor="middle" fill="#0A0A0A" font-size="56" font-weight="800">'+d.oxG+'g</text></g>';
+    }
+    var rows=[];
+    rows.push('<div class="ps-row"><span>'+(d.perm?'펌제 총량':'염모제 총량')+'</span><span>'+d.dyeT+'g</span></div>');
+    if(d.exT>0){
+      rows.push('<div class="ps-row"><span>추가제 총량</span><span>'+d.exT+'g</span></div>');
+      rows.push('<div class="ps-divider"></div>');
+      rows.push('<div class="ps-row ps-subtotal"><span>1제 총량</span><span>'+d.oneT+'g</span></div>');
+    }
+    if(d.oxG>0){
+      rows.push('<div class="ps-row"><span>산화제 ('+d.oxR+')</span><span>'+d.oxG+'g</span></div>');
+    }
+    rows.push('<div class="ps-divider"></div>');
+    rows.push('<div class="ps-row ps-grand"><span>바울 합계</span><span>'+d.gd+'g</span></div>');
+    var html='<div class="photo-area"><svg viewBox="0 0 1636 1112" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">'+sv+'</svg></div><div class="photo-summary">'+rows.join('')+'</div>';
+    var w=document.createElement('div');
+    w.className='bowl-photo-viz';
+    w.innerHTML=html;
+    bar.appendChild(w);
+  }
+  function wedge(cx,cy,R,ir,sd,ed){
+    if(Math.abs(ed-sd-360)<0.01)return 'M '+(cx+R)+' '+cy+' A '+R+' '+R+' 0 1 1 '+(cx-R)+' '+cy+' A '+R+' '+R+' 0 1 1 '+(cx+R)+' '+cy+' Z M '+(cx+ir)+' '+cy+' A '+ir+' '+ir+' 0 1 1 '+(cx-ir)+' '+cy+' A '+ir+' '+ir+' 0 1 1 '+(cx+ir)+' '+cy+' Z';
+    var s=(sd-90)*Math.PI/180,e=(ed-90)*Math.PI/180;
+    var x1=cx+R*Math.cos(s),y1=cy+R*Math.sin(s);
+    var x2=cx+R*Math.cos(e),y2=cy+R*Math.sin(e);
+    var ix1=cx+ir*Math.cos(s),iy1=cy+ir*Math.sin(s);
+    var ix2=cx+ir*Math.cos(e),iy2=cy+ir*Math.sin(e);
+    var L=(ed-sd)>180?1:0;
+    return 'M '+x1.toFixed(0)+' '+y1.toFixed(0)+' A '+R+' '+R+' 0 '+L+' 1 '+x2.toFixed(0)+' '+y2.toFixed(0)+' L '+ix2.toFixed(0)+' '+iy2.toFixed(0)+' A '+ir+' '+ir+' 0 '+L+' 0 '+ix1.toFixed(0)+' '+iy1.toFixed(0)+' Z';
+  }
+  function short(n){return n&&n.length>6?n.substring(0,6):(n||'');}
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
+  else init();
+})();
+</script>
 </body>
 </html>
