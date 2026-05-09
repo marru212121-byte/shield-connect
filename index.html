@@ -693,6 +693,12 @@
       stroke:#fff !important;
     }
 
+    /* === iOS PWA overscroll 방지 (body 끝에서 외부 노출 차단) — 2026-05-09 === */
+    html, body {
+      overscroll-behavior-y: none !important;
+      -webkit-overflow-scrolling: auto !important;
+    }
+
     /* === 홈 메뉴 — 아이콘 박스만 키움 (B안) — 2026-05-09 === */
     #page-home .menu-card {
       grid-template-columns:54px 1fr !important;
