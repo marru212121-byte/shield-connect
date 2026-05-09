@@ -731,20 +731,20 @@
       height:100%;
     }
     #page-calculator .bowl-photo-viz .photo-summary {
-      padding:11px 13px;
+      padding:14px 16px;
       background:#141414;
       border:0.5px solid rgba(199,240,80,0.15);
       border-radius:8px;
       display:flex;
       flex-direction:column;
-      gap:6px;
+      gap:8px;
     }
     #page-calculator .bowl-photo-viz .ps-row {
       display:flex;
       justify-content:space-between;
       align-items:center;
-      font-size:12.5px;
-      color:rgba(255,255,255,0.85);
+      font-size:14.5px;
+      color:rgba(255,255,255,0.88);
       letter-spacing:-0.01em;
     }
     #page-calculator .bowl-photo-viz .ps-row span:last-child {
@@ -755,6 +755,7 @@
     #page-calculator .bowl-photo-viz .ps-subtotal span:last-child {
       color:#C7F050 !important;
       font-weight:700;
+      font-size:15.5px;
     }
     #page-calculator .bowl-photo-viz .ps-divider {
       height:1px;
@@ -762,20 +763,20 @@
       margin:1px 0;
     }
     #page-calculator .bowl-photo-viz .ps-grand {
-      font-size:13.5px;
+      font-size:16px;
       font-weight:800;
       color:#fff;
       padding-top:1px;
     }
     #page-calculator .bowl-photo-viz .ps-grand span:last-child {
-      font-size:16px;
+      font-size:19px;
       color:#C7F050;
     }
     #page-calculator .bowl-photo-viz .ps-empty {
       justify-content:center;
       color:rgba(255,255,255,0.45);
-      font-size:12px;
-      padding:6px 0;
+      font-size:13px;
+      padding:8px 0;
     }
     /* === "+ 바울 2 추가" 버튼 숨김 — 2026-05-09 === */
     #page-calculator .bowl-add-btn {
@@ -1942,40 +1943,47 @@
     var svg=bar._pvzSvg,sum=bar._pvzSum;
     if(!svg||!sum)return;
     var items=[];
-    d.dyes.forEach(function(dy,i){if(dy.g>0)items.push({n:dy.n,g:dy.g,c:COLORS[i]});});
-    d.extras.forEach(function(e,i){if(e.g>0)items.push({n:e.n,g:e.g,c:COLORS[3+i]});});
+    d.dyes.forEach(function(dy,i){if(dy.g>0)items.push({n:dy.n,g:dy.g,c:COLORS[i],ext:false});});
+    d.extras.forEach(function(e,i){if(e.g>0)items.push({n:e.n,g:e.g,c:COLORS[3+i],ext:true});});
     var pT=d.oneT;
     var PCX=660,PCY=467,PR=295,PIR=110;
     var sv='';
     if(pT>0){
       var sd=0;
+      // 1pass: 모든 segment 그리기
       items.forEach(function(it){
         var ang=(it.g/pT)*360;
         var ed=sd+ang;
-        var tc=it.c===COLORS[2]?'#fff':'#0A0A0A';
         sv+='<path d="'+wedge(PCX,PCY,PR,PIR,sd,ed)+'" fill="'+it.c+'" fill-rule="evenodd" fill-opacity="0.78"/>';
-        var lr=(PR+PIR)/2,md=(sd+ed)/2;
-        var rad=(md-90)*Math.PI/180;
-        var lx=PCX+lr*Math.cos(rad),ly=PCY+lr*Math.sin(rad);
-        var nm=esc(it.n||'-');
-        if(ang>=22){
-          // 풀 표시: 이름 + 그람 (큰)
-          sv+='<text x="'+lx.toFixed(0)+'" y="'+(ly-12).toFixed(0)+'" text-anchor="middle" fill="'+tc+'" font-size="40" font-weight="700" stroke="rgba(255,255,255,0.55)" stroke-width="1" paint-order="stroke fill">'+nm+'</text>';
-          sv+='<text x="'+lx.toFixed(0)+'" y="'+(ly+34).toFixed(0)+'" text-anchor="middle" fill="'+tc+'" font-size="50" font-weight="800" stroke="rgba(255,255,255,0.55)" stroke-width="1.2" paint-order="stroke fill">'+it.g+'g</text>';
-        }else if(ang>=12){
-          // 중간: 이름 + 그람 (작게)
-          sv+='<text x="'+lx.toFixed(0)+'" y="'+(ly-7).toFixed(0)+'" text-anchor="middle" fill="'+tc+'" font-size="30" font-weight="700" stroke="rgba(255,255,255,0.55)" stroke-width="0.9" paint-order="stroke fill">'+nm+'</text>';
-          sv+='<text x="'+lx.toFixed(0)+'" y="'+(ly+24).toFixed(0)+'" text-anchor="middle" fill="'+tc+'" font-size="36" font-weight="800" stroke="rgba(255,255,255,0.55)" stroke-width="1" paint-order="stroke fill">'+it.g+'g</text>';
-        }else if(ang>=4){
-          // 작음: 외부에 leader line + 라벨
-          var olx=PCX+(PR+95)*Math.cos(rad),oly=PCY+(PR+95)*Math.sin(rad);
-          var anc=Math.cos(rad)>0.1?'start':(Math.cos(rad)<-0.1?'end':'middle');
-          var dx=Math.cos(rad)>0.1?10:(Math.cos(rad)<-0.1?-10:0);
-          sv+='<line x1="'+(PCX+(PR+5)*Math.cos(rad)).toFixed(0)+'" y1="'+(PCY+(PR+5)*Math.sin(rad)).toFixed(0)+'" x2="'+olx.toFixed(0)+'" y2="'+oly.toFixed(0)+'" stroke="'+it.c+'" stroke-width="3" stroke-opacity="0.85"/>';
-          sv+='<text x="'+(olx+dx).toFixed(0)+'" y="'+(oly-6).toFixed(0)+'" text-anchor="'+anc+'" fill="#fff" font-size="32" font-weight="700" stroke="#0A0A0A" stroke-width="1.2" paint-order="stroke fill">'+nm+'</text>';
-          sv+='<text x="'+(olx+dx).toFixed(0)+'" y="'+(oly+30).toFixed(0)+'" text-anchor="'+anc+'" fill="#fff" font-size="36" font-weight="800" stroke="#0A0A0A" stroke-width="1.2" paint-order="stroke fill">'+it.g+'g</text>';
-        }
+        it._sd=sd;it._ed=ed;it._ang=ang;
         sd=ed;
+      });
+      // 2pass: 라벨 그리기 — 추가제는 무조건 leader, 염모제는 각도 따라
+      items.forEach(function(it){
+        var sd=it._sd,ed=it._ed,ang=it._ang;
+        var md=(sd+ed)/2,rad=(md-90)*Math.PI/180;
+        var nm=esc(it.n||'-');
+        if(!it.ext&&ang>=22){
+          // 염모제 큰: 이름 + 그람 (안에)
+          var lr=(PR+PIR)/2;
+          var lx=PCX+lr*Math.cos(rad),ly=PCY+lr*Math.sin(rad);
+          sv+='<text x="'+lx.toFixed(0)+'" y="'+(ly-14).toFixed(0)+'" text-anchor="middle" fill="#0A0A0A" font-size="50" font-weight="700" stroke="rgba(255,255,255,0.55)" stroke-width="1.2" paint-order="stroke fill">'+nm+'</text>';
+          sv+='<text x="'+lx.toFixed(0)+'" y="'+(ly+42).toFixed(0)+'" text-anchor="middle" fill="#0A0A0A" font-size="62" font-weight="800" stroke="rgba(255,255,255,0.55)" stroke-width="1.4" paint-order="stroke fill">'+it.g+'g</text>';
+        }else if(!it.ext&&ang>=12){
+          // 염모제 중간: 이름 + 그람 (안에 작게)
+          var lr=(PR+PIR)/2;
+          var lx=PCX+lr*Math.cos(rad),ly=PCY+lr*Math.sin(rad);
+          sv+='<text x="'+lx.toFixed(0)+'" y="'+(ly-9).toFixed(0)+'" text-anchor="middle" fill="#0A0A0A" font-size="38" font-weight="700" stroke="rgba(255,255,255,0.55)" stroke-width="1" paint-order="stroke fill">'+nm+'</text>';
+          sv+='<text x="'+lx.toFixed(0)+'" y="'+(ly+30).toFixed(0)+'" text-anchor="middle" fill="#0A0A0A" font-size="46" font-weight="800" stroke="rgba(255,255,255,0.55)" stroke-width="1.2" paint-order="stroke fill">'+it.g+'g</text>';
+        }else{
+          // 작거나 추가제: 외부 leader line + 라벨
+          var olx=PCX+(PR+105)*Math.cos(rad),oly=PCY+(PR+105)*Math.sin(rad);
+          var anc=Math.cos(rad)>0.1?'start':(Math.cos(rad)<-0.1?'end':'middle');
+          var dx=Math.cos(rad)>0.1?12:(Math.cos(rad)<-0.1?-12:0);
+          sv+='<line x1="'+(PCX+(PR+5)*Math.cos(rad)).toFixed(0)+'" y1="'+(PCY+(PR+5)*Math.sin(rad)).toFixed(0)+'" x2="'+olx.toFixed(0)+'" y2="'+oly.toFixed(0)+'" stroke="'+it.c+'" stroke-width="4" stroke-opacity="0.9"/>';
+          sv+='<text x="'+(olx+dx).toFixed(0)+'" y="'+(oly-8).toFixed(0)+'" text-anchor="'+anc+'" fill="#fff" font-size="38" font-weight="700" stroke="#0A0A0A" stroke-width="1.4" paint-order="stroke fill">'+nm+'</text>';
+          sv+='<text x="'+(olx+dx).toFixed(0)+'" y="'+(oly+34).toFixed(0)+'" text-anchor="'+anc+'" fill="#fff" font-size="44" font-weight="800" stroke="#0A0A0A" stroke-width="1.4" paint-order="stroke fill">'+it.g+'g</text>';
+        }
       });
     }
     if(d.oxG>0){
@@ -1988,18 +1996,15 @@
     var rows=[];
     if(d.hasData){
       // 각 염모제별 줄
-      d.dyes.forEach(function(dy,i){
+      d.dyes.forEach(function(dy){
         if(dy.g>0)rows.push('<div class="ps-row"><span>'+esc(dy.n)+'</span><span>'+dy.g+'g</span></div>');
       });
-      if(d.dyes.filter(function(dy){return dy.g>0;}).length>1){
-        rows.push('<div class="ps-divider"></div>');
-        rows.push('<div class="ps-row"><span>'+(d.perm?'펌제 총량':'염모제 총량')+'</span><span>'+d.dyeT+'g</span></div>');
-      }
       // 추가제별
+      var hasExtras=false;
       d.extras.forEach(function(e){
-        if(e.g>0)rows.push('<div class="ps-row"><span>'+esc(e.n)+'</span><span>'+e.g+'g</span></div>');
+        if(e.g>0){rows.push('<div class="ps-row"><span>'+esc(e.n)+'</span><span>'+e.g+'g</span></div>');hasExtras=true;}
       });
-      if(d.exT>0){
+      if(d.oneT>0){
         rows.push('<div class="ps-divider"></div>');
         rows.push('<div class="ps-row ps-subtotal"><span>1제 총량</span><span>'+d.oneT+'g</span></div>');
       }
