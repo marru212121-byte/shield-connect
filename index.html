@@ -740,36 +740,70 @@
       gap:8px;
     }
     #page-calculator .bowl-photo-viz .ps-row {
+      position:relative;
       display:flex;
       justify-content:space-between;
       align-items:center;
-      font-size:14.5px;
-      color:rgba(255,255,255,0.88);
+      font-size:17px;
+      font-weight:600;
+      color:rgba(255,255,255,0.92);
       letter-spacing:-0.01em;
+      padding:3px 0 3px 14px;
+    }
+    /* 좌측 색띠 — 도넛 조각 색과 1:1 매칭 */
+    #page-calculator .bowl-photo-viz .ps-row::before {
+      content:'';
+      position:absolute;
+      left:0;
+      top:6px;
+      bottom:6px;
+      width:4px;
+      border-radius:2px;
+      background:var(--row-color, transparent);
     }
     #page-calculator .bowl-photo-viz .ps-row span:last-child {
-      font-weight:700;
+      font-weight:800;
+      font-size:18px;
       color:#fff;
+    }
+    /* 보조제 태그 칩 — 이름 앞 작은 라벨 */
+    #page-calculator .bowl-photo-viz .ps-tag {
+      display:inline-block;
+      font-size:10.5px;
+      font-weight:700;
+      color:#FFE94D;
+      background:rgba(255,233,77,0.12);
+      border:0.5px solid rgba(255,233,77,0.35);
+      padding:1px 6px;
+      border-radius:4px;
+      margin-right:7px;
+      vertical-align:1px;
+      letter-spacing:0;
     }
     #page-calculator .bowl-photo-viz .ps-subtotal,
     #page-calculator .bowl-photo-viz .ps-subtotal span:last-child {
       color:#C7F050 !important;
       font-weight:700;
-      font-size:15.5px;
+      font-size:17px;
+    }
+    /* 소계/합계 줄에는 색띠 없음 */
+    #page-calculator .bowl-photo-viz .ps-subtotal::before,
+    #page-calculator .bowl-photo-viz .ps-grand::before {
+      display:none;
     }
     #page-calculator .bowl-photo-viz .ps-divider {
       height:1px;
       background:rgba(199,240,80,0.18);
-      margin:1px 0;
+      margin:2px 0;
     }
     #page-calculator .bowl-photo-viz .ps-grand {
-      font-size:16px;
+      font-size:17px;
       font-weight:800;
       color:#fff;
       padding-top:1px;
     }
     #page-calculator .bowl-photo-viz .ps-grand span:last-child {
-      font-size:19px;
+      font-size:21px;
       color:#C7F050;
     }
     #page-calculator .bowl-photo-viz .ps-empty {
@@ -1976,13 +2010,22 @@
           sv+='<text x="'+lx.toFixed(0)+'" y="'+(ly-9).toFixed(0)+'" text-anchor="middle" fill="#0A0A0A" font-size="38" font-weight="700" stroke="rgba(255,255,255,0.55)" stroke-width="1" paint-order="stroke fill">'+nm+'</text>';
           sv+='<text x="'+lx.toFixed(0)+'" y="'+(ly+30).toFixed(0)+'" text-anchor="middle" fill="#0A0A0A" font-size="46" font-weight="800" stroke="rgba(255,255,255,0.55)" stroke-width="1.2" paint-order="stroke fill">'+it.g+'g</text>';
         }else{
-          // 작거나 추가제: 외부 leader line + 라벨
-          var olx=PCX+(PR+105)*Math.cos(rad),oly=PCY+(PR+105)*Math.sin(rad);
+          // 작거나 추가제: 외부 화살표 leader + 노랑 라벨 (가독성 강화)
+          var sx=PCX+(PR+5)*Math.cos(rad),sy=PCY+(PR+5)*Math.sin(rad);
+          var olx=PCX+(PR+115)*Math.cos(rad),oly=PCY+(PR+115)*Math.sin(rad);
           var anc=Math.cos(rad)>0.1?'start':(Math.cos(rad)<-0.1?'end':'middle');
-          var dx=Math.cos(rad)>0.1?12:(Math.cos(rad)<-0.1?-12:0);
-          sv+='<line x1="'+(PCX+(PR+5)*Math.cos(rad)).toFixed(0)+'" y1="'+(PCY+(PR+5)*Math.sin(rad)).toFixed(0)+'" x2="'+olx.toFixed(0)+'" y2="'+oly.toFixed(0)+'" stroke="'+it.c+'" stroke-width="4" stroke-opacity="0.9"/>';
-          sv+='<text x="'+(olx+dx).toFixed(0)+'" y="'+(oly-8).toFixed(0)+'" text-anchor="'+anc+'" fill="#fff" font-size="38" font-weight="700" stroke="#0A0A0A" stroke-width="1.4" paint-order="stroke fill">'+nm+'</text>';
-          sv+='<text x="'+(olx+dx).toFixed(0)+'" y="'+(oly+34).toFixed(0)+'" text-anchor="'+anc+'" fill="#fff" font-size="44" font-weight="800" stroke="#0A0A0A" stroke-width="1.4" paint-order="stroke fill">'+it.g+'g</text>';
+          var dx=Math.cos(rad)>0.1?16:(Math.cos(rad)<-0.1?-16:0);
+          // 화살표 line
+          sv+='<line x1="'+sx.toFixed(0)+'" y1="'+sy.toFixed(0)+'" x2="'+olx.toFixed(0)+'" y2="'+oly.toFixed(0)+'" stroke="'+it.c+'" stroke-width="5" stroke-opacity="0.95" stroke-linecap="round"/>';
+          // 화살촉 (외부 끝, 라벨 방향) — 작은 삼각형
+          var ah=22,aw=11;
+          var bx=olx-Math.cos(rad)*ah,by=oly-Math.sin(rad)*ah;
+          var p1x=bx-Math.sin(rad)*aw,p1y=by+Math.cos(rad)*aw;
+          var p2x=bx+Math.sin(rad)*aw,p2y=by-Math.cos(rad)*aw;
+          sv+='<polygon points="'+olx.toFixed(0)+','+oly.toFixed(0)+' '+p1x.toFixed(0)+','+p1y.toFixed(0)+' '+p2x.toFixed(0)+','+p2y.toFixed(0)+'" fill="'+it.c+'" fill-opacity="0.95"/>';
+          // 노랑 라벨 (이름 + 그람) — 더 크게, 검정 외곽선
+          sv+='<text x="'+(olx+dx).toFixed(0)+'" y="'+(oly-12).toFixed(0)+'" text-anchor="'+anc+'" fill="#FFE94D" font-size="50" font-weight="700" stroke="#0A0A0A" stroke-width="2.2" paint-order="stroke fill">'+nm+'</text>';
+          sv+='<text x="'+(olx+dx).toFixed(0)+'" y="'+(oly+46).toFixed(0)+'" text-anchor="'+anc+'" fill="#FFE94D" font-size="60" font-weight="800" stroke="#0A0A0A" stroke-width="2.4" paint-order="stroke fill">'+it.g+'g</text>';
         }
       });
     }
@@ -1995,14 +2038,14 @@
     svg.innerHTML=sv;
     var rows=[];
     if(d.hasData){
-      // 각 염모제별 줄
-      d.dyes.forEach(function(dy){
-        if(dy.g>0)rows.push('<div class="ps-row"><span>'+esc(dy.n)+'</span><span>'+dy.g+'g</span></div>');
+      // 각 염모제별 줄 — 색띠로 도넛과 1:1 매칭
+      d.dyes.forEach(function(dy,i){
+        if(dy.g>0)rows.push('<div class="ps-row" style="--row-color:'+COLORS[i]+'"><span>'+esc(dy.n)+'</span><span>'+dy.g+'g</span></div>');
       });
-      // 추가제별
+      // 추가제별 — 색띠 + "보조제" 칩
       var hasExtras=false;
-      d.extras.forEach(function(e){
-        if(e.g>0){rows.push('<div class="ps-row"><span>'+esc(e.n)+'</span><span>'+e.g+'g</span></div>');hasExtras=true;}
+      d.extras.forEach(function(e,i){
+        if(e.g>0){rows.push('<div class="ps-row" style="--row-color:'+COLORS[3+i]+'"><span><span class="ps-tag">보조제</span>'+esc(e.n)+'</span><span>'+e.g+'g</span></div>');hasExtras=true;}
       });
       if(d.oneT>0){
         rows.push('<div class="ps-divider"></div>');
