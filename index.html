@@ -771,6 +771,16 @@
       font-size:16px;
       color:#C7F050;
     }
+    #page-calculator .bowl-photo-viz .ps-empty {
+      justify-content:center;
+      color:rgba(255,255,255,0.45);
+      font-size:12px;
+      padding:6px 0;
+    }
+    /* === "+ 바울 2 추가" 버튼 숨김 — 2026-05-09 === */
+    #page-calculator .bowl-add-btn {
+      display:none !important;
+    }
     /* 기존 결과 텍스트 숨김 (사진 viz가 대체) */
     #page-calculator .bowl-total-bar > .bowl-res-label,
     #page-calculator .bowl-total-bar > .bowl-res-ratio,
@@ -1858,14 +1868,17 @@
   }
   function setup(bar){
     if(bar._pvz)return;bar._pvz=true;
+    // 항상 사진 컨테이너 한번만 생성
+    var w=document.createElement('div');
+    w.className='bowl-photo-viz';
+    w.innerHTML='<div class="photo-area"><svg class="pviz-svg" viewBox="0 0 1636 1112" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg></div><div class="photo-summary"></div>';
+    bar.appendChild(w);
+    bar._pvzWrap=w;
+    bar._pvzSvg=w.querySelector('.pviz-svg');
+    bar._pvzSum=w.querySelector('.photo-summary');
     var lastH='';
     function chk(){
       var d=parse(bar);
-      if(!d){
-        var ex=bar.querySelector(':scope > .bowl-photo-viz');
-        if(ex)ex.remove();
-        lastH='';return;
-      }
       var h=JSON.stringify(d);
       if(h===lastH)return;
       lastH=h;
@@ -1875,10 +1888,11 @@
     chk();
   }
   function parse(bar){
-    if(bar.querySelector(':scope > .bowl-total-empty'))return null;
+    var empty={dyes:[],extras:[],dyeT:0,exT:0,oneT:0,oxG:0,oxR:'1:1',gd:0,perm:!!bar.closest('#calc-perm-tab'),hasData:false};
+    if(bar.querySelector(':scope > .bowl-total-empty'))return empty;
     var mt=bar.querySelector(':scope > .bowl-res-main-total');
-    if(!mt)return null;
-    var d={dyes:[],extras:[],dyeT:0,exT:0,oneT:0,oxG:0,oxR:'1:1',gd:0,perm:!!bar.closest('#calc-perm-tab')};
+    if(!mt)return empty;
+    var d={dyes:[],extras:[],dyeT:0,exT:0,oneT:0,oxG:0,oxR:'1:1',gd:0,perm:!!bar.closest('#calc-perm-tab'),hasData:true};
     var mtm=(mt.textContent||'').match(/(\d+(?:\.\d+)?)\s*g/);
     if(mtm)d.dyeT=parseFloat(mtm[1]);
     var found=false;
@@ -1917,13 +1931,13 @@
     return d;
   }
   function render(bar,d){
-    var ex=bar.querySelector(':scope > .bowl-photo-viz');
-    if(ex)ex.remove();
+    var svg=bar._pvzSvg,sum=bar._pvzSum;
+    if(!svg||!sum)return;
     var items=[];
     d.dyes.forEach(function(dy,i){if(dy.g>0)items.push({n:dy.n,g:dy.g,c:COLORS[i]});});
     d.extras.forEach(function(e,i){if(e.g>0)items.push({n:e.n,g:e.g,c:COLORS[3+i]});});
     var pT=d.oneT;
-    var PCX=660,PCY=467,PR=230,PIR=95;
+    var PCX=660,PCY=467,PR=295,PIR=110;
     var sv='';
     if(pT>0){
       var sd=0;
@@ -1931,42 +1945,65 @@
         var ang=(it.g/pT)*360;
         var ed=sd+ang;
         var tc=it.c===COLORS[2]?'#fff':'#0A0A0A';
-        sv+='<path d="'+wedge(PCX,PCY,PR,PIR,sd,ed)+'" fill="'+it.c+'" fill-rule="evenodd" fill-opacity="0.7"/>';
+        sv+='<path d="'+wedge(PCX,PCY,PR,PIR,sd,ed)+'" fill="'+it.c+'" fill-rule="evenodd" fill-opacity="0.78"/>';
         var lr=(PR+PIR)/2,md=(sd+ed)/2;
         var rad=(md-90)*Math.PI/180;
         var lx=PCX+lr*Math.cos(rad),ly=PCY+lr*Math.sin(rad);
-        if(ang>=30){
-          sv+='<text x="'+lx.toFixed(0)+'" y="'+(ly-8).toFixed(0)+'" text-anchor="middle" fill="'+tc+'" font-size="34" font-weight="700" stroke="rgba(255,255,255,0.5)" stroke-width="0.6" paint-order="stroke fill">'+esc(short(it.n))+'</text>';
-          sv+='<text x="'+lx.toFixed(0)+'" y="'+(ly+34).toFixed(0)+'" text-anchor="middle" fill="'+tc+'" font-size="46" font-weight="800" stroke="rgba(255,255,255,0.5)" stroke-width="0.8" paint-order="stroke fill">'+it.g+'g</text>';
-        }else if(ang>=15){
-          sv+='<text x="'+lx.toFixed(0)+'" y="'+(ly+12).toFixed(0)+'" text-anchor="middle" fill="'+tc+'" font-size="40" font-weight="800" stroke="rgba(255,255,255,0.5)" stroke-width="0.8" paint-order="stroke fill">'+it.g+'g</text>';
+        var nm=esc(it.n||'-');
+        if(ang>=22){
+          // 풀 표시: 이름 + 그람 (큰)
+          sv+='<text x="'+lx.toFixed(0)+'" y="'+(ly-12).toFixed(0)+'" text-anchor="middle" fill="'+tc+'" font-size="40" font-weight="700" stroke="rgba(255,255,255,0.55)" stroke-width="1" paint-order="stroke fill">'+nm+'</text>';
+          sv+='<text x="'+lx.toFixed(0)+'" y="'+(ly+34).toFixed(0)+'" text-anchor="middle" fill="'+tc+'" font-size="50" font-weight="800" stroke="rgba(255,255,255,0.55)" stroke-width="1.2" paint-order="stroke fill">'+it.g+'g</text>';
+        }else if(ang>=12){
+          // 중간: 이름 + 그람 (작게)
+          sv+='<text x="'+lx.toFixed(0)+'" y="'+(ly-7).toFixed(0)+'" text-anchor="middle" fill="'+tc+'" font-size="30" font-weight="700" stroke="rgba(255,255,255,0.55)" stroke-width="0.9" paint-order="stroke fill">'+nm+'</text>';
+          sv+='<text x="'+lx.toFixed(0)+'" y="'+(ly+24).toFixed(0)+'" text-anchor="middle" fill="'+tc+'" font-size="36" font-weight="800" stroke="rgba(255,255,255,0.55)" stroke-width="1" paint-order="stroke fill">'+it.g+'g</text>';
+        }else if(ang>=4){
+          // 작음: 외부에 leader line + 라벨
+          var olx=PCX+(PR+95)*Math.cos(rad),oly=PCY+(PR+95)*Math.sin(rad);
+          var anc=Math.cos(rad)>0.1?'start':(Math.cos(rad)<-0.1?'end':'middle');
+          var dx=Math.cos(rad)>0.1?10:(Math.cos(rad)<-0.1?-10:0);
+          sv+='<line x1="'+(PCX+(PR+5)*Math.cos(rad)).toFixed(0)+'" y1="'+(PCY+(PR+5)*Math.sin(rad)).toFixed(0)+'" x2="'+olx.toFixed(0)+'" y2="'+oly.toFixed(0)+'" stroke="'+it.c+'" stroke-width="3" stroke-opacity="0.85"/>';
+          sv+='<text x="'+(olx+dx).toFixed(0)+'" y="'+(oly-6).toFixed(0)+'" text-anchor="'+anc+'" fill="#fff" font-size="32" font-weight="700" stroke="#0A0A0A" stroke-width="1.2" paint-order="stroke fill">'+nm+'</text>';
+          sv+='<text x="'+(olx+dx).toFixed(0)+'" y="'+(oly+30).toFixed(0)+'" text-anchor="'+anc+'" fill="#fff" font-size="36" font-weight="800" stroke="#0A0A0A" stroke-width="1.2" paint-order="stroke fill">'+it.g+'g</text>';
         }
         sd=ed;
       });
     }
     if(d.oxG>0){
-      var olx=1170,oly=44,lw=290,lh=130;
-      sv+='<g><rect x="'+(olx-lw/2)+'" y="'+oly+'" width="'+lw+'" height="'+lh+'" rx="22" fill="#C7F050" stroke="#0A0A0A" stroke-width="6"/>';
-      sv+='<text x="'+olx+'" y="'+(oly+44)+'" text-anchor="middle" fill="#0A0A0A" font-size="34" font-weight="600">산화제 ('+d.oxR+')</text>';
-      sv+='<text x="'+olx+'" y="'+(oly+102)+'" text-anchor="middle" fill="#0A0A0A" font-size="56" font-weight="800">'+d.oxG+'g</text></g>';
+      var olx2=1170,oly2=44,lw=290,lh=130;
+      sv+='<g><rect x="'+(olx2-lw/2)+'" y="'+oly2+'" width="'+lw+'" height="'+lh+'" rx="22" fill="#C7F050" stroke="#0A0A0A" stroke-width="6"/>';
+      sv+='<text x="'+olx2+'" y="'+(oly2+44)+'" text-anchor="middle" fill="#0A0A0A" font-size="34" font-weight="600">산화제 ('+d.oxR+')</text>';
+      sv+='<text x="'+olx2+'" y="'+(oly2+102)+'" text-anchor="middle" fill="#0A0A0A" font-size="56" font-weight="800">'+d.oxG+'g</text></g>';
     }
+    svg.innerHTML=sv;
     var rows=[];
-    rows.push('<div class="ps-row"><span>'+(d.perm?'펌제 총량':'염모제 총량')+'</span><span>'+d.dyeT+'g</span></div>');
-    if(d.exT>0){
-      rows.push('<div class="ps-row"><span>추가제 총량</span><span>'+d.exT+'g</span></div>');
+    if(d.hasData){
+      // 각 염모제별 줄
+      d.dyes.forEach(function(dy,i){
+        if(dy.g>0)rows.push('<div class="ps-row"><span>'+esc(dy.n)+'</span><span>'+dy.g+'g</span></div>');
+      });
+      if(d.dyes.filter(function(dy){return dy.g>0;}).length>1){
+        rows.push('<div class="ps-divider"></div>');
+        rows.push('<div class="ps-row"><span>'+(d.perm?'펌제 총량':'염모제 총량')+'</span><span>'+d.dyeT+'g</span></div>');
+      }
+      // 추가제별
+      d.extras.forEach(function(e){
+        if(e.g>0)rows.push('<div class="ps-row"><span>'+esc(e.n)+'</span><span>'+e.g+'g</span></div>');
+      });
+      if(d.exT>0){
+        rows.push('<div class="ps-divider"></div>');
+        rows.push('<div class="ps-row ps-subtotal"><span>1제 총량</span><span>'+d.oneT+'g</span></div>');
+      }
+      if(d.oxG>0){
+        rows.push('<div class="ps-row"><span>산화제 ('+d.oxR+')</span><span>'+d.oxG+'g</span></div>');
+      }
       rows.push('<div class="ps-divider"></div>');
-      rows.push('<div class="ps-row ps-subtotal"><span>1제 총량</span><span>'+d.oneT+'g</span></div>');
+      rows.push('<div class="ps-row ps-grand"><span>바울 합계</span><span>'+d.gd+'g</span></div>');
+    }else{
+      rows.push('<div class="ps-row ps-empty"><span>염모제를 입력하면 실시간으로 계산됩니다</span></div>');
     }
-    if(d.oxG>0){
-      rows.push('<div class="ps-row"><span>산화제 ('+d.oxR+')</span><span>'+d.oxG+'g</span></div>');
-    }
-    rows.push('<div class="ps-divider"></div>');
-    rows.push('<div class="ps-row ps-grand"><span>바울 합계</span><span>'+d.gd+'g</span></div>');
-    var html='<div class="photo-area"><svg viewBox="0 0 1636 1112" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">'+sv+'</svg></div><div class="photo-summary">'+rows.join('')+'</div>';
-    var w=document.createElement('div');
-    w.className='bowl-photo-viz';
-    w.innerHTML=html;
-    bar.appendChild(w);
+    sum.innerHTML=rows.join('');
   }
   function wedge(cx,cy,R,ir,sd,ed){
     if(Math.abs(ed-sd-360)<0.01)return 'M '+(cx+R)+' '+cy+' A '+R+' '+R+' 0 1 1 '+(cx-R)+' '+cy+' A '+R+' '+R+' 0 1 1 '+(cx+R)+' '+cy+' Z M '+(cx+ir)+' '+cy+' A '+ir+' '+ir+' 0 1 1 '+(cx-ir)+' '+cy+' A '+ir+' '+ir+' 0 1 1 '+(cx+ir)+' '+cy+' Z';
