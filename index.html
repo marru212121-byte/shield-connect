@@ -1868,19 +1868,27 @@
   }
   function setup(bar){
     if(bar._pvz)return;bar._pvz=true;
-    // 항상 사진 컨테이너 한번만 생성
-    var w=document.createElement('div');
-    w.className='bowl-photo-viz';
-    w.innerHTML='<div class="photo-area"><svg class="pviz-svg" viewBox="0 0 1636 1112" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg></div><div class="photo-summary"></div>';
-    bar.appendChild(w);
-    bar._pvzWrap=w;
-    bar._pvzSvg=w.querySelector('.pviz-svg');
-    bar._pvzSum=w.querySelector('.photo-summary');
+    function ensureWrap(){
+      var w=bar._pvzWrap;
+      if(!w||w.parentNode!==bar){
+        // 새로 만들거나 끊어진 경우 다시 부착
+        w=document.createElement('div');
+        w.className='bowl-photo-viz';
+        w.innerHTML='<div class="photo-area"><svg class="pviz-svg" viewBox="0 0 1636 1112" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg></div><div class="photo-summary"></div>';
+        bar.appendChild(w);
+        bar._pvzWrap=w;
+        bar._pvzSvg=w.querySelector('.pviz-svg');
+        bar._pvzSum=w.querySelector('.photo-summary');
+        return true; // 새로 만든 경우 강제 재렌더
+      }
+      return false;
+    }
     var lastH='';
     function chk(){
+      var recreated=ensureWrap();
       var d=parse(bar);
       var h=JSON.stringify(d);
-      if(h===lastH)return;
+      if(!recreated&&h===lastH)return;
       lastH=h;
       render(bar,d);
     }
