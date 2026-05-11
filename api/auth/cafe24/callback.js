@@ -3,6 +3,7 @@
 // v24 2차 수정:
 //   - user_identifier 사용 (member_id 대신)
 //   - SameSite=None (카페24 → 우리 앱 크로스 사이트 리다이렉트 허용)
+// v25: SIGNUP_BONUS 6 → 2 (실제 정책 반영)
 
 import crypto from 'node:crypto';
 import {
@@ -13,7 +14,7 @@ import { getSupabase } from '../../../lib/supabase.js';
 import { setSessionCookie } from '../../../lib/session.js';
 
 const STATE_COOKIE = 'sc_oauth_state';
-const SIGNUP_BONUS = 6;
+const SIGNUP_BONUS = 2;
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
