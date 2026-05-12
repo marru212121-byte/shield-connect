@@ -159,7 +159,7 @@ export default async function handler(req, res) {
   if (!session?.memberId) {
     return res.status(401).json({
       code: 'not_authenticated',
-      message: '로그인이 필요합니다.',
+      message: '로그인이 필요해요. 로그인 후 이용해주세요.',
     });
   }
   const memberId = session.memberId;
@@ -193,7 +193,7 @@ export default async function handler(req, res) {
   if (refs.length > MAX_REFERENCES) {
     return res.status(400).json({
       code: 'too_many_references',
-      message: `참조 사진은 최대 ${MAX_REFERENCES}장까지 첨부 가능합니다.`,
+      message: `참조 사진은 최대 ${MAX_REFERENCES}장까지 첨부할 수 있어요.`,
     });
   }
   for (const r of refs) {
@@ -203,7 +203,7 @@ export default async function handler(req, res) {
     if (r.base64.length > 8 * 1024 * 1024) {
       return res.status(400).json({
         code: 'reference_too_large',
-        message: '참조 사진 중 너무 큰 이미지가 있어요.',
+        message: '사진이 너무 커요 (10MB 이하로 올려주세요).',
       });
     }
   }
@@ -240,10 +240,10 @@ export default async function handler(req, res) {
     const reason = result?.reason;
     const remaining = Number(result?.credits_remaining ?? 0);
     if (reason === 'member_not_found') {
-      return res.status(401).json({ code: 'not_authenticated', message: '세션이 만료되었습니다. 다시 로그인해주세요.' });
+      return res.status(401).json({ code: 'not_authenticated', message: '로그인이 만료되었어요. 다시 로그인해주세요.' });
     }
     if (reason === 'insufficient_credits' || remaining <= 0) {
-      return res.status(402).json({ code: 'insufficient_credits', message: '크레딧이 부족합니다.', credits_remaining: remaining });
+      return res.status(402).json({ code: 'insufficient_credits', message: '크레딧이 부족해요. 충전 후 이용해주세요.', credits_remaining: remaining });
     }
     console.error('[generate-image] unknown consume reason:', result);
     return res.status(500).json({ code: 'server_error' });
@@ -385,24 +385,10 @@ export default async function handler(req, res) {
           console.error(`[generate-image] all fallbacks failed: ${e4.name} - ${e4.message}`);
           await refundCredit(supabase, memberId, generationRef, result.is_admin);
 
-          if (e4.name === 'AbortError' || e3.name === 'AbortError' ||
-              e2.name === 'AbortError' || e1.name === 'AbortError') {
-            return res.status(504).json({
-              code: 'gemini_timeout',
-              message: 'AI 서버 응답이 느려요. 잠시 후 다시 시도해주세요. 크레딧은 복구되었습니다.',
-            });
-          }
-          if (e4.status) {
-            return res.status(502).json({
-              code: 'gemini_error',
-              message: '이미지 생성 중 오류가 발생했습니다. 크레딧은 복구되었습니다.',
-              debug: { status: e4.status, detail: e4.detail || '' },
-            });
-          }
-          return res.status(502).json({
-            code: 'gemini_error',
-            message: 'AI 서버와 연결할 수 없습니다. 크레딧은 복구되었습니다.',
-            debug: { error: e4.message },
+          // 모든 에러 케이스 통일 — 디자이너는 다시 시도하면 됨
+          return res.status(503).json({
+            code: 'busy',
+            message: '지금 많은 분이 사용 중이에요. 30초 후 다시 시도해주세요.\n크레딧은 차감되지 않았습니다.',
           });
         }
       }
@@ -412,17 +398,10 @@ export default async function handler(req, res) {
   // ─── 7. 응답에서 이미지 추출 ────────────────────────────────
   if (!imagePart || !imagePart.data) {
     await refundCredit(supabase, memberId, generationRef, result.is_admin);
-    let userMsg = '이미지가 생성되지 않았어요. 크레딧은 복구되었습니다.';
-    if (finishReason === 'SAFETY' || finishReason === 'IMAGE_SAFETY') {
-      userMsg = '안전 필터에 걸렸어요. 프롬프트를 조정해주세요. 크레딧은 복구되었습니다.';
-    } else if (finishReason === 'PROHIBITED_CONTENT') {
-      userMsg = '제한된 콘텐츠로 분류됐어요. 크레딧은 복구되었습니다.';
-    } else if (textPart) {
-      userMsg = '이미지 대신 텍스트만 반환됨. 크레딧은 복구되었습니다.';
-    }
+    // 안전 필터 / 제한 콘텐츠 / 텍스트만 반환 → 모두 통일 메시지 (사용자에겐 동일한 액션이 답)
     return res.status(422).json({
-      code: 'no_image',
-      message: userMsg,
+      code: 'content_blocked',
+      message: '제한된 콘텐츠로 분류됐어요. 참조 사진/프롬프트를 변경 후 시도해주세요.\n크레딧은 차감되지 않았습니다.',
       finishReason,
     });
   }
