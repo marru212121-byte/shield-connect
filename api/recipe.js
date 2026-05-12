@@ -19,7 +19,9 @@ import { getSupabase } from '../lib/supabase.js';
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
 // 크레딧 차감 skip 대상 stage
-const SKIP_CHARGE_STAGES = ['recipe_only', 'customer_message'];
+// - 'customer_message': 컷분석기의 고객 안내 생성 (무료, 분석 결과 재가공)
+// - 'recipe_only'는 컬러 분석기 Step 2 (레시피 가이드) — 1크레딧 차감하도록 SKIP 제외
+const SKIP_CHARGE_STAGES = ['customer_message'];
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -31,7 +33,7 @@ export default async function handler(req, res) {
   if (!session?.memberId) {
     return res.status(401).json({
       code: 'not_authenticated',
-      message: '로그인이 필요합니다.',
+      message: '로그인이 필요해요. 로그인 후 이용해주세요.',
     });
   }
   const memberId = session.memberId;
@@ -83,14 +85,14 @@ export default async function handler(req, res) {
       if (reason === 'member_not_found') {
         return res.status(401).json({
           code: 'not_authenticated',
-          message: '세션이 만료되었습니다. 다시 로그인해주세요.',
+          message: '로그인이 만료되었어요. 다시 로그인해주세요.',
         });
       }
 
       if (reason === 'insufficient_credits' || remaining <= 0) {
         return res.status(402).json({
           code: 'insufficient_credits',
-          message: '크레딧이 부족합니다. 충전 후 다시 시도해주세요.',
+          message: '크레딧이 부족해요. 충전 후 이용해주세요.',
           credits_remaining: remaining,
         });
       }
@@ -130,10 +132,8 @@ export default async function handler(req, res) {
       await refundCredit(supabase, memberId, analysisRef, result.is_admin);
     }
     return res.status(502).json({
-      code: 'anthropic_error',
-      message: skipCharge
-        ? 'AI 서버와 연결할 수 없습니다. 잠시 후 다시 시도해주세요.'
-        : 'AI 서버와 연결할 수 없습니다. 크레딧은 복구되었습니다.',
+      code: 'busy',
+      message: '지금 많은 분이 사용 중이에요. 30초 후 다시 시도해주세요.\n크레딧은 차감되지 않았습니다.',
     });
   }
 
@@ -144,10 +144,8 @@ export default async function handler(req, res) {
       await refundCredit(supabase, memberId, analysisRef, result.is_admin);
     }
     return res.status(502).json({
-      code: 'anthropic_error',
-      message: skipCharge
-        ? 'AI 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
-        : 'AI 분석 중 오류가 발생했습니다. 크레딧은 복구되었습니다.',
+      code: 'busy',
+      message: '지금 많은 분이 사용 중이에요. 30초 후 다시 시도해주세요.\n크레딧은 차감되지 않았습니다.',
     });
   }
 
