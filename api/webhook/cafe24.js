@@ -1,10 +1,11 @@
 // api/webhook/cafe24.js
-// v24 9차: 단순화 — 주문 웹훅 오면 무조건 크레딧 충전
-//   - 결제 상태 체크 제거 (카페24가 웹훅 자체를 결제 안 되면 안 쏨)
-//   - 결제 수단 체크 제거 (카드/카카오페이/페이코/휴대폰결제 등 전부 통과)
-//   - 취소/환불은 별도 이벤트에서 처리 (TODO: 추후)
+// v25: member_id → user_identifier 변환 추가
+//   - order.member_id (자사몰 회원ID, 예: '3677479709@k')를
+//     user_identifier (OAuth 해시, 예: 'C8dbdb5be...')로 변환 후 적립
+//   - 이렇게 해야 로그인 계정과 결제 적립 계정이 일치
+//   - 이전 v24까지는 member_id 그대로 적립해서 가짜 계정이 생기던 문제 해결
 
-import { verifyWebhookSignature, fetchOrder } from '../../lib/cafe24.js';
+import { verifyWebhookSignature, fetchOrder, fetchCustomerByMemberId } from '../../lib/cafe24.js';
 import { getSupabase } from '../../lib/supabase.js';
 
 const TARGET_EVENT_NO = 90023;
@@ -77,11 +78,43 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, ignored: 'order_not_found' });
     }
 
-    // member_id 확인 (비회원이면 크레딧 줄 수 없음)
-    const memberId = order.member_id;
-    if (!memberId) {
+    // 자사몰 회원ID 확인 (비회원이면 크레딧 줄 수 없음)
+    const cafeMemberId = order.member_id;
+    if (!cafeMemberId) {
       console.warn('[webhook/cafe24] guest order:', orderId);
       return res.status(200).json({ ok: true, ignored: 'guest_order' });
+    }
+
+    // ★★★ v25 핵심 변경 ★★★
+    // 자사몰 회원ID(3677479709@k) → user_identifier(C8dbdb5be...) 변환
+    // 이렇게 해야 로그인 계정과 같은 ID로 크레딧 적립됨
+    let memberId; // 최종 적립에 쓸 ID (user_identifier)
+    try {
+      const customerData = await fetchCustomerByMemberId(cafeMemberId);
+
+      // 카페24 응답 구조 디버그 (어떤 필드가 오는지 첫 시도라 통째로 찍음)
+      console.log('[webhook/cafe24] customer lookup response:', JSON.stringify(customerData));
+
+      const customer = Array.isArray(customerData?.customers)
+        ? customerData.customers[0]
+        : null;
+
+      const userIdentifier = customer?.user_identifier || null;
+
+      if (!userIdentifier) {
+        console.error('[webhook/cafe24] user_identifier not found for member:', cafeMemberId);
+        // 잘못된 적립을 막기 위해 여기서 멈춤. 카페24가 재시도하므로 손실 X.
+        return res.status(500).json({
+          error: 'user_identifier_not_found',
+          cafe_member_id: cafeMemberId,
+        });
+      }
+
+      memberId = userIdentifier;
+      console.log('[webhook/cafe24] resolved:', cafeMemberId, '→', memberId);
+    } catch (err) {
+      console.error('[webhook/cafe24] customer lookup failed:', cafeMemberId, err.message);
+      return res.status(502).json({ error: 'customer_lookup_failed' });
     }
 
     // 상품 확인
@@ -128,7 +161,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, ignored: 'no_credit_products' });
     }
 
-    // 크레딧 충전
+    // 크레딧 충전 (user_identifier로!)
     const { data: chargeResult, error: chargeError } = await supabase.rpc(
       'charge_credit_from_webhook',
       {
@@ -136,7 +169,7 @@ export default async function handler(req, res) {
         p_event_no: eventNo,
         p_order_id: orderId,
         p_mall_id: mallId,
-        p_member_id: memberId,
+        p_member_id: memberId, // ← user_identifier (로그인 계정과 동일)
         p_credits: totalCredits,
         p_raw_payload: body,
       }
@@ -150,6 +183,7 @@ export default async function handler(req, res) {
     const result = Array.isArray(chargeResult) ? chargeResult[0] : chargeResult;
     console.log('[webhook/cafe24] charged:', {
       order_id: orderId,
+      cafe_member_id: cafeMemberId,
       member_id: memberId,
       credits: totalCredits,
       remaining: result?.credits_remaining,
