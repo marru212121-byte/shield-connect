@@ -1,33 +1,28 @@
 /* 쉴드 커넥트 — 충전 모달 + 복귀 토스트 (drop-in)
- * v2 (2026-05-13):
- *   - openChargeModal() : 기존 충전 안내 모달 (변경 없음)
- *   - gotoChargeDirect(): 모달 없이 바로 카페24 충전 페이지로 (크레딧 부족 모달용)
- *   - 충전 후 PWA 복귀 시 자동 토스트 ("30크레딧이 충전되었어요 / 현재 잔액 142크레딧")
- *
- * 사용법:
- *   1. 각 페이지의 </body> 직전에 <script src="./charge-modal.js"></script>
- *   2. openChargeModal()    → 안내 모달 열기
- *   3. gotoChargeDirect()   → 모달 없이 바로 충전 페이지 (크레딧 부족 모달용)
+ * v3 (2026-05-14):
+ *   - 슬라이드 다운 진입 애니메이션 (transform translateY)
+ *   - X 버튼 44x44 원형 배경 (아이콘 22px)
+ *   - 드래그 핸들 아래로 스와이프 = 닫기 (drag-to-dismiss)
+ *   - 무제한 섹션 각 메뉴 우측 UNLIMITED 라임 배지
+ *   - 충전 후 PWA 복귀 시 토스트 (기존 유지)
+ *   - openChargeModal()    : 안내 모달 열기
+ *   - gotoChargeDirect()   : 모달 없이 바로 카페24 (크레딧 부족 모달용)
  */
 
 (function () {
   'use strict';
 
-  /* ============================================================
-     ⚠️ 카페24 충전권 상품 URL
-     ============================================================ */
   var CAFE24_CHARGE_URL = 'https://marru2121.cafe24.com/surl/O/15';
 
-  /* ============================================================
-     localStorage 키
-     ============================================================ */
   var LS_PRE_BALANCE = 'sc_pre_charge_balance';
   var LS_PRE_TIME    = 'sc_pre_charge_time';
-  var STALE_MS       = 60 * 60 * 1000; // 1시간 지나면 무시 (혹시 결제 안 하고 돌아온 경우 대비)
+  var STALE_MS       = 60 * 60 * 1000;
 
-  var ICON_X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  var ICON_X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
   var ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="#C7F050" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>';
   var ICON_INFINITY = '<svg viewBox="0 0 24 24" fill="none" stroke="#C7F050" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0"><path d="M9.828 9.172a4 4 0 1 0 0 5.656a10 10 0 0 0 2.172 -2.828a10 10 0 0 1 2.172 -2.828a4 4 0 1 1 0 5.656a10 10 0 0 1 -2.172 -2.828a10 10 0 0 0 -2.172 -2.828"/></svg>';
+
+  var UNLIMITED_BADGE = '<span style="background:#C7F050;color:#0A0A0A;font-size:9.5px;font-weight:800;padding:3px 7px;border-radius:5px;letter-spacing:0.4px;flex-shrink:0;line-height:1">UNLIMITED</span>';
 
   function featureBlock(opts) {
     var engineHTML = opts.engine
@@ -47,26 +42,32 @@
       + '</div>';
   }
 
+  /* 무제한 메뉴 블록 — 우측 UNLIMITED 배지 */
   function freeBlock(title, desc, last) {
     return ''
-      + '<div style="' + (last ? '' : 'margin-bottom:11px;') + 'padding-left:10px;border-left:2px solid rgba(199,240,80,0.35)">'
-      +   '<div style="font-size:12.5px;color:#fff;font-weight:600;letter-spacing:-0.1px">' + title + '</div>'
-      +   '<div style="font-size:11px;color:rgba(255,255,255,0.5);line-height:1.5;margin-top:2px">' + desc + '</div>'
+      + '<div style="' + (last ? '' : 'margin-bottom:11px;') + 'padding-left:10px;border-left:2px solid rgba(199,240,80,0.35);display:flex;align-items:center;justify-content:space-between;gap:8px">'
+      +   '<div style="min-width:0;flex:1">'
+      +     '<div style="font-size:12.5px;color:#fff;font-weight:600;letter-spacing:-0.1px">' + title + '</div>'
+      +     '<div style="font-size:11px;color:rgba(255,255,255,0.5);line-height:1.5;margin-top:2px">' + desc + '</div>'
+      +   '</div>'
+      +   UNLIMITED_BADGE
       + '</div>';
   }
 
   var MODAL_HTML = ''
-    + '<div id="sc-charge-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99999;overflow-y:auto;-webkit-overflow-scrolling:touch">'
+    + '<div id="sc-charge-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99999;overflow-y:auto;-webkit-overflow-scrolling:touch;opacity:0;transition:opacity 0.25s ease">'
     +   '<div style="min-height:100%;display:flex;align-items:flex-start;justify-content:center;padding:20px 12px 40px;box-sizing:border-box">'
-    +     '<div style="max-width:380px;width:100%;background:#0A0A0A;border-radius:20px;padding:20px 16px 18px;border:1px solid rgba(255,255,255,0.08);box-sizing:border-box">'
+    +     '<div id="sc-charge-sheet" style="max-width:380px;width:100%;background:#0A0A0A;border-radius:20px;padding:0 16px 18px;border:1px solid rgba(255,255,255,0.08);box-sizing:border-box;transform:translateY(-100%);transition:transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)">'
 
-    +       '<div style="display:flex;justify-content:center;margin-bottom:10px">'
-    +         '<div style="width:48px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px"></div>'
-    +       '</div>'
+    +       '<div id="sc-drag-area" style="padding:10px 0 0;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none">'
+    +         '<div style="display:flex;justify-content:center;margin-bottom:10px">'
+    +           '<div style="width:48px;height:5px;background:rgba(255,255,255,0.3);border-radius:3px"></div>'
+    +         '</div>'
 
-    +       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">'
-    +         '<div style="font-size:11px;color:rgba(255,255,255,0.45);letter-spacing:0.5px;font-weight:500">크레딧 충전</div>'
-    +         '<button id="sc-charge-close" type="button" aria-label="닫기" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);background:none;border:none;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent">' + ICON_X + '</button>'
+    +         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">'
+    +           '<div style="font-size:12px;color:rgba(255,255,255,0.55);letter-spacing:0.4px;font-weight:500">크레딧 충전</div>'
+    +           '<button id="sc-charge-close" type="button" aria-label="닫기" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;flex-shrink:0">' + ICON_X + '</button>'
+    +         '</div>'
     +       '</div>'
 
     +       '<div style="text-align:center;margin-bottom:22px">'
@@ -137,11 +138,8 @@
     +   '</div>'
     + '</div>';
 
-  /* ============================================================
-     복귀 토스트 (충전 후 PWA 돌아왔을 때)
-     ============================================================ */
   var TOAST_HTML = ''
-    + '<div id="sc-charge-toast" style="display:none;position:fixed;left:50%;transform:translateX(-50%);top:max(16px, calc(env(safe-area-inset-top, 0px) + 12px));z-index:100000;width:calc(100% - 24px);max-width:360px;background:#0A0A0A;border:1px solid rgba(199,240,80,0.3);border-radius:14px;padding:14px 16px;box-shadow:0 8px 28px rgba(0,0,0,0.4);box-sizing:border-box;animation:sc-toast-in 0.3s ease">'
+    + '<div id="sc-charge-toast" style="display:none;position:fixed;left:50%;transform:translateX(-50%);top:max(16px, calc(env(safe-area-inset-top, 0px) + 12px));z-index:100000;width:calc(100% - 24px);max-width:360px;background:#0A0A0A;border:1px solid rgba(199,240,80,0.3);border-radius:14px;padding:14px 16px;box-shadow:0 8px 28px rgba(0,0,0,0.4);box-sizing:border-box">'
     +   '<div style="display:flex;align-items:flex-start;gap:10px">'
     +     '<div style="flex:1;min-width:0">'
     +       '<div id="sc-toast-line1" style="font-size:14px;font-weight:700;color:#C7F050;letter-spacing:-0.2px;line-height:1.3;margin-bottom:3px"></div>'
@@ -158,6 +156,10 @@
   var savedScrollY = 0;
   var toastTimer = null;
   var checking = false;
+
+  var dragStartY = 0;
+  var dragCurrentY = 0;
+  var dragging = false;
 
   function init() {
     if (initialized) return;
@@ -178,7 +180,15 @@
     var toastClose = document.getElementById('sc-toast-close');
     if (toastClose) toastClose.onclick = hideToast;
 
-    // ESC 키로 닫기
+    var dragArea = document.getElementById('sc-drag-area');
+    if (dragArea) {
+      dragArea.addEventListener('touchstart', onDragStart, { passive: true });
+      dragArea.addEventListener('touchmove',  onDragMove,  { passive: false });
+      dragArea.addEventListener('touchend',   onDragEnd,   { passive: true });
+      dragArea.addEventListener('touchcancel', onDragEnd,  { passive: true });
+      dragArea.addEventListener('mousedown',  onMouseDown);
+    }
+
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && overlay.style.display !== 'none') {
         closeChargeModal();
@@ -188,35 +198,116 @@
     initialized = true;
   }
 
+  /* 드래그-투-디스미스 */
+  function onDragStart(e) {
+    if (!e.touches || e.touches.length !== 1) return;
+    dragStartY = e.touches[0].clientY;
+    dragCurrentY = dragStartY;
+    dragging = true;
+    var sheet = document.getElementById('sc-charge-sheet');
+    if (sheet) sheet.style.transition = 'none';
+  }
+
+  function onDragMove(e) {
+    if (!dragging || !e.touches || e.touches.length !== 1) return;
+    dragCurrentY = e.touches[0].clientY;
+    var diff = dragCurrentY - dragStartY;
+    if (diff < 0) diff = 0;
+    e.preventDefault();
+    var sheet = document.getElementById('sc-charge-sheet');
+    var overlay = document.getElementById('sc-charge-overlay');
+    if (sheet) sheet.style.transform = 'translateY(' + diff + 'px)';
+    if (overlay) {
+      var ratio = Math.min(diff / 300, 1);
+      overlay.style.opacity = String(1 - ratio * 0.5);
+    }
+  }
+
+  function onDragEnd() {
+    if (!dragging) return;
+    dragging = false;
+    var diff = dragCurrentY - dragStartY;
+    var sheet = document.getElementById('sc-charge-sheet');
+    var overlay = document.getElementById('sc-charge-overlay');
+    if (sheet) sheet.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+    if (overlay) overlay.style.transition = 'opacity 0.25s ease';
+
+    if (diff > 100) {
+      closeChargeModal();
+    } else {
+      if (sheet) sheet.style.transform = 'translateY(0)';
+      if (overlay) overlay.style.opacity = '1';
+    }
+  }
+
+  function onMouseDown(e) {
+    dragStartY = e.clientY;
+    dragCurrentY = dragStartY;
+    dragging = true;
+    var sheet = document.getElementById('sc-charge-sheet');
+    if (sheet) sheet.style.transition = 'none';
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup',   onMouseUp);
+  }
+  function onMouseMove(e) {
+    if (!dragging) return;
+    dragCurrentY = e.clientY;
+    var diff = dragCurrentY - dragStartY;
+    if (diff < 0) diff = 0;
+    var sheet = document.getElementById('sc-charge-sheet');
+    var overlay = document.getElementById('sc-charge-overlay');
+    if (sheet) sheet.style.transform = 'translateY(' + diff + 'px)';
+    if (overlay) {
+      var ratio = Math.min(diff / 300, 1);
+      overlay.style.opacity = String(1 - ratio * 0.5);
+    }
+  }
+  function onMouseUp() {
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup',   onMouseUp);
+    onDragEnd();
+  }
+
   function openChargeModal() {
     init();
     savedScrollY = window.scrollY || window.pageYOffset || 0;
-    document.getElementById('sc-charge-overlay').style.display = 'block';
+    var overlay = document.getElementById('sc-charge-overlay');
+    var sheet   = document.getElementById('sc-charge-sheet');
+    overlay.style.display = 'block';
     document.body.style.overflow = 'hidden';
     document.body.style.position = 'fixed';
     document.body.style.top = '-' + savedScrollY + 'px';
     document.body.style.width = '100%';
+    void overlay.offsetWidth;
+    overlay.style.opacity = '1';
+    if (sheet) sheet.style.transform = 'translateY(0)';
   }
 
   function closeChargeModal() {
-    var o = document.getElementById('sc-charge-overlay');
-    if (o) o.style.display = 'none';
-    document.body.style.overflow = '';
-    document.body.style.position = '';
-    document.body.style.top = '';
-    document.body.style.width = '';
-    window.scrollTo(0, savedScrollY);
+    var overlay = document.getElementById('sc-charge-overlay');
+    var sheet   = document.getElementById('sc-charge-sheet');
+    if (!overlay) return;
+    overlay.style.opacity = '0';
+    if (sheet) {
+      sheet.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+      sheet.style.transform = 'translateY(-100%)';
+    }
+    setTimeout(function () {
+      overlay.style.display = 'none';
+      if (sheet) sheet.style.transform = 'translateY(-100%)';
+      overlay.style.opacity = '0';
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, savedScrollY);
+    }, 280);
   }
 
-  /* ============================================================
-     현재 잔액 읽기 (헤더 #creditCountHeader 또는 다른 위치)
-     ============================================================ */
   function readCurrentBalance() {
-    // 우선순위 1: window.SESSION.credits (analyzer / cut-analyzer)
     if (window.SESSION && typeof window.SESSION.credits === 'number') {
       return window.SESSION.credits;
     }
-    // 우선순위 2: 헤더 표시값
     var el = document.getElementById('creditCountHeader');
     if (el) {
       var n = parseInt((el.textContent || '').replace(/[^0-9-]/g, ''), 10);
@@ -225,9 +316,6 @@
     return null;
   }
 
-  /* ============================================================
-     충전 페이지로 이동 (localStorage에 결제 전 잔액 저장)
-     ============================================================ */
   function gotoChargeDirect() {
     if (!CAFE24_CHARGE_URL || CAFE24_CHARGE_URL.indexOf('REPLACE_') === 0) {
       alert('충전권 URL 설정이 필요합니다. (관리자에게 문의)');
@@ -239,18 +327,14 @@
         localStorage.setItem(LS_PRE_BALANCE, String(prev));
         localStorage.setItem(LS_PRE_TIME, String(Date.now()));
       }
-    } catch (e) { /* localStorage 비활성/할당량 등 */ }
+    } catch (e) {}
     window.location.href = CAFE24_CHARGE_URL;
   }
 
-  // 모달의 [충전하기] 버튼도 같은 동작
   function gotoCharge() {
     gotoChargeDirect();
   }
 
-  /* ============================================================
-     복귀 토스트 표시
-     ============================================================ */
   function showToast(addedCredits, newBalance) {
     init();
     var t = document.getElementById('sc-charge-toast');
@@ -259,7 +343,6 @@
     document.getElementById('sc-toast-line2').textContent = '현재 잔액 ' + newBalance + '크레딧';
     t.style.display = 'block';
     t.style.animation = 'sc-toast-in 0.3s ease';
-
     if (toastTimer) clearTimeout(toastTimer);
     toastTimer = setTimeout(hideToast, 3500);
   }
@@ -272,32 +355,19 @@
     setTimeout(function () { t.style.display = 'none'; }, 260);
   }
 
-  /* ============================================================
-     충전 복귀 체크 (visibility / pageshow)
-     ============================================================ */
   function checkChargeReturn() {
     if (checking) return;
-
     var prevStr, prevTimeStr;
     try {
       prevStr     = localStorage.getItem(LS_PRE_BALANCE);
       prevTimeStr = localStorage.getItem(LS_PRE_TIME);
     } catch (e) { return; }
-
     if (prevStr === null || prevTimeStr === null) return;
 
     var prev     = parseInt(prevStr, 10);
     var prevTime = parseInt(prevTimeStr, 10);
-    if (isNaN(prev) || isNaN(prevTime)) {
-      clearChargeMark();
-      return;
-    }
-
-    // 너무 오래된 마크는 무시 (1시간 이상 = 결제 안 하고 그냥 돌아온 경우)
-    if (Date.now() - prevTime > STALE_MS) {
-      clearChargeMark();
-      return;
-    }
+    if (isNaN(prev) || isNaN(prevTime)) { clearChargeMark(); return; }
+    if (Date.now() - prevTime > STALE_MS) { clearChargeMark(); return; }
 
     checking = true;
     fetch('/api/customer/me', { credentials: 'same-origin', cache: 'no-store' })
@@ -307,20 +377,17 @@
         var curr = data.credits_remaining;
         var diff = curr - prev;
         if (diff > 0) {
-          // 헤더 잔액 동기화 (어떤 페이지든 #creditCountHeader가 있으면 갱신)
           var el = document.getElementById('creditCountHeader');
           if (el) el.textContent = String(curr);
           if (window.SESSION) window.SESSION.credits = curr;
-          // updateCreditBadge 헬퍼가 있으면 호출 (페이지별 추가 동기화)
           if (typeof window.updateCreditBadge === 'function') {
             try { window.updateCreditBadge(curr); } catch (e) {}
           }
           showToast(diff, curr);
           clearChargeMark();
         }
-        // 잔액 변화 없으면 마크 유지 (웹훅 지연 가능성 — 다음 visibility 때 다시 시도)
       })
-      .catch(function () { /* 네트워크 에러는 다음 visibility 때 다시 시도 */ })
+      .catch(function () {})
       .then(function () { checking = false; });
   }
 
@@ -331,7 +398,6 @@
     } catch (e) {}
   }
 
-  // 페이지 보일 때마다 체크
   document.addEventListener('visibilitychange', function () {
     if (!document.hidden) checkChargeReturn();
   });
@@ -339,10 +405,9 @@
     checkChargeReturn();
   });
 
-  // 전역 노출
   window.openChargeModal   = openChargeModal;
   window.closeChargeModal  = closeChargeModal;
-  window.gotoChargeDirect  = gotoChargeDirect;  // 크레딧 부족 모달용
+  window.gotoChargeDirect  = gotoChargeDirect;
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () {
