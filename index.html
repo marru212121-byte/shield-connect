@@ -144,6 +144,40 @@
     #page-home .account-logout { color:rgba(255,255,255,0.5) !important; }
     #page-home .account-logout:active { color:#fff !important; }
 
+    /* ── 충전 버튼: 홈 계정바 안 ── */
+    #page-home .account-charge-btn {
+      background:#C7F050; color:#0A0A0A;
+      border:none; padding:5px 11px;
+      border-radius:12px; font-size:11.5px; font-weight:700;
+      cursor:pointer; letter-spacing:-0.1px;
+      -webkit-tap-highlight-color:transparent;
+      margin:0 2px; font-family:inherit;
+      display:inline-flex; align-items:center; gap:2px;
+      transition:opacity .15s, transform .15s;
+    }
+    #page-home .account-charge-btn:active { opacity:.85; transform:scale(.96); }
+
+    /* ── 충전 FAB: 서브 페이지(홈 외) 우상단 떠있는 버튼 ── */
+    #chargeFab {
+      display:none;
+      position:fixed; top:12px; right:14px;
+      z-index:9998;
+      background:#1A1814; color:#C7F050;
+      border:1.5px solid #C7F050;
+      padding:6px 12px;
+      border-radius:14px;
+      font-size:11.5px; font-weight:700;
+      letter-spacing:-0.2px;
+      cursor:pointer;
+      font-family:inherit;
+      align-items:center; gap:3px;
+      box-shadow:0 2px 8px rgba(0,0,0,0.12);
+      -webkit-tap-highlight-color:transparent;
+      transition:transform .15s, opacity .15s;
+    }
+    #chargeFab:active { opacity:.85; transform:scale(.96); }
+    /* 다크 페이지(reels 등)에서도 톤 잘 맞도록 동일 스타일 사용 */
+
     /* 태그라인 */
     #page-home .home-tagline-row { background:transparent !important; border:none !important; padding:8px 16px 14px; }
     #page-home .home-tagline-line1 { color:#fff !important; font-size:12px !important; line-height:1.45 !important; letter-spacing:-0.2px; }
@@ -856,6 +890,7 @@
     <!-- 로그인 상태 -->
     <div class="account-info" id="accountInfoHome" style="display:none">
       <span class="account-credit"><strong id="creditCountHome">0</strong> 크레딧</span>
+      <button class="account-charge-btn" id="chargeBtnHome" type="button" onclick="openChargeModal();return false;">+ 충전</button>
       <span class="account-divider">·</span>
       <a class="account-logout" id="logoutLinkHome">로그아웃</a>
     </div>
@@ -1864,10 +1899,16 @@
     if(settingsLoggedIn)  settingsLoggedIn.style.display  = 'block';
     if(settingsCredit)    settingsCredit.textContent      = credit;
     if(settingsMemberId)  settingsMemberId.textContent    = memberId;
+
+    // 충전 FAB (홈 아닌 페이지에서만 표시)
+    window.__scLoggedIn = true;
+    if(typeof window.__updateChargeFab === 'function') window.__updateChargeFab();
   }
 
   function renderLoggedOut(){
     // 이미 기본값이 로그아웃 상태이므로 건드릴 필요 없음
+    window.__scLoggedIn = false;
+    if(typeof window.__updateChargeFab === 'function') window.__updateChargeFab();
   }
 
   // ── 세션 확인 ──
@@ -2077,5 +2118,65 @@
   else init();
 })();
 </script>
+
+<!-- ════════════ 충전 FAB + 모달 통합 ════════════ -->
+<button id="chargeFab" type="button" onclick="openChargeModal();return false;" aria-label="크레딧 충전">+ 충전</button>
+
+<script>
+(function(){
+  'use strict';
+
+  // 현재 보이는 page-screen이 홈인지 판정
+  function isHomeVisible(){
+    var home = document.getElementById('page-home');
+    if(!home) return false;
+    var s = home.style.display;
+    if(s === 'none') return false;
+    // style.display가 빈 문자열이면 CSS 기본값(display:block; 홈 디폴트)
+    return true;
+  }
+
+  // FAB 가시성 갱신 (로그인 + 홈 아님)
+  function updateChargeFab(){
+    var fab = document.getElementById('chargeFab');
+    if(!fab) return;
+    var loggedIn = !!window.__scLoggedIn;
+    var show = loggedIn && !isHomeVisible();
+    fab.style.display = show ? 'inline-flex' : 'none';
+  }
+  window.__updateChargeFab = updateChargeFab;
+
+  // navigate() monkey-patch — 페이지 전환마다 FAB 토글
+  function wrapNavigate(){
+    if(typeof window.navigate !== 'function') return false;
+    if(window.navigate.__scWrapped) return true;
+    var orig = window.navigate;
+    window.navigate = function(){
+      var r = orig.apply(this, arguments);
+      // 페이지 전환은 동기로 끝나지만 안전하게 다음 틱에 갱신
+      setTimeout(updateChargeFab, 0);
+      return r;
+    };
+    window.navigate.__scWrapped = true;
+    return true;
+  }
+
+  // navigate가 외부 스크립트(script.js)에서 정의되므로 폴링 대기
+  var tries = 0;
+  var iv = setInterval(function(){
+    tries++;
+    if(wrapNavigate() || tries > 60){ clearInterval(iv); }
+  }, 50);
+
+  // 초기 한 번
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', updateChargeFab);
+  } else {
+    updateChargeFab();
+  }
+})();
+</script>
+
+<script src="./charge-modal.js"></script>
 </body>
 </html>
