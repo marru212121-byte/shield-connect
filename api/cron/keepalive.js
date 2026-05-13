@@ -106,6 +106,16 @@ export default async function handler(req, res) {
 
     const tokenData = await tokenRes.json();
 
+    // ── 진단 로그 (카페24가 진짜 어떤 토큰을 주는지 확인) ──
+    console.log('[keepalive] cafe24 응답 keys:', Object.keys(tokenData || {}));
+    console.log('[keepalive] cafe24 응답 토큰길이:', {
+      access_token_len: tokenData?.access_token ? String(tokenData.access_token).length : 0,
+      refresh_token_len: tokenData?.refresh_token ? String(tokenData.refresh_token).length : 0,
+      expires_at: tokenData?.expires_at,
+      expires_in: tokenData?.expires_in,
+      refresh_token_expires_at: tokenData?.refresh_token_expires_at,
+    });
+
     if (!tokenRes.ok || !tokenData.access_token) {
       console.error('[keepalive] 카페24 토큰 갱신 실패:', tokenRes.status, tokenData);
       return res.status(500).json({
