@@ -128,16 +128,41 @@ export default async function handler(req, res) {
     }
 
     // ─── 6. Supabase 에 새 토큰 저장 ─────────────────────
-    // 카페24 응답 형식:
-    //   access_token, expires_at (ISO),
-    //   refresh_token, refresh_token_expires_at (ISO)
+    // ⚠️ 카페24 응답 형식 (확인됨, 진단 로그로 검증):
+    //   expires_at: '2026-05-14T00:40:28.000'   ← 타임존 표시 없음 (KST임)
+    //   refresh_token_expires_at: '2026-05-27T22:40:28.000'  ← 동일
+    //
+    // JavaScript의 new Date(타임존없는문자열) 은 UTC로 해석함 → 9시간 어긋남.
+    // 카페24는 한국시간(KST, +09:00)으로 주는 게 확인됐으므로
+    // 명시적으로 +09:00을 붙여서 정확히 변환.
+    //
+    // 변환 헬퍼 - 이미 Z 또는 +-HH:MM이 붙어있으면 그대로, 없으면 KST로 간주
+    const parseCafe24Time = (s) => {
+      if (!s) return null;
+      const str = String(s);
+      // 이미 타임존 표시 있으면 (Z 또는 +09:00 같은 형태) 그대로 파싱
+      if (/[Zz]$|[+-]\d{2}:?\d{2}$/.test(str)) {
+        return new Date(str).toISOString();
+      }
+      // 타임존 없으면 KST(+09:00) 로 간주
+      return new Date(str + '+09:00').toISOString();
+    };
+
     const newAccessExpiresAt = tokenData.expires_at
-      ? new Date(tokenData.expires_at).toISOString()
+      ? parseCafe24Time(tokenData.expires_at)
       : new Date(Date.now() + (tokenData.expires_in || 7200) * 1000).toISOString();
 
     const newRefreshExpiresAt = tokenData.refresh_token_expires_at
-      ? new Date(tokenData.refresh_token_expires_at).toISOString()
+      ? parseCafe24Time(tokenData.refresh_token_expires_at)
       : oauth.refresh_token_expires_at;
+
+    // 변환 결과 진단 로그 (정상 동작 확인 후 제거 가능)
+    console.log('[keepalive] 시간 변환 결과:', {
+      카페24_원본_access: tokenData.expires_at,
+      변환된_access_UTC: newAccessExpiresAt,
+      카페24_원본_refresh: tokenData.refresh_token_expires_at,
+      변환된_refresh_UTC: newRefreshExpiresAt,
+    });
 
     const updateFields = {
       access_token: tokenData.access_token,
