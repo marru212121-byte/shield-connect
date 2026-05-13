@@ -1,10 +1,8 @@
 // api/auth/cafe24/callback.js
-// 카페24 Customer 로그인 콜백
-// v24 2차 수정:
-//   - user_identifier 사용 (member_id 대신)
-//   - SameSite=None (카페24 → 우리 앱 크로스 사이트 리다이렉트 허용)
-// v25: SIGNUP_BONUS 6 → 2 (실제 정책 반영)
-// v26: SIGNUP_BONUS 2 → 1 (30일 만료 정책 도입에 맞춰 1로)
+// v26: 디버그 로그 추가 (카페24 토큰 응답 형식 확인용)
+//   - 기존 동작은 100% 동일
+//   - exchangeCustomerCode 응답 전체를 콘솔에 찍어서
+//     카페24가 user_id 같은 필드를 주는지 확인
 
 import crypto from 'node:crypto';
 import {
@@ -55,13 +53,19 @@ export default async function handler(req, res) {
       return redirectToApp(res, '/?auth_error=token_exchange_failed');
     }
 
+    // ★★★ v26 디버그 로그 ★★★
+    // 카페24 Customer OAuth 토큰 응답 전체를 찍어서
+    // user_id / mall_user_id / member_id 등 어떤 필드가 들어있는지 확인
+    console.log('[auth/cafe24/callback] ▶▶▶ FULL TOKEN RESPONSE ▶▶▶');
+    console.log(JSON.stringify(tokens, null, 2));
+    console.log('[auth/cafe24/callback] ◀◀◀ END TOKEN RESPONSE ◀◀◀');
+
     const customerAccessToken = tokens.access_token;
     if (!customerAccessToken) {
       return redirectToApp(res, '/?auth_error=no_access_token');
     }
 
-    // ⭐ user_identifier 조회 (공식 문서 기준)
-    // Response 형식: { identifier: { shop_no, user_identifier } }
+    // 기존 동작 그대로: user_identifier로 적립
     let memberId;
     try {
       const identifierResp = await fetchCustomerIdentifier(customerAccessToken);
@@ -85,9 +89,7 @@ export default async function handler(req, res) {
       .maybeSingle();
 
     if (!existing?.signup_bonus_given) {
-      // 전화번호 조회는 user_identifier로는 불가능하므로 일단 스킵
       const phoneHash = null;
-
       const { data: bonusResult, error: bonusError } = await supabase.rpc('grant_signup_bonus', {
         p_member_id: memberId,
         p_bonus_amount: SIGNUP_BONUS,
