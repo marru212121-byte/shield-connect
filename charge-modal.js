@@ -1,18 +1,29 @@
-/* 쉴드 커넥트 — 충전 모달 (drop-in)
+/* 쉴드 커넥트 — 충전 모달 + 복귀 토스트 (drop-in)
+ * v2 (2026-05-13):
+ *   - openChargeModal() : 기존 충전 안내 모달 (변경 없음)
+ *   - gotoChargeDirect(): 모달 없이 바로 카페24 충전 페이지로 (크레딧 부족 모달용)
+ *   - 충전 후 PWA 복귀 시 자동 토스트 ("30크레딧이 충전되었어요 / 현재 잔액 142크레딧")
+ *
  * 사용법:
  *   1. 각 페이지의 </body> 직전에 <script src="./charge-modal.js"></script>
- *   2. 어디서든 openChargeModal() 호출하면 모달 등장
- *   3. 아래 CAFE24_CHARGE_URL을 실제 카페24 상품 URL로 교체
+ *   2. openChargeModal()    → 안내 모달 열기
+ *   3. gotoChargeDirect()   → 모달 없이 바로 충전 페이지 (크레딧 부족 모달용)
  */
 
 (function () {
   'use strict';
 
   /* ============================================================
-     ⚠️ 여기만 교체: 카페24 충전권 상품 URL
-     예: https://marru2121.cafe24.com/product/detail.html?product_no=99
+     ⚠️ 카페24 충전권 상품 URL
      ============================================================ */
   var CAFE24_CHARGE_URL = 'https://marru2121.cafe24.com/surl/O/15';
+
+  /* ============================================================
+     localStorage 키
+     ============================================================ */
+  var LS_PRE_BALANCE = 'sc_pre_charge_balance';
+  var LS_PRE_TIME    = 'sc_pre_charge_time';
+  var STALE_MS       = 60 * 60 * 1000; // 1시간 지나면 무시 (혹시 결제 안 하고 돌아온 경우 대비)
 
   var ICON_X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
   var ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="#C7F050" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>';
@@ -126,24 +137,46 @@
     +   '</div>'
     + '</div>';
 
+  /* ============================================================
+     복귀 토스트 (충전 후 PWA 돌아왔을 때)
+     ============================================================ */
+  var TOAST_HTML = ''
+    + '<div id="sc-charge-toast" style="display:none;position:fixed;left:50%;transform:translateX(-50%);top:max(16px, calc(env(safe-area-inset-top, 0px) + 12px));z-index:100000;width:calc(100% - 24px);max-width:360px;background:#0A0A0A;border:1px solid rgba(199,240,80,0.3);border-radius:14px;padding:14px 16px;box-shadow:0 8px 28px rgba(0,0,0,0.4);box-sizing:border-box;animation:sc-toast-in 0.3s ease">'
+    +   '<div style="display:flex;align-items:flex-start;gap:10px">'
+    +     '<div style="flex:1;min-width:0">'
+    +       '<div id="sc-toast-line1" style="font-size:14px;font-weight:700;color:#C7F050;letter-spacing:-0.2px;line-height:1.3;margin-bottom:3px"></div>'
+    +       '<div id="sc-toast-line2" style="font-size:12px;color:rgba(255,255,255,0.75);letter-spacing:-0.1px;line-height:1.4"></div>'
+    +     '</div>'
+    +     '<button id="sc-toast-close" type="button" aria-label="닫기" style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.45);background:none;border:none;cursor:pointer;padding:0;margin:-2px -4px 0 0;-webkit-tap-highlight-color:transparent;flex-shrink:0">'
+    +       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+    +     '</button>'
+    +   '</div>'
+    + '</div>'
+    + '<style>@keyframes sc-toast-in{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}@keyframes sc-toast-out{to{opacity:0;transform:translate(-50%,-8px)}}</style>';
+
   var initialized = false;
   var savedScrollY = 0;
+  var toastTimer = null;
+  var checking = false;
 
   function init() {
     if (initialized) return;
     if (!document.body) return;
 
     var wrap = document.createElement('div');
-    wrap.innerHTML = MODAL_HTML;
-    var overlay = wrap.firstElementChild;
-    document.body.appendChild(overlay);
+    wrap.innerHTML = MODAL_HTML + TOAST_HTML;
+    while (wrap.firstChild) document.body.appendChild(wrap.firstChild);
 
     document.getElementById('sc-charge-close').onclick = closeChargeModal;
     document.getElementById('sc-charge-cta').onclick = gotoCharge;
 
+    var overlay = document.getElementById('sc-charge-overlay');
     overlay.onclick = function (e) {
       if (e.target === overlay) closeChargeModal();
     };
+
+    var toastClose = document.getElementById('sc-toast-close');
+    if (toastClose) toastClose.onclick = hideToast;
 
     // ESC 키로 닫기
     document.addEventListener('keydown', function (e) {
@@ -175,20 +208,149 @@
     window.scrollTo(0, savedScrollY);
   }
 
-  function gotoCharge() {
+  /* ============================================================
+     현재 잔액 읽기 (헤더 #creditCountHeader 또는 다른 위치)
+     ============================================================ */
+  function readCurrentBalance() {
+    // 우선순위 1: window.SESSION.credits (analyzer / cut-analyzer)
+    if (window.SESSION && typeof window.SESSION.credits === 'number') {
+      return window.SESSION.credits;
+    }
+    // 우선순위 2: 헤더 표시값
+    var el = document.getElementById('creditCountHeader');
+    if (el) {
+      var n = parseInt((el.textContent || '').replace(/[^0-9-]/g, ''), 10);
+      if (!isNaN(n)) return n;
+    }
+    return null;
+  }
+
+  /* ============================================================
+     충전 페이지로 이동 (localStorage에 결제 전 잔액 저장)
+     ============================================================ */
+  function gotoChargeDirect() {
     if (!CAFE24_CHARGE_URL || CAFE24_CHARGE_URL.indexOf('REPLACE_') === 0) {
       alert('충전권 URL 설정이 필요합니다. (관리자에게 문의)');
       return;
     }
+    try {
+      var prev = readCurrentBalance();
+      if (prev !== null) {
+        localStorage.setItem(LS_PRE_BALANCE, String(prev));
+        localStorage.setItem(LS_PRE_TIME, String(Date.now()));
+      }
+    } catch (e) { /* localStorage 비활성/할당량 등 */ }
     window.location.href = CAFE24_CHARGE_URL;
   }
 
-  window.openChargeModal = openChargeModal;
-  window.closeChargeModal = closeChargeModal;
+  // 모달의 [충전하기] 버튼도 같은 동작
+  function gotoCharge() {
+    gotoChargeDirect();
+  }
+
+  /* ============================================================
+     복귀 토스트 표시
+     ============================================================ */
+  function showToast(addedCredits, newBalance) {
+    init();
+    var t = document.getElementById('sc-charge-toast');
+    if (!t) return;
+    document.getElementById('sc-toast-line1').textContent = addedCredits + '크레딧이 충전되었어요';
+    document.getElementById('sc-toast-line2').textContent = '현재 잔액 ' + newBalance + '크레딧';
+    t.style.display = 'block';
+    t.style.animation = 'sc-toast-in 0.3s ease';
+
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(hideToast, 3500);
+  }
+
+  function hideToast() {
+    var t = document.getElementById('sc-charge-toast');
+    if (!t) return;
+    t.style.animation = 'sc-toast-out 0.25s ease forwards';
+    if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; }
+    setTimeout(function () { t.style.display = 'none'; }, 260);
+  }
+
+  /* ============================================================
+     충전 복귀 체크 (visibility / pageshow)
+     ============================================================ */
+  function checkChargeReturn() {
+    if (checking) return;
+
+    var prevStr, prevTimeStr;
+    try {
+      prevStr     = localStorage.getItem(LS_PRE_BALANCE);
+      prevTimeStr = localStorage.getItem(LS_PRE_TIME);
+    } catch (e) { return; }
+
+    if (prevStr === null || prevTimeStr === null) return;
+
+    var prev     = parseInt(prevStr, 10);
+    var prevTime = parseInt(prevTimeStr, 10);
+    if (isNaN(prev) || isNaN(prevTime)) {
+      clearChargeMark();
+      return;
+    }
+
+    // 너무 오래된 마크는 무시 (1시간 이상 = 결제 안 하고 그냥 돌아온 경우)
+    if (Date.now() - prevTime > STALE_MS) {
+      clearChargeMark();
+      return;
+    }
+
+    checking = true;
+    fetch('/api/customer/me', { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || typeof data.credits_remaining !== 'number') return;
+        var curr = data.credits_remaining;
+        var diff = curr - prev;
+        if (diff > 0) {
+          // 헤더 잔액 동기화 (어떤 페이지든 #creditCountHeader가 있으면 갱신)
+          var el = document.getElementById('creditCountHeader');
+          if (el) el.textContent = String(curr);
+          if (window.SESSION) window.SESSION.credits = curr;
+          // updateCreditBadge 헬퍼가 있으면 호출 (페이지별 추가 동기화)
+          if (typeof window.updateCreditBadge === 'function') {
+            try { window.updateCreditBadge(curr); } catch (e) {}
+          }
+          showToast(diff, curr);
+          clearChargeMark();
+        }
+        // 잔액 변화 없으면 마크 유지 (웹훅 지연 가능성 — 다음 visibility 때 다시 시도)
+      })
+      .catch(function () { /* 네트워크 에러는 다음 visibility 때 다시 시도 */ })
+      .then(function () { checking = false; });
+  }
+
+  function clearChargeMark() {
+    try {
+      localStorage.removeItem(LS_PRE_BALANCE);
+      localStorage.removeItem(LS_PRE_TIME);
+    } catch (e) {}
+  }
+
+  // 페이지 보일 때마다 체크
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) checkChargeReturn();
+  });
+  window.addEventListener('pageshow', function () {
+    checkChargeReturn();
+  });
+
+  // 전역 노출
+  window.openChargeModal   = openChargeModal;
+  window.closeChargeModal  = closeChargeModal;
+  window.gotoChargeDirect  = gotoChargeDirect;  // 크레딧 부족 모달용
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', function () {
+      init();
+      checkChargeReturn();
+    });
   } else {
     init();
+    checkChargeReturn();
   }
 })();
