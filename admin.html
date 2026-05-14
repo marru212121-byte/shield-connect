@@ -1,0 +1,1336 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FAFAF7">
+<title>쉴드 커넥트 어드민</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+:root{
+  --bg:#FAFAF7;--surface:#FFFFFF;--surface2:#F4F2EC;--surface3:#EAE7DE;
+  --line:#E6E2D8;--line2:#D3D1C7;
+  --text:#1C1917;--text2:#5F5E5A;--text3:#888780;
+  --ok:#3B6D11;--ok-bg:#EAF3DE;
+  --info:#185FA5;--info-bg:#E6F1FB;
+  --warn:#854F0B;--warn-bg:#FAEEDA;
+  --danger:#A32D2D;--danger-bg:#FCEBEB;
+  --accent:#534AB7;--accent-bg:#EEEDFE;
+  --r-md:8px;--r-lg:12px;
+  --safe-bottom:env(safe-area-inset-bottom);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Neo','Pretendard',sans-serif;
+  font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer;padding:0}
+a{color:var(--info);text-decoration:none}
+p,h1,h2,h3,h4{margin:0}
+
+.app{max-width:440px;margin:0 auto;background:var(--surface);min-height:100vh;
+  padding-bottom:calc(72px + var(--safe-bottom))}
+.head{padding:14px 16px 12px;border-bottom:0.5px solid var(--line);
+  display:flex;align-items:center;gap:10px;background:var(--surface);
+  position:sticky;top:0;z-index:50}
+.back{padding:6px;color:var(--text2);display:none}
+.back.show{display:flex}
+.head .title{flex:1}
+.head .title .small{font-size:11px;color:var(--text3)}
+.head .title .big{font-size:17px;font-weight:500;margin-top:1px}
+.head .refresh{padding:6px;color:var(--text2)}
+.head .refresh i{font-size:20px}
+.head .back i{font-size:22px}
+
+.screen{padding:14px 16px 24px}
+.sec{margin-bottom:20px}
+.sec-title{font-size:13px;color:var(--text2);margin:0 0 8px;
+  display:flex;align-items:center;justify-content:space-between}
+.sec-title .right{font-size:11px;color:var(--text3)}
+.sec-title .right.action{color:var(--info);cursor:pointer}
+
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.kpi{background:var(--surface2);border-radius:var(--r-md);padding:12px}
+.kpi.featured{background:var(--ok-bg)}
+.kpi .label{font-size:11px;color:var(--text2);margin:0}
+.kpi.featured .label{color:var(--ok)}
+.kpi .val{font-size:20px;font-weight:500;margin:4px 0 0;line-height:1.1}
+.kpi.featured .val{color:var(--ok)}
+.kpi .sub{font-size:11px;color:var(--text3);margin:3px 0 0}
+.kpi.featured .sub{color:var(--ok);opacity:.85}
+
+.panel{background:var(--surface2);border-radius:var(--r-md);padding:2px 14px}
+.row{display:flex;align-items:center;gap:11px;padding:11px 0;
+  border-bottom:0.5px solid var(--line);cursor:pointer}
+.row:last-child{border-bottom:none}
+.row:active{background:var(--surface3);margin:0 -14px;padding-left:14px;padding-right:14px}
+.row.no-click{cursor:default}
+.row.no-click:active{background:transparent;margin:0;padding:11px 0}
+
+.avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:13px;font-weight:500;flex-shrink:0;
+  background:var(--info-bg);color:var(--info)}
+.avatar.money{background:var(--ok-bg);color:var(--ok)}
+.avatar.warn{background:var(--warn-bg);color:var(--warn)}
+
+.row-body{flex:1;min-width:0}
+.row-name{font-size:13px;margin:0;display:flex;align-items:center;gap:6px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-sub{font-size:11px;color:var(--text3);margin:2px 0 0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-right{text-align:right;flex-shrink:0}
+.row-main{font-size:13px;font-weight:500;margin:0}
+.row-main.cr{color:var(--ok)}
+.row-time{font-size:10px;color:var(--text3);margin:2px 0 0}
+
+.chip{font-size:10px;padding:1px 7px;border-radius:8px;flex-shrink:0}
+.chip.kakao{background:var(--warn-bg);color:var(--warn)}
+.chip.naver{background:var(--ok-bg);color:var(--ok)}
+.chip.mall{background:var(--surface3);color:var(--text2);border:0.5px solid var(--line2)}
+.chip.dormant{background:var(--danger-bg);color:var(--danger)}
+.chip.admin{background:var(--accent-bg);color:var(--accent)}
+
+.alert{border-radius:var(--r-md);padding:10px 12px;display:flex;gap:10px;
+  align-items:center;margin-bottom:6px}
+.alert i{font-size:16px;flex-shrink:0}
+.alert .txt{font-size:12px;line-height:1.4;flex:1}
+.alert.danger{background:var(--danger-bg);color:var(--danger)}
+.alert.warn{background:var(--warn-bg);color:var(--warn)}
+.alert.info{background:var(--info-bg);color:var(--info)}
+
+.tabs{position:fixed;bottom:0;left:0;right:0;background:var(--surface);
+  border-top:0.5px solid var(--line);
+  display:grid;grid-template-columns:repeat(5,1fr);
+  padding:8px 0 calc(8px + var(--safe-bottom));z-index:100;
+  max-width:440px;margin:0 auto}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-size:10px;color:var(--text3);padding:4px 0}
+.tab i{font-size:20px}
+.tab.active{color:var(--info)}
+
+/* loading */
+.loading{display:flex;justify-content:center;padding:40px 0;color:var(--text3);font-size:12px}
+.skeleton{background:linear-gradient(90deg,var(--surface2) 25%,var(--surface3) 50%,var(--surface2) 75%);
+  background-size:200% 100%;animation:sk 1.5s infinite;border-radius:var(--r-md)}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* search */
+.search{background:var(--surface2);border-radius:var(--r-md);padding:9px 12px;
+  display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.search input{background:none;border:none;outline:none;font-size:13px;flex:1;
+  color:var(--text);font-family:inherit;min-width:0}
+.search input::placeholder{color:var(--text3)}
+
+.filterbar{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;padding-bottom:2px;
+  -webkit-overflow-scrolling:touch}
+.filterbar::-webkit-scrollbar{display:none}
+.filter-chip{font-size:11px;padding:6px 11px;border-radius:14px;
+  background:var(--surface2);color:var(--text2);white-space:nowrap}
+.filter-chip.active{background:var(--text);color:var(--surface)}
+
+/* detail modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);
+  z-index:200;display:none;align-items:flex-end}
+.modal-overlay.show{display:flex}
+.modal{background:var(--surface);width:100%;max-width:440px;margin:0 auto;
+  max-height:92vh;overflow-y:auto;border-radius:16px 16px 0 0;
+  animation:slide-up .25s ease-out}
+@keyframes slide-up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+
+.modal-hero{padding:18px 16px 14px;background:var(--surface2)}
+.modal-close{position:absolute;top:14px;right:14px;color:var(--text2);
+  padding:6px;background:var(--surface);border-radius:50%;
+  width:32px;height:32px;display:flex;align-items:center;justify-content:center;z-index:10}
+.modal-close i{font-size:18px}
+.detail-name-row{display:flex;gap:12px;align-items:center;margin-bottom:14px;padding-right:40px}
+.detail-avatar{width:52px;height:52px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:500;flex-shrink:0;
+  background:var(--info-bg);color:var(--info)}
+.detail-name{font-size:17px;font-weight:500;margin:0}
+.detail-meta{font-size:11px;color:var(--text3);margin:3px 0 0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.detail-bal{background:var(--surface);border-radius:10px;padding:12px;
+  display:flex;justify-content:space-between;align-items:center;gap:10px}
+.bal-label{font-size:11px;color:var(--text3);margin:0}
+.bal-val{font-size:24px;font-weight:500;margin:2px 0 0;line-height:1}
+.bal-mini{font-size:10px;color:var(--text3);margin:4px 0 0}
+.bal-btns{display:flex;gap:6px;flex-shrink:0}
+.bal-btn{padding:8px 13px;border-radius:8px;border:0.5px solid var(--line2);
+  background:var(--surface);font-size:13px;font-weight:500}
+.bal-btn.minus{color:var(--danger);border-color:var(--danger)}
+.bal-btn.plus{color:var(--ok);border-color:var(--ok)}
+
+.tab-strip{display:flex;gap:4px;padding:8px 16px 0;border-bottom:0.5px solid var(--line)}
+.tstrip{padding:9px 12px;font-size:12px;color:var(--text2);
+  border-bottom:2px solid transparent;margin-bottom:-1px}
+.tstrip.active{color:var(--info);border-bottom-color:var(--info)}
+
+.modal-screen{padding:14px 16px 24px}
+
+.led-row{display:flex;gap:10px;padding:11px 0;border-bottom:0.5px solid var(--line);align-items:center}
+.led-row:last-child{border-bottom:none}
+.led-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.led-dot.charge,.led-dot.signup_bonus{background:var(--ok)}
+.led-dot.use{background:var(--info)}
+.led-dot.refund,.led-dot.admin_adjust{background:var(--warn)}
+.led-body{flex:1;min-width:0}
+.led-title{font-size:12px;margin:0}
+.led-meta{font-size:11px;color:var(--text3);margin:2px 0 0}
+.led-amt{font-size:13px;font-weight:500;flex-shrink:0}
+.led-amt.plus{color:var(--ok)}
+.led-amt.minus{color:var(--info)}
+
+.gallery-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.gallery-item{aspect-ratio:9/16;background:var(--surface3);border-radius:8px;
+  position:relative;overflow:hidden}
+.gallery-item img{width:100%;height:100%;object-fit:cover}
+.gallery-badge{position:absolute;bottom:6px;left:6px;font-size:9px;
+  padding:2px 6px;border-radius:6px;background:rgba(0,0,0,0.65);color:white}
+.gallery-fav{position:absolute;top:6px;right:6px;color:#FFD700;font-size:14px}
+
+/* AI 로그 (v2 — 마케팅 vs 디버깅 분리) */
+.log-row{padding:12px 0;border-bottom:0.5px solid var(--line);cursor:pointer}
+.log-row:last-child{border-bottom:none}
+.log-row:active{background:var(--surface3);margin:0 -14px;padding-left:14px;padding-right:14px}
+.log-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.log-status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.log-status-dot.ok{background:var(--ok)}
+.log-status-dot.warn{background:var(--warn)}
+.log-status-dot.err{background:var(--danger)}
+.log-status-dot.crit{background:var(--danger);box-shadow:0 0 0 3px var(--danger-bg)}
+.log-user{font-size:12px;font-weight:500}
+.log-route{font-size:10px;padding:1px 7px;border-radius:8px;
+  background:var(--surface);color:var(--text2);border:0.5px solid var(--line)}
+.log-time{font-size:10px;color:var(--text3);margin-left:auto}
+.log-summary{font-size:12px;margin:6px 0 0;line-height:1.5}
+
+/* 회원 화면 박스 (마케팅 언어) */
+.box-user{font-size:11px;padding:6px 9px;border-radius:6px;margin-top:6px;
+  background:var(--info-bg);color:var(--info);line-height:1.5}
+.box-user b{font-weight:500;display:block;font-size:10px;margin-bottom:2px;opacity:.7}
+
+/* 실제 원인 박스 (디버깅 언어) — alert_level별 색상 */
+.box-reason{font-size:11px;padding:6px 9px;border-radius:6px;margin-top:5px;
+  line-height:1.5}
+.box-reason b{font-weight:500;display:block;font-size:10px;margin-bottom:2px;opacity:.7}
+.box-reason.info{background:var(--ok-bg);color:var(--ok)}
+.box-reason.warning{background:var(--warn-bg);color:var(--warn)}
+.box-reason.critical{background:var(--danger-bg);color:var(--danger)}
+
+/* 펼침 영역 (탭하면 노출) */
+.log-expand{display:none;margin-top:8px;padding:9px 11px;background:var(--surface3);
+  border-radius:6px;font-size:10px;color:var(--text2);line-height:1.6}
+.log-row.open .log-expand{display:block}
+.log-expand .kv{display:flex;gap:8px;margin:2px 0}
+.log-expand .kv .k{color:var(--text3);min-width:62px;flex-shrink:0}
+.log-expand .kv .v{color:var(--text);word-break:break-all}
+.log-expand pre{font-family:inherit;font-size:10px;margin:4px 0 0;
+  white-space:pre-wrap;color:var(--text2);background:var(--surface);
+  padding:6px 8px;border-radius:4px;border:0.5px solid var(--line)}
+
+/* 알림 단계 KPI (오늘 긴급/주의/정상) */
+.alert-kpi.critical{background:var(--danger-bg)}
+.alert-kpi.critical .label{color:var(--danger)}
+.alert-kpi.critical .val{color:var(--danger)}
+.alert-kpi.warning{background:var(--warn-bg)}
+.alert-kpi.warning .label{color:var(--warn)}
+.alert-kpi.warning .val{color:var(--warn)}
+
+/* 카탈로그 (접힘 — 회원 안내 문구 사전) */
+.catalog{background:var(--surface2);border-radius:var(--r-md);overflow:hidden}
+.catalog-toggle{width:100%;padding:11px 14px;display:flex;align-items:center;
+  justify-content:space-between;font-size:12px;font-weight:500;color:var(--text2)}
+.catalog-toggle i{font-size:14px;transition:transform .15s}
+.catalog.open .catalog-toggle i{transform:rotate(180deg)}
+.catalog-body{display:none;padding:0 14px 12px;border-top:0.5px solid var(--line)}
+.catalog.open .catalog-body{display:block}
+.cat-item{padding:9px 0;border-bottom:0.5px solid var(--line)}
+.cat-item:last-child{border-bottom:none}
+.cat-code{font-size:10px;color:var(--text3);font-family:Menlo,monospace;margin:0}
+.cat-msg{font-size:11px;margin:3px 0 0;line-height:1.5;color:var(--text)}
+.cat-when{font-size:10px;color:var(--text2);margin:2px 0 0}
+
+/* 잔액(사용량) 게이지 카드 */
+.usage-card{background:var(--surface2);border-radius:var(--r-md);padding:14px;margin-bottom:8px}
+.usage-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.usage-title{font-size:13px;font-weight:500;margin:0}
+.usage-sub{font-size:11px;color:var(--text3);margin:2px 0 0}
+.usage-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.usage-stat{background:var(--surface);border-radius:6px;padding:9px 11px}
+.usage-stat .lbl{font-size:10px;color:var(--text3);margin:0}
+.usage-stat .val{font-size:15px;font-weight:500;margin:2px 0 0}
+.usage-stat .sub{font-size:10px;color:var(--text2);margin:1px 0 0}
+.usage-link{display:block;margin-top:10px;padding:9px;text-align:center;
+  background:var(--surface);border-radius:6px;font-size:11px;color:var(--info);
+  border:0.5px solid var(--line)}
+.usage-note{font-size:10px;color:var(--text3);margin:8px 0 0;line-height:1.5}
+
+/* split bar (라우트 분포) */
+.split-bar{display:flex;height:24px;border-radius:4px;overflow:hidden;
+  margin:8px 0 6px;background:var(--surface3)}
+.split-seg{display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:500;color:var(--surface)}
+.split-seg.seoul{background:var(--text3)}
+.split-seg.global{background:var(--ok)}
+.split-seg.legacy{background:var(--warn)}
+.split-legend{display:flex;gap:12px;font-size:11px;color:var(--text2);flex-wrap:wrap}
+.split-legend span{display:flex;align-items:center;gap:5px}
+.split-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+
+/* 시스템 페이지 토큰 카드 */
+.token-card{background:var(--surface2);border-radius:var(--r-md);padding:14px;margin-bottom:8px}
+.token-card.warn{background:var(--warn-bg)}
+.token-card.danger{background:var(--danger-bg)}
+.token-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.token-icon{width:32px;height:32px;border-radius:8px;
+  background:var(--surface);display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;color:var(--info)}
+.token-icon i{font-size:18px}
+.token-title{font-size:13px;font-weight:500;margin:0}
+.token-sub{font-size:11px;color:var(--text2);margin:2px 0 0}
+.token-badge{font-size:11px;padding:2px 8px;border-radius:10px;
+  margin-left:auto;flex-shrink:0}
+.badge-ok{background:var(--ok-bg);color:var(--ok)}
+.badge-warn{background:var(--surface);color:var(--warn);
+  border:0.5px solid var(--warn)}
+.badge-info{background:var(--info-bg);color:var(--info)}
+.token-why{font-size:11px;color:var(--text2);line-height:1.5;
+  margin:0 0 10px;padding:8px 10px;background:var(--surface);border-radius:6px}
+.token-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px 10px;font-size:11px}
+.tg-label{color:var(--text3)}
+.tg-val{color:var(--text);text-align:right;font-weight:500;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tg-val.danger{color:var(--danger)}
+.tg-val.ok{color:var(--ok)}
+.token-action{width:100%;margin-top:10px;padding:10px;
+  background:var(--warn);color:white;border-radius:8px;
+  font-size:12px;font-weight:500}
+
+/* 결제 페이지 차트 */
+.bar-chart{padding:10px 4px 0}
+.bar-row{display:flex;align-items:flex-end;height:120px;gap:6px}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.bar{width:100%;background:var(--text3);border-radius:3px;opacity:0.5;min-height:2px;
+  position:relative;display:flex;flex-direction:column;align-items:center;padding-top:3px}
+.bar.today{background:var(--ok);opacity:1}
+.bar-val{font-size:10px;color:var(--text2);position:absolute;top:-14px;white-space:nowrap}
+.bar.today .bar-val{color:var(--ok);font-weight:500}
+.bar-label{font-size:11px;color:var(--text3);margin-top:6px}
+.bar.today + .bar-label{color:var(--info);font-weight:500}
+
+/* link button (시스템 페이지 자주 가는 곳) */
+.link-btn{background:var(--surface2);border-radius:var(--r-md);
+  padding:13px 11px;display:flex;align-items:center;gap:8px;font-size:12px;
+  text-align:left;color:var(--text);width:100%}
+.link-btn i{font-size:16px}
+
+/* empty state */
+.empty{padding:30px 16px;text-align:center;color:var(--text3);font-size:12px}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <header class="head">
+    <button class="back" id="backBtn" aria-label="뒤로"><i class="ti ti-chevron-left"></i></button>
+    <div class="title">
+      <p class="small">쉴드 커넥트 어드민</p>
+      <p class="big" id="headTitle">홈</p>
+    </div>
+    <button class="refresh" id="refreshBtn" aria-label="새로고침"><i class="ti ti-refresh"></i></button>
+  </header>
+
+  <main class="screen" id="screen">
+    <div class="loading">불러오는 중...</div>
+  </main>
+</div>
+
+<nav class="tabs" id="tabs">
+  <button class="tab active" data-page="home"><i class="ti ti-home"></i><span>홈</span></button>
+  <button class="tab" data-page="members"><i class="ti ti-users"></i><span>회원</span></button>
+  <button class="tab" data-page="payments"><i class="ti ti-credit-card"></i><span>결제</span></button>
+  <button class="tab" data-page="ai"><i class="ti ti-sparkles"></i><span>AI 사용</span></button>
+  <button class="tab" data-page="system"><i class="ti ti-settings"></i><span>시스템</span></button>
+</nav>
+
+<!-- 회원 상세 모달 -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <div class="loading">불러오는 중...</div>
+  </div>
+</div>
+
+<script>
+// ═════════════════════════════════════════════════════════════
+// 유틸
+// ═════════════════════════════════════════════════════════════
+const KO_PROVIDERS = { kakao: '카카오', naver: '네이버', mall: '자사몰' };
+
+function ago(iso) {
+  if (!iso) return '';
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return '방금 전';
+  if (m < 60) return m + '분 전';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + '시간 전';
+  const d = Math.floor(h / 24);
+  if (d < 7) return d + '일 전';
+  const date = new Date(iso);
+  return (date.getMonth() + 1) + '월 ' + date.getDate() + '일';
+}
+
+function won(n) { return '₩' + (n || 0).toLocaleString(); }
+function num(n) { return (n || 0).toLocaleString(); }
+function initialOf(memberId) {
+  if (!memberId) return '?';
+  return memberId.slice(0, 1).toUpperCase();
+}
+function shortId(memberId) {
+  if (!memberId) return '';
+  if (memberId.length <= 8) return memberId;
+  return memberId.slice(0, 4) + '...';
+}
+function dayLeft(iso) {
+  if (!iso) return null;
+  return Math.floor((new Date(iso).getTime() - Date.now()) / 86400000);
+}
+
+async function fetchJSON(url, opts) {
+  try {
+    const res = await fetch(url, opts);
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = { _raw: text }; }
+    if (!res.ok) {
+      throw new Error(data?.message || data?.code || ('HTTP ' + res.status));
+    }
+    return data;
+  } catch (err) {
+    console.error('[fetch]', url, err);
+    throw err;
+  }
+}
+
+function setHead(title, backFn) {
+  document.getElementById('headTitle').textContent = title;
+  const back = document.getElementById('backBtn');
+  if (backFn) {
+    back.classList.add('show');
+    back.onclick = backFn;
+  } else {
+    back.classList.remove('show');
+    back.onclick = null;
+  }
+}
+
+function setScreen(html) {
+  document.getElementById('screen').innerHTML = html;
+}
+
+function showError(msg) {
+  setScreen(`<div class="alert danger" style="margin-top:20px;">
+    <i class="ti ti-alert-circle"></i>
+    <div class="txt"><b>오류:</b> ${msg}</div>
+  </div>`);
+}
+
+// ═════════════════════════════════════════════════════════════
+// 페이지: 홈
+// ═════════════════════════════════════════════════════════════
+async function renderHome() {
+  setHead('홈');
+  setScreen('<div class="loading">불러오는 중...</div>');
+
+  try {
+    const d = await fetchJSON('/api/admin/overview');
+
+    let alertsHtml = '';
+    if (d.alerts && d.alerts.length) {
+      alertsHtml = `<div class="sec">
+        <p class="sec-title"><span>주의 · 알림</span><span class="right" style="color:var(--danger)">${d.alerts.length}</span></p>
+        ${d.alerts.map(a => `
+          <div class="alert ${a.level === 'danger' ? 'danger' : 'warn'}">
+            <i class="ti ti-${a.level === 'danger' ? 'alert-triangle' : 'clock-hour-4'}"></i>
+            <div class="txt"><b>${a.title}</b> · ${a.message}</div>
+          </div>
+        `).join('')}
+      </div>`;
+    }
+
+    let signupsHtml;
+    if (!d.recent_signups || d.recent_signups.length === 0) {
+      signupsHtml = '<div class="empty">오늘 신규 가입 없음</div>';
+    } else {
+      signupsHtml = `<div class="panel">${d.recent_signups.map(s => `
+        <div class="row no-click">
+          <div class="avatar">${initialOf(s.member_id)}</div>
+          <div class="row-body">
+            <p class="row-name">${shortId(s.member_id)}</p>
+            <p class="row-sub">${ago(s.created_at)}</p>
+          </div>
+          <div class="row-right">
+            <p class="row-main cr">+${s.amount}</p>
+            <p class="row-time">크레딧</p>
+          </div>
+        </div>
+      `).join('')}</div>`;
+    }
+
+    let paymentsHtml;
+    if (!d.recent_payments || d.recent_payments.length === 0) {
+      paymentsHtml = '<div class="empty">오늘 결제 없음</div>';
+    } else {
+      paymentsHtml = `<div class="panel">${d.recent_payments.map(p => `
+        <div class="row no-click">
+          <div class="avatar money"><i class="ti ti-credit-card" style="font-size:14px"></i></div>
+          <div class="row-body">
+            <p class="row-name">${shortId(p.member_id)}</p>
+            <p class="row-sub">주문 ${p.order_id || ''}</p>
+          </div>
+          <div class="row-right">
+            <p class="row-main">₩9,900</p>
+            <p class="row-time" style="color:var(--ok)">+${p.amount} 크레딧</p>
+          </div>
+        </div>
+      `).join('')}</div>`;
+    }
+
+    setScreen(`
+      <div class="sec">
+        <p class="sec-title"><span>오늘의 한눈</span><span class="right">실시간</span></p>
+        <div class="g3">
+          <div class="kpi">
+            <p class="label">신규 가입</p>
+            <p class="val">${d.today.signups}</p>
+            <p class="sub">+2 보너스</p>
+          </div>
+          <div class="kpi featured">
+            <p class="label">크레딧 결제</p>
+            <p class="val">${d.today.payments}</p>
+            <p class="sub">${won(d.today.revenue)}</p>
+          </div>
+          <div class="kpi">
+            <p class="label">AI 사용</p>
+            <p class="val">${d.today.ai_calls.total}</p>
+            <p class="sub">사진 ${d.today.ai_calls.nanobanana} · 분석 ${d.today.ai_calls.sonnet}</p>
+          </div>
+        </div>
+      </div>
+      ${alertsHtml}
+      <div class="sec">
+        <p class="sec-title"><span>신규 가입 · 오늘</span><span class="right action" onclick="navigateTo('members')">전체 ↗</span></p>
+        ${signupsHtml}
+      </div>
+      <div class="sec">
+        <p class="sec-title"><span>크레딧 결제 · 오늘</span><span class="right action" onclick="navigateTo('payments')">전체 ↗</span></p>
+        ${paymentsHtml}
+      </div>
+    `);
+  } catch (err) {
+    showError(err.message);
+  }
+}
+
+// ═════════════════════════════════════════════════════════════
+// 페이지: 회원
+// ═════════════════════════════════════════════════════════════
+let memberFilter = 'all';
+let memberSearch = '';
+
+async function renderMembers() {
+  setHead('회원');
+  setScreen('<div class="loading">불러오는 중...</div>');
+
+  try {
+    const params = new URLSearchParams({ filter: memberFilter });
+    if (memberSearch) params.set('search', memberSearch);
+    const d = await fetchJSON('/api/admin/members?' + params.toString());
+
+    const s = d.summary;
+    const filters = [
+      { key: 'all', label: '전체' },
+      { key: 'active', label: '활성' },
+      { key: 'paid', label: '결제 고객' },
+      { key: 'rich', label: '잔액 많음' },
+      { key: 'dormant', label: '휴면' },
+    ];
+
+    let listHtml;
+    if (!d.members || d.members.length === 0) {
+      listHtml = '<div class="empty">표시할 회원 없음</div>';
+    } else {
+      listHtml = `<div class="panel">${d.members.map(m => {
+        const chips = [];
+        if (m.role === 'admin') chips.push(`<span class="chip admin">관리자</span>`);
+        if (m.is_dormant) chips.push(`<span class="chip dormant">휴면</span>`);
+        return `
+          <div class="row" onclick="openMemberDetail('${m.member_id}')">
+            <div class="avatar">${initialOf(m.member_id)}</div>
+            <div class="row-body">
+              <p class="row-name">${shortId(m.member_id)} ${chips.join(' ')}</p>
+              <p class="row-sub">충전 ${m.stats.charge}회 · 사용 ${m.stats.use}회</p>
+            </div>
+            <div class="row-right">
+              <p class="row-main">${num(m.credits_remaining)}</p>
+              <p class="row-time">${ago(m.last_active)}</p>
+            </div>
+          </div>
+        `;
+      }).join('')}</div>`;
+    }
+
+    setScreen(`
+      <div class="sec">
+        <div class="g3">
+          <div class="kpi" style="text-align:center">
+            <p class="label">활성</p>
+            <p class="val" style="font-size:16px">${s.active}</p>
+            <p class="sub">7일 내</p>
+          </div>
+          <div class="kpi" style="text-align:center">
+            <p class="label">결제 고객</p>
+            <p class="val" style="font-size:16px">${s.paid}</p>
+            <p class="sub">1회+</p>
+          </div>
+          <div class="kpi" style="text-align:center">
+            <p class="label">휴면</p>
+            <p class="val" style="font-size:16px">${s.dormant}</p>
+            <p class="sub">30일+</p>
+          </div>
+        </div>
+        <p class="sec-title" style="margin-top:14px"><span>총 ${s.total}명</span></p>
+      </div>
+
+      <div class="sec">
+        <div class="search">
+          <i class="ti ti-search" style="font-size:14px;color:var(--text3)"></i>
+          <input type="text" id="memberSearch" placeholder="이름 또는 ID 검색" value="${memberSearch}">
+        </div>
+        <div class="filterbar">
+          ${filters.map(f => `
+            <button class="filter-chip ${memberFilter === f.key ? 'active' : ''}"
+              onclick="setMemberFilter('${f.key}')">${f.label}</button>
+          `).join('')}
+        </div>
+        ${listHtml}
+      </div>
+    `);
+
+    // search debounce
+    const searchInput = document.getElementById('memberSearch');
+    if (searchInput) {
+      let timer;
+      searchInput.addEventListener('input', (e) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          memberSearch = e.target.value.trim();
+          renderMembers();
+        }, 400);
+      });
+    }
+  } catch (err) {
+    showError(err.message);
+  }
+}
+
+function setMemberFilter(f) {
+  memberFilter = f;
+  renderMembers();
+}
+
+// ═════════════════════════════════════════════════════════════
+// 회원 상세 모달
+// ═════════════════════════════════════════════════════════════
+async function openMemberDetail(memberId) {
+  const overlay = document.getElementById('modalOverlay');
+  const modal = document.getElementById('modal');
+  overlay.classList.add('show');
+  modal.innerHTML = '<div class="loading">불러오는 중...</div>';
+
+  try {
+    const d = await fetchJSON('/api/admin/member-detail?id=' + encodeURIComponent(memberId));
+    renderMemberDetail(d);
+  } catch (err) {
+    modal.innerHTML = `<div style="padding:30px;text-align:center;color:var(--danger)">${err.message}</div>
+      <div style="text-align:center;padding-bottom:30px"><button onclick="closeMemberDetail()" style="padding:8px 16px;background:var(--surface2);border-radius:8px">닫기</button></div>`;
+  }
+}
+
+function closeMemberDetail() {
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'modalOverlay') closeMemberDetail();
+});
+
+let detailTab = 'ledger';
+let detailData = null;
+
+function renderMemberDetail(d) {
+  detailData = d;
+  detailTab = 'ledger';
+  const m = d.member;
+  const s = d.stats;
+
+  const modal = document.getElementById('modal');
+  modal.innerHTML = `
+    <button class="modal-close" onclick="closeMemberDetail()" aria-label="닫기"><i class="ti ti-x"></i></button>
+    <div class="modal-hero">
+      <div class="detail-name-row">
+        <div class="detail-avatar">${initialOf(m.member_id)}</div>
+        <div style="flex:1;min-width:0">
+          <p class="detail-name">${shortId(m.member_id)}</p>
+          <p class="detail-meta">가입 ${ago(m.created_at)} · ID ${m.member_id}</p>
+        </div>
+      </div>
+      <div class="detail-bal">
+        <div>
+          <p class="bal-label">잔액</p>
+          <p class="bal-val">${num(m.credits_remaining)}</p>
+          <p class="bal-mini">충전 ${s.total_charges + s.total_signups} · 사용 ${s.total_uses} · 환불 ${s.total_refunds}</p>
+        </div>
+        <div class="bal-btns">
+          <button class="bal-btn minus" onclick="adjustCredit('${m.member_id}', -1)">−1</button>
+          <button class="bal-btn plus" onclick="adjustCredit('${m.member_id}', 1)">+1</button>
+        </div>
+      </div>
+    </div>
+    <div class="tab-strip">
+      <button class="tstrip active" onclick="setDetailTab('ledger')">거래 내역</button>
+      <button class="tstrip" onclick="setDetailTab('gallery')">사진</button>
+      <button class="tstrip" onclick="setDetailTab('ai')">AI 호출</button>
+    </div>
+    <div class="modal-screen" id="modalScreen"></div>
+  `;
+  renderDetailTab();
+}
+
+function setDetailTab(tab) {
+  detailTab = tab;
+  document.querySelectorAll('.tstrip').forEach((el, i) => {
+    el.classList.toggle('active', ['ledger', 'gallery', 'ai'][i] === tab);
+  });
+  renderDetailTab();
+}
+
+function renderDetailTab() {
+  const screen = document.getElementById('modalScreen');
+  const d = detailData;
+  if (!d) return;
+
+  if (detailTab === 'ledger') {
+    if (!d.ledger || d.ledger.length === 0) {
+      screen.innerHTML = '<div class="empty">거래 내역 없음</div>';
+      return;
+    }
+    screen.innerHTML = d.ledger.map(l => {
+      const dotClass = l.type;
+      const sign = l.amount >= 0 ? '+' : '';
+      const amtClass = l.amount >= 0 ? 'plus' : 'minus';
+      const titleMap = {
+        charge: '충전권 결제',
+        use: 'AI 사용',
+        refund: '자동 환불',
+        signup_bonus: '가입 보너스',
+        admin_adjust: '[관리자 조정]',
+      };
+      return `
+        <div class="led-row">
+          <span class="led-dot ${dotClass}"></span>
+          <div class="led-body">
+            <p class="led-title">${titleMap[l.type] || l.type}</p>
+            <p class="led-meta">${ago(l.created_at)}${l.note ? ' · ' + l.note : ''}</p>
+          </div>
+          <span class="led-amt ${amtClass}">${sign}${l.amount}</span>
+        </div>
+      `;
+    }).join('');
+  } else if (detailTab === 'gallery') {
+    if (!d.gallery || d.gallery.length === 0) {
+      screen.innerHTML = '<div class="empty">사진 없음</div>';
+      return;
+    }
+    screen.innerHTML = `<div class="gallery-grid">${d.gallery.map(g => `
+      <div class="gallery-item">
+        ${g.image_url ? `<img src="${g.image_url}" alt="" loading="lazy">` : ''}
+        ${g.is_favorite ? '<i class="ti ti-star gallery-fav"></i>' : ''}
+        <span class="gallery-badge">${ago(g.created_at)}</span>
+      </div>
+    `).join('')}</div>`;
+  } else if (detailTab === 'ai') {
+    if (!d.ai_logs || d.ai_logs.length === 0) {
+      screen.innerHTML = '<div class="empty">AI 호출 기록 없음<br><br>이 기능은 ai_call_logs 테이블 생성 후 데이터가 쌓입니다.</div>';
+      return;
+    }
+    screen.innerHTML = d.ai_logs.map(log => {
+      const statusClass = log.status === 'success' ? 'ok' :
+                         log.status === 'safety_block' || log.status === 'rate_limit' ? 'warn' : 'err';
+      return `
+        <div class="log-row">
+          <div class="log-head">
+            <span class="log-status-dot ${statusClass}"></span>
+            <span class="log-user">${log.model === 'nanobanana' ? '나노바나나' : '소넷'}</span>
+            <span class="log-route">${log.route || log.stage || ''}</span>
+            <span class="log-time">${ago(log.created_at)}</span>
+          </div>
+          <p class="log-summary">${log.user_message || log.status}</p>
+          ${log.duration_ms ? `<p class="log-detail">${(log.duration_ms / 1000).toFixed(1)}초 소요</p>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+}
+
+async function adjustCredit(memberId, delta) {
+  const reason = prompt(`크레딧 ${delta > 0 ? '+' + delta : delta} 조정 사유를 입력하세요:`);
+  if (!reason || reason.trim().length < 2) return;
+  try {
+    const res = await fetchJSON('/api/admin/member-detail?id=' + encodeURIComponent(memberId), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ delta, reason: reason.trim() }),
+    });
+    alert(`조정 완료. 새 잔액: ${res.credits_remaining}`);
+    openMemberDetail(memberId);
+  } catch (err) {
+    alert('조정 실패: ' + err.message);
+  }
+}
+
+// ═════════════════════════════════════════════════════════════
+// 페이지: 결제
+// ═════════════════════════════════════════════════════════════
+async function renderPayments() {
+  setHead('결제');
+  setScreen('<div class="loading">불러오는 중...</div>');
+
+  try {
+    const d = await fetchJSON('/api/admin/payments');
+    const s = d.summary;
+
+    // 7일 차트 - 최대값 기준 비율
+    const maxRev = Math.max(1, ...d.daily.map(x => x.revenue));
+
+    let recentHtml;
+    if (!d.recent_payments || d.recent_payments.length === 0) {
+      recentHtml = '<div class="empty">최근 7일 결제 없음</div>';
+    } else {
+      recentHtml = `<div class="panel">${d.recent_payments.map(p => `
+        <div class="row no-click">
+          <div class="avatar money"><i class="ti ti-credit-card" style="font-size:14px"></i></div>
+          <div class="row-body">
+            <p class="row-name">${shortId(p.member_id)}</p>
+            <p class="row-sub">주문 ${p.order_id || ''} · ${ago(p.created_at)}</p>
+          </div>
+          <div class="row-right">
+            <p class="row-main">${won(p.revenue)}</p>
+            <p class="row-time" style="color:var(--ok)">+${p.amount}</p>
+          </div>
+        </div>
+      `).join('')}</div>`;
+    }
+
+    let productHtml = '';
+    if (d.products && d.products.length) {
+      productHtml = d.products.map(p => `
+        <div class="row no-click">
+          <div class="avatar" style="border-radius:8px;background:var(--info-bg);color:var(--info)">${p.cafe24_product_no}</div>
+          <div class="row-body">
+            <p class="row-name">${p.product_name || '(이름 없음)'}</p>
+            <p class="row-sub">${won(p.price)} → ${p.credits} 크레딧 · 활성</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    setScreen(`
+      <div class="sec">
+        <p class="sec-title"><span>매출 요약</span><span class="right">실시간</span></p>
+        <div class="g3">
+          <div class="kpi featured">
+            <p class="label">오늘</p>
+            <p class="val" style="font-size:15px">${won(s.today.revenue)}</p>
+            <p class="sub">${s.today.count}건</p>
+          </div>
+          <div class="kpi">
+            <p class="label">이번 달</p>
+            <p class="val" style="font-size:15px">${won(s.month.revenue)}</p>
+            <p class="sub">${s.month.count}건</p>
+          </div>
+          <div class="kpi">
+            <p class="label">누적</p>
+            <p class="val" style="font-size:15px">${won(s.total.revenue)}</p>
+            <p class="sub">${s.total.count}건</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <p class="sec-title"><span>최근 7일 매출</span><span class="right">단위 천원</span></p>
+        <div class="panel" style="padding:14px 12px 10px">
+          <div class="bar-chart">
+            <div class="bar-row">
+              ${d.daily.map((x, i) => {
+                const isToday = i === d.daily.length - 1;
+                const pct = (x.revenue / maxRev) * 100;
+                return `
+                  <div class="bar-col">
+                    <div class="bar ${isToday ? 'today' : ''}" style="height:${pct}%">
+                      ${x.count > 0 ? `<span class="bar-val">${Math.round(x.revenue / 1000)}</span>` : ''}
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+            <div class="bar-row" style="height:auto;margin-top:4px">
+              ${d.daily.map((x, i) => `
+                <div class="bar-col">
+                  <span class="bar-label" style="${i === d.daily.length - 1 ? 'color:var(--info);font-weight:500' : ''}">${x.day_label}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <p class="sec-title"><span>최근 결제</span></p>
+        ${recentHtml}
+      </div>
+
+      <div class="sec">
+        <p class="sec-title"><span>웹훅 시스템 상태</span><span class="right" style="color:var(--ok)"><i class="ti ti-circle-check" style="font-size:11px"></i> 정상</span></p>
+        <div class="g2">
+          <div class="kpi">
+            <p class="label">24h 수신</p>
+            <p class="val" style="font-size:16px">${d.webhook_status.last_24h}건</p>
+          </div>
+          <div class="kpi">
+            <p class="label">마지막 수신</p>
+            <p class="val" style="font-size:14px">${ago(d.webhook_status.last_received) || '없음'}</p>
+          </div>
+        </div>
+      </div>
+
+      ${productHtml ? `
+        <div class="sec">
+          <p class="sec-title"><span>활성 상품</span><span class="right">카페24 ↔ Supabase</span></p>
+          <div class="panel">${productHtml}</div>
+        </div>
+      ` : ''}
+    `);
+  } catch (err) {
+    showError(err.message);
+  }
+}
+
+// ═════════════════════════════════════════════════════════════
+// 페이지: AI 사용 (v2 — 마케팅 vs 디버깅 분리)
+// ═════════════════════════════════════════════════════════════
+async function renderAI() {
+  setHead('AI 사용');
+  setScreen('<div class="loading">불러오는 중...</div>');
+
+  try {
+    const d = await fetchJSON('/api/admin/ai-logs?limit=80');
+    const ts = d.today_stats;
+    const rd = d.route_distribution;
+    const ac = d.alert_counts || { critical: 0, warning: 0, info: 0 };
+    const cat = d.user_message_catalog || [];
+
+    // ─── 카탈로그 (접힘 — 회원 안내 문구 사전) ────────────
+    const catalogHtml = `
+      <div class="catalog" id="catalog">
+        <button class="catalog-toggle" onclick="document.getElementById('catalog').classList.toggle('open')">
+          <span>📖 회원 화면에 뜨는 안내 문구 사전</span>
+          <i class="ti ti-chevron-down"></i>
+        </button>
+        <div class="catalog-body">
+          ${cat.map(c => `
+            <div class="cat-item">
+              <p class="cat-code">${c.http} ${c.code}</p>
+              <p class="cat-msg">"${c.message}"</p>
+              <p class="cat-when">언제 떠요? · ${c.when}</p>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+
+    // ─── 알림 단계 KPI ──────────────────────────────────────
+    const alertKpiHtml = `
+      <div class="g3">
+        <div class="kpi alert-kpi ${ac.critical > 0 ? 'critical' : ''}">
+          <p class="label">🔴 긴급</p>
+          <p class="val">${ac.critical}</p>
+          <p class="sub">${ac.critical > 0 ? '즉시 대응' : '없음'}</p>
+        </div>
+        <div class="kpi alert-kpi ${ac.warning > 0 ? 'warning' : ''}">
+          <p class="label">🟡 주의</p>
+          <p class="val">${ac.warning}</p>
+          <p class="sub">${ac.warning > 0 ? '패턴 확인' : '없음'}</p>
+        </div>
+        <div class="kpi">
+          <p class="label">🟢 정상</p>
+          <p class="val">${ac.info}</p>
+          <p class="sub">자연 해소</p>
+        </div>
+      </div>
+    `;
+
+    // ─── 로그 한 줄씩 (버셀 스타일) ─────────────────────────
+    let logsHtml;
+    if (!d.recent_logs || d.recent_logs.length === 0) {
+      logsHtml = `<div class="empty">
+        아직 AI 호출 기록이 없어요.<br><br>
+        <span style="line-height:1.6">디자이너가 컬러/컷 분석 또는 HAIRO 사진을<br>
+        한 번이라도 사용하면 여기에 기록됩니다.</span>
+      </div>`;
+    } else {
+      logsHtml = `<div class="panel">${d.recent_logs.map((log, idx) => {
+        const k = log._ko || {};
+
+        // 상태 점 색상
+        const lvl = log.alert_level || 'info';
+        let dotCls = 'ok';
+        if (log.status === 'success') dotCls = 'ok';
+        else if (lvl === 'critical') dotCls = 'crit';
+        else if (lvl === 'warning') dotCls = 'warn';
+        else if (log.status === 'safety_block' || log.status === 'refunded') dotCls = 'warn';
+        else dotCls = 'err';
+
+        return `
+          <div class="log-row" id="log-${idx}" onclick="document.getElementById('log-${idx}').classList.toggle('open')">
+            <div class="log-head">
+              <span class="log-status-dot ${dotCls}"></span>
+              <span class="log-user">${shortId(log.member_id)} · ${k.stage_ko || k.model_ko}</span>
+              ${k.route_ko ? `<span class="log-route">${k.route_ko}</span>` : ''}
+              <span class="log-time">${ago(log.created_at)}</span>
+            </div>
+            <p class="log-summary">${k.summary}</p>
+
+            ${log.user_message ? `
+              <div class="box-user">
+                <b>회원 화면에 표시됨</b>
+                "${log.user_message}"
+              </div>
+            ` : ''}
+
+            ${log.internal_reason && log.status !== 'success' ? `
+              <div class="box-reason ${lvl}">
+                <b>실제 원인</b>
+                ${k.reason_icon} ${k.reason_ko}
+              </div>
+            ` : ''}
+
+            <div class="log-expand">
+              <div class="kv"><span class="k">시간</span><span class="v">${new Date(log.created_at).toLocaleString('ko-KR')}</span></div>
+              <div class="kv"><span class="k">HTTP/코드</span><span class="v">${log.error_code || '200'} · ${log.status}</span></div>
+              <div class="kv"><span class="k">모델/라우트</span><span class="v">${k.model_ko}${k.route_ko ? ' · ' + k.route_ko : ''}</span></div>
+              ${log.duration_ms ? `<div class="kv"><span class="k">소요</span><span class="v">${(log.duration_ms / 1000).toFixed(2)}초</span></div>` : ''}
+              <div class="kv"><span class="k">회원ID</span><span class="v">${log.member_id}</span></div>
+              ${log.raw_error ? `<div class="kv"><span class="k">영어 원문</span><span class="v"></span></div><pre>${escapeHtml(log.raw_error)}</pre>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('')}</div>`;
+    }
+
+    // ─── 라우트 분포 ────────────────────────────────────────
+    let routeHtml = '';
+    if (rd.total > 0) {
+      const seoulPct = Math.round((rd.seoul / rd.total) * 100);
+      const globalPct = Math.round((rd.global / rd.total) * 100);
+      const legacyPct = Math.round((rd.legacy / rd.total) * 100);
+      routeHtml = `
+        <div class="sec">
+          <p class="sec-title"><span>나노바나나 라우트 분포</span><span class="right">24시간</span></p>
+          <div class="panel" style="padding:14px">
+            <p style="font-size:11px;color:var(--text2);margin:0">성공 ${rd.total}건 중</p>
+            <div class="split-bar">
+              ${seoulPct > 0 ? `<div class="split-seg seoul" style="flex:${seoulPct}">${seoulPct}%</div>` : ''}
+              ${globalPct > 0 ? `<div class="split-seg global" style="flex:${globalPct}">${globalPct}% 글로벌</div>` : ''}
+              ${legacyPct > 0 ? `<div class="split-seg legacy" style="flex:${legacyPct}">${legacyPct}%</div>` : ''}
+            </div>
+            <div class="split-legend">
+              <span><span class="split-dot" style="background:var(--text3);opacity:.3"></span>서울 ${seoulPct}%</span>
+              <span><span class="split-dot" style="background:var(--ok)"></span>글로벌 ${globalPct}%</span>
+              <span><span class="split-dot" style="background:var(--warn)"></span>Legacy ${legacyPct}%</span>
+            </div>
+            <p style="font-size:11px;color:var(--text3);margin:10px 0 0;line-height:1.5">
+              서울 리젼은 현재 모델 미지원 — 즉시 글로벌로 전환됨 (1초 미만). 정상 동작.
+              구글이 서울 지원 시 자동으로 사용됩니다.
+            </p>
+          </div>
+        </div>
+      `;
+    }
+
+    setScreen(`
+      <div class="sec">
+        <p class="sec-title"><span>오늘의 알림 단계</span><span class="right">실시간</span></p>
+        ${alertKpiHtml}
+      </div>
+
+      <div class="sec">
+        <p class="sec-title"><span>오늘의 호출</span></p>
+        <div class="g2">
+          <div class="kpi">
+            <p class="label">나노바나나 (사진)</p>
+            <p class="val">${ts.nanobanana.total}</p>
+            <p class="sub" style="color:var(--ok)">성공 ${ts.nanobanana.success}</p>
+          </div>
+          <div class="kpi">
+            <p class="label">소넷 (분석기)</p>
+            <p class="val">${ts.sonnet.total}</p>
+            <p class="sub" style="color:var(--ok)">성공 ${ts.sonnet.success}</p>
+          </div>
+        </div>
+      </div>
+
+      ${routeHtml}
+
+      <div class="sec">
+        <p class="sec-title"><span>회원 안내 문구 사전</span><span class="right">탭하면 펼침</span></p>
+        ${catalogHtml}
+      </div>
+
+      <div class="sec">
+        <p class="sec-title"><span>최근 AI 호출</span><span class="right">탭하면 영어 원문</span></p>
+        ${logsHtml}
+      </div>
+
+      <div class="sec">
+        <p class="sec-title"><span>여기서 안 잡힌 에러는?</span></p>
+        <button class="link-btn" onclick="window.open('https://vercel.com/dashboard', '_blank')">
+          <i class="ti ti-server"></i> Vercel 원본 로그 바로가기
+        </button>
+        <p style="font-size:10px;color:var(--text3);margin:8px 2px 0;line-height:1.5">
+          위 목록은 AI 호출 흐름 안에서 잡힌 에러만 표시됩니다. 함수 자체가
+          폭발한 경우나 인증/네트워크 자체가 죽은 경우는 Vercel 원본 로그에서 확인.
+        </p>
+      </div>
+    `);
+  } catch (err) {
+    showError(err.message);
+  }
+}
+
+// HTML escape (영어 원문에 <,>,& 등 들어가도 안전)
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+// ═════════════════════════════════════════════════════════════
+// 페이지: 시스템
+// ═════════════════════════════════════════════════════════════
+async function renderSystem() {
+  setHead('시스템');
+  setScreen('<div class="loading">불러오는 중...</div>');
+
+  try {
+    const d = await fetchJSON('/api/admin/system');
+
+    const okCount = d.tokens.filter(t => t.status === 'ok').length;
+
+    const tokenCards = d.tokens.map(t => {
+      const cardClass = t.status === 'danger' ? 'danger' : t.status === 'warning' ? 'warn' : '';
+      const badge = t.renewal === 'manual'
+        ? `<span class="token-badge badge-warn">${t.days_left != null ? t.days_left + '일 남음' : '확인 필요'}</span>`
+        : t.renewal === 'auto'
+        ? `<span class="token-badge badge-ok">자동 관리</span>`
+        : `<span class="token-badge badge-info">만료 없음</span>`;
+
+      let grid = '';
+      if (t.key === 'cafe24_refresh') {
+        grid = `
+          <span class="tg-label">만료일</span><span class="tg-val danger">${t.expires_at ? new Date(t.expires_at).toLocaleString('ko-KR') : '미설치'}</span>
+          <span class="tg-label">갱신 방식</span><span class="tg-val">손으로 재설치</span>
+          <span class="tg-label">마지막 발급</span><span class="tg-val">${t.last_issued_at ? ago(t.last_issued_at) : '-'}</span>
+          <span class="tg-label">발급 장소</span><span class="tg-val">카페24 개발자센터</span>
+        `;
+      } else if (t.key === 'cafe24_access') {
+        grid = `
+          <span class="tg-label">만료까지</span><span class="tg-val">${t.minutes_left != null ? t.minutes_left + '분' : '-'}</span>
+          <span class="tg-label">갱신 방식</span><span class="tg-val ok">코드가 자동</span>
+          <span class="tg-label">마지막 갱신</span><span class="tg-val">${ago(t.last_renewed_at)}</span>
+          <span class="tg-label">갱신 위치</span><span class="tg-val">Vercel 함수</span>
+        `;
+      } else if (t.key === 'vertex_access') {
+        grid = `
+          <span class="tg-label">갱신 방식</span><span class="tg-val ok">코드가 자동</span>
+          <span class="tg-label">만료 주기</span><span class="tg-val">1시간</span>
+          <span class="tg-label">저장</span><span class="tg-val">서버 메모리</span>
+          <span class="tg-label">상태</span><span class="tg-val ok">정상</span>
+        `;
+      } else if (t.key === 'anthropic_key') {
+        grid = `
+          <span class="tg-label">상태</span><span class="tg-val ok">정상 사용중</span>
+          <span class="tg-label">저장 위치</span><span class="tg-val">Vercel 환경변수</span>
+          <span class="tg-label">만료</span><span class="tg-val">없음</span>
+        `;
+      }
+
+      const action = t.key === 'cafe24_refresh'
+        ? `<button class="token-action" onclick="window.open('https://developers.cafe24.com', '_blank')">카페24 개발자센터 ↗</button>`
+        : '';
+
+      return `
+        <div class="token-card ${cardClass}">
+          <div class="token-head">
+            <div class="token-icon"><i class="ti ti-${t.key === 'cafe24_refresh' ? 'key' : t.key === 'cafe24_access' ? 'refresh' : t.key === 'vertex_access' ? 'photo' : 'message-circle'}"></i></div>
+            <div style="flex:1;min-width:0">
+              <p class="token-title">${t.title}</p>
+              <p class="token-sub">${t.subtitle}</p>
+            </div>
+            ${badge}
+          </div>
+          ${t.why ? `<p class="token-why"><b style="font-weight:500">왜 필요?</b> ${t.why}</p>` : ''}
+          <div class="token-grid">${grid}</div>
+          ${action}
+        </div>
+      `;
+    }).join('');
+
+    // ─── AI API 사용량 추정 게이지 (NEW) ─────────────────
+    const usage = d.api_usage || {};
+    const usageCard = (u) => u ? `
+      <div class="usage-card">
+        <div class="usage-head">
+          <div style="flex:1;min-width:0">
+            <p class="usage-title">${u.title}</p>
+            <p class="usage-sub">${u.subtitle}</p>
+          </div>
+        </div>
+        <div class="usage-stats">
+          <div class="usage-stat">
+            <p class="lbl">오늘 호출</p>
+            <p class="val">${(u.today_calls || 0).toLocaleString()}</p>
+            <p class="sub">≈ $${(u.today_cost_usd || 0).toFixed(2)}</p>
+          </div>
+          <div class="usage-stat">
+            <p class="lbl">이번 달 호출</p>
+            <p class="val">${(u.month_calls || 0).toLocaleString()}</p>
+            <p class="sub">≈ $${(u.month_cost_usd || 0).toFixed(2)}</p>
+          </div>
+        </div>
+        <a class="usage-link" href="${u.console_url}" target="_blank">
+          실제 잔액은 콘솔에서 확인 ↗
+        </a>
+        <p class="usage-note">${u.note}</p>
+      </div>
+    ` : '';
+
+    setScreen(`
+      <div class="sec">
+        <p class="sec-title"><span>연결 상태 요약</span><span class="right" style="color:var(--ok)"><i class="ti ti-circle-check" style="font-size:11px"></i> 정상 ${d.tokens.length}개 중 ${okCount}</span></p>
+        ${tokenCards}
+      </div>
+
+      <div class="sec">
+        <p class="sec-title"><span>AI API 사용량 추정</span><span class="right">ai_call_logs 기반</span></p>
+        ${usageCard(usage.sonnet)}
+        ${usageCard(usage.nanobanana)}
+      </div>
+
+      <div class="sec">
+        <p class="sec-title"><span>자동 알람 작동</span></p>
+        <div class="panel">
+          ${d.crons.map(c => {
+            const badge = c.status === 'danger' ? '<span class="token-badge badge-warn" style="color:var(--danger);border-color:var(--danger)">멈춤 의심</span>'
+                        : c.status === 'warning' ? '<span class="token-badge badge-warn">지연</span>'
+                        : '<span class="token-badge badge-ok">정상</span>';
+            return `
+              <div class="row no-click">
+                <div class="avatar warn"><i class="ti ti-clock" style="font-size:14px"></i></div>
+                <div class="row-body">
+                  <p class="row-name">${c.title}</p>
+                  <p class="row-sub">${c.subtitle} · ${c.last_run ? '마지막 ' + ago(c.last_run) : (c.note || '')}</p>
+                </div>
+                ${badge}
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <p style="font-size:10px;color:var(--text3);margin:6px 2px 0;line-height:1.5">
+          5분마다 자동 실행. 실시간 로그는 화면이 도배되므로 표시 안 함 — 마지막 작동 시각만 노출.
+        </p>
+      </div>
+
+      <div class="sec">
+        <p class="sec-title"><span>저장공간 (Supabase 추정)</span></p>
+        <div class="panel" style="padding:14px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:8px">
+            <div>
+              <p style="font-size:13px;font-weight:500;margin:0">갤러리 이미지</p>
+              <p style="font-size:11px;color:var(--text3);margin:3px 0 0">${d.storage.gallery_images.toLocaleString()}장 저장중</p>
+            </div>
+            <p style="font-size:14px;font-weight:500;margin:0">${d.storage.estimated_mb}<span style="font-size:11px;color:var(--text3)"> / ${d.storage.limit_mb}MB</span></p>
+          </div>
+          <div style="height:6px;background:var(--surface3);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${d.storage.percent}%;background:var(--info)"></div>
+          </div>
+          <p style="font-size:11px;color:var(--text3);margin:8px 0 0">${d.storage.note}</p>
+        </div>
+      </div>
+
+      <div class="sec">
+        <p class="sec-title"><span>자주 가는 곳</span></p>
+        <div class="g2">
+          <button class="link-btn" onclick="window.open('https://supabase.com/dashboard', '_blank')"><i class="ti ti-database"></i> Supabase</button>
+          <button class="link-btn" onclick="window.open('https://vercel.com/dashboard', '_blank')"><i class="ti ti-server"></i> Vercel 로그</button>
+          <button class="link-btn" onclick="window.open('https://developers.cafe24.com', '_blank')"><i class="ti ti-shopping-cart"></i> 카페24</button>
+          <button class="link-btn" onclick="window.open('https://console.anthropic.com/settings/billing', '_blank')"><i class="ti ti-credit-card"></i> Anthropic 잔액</button>
+          <button class="link-btn" onclick="window.open('https://console.cloud.google.com/billing', '_blank')"><i class="ti ti-credit-card"></i> GCP 잔액</button>
+        </div>
+      </div>
+    `);
+  } catch (err) {
+    showError(err.message);
+  }
+}
+
+// ═════════════════════════════════════════════════════════════
+// 라우팅
+// ═════════════════════════════════════════════════════════════
+const PAGES = {
+  home: renderHome,
+  members: renderMembers,
+  payments: renderPayments,
+  ai: renderAI,
+  system: renderSystem,
+};
+
+let currentPage = 'home';
+
+function navigateTo(page) {
+  if (!PAGES[page]) return;
+  currentPage = page;
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.page === page);
+  });
+  PAGES[page]();
+  window.scrollTo(0, 0);
+}
+
+document.getElementById('tabs').addEventListener('click', (e) => {
+  const tab = e.target.closest('.tab');
+  if (!tab) return;
+  navigateTo(tab.dataset.page);
+});
+
+document.getElementById('refreshBtn').addEventListener('click', () => {
+  PAGES[currentPage]();
+});
+
+// 시작
+navigateTo('home');
+</script>
+
+</body>
+</html>
