@@ -2765,89 +2765,122 @@ async function saveToArchiveAsync(imageBase64, mimeType, prompt, aspect, yaw, pi
 
 async function compressBase64Image(b64, srcMime) {
   // ────────────────────────────────────────────────────────
-  // iOS 사파리 검은 캔버스 버그 대응
-  //   증상: 큰 base64를 <img>에 넣고 캔버스에 그린 직후 toDataURL 하면
-  //         가끔 전부 검은 이미지가 반환됨 (메모리/타이밍 이슈)
-  //   대응:
-  //     1) <img> + decode() 로 디코딩 보장
-  //     2) 1프레임 yield 후 toDataURL (메모리 정착 대기)
-  //     3) 검은 캔버스인지 픽셀 샘플링 검증
-  //     4) 검으면 한 번 재시도, 그래도 검으면 압축 포기하고 원본 반환
+  // iOS Safari 검은 캔버스 완전 방어
+  //   - 옛 방식: base64 → <img>.src = "data:..." → 캔버스
+  //     → iOS Safari에서 큰 base64 만나면 가끔 검은 결과
+  //   - 새 방식: base64 → Blob → createImageBitmap → 캔버스
+  //     → 메모리 효율 + iOS 검은 캔버스 거의 안 일으킴
+  //   - 폴백 3중: ImageBitmap → Blob URL <img> → base64 <img>
+  //   - 마지막 안전망: 검은 캔버스 검증 → 재시도 → 압축 포기 후 원본
   // ────────────────────────────────────────────────────────
 
+  // base64 → Blob 변환 (메모리 효율 + 큰 파일 안전)
+  function base64ToBlob(b64Str, mime) {
+    const binStr = atob(b64Str);
+    const bytes = new Uint8Array(binStr.length);
+    for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
+    return new Blob([bytes], { type: mime });
+  }
+
+  // 9개 픽셀 샘플링으로 검은 캔버스 감지
   function isMostlyBlack(canvas) {
     try {
       const ctx = canvas.getContext('2d');
       const w = canvas.width, h = canvas.height;
-      // 9개 지점 샘플링 (가운데 + 4모서리 + 4중간점)
       const pts = [
         [w*0.5, h*0.5],
         [w*0.1, h*0.1], [w*0.9, h*0.1], [w*0.1, h*0.9], [w*0.9, h*0.9],
         [w*0.5, h*0.1], [w*0.5, h*0.9], [w*0.1, h*0.5], [w*0.9, h*0.5],
       ];
-      let darkCount = 0;
+      let dark = 0;
       for (const [x, y] of pts) {
         const d = ctx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data;
-        if (d[0] < 8 && d[1] < 8 && d[2] < 8) darkCount++;
+        if (d[0] < 8 && d[1] < 8 && d[2] < 8) dark++;
       }
-      // 9개 중 8개 이상이 거의 검은색이면 캔버스가 깨졌다고 판단
-      return darkCount >= 8;
-    } catch (e) {
-      return false; // 검증 실패하면 그냥 통과
-    }
+      return dark >= 8;
+    } catch (e) { return false; }
   }
 
-  async function drawAndEncode() {
-    const img = new Image();
-    await new Promise((resolve, reject) => {
-      img.onload = resolve;
-      img.onerror = () => reject(new Error('image load failed'));
-      img.src = `data:${srcMime};base64,${b64}`;
-    });
-
-    // iOS Safari: decode() 호출로 디코딩 완료 보장 (지원 안 하면 무시)
-    if (typeof img.decode === 'function') {
-      try { await img.decode(); } catch (_) {}
-    }
-
-    // 한 프레임 yield — 메모리 정착 대기 (iOS Safari 핵심)
-    await new Promise(r => requestAnimationFrame(() => r()));
-
-    const canvas = document.createElement('canvas');
-    let w = img.naturalWidth || img.width;
-    let h = img.naturalHeight || img.height;
+  function drawBitmapToCanvas(bitmapOrImg, srcW, srcH) {
+    let w = srcW, h = srcH;
     if (w > GALLERY_THUMB_MAX || h > GALLERY_THUMB_MAX) {
       const r = Math.min(GALLERY_THUMB_MAX / w, GALLERY_THUMB_MAX / h);
       w = Math.round(w * r); h = Math.round(h * r);
     }
+    const canvas = document.createElement('canvas');
     canvas.width = w; canvas.height = h;
     const ctx = canvas.getContext('2d');
-    // 흰색 배경 먼저 칠해서 알파 채널 깨짐 대비
+    // 흰 배경 먼저 (알파 채널 깨짐 대비)
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, w, h);
-    ctx.drawImage(img, 0, 0, w, h);
-
-    // 검은 캔버스 검증
-    if (isMostlyBlack(canvas)) {
-      return null; // 재시도 신호
-    }
-
-    const dataUrl = canvas.toDataURL('image/jpeg', GALLERY_THUMB_QUALITY);
-    return { base64: dataUrl.split(',')[1], mimeType: 'image/jpeg' };
+    ctx.drawImage(bitmapOrImg, 0, 0, w, h);
+    return canvas;
   }
 
-  // 1차 시도
-  let result = await drawAndEncode();
+  // ─── 방식 1: createImageBitmap (가장 안전, iOS 14+) ────
+  async function tryImageBitmap() {
+    if (typeof createImageBitmap !== 'function') return null;
+    try {
+      const blob = base64ToBlob(b64, srcMime);
+      const bitmap = await createImageBitmap(blob);
+      const canvas = drawBitmapToCanvas(bitmap, bitmap.width, bitmap.height);
+      if (typeof bitmap.close === 'function') bitmap.close();
+      if (isMostlyBlack(canvas)) return null;
+      const dataUrl = canvas.toDataURL('image/jpeg', GALLERY_THUMB_QUALITY);
+      return { base64: dataUrl.split(',')[1], mimeType: 'image/jpeg' };
+    } catch (e) {
+      console.warn('[compress] ImageBitmap 실패:', e?.message);
+      return null;
+    }
+  }
+
+  // ─── 방식 2: Blob URL + <img> (base64 직접 안 박음) ───
+  async function tryBlobUrl() {
+    const blob = base64ToBlob(b64, srcMime);
+    const objUrl = URL.createObjectURL(blob);
+    try {
+      const img = new Image();
+      await new Promise((res, rej) => {
+        img.onload = res;
+        img.onerror = () => rej(new Error('blob url load failed'));
+        img.src = objUrl;
+      });
+      if (typeof img.decode === 'function') {
+        try { await img.decode(); } catch (_) {}
+      }
+      await new Promise(r => requestAnimationFrame(() => r()));
+      const w = img.naturalWidth || img.width;
+      const h = img.naturalHeight || img.height;
+      const canvas = drawBitmapToCanvas(img, w, h);
+      if (isMostlyBlack(canvas)) return null;
+      const dataUrl = canvas.toDataURL('image/jpeg', GALLERY_THUMB_QUALITY);
+      return { base64: dataUrl.split(',')[1], mimeType: 'image/jpeg' };
+    } catch (e) {
+      console.warn('[compress] Blob URL 실패:', e?.message);
+      return null;
+    } finally {
+      URL.revokeObjectURL(objUrl);
+    }
+  }
+
+  // 1차: ImageBitmap (가장 안전)
+  let result = await tryImageBitmap();
   if (result) return result;
 
-  // 2차 시도 (500ms 대기 후 재시도)
-  console.warn('[compress] 검은 캔버스 감지 — 재시도');
+  // 2차: Blob URL <img> (500ms 대기 후)
+  console.warn('[compress] ImageBitmap 통과 안 됨 — Blob URL 시도');
   await new Promise(r => setTimeout(r, 500));
-  result = await drawAndEncode();
+  result = await tryBlobUrl();
   if (result) return result;
 
-  // 그래도 안 되면 압축 포기 — 원본 반환 (백엔드 8MB 제한 내라면 통과)
-  console.warn('[compress] 재시도 실패 — 원본 그대로 전송');
+  // 3차: 한 번 더 Blob URL (캐시/메모리 정착 대기)
+  console.warn('[compress] Blob URL 통과 안 됨 — 한 번 더 시도');
+  await new Promise(r => setTimeout(r, 800));
+  result = await tryBlobUrl();
+  if (result) return result;
+
+  // 최종: 압축 포기 — 원본 그대로 전송 (백엔드 8MB 제한 내면 OK)
+  console.warn('[compress] 모든 시도 실패 — 원본 그대로 전송');
   return { base64: b64, mimeType: srcMime };
 }
 
