@@ -1,18 +1,19 @@
 // api/auth/cafe24/callback.js
-// v28: fetchCustomerIdentifier (카페24 공식 진리 ID) 우선 사용
-//   - 자사몰 직접 가입자와 소셜 로그인 회원 모두 동일 형식 ID 보장
-//   - 카페24 권한선택(쇼핑몰 고객) "고객 식별자(Customer Identifier)" 권한 활용
-//   - 1차: fetchCustomerIdentifier → user_identifier (공식 진리 ID)
-//   - 폴백: tokens.user_id (API 일시 장애 시 안전망)
+// v29 (롤백 + 정리): tokens.user_id만 사용. fetchCustomerIdentifier 완전 제거.
 //
-// v27까지의 동작: tokens.user_id 우선 사용 → 자사몰 직접 가입자 ID 형식 불확실
-// v28 변경: fetchCustomerIdentifier 우선 → 카페24 공식 통일 ID 보장
+// 변경 이력:
+//   v27: tokens.user_id 우선 + fetchCustomerIdentifier 폴백
+//   v28: fetchCustomerIdentifier 우선 → 실측 결과 호출마다 다른 임시값 반환 확인
+//        (08:07:03 → C2f3bbdf... / 08:08:54 → C8dbdb5b... / 동일 카카오 계정)
+//   v29: tokens.user_id만 사용. fetchCustomerIdentifier 폴백도 제거 (위험).
+//
+// 근거:
+//   - tokens.user_id (예: 3677479709@k, 20988042@n) = 카페24의 영구 회원 식별자
+//   - 결제 webhook order.member_id와 100% 동일 형식 = 적립 매칭 가능
+//   - fetchCustomerIdentifier 의 user_identifier = 세션마다 다른 임시값 (영구 ID 아님)
 
 import crypto from 'node:crypto';
-import {
-  exchangeCustomerCode,
-  fetchCustomerIdentifier,
-} from '../../../lib/cafe24.js';
+import { exchangeCustomerCode } from '../../../lib/cafe24.js';
 import { getSupabase } from '../../../lib/supabase.js';
 import { setSessionCookie } from '../../../lib/session.js';
 
@@ -57,32 +58,18 @@ export default async function handler(req, res) {
       return redirectToApp(res, '/?auth_error=token_exchange_failed');
     }
 
-    const customerAccessToken = tokens.access_token;
-    if (!customerAccessToken) {
-      return redirectToApp(res, '/?auth_error=no_access_token');
-    }
-
-    // ★★★ v28 핵심 변경 ★★★
-    // 카페24 공식 "진리 ID" (Customer Identifier) API 먼저 호출.
-    // 자사몰 직접 가입자도 소셜 로그인 회원도 카페24 백엔드에서 동일 형식의
-    // 고유 식별자를 발급받음. 결제 webhook의 order.member_id와도 동일 형식 보장.
-    //
-    // 폴백: API 일시 장애 시 tokens.user_id 사용 (소셜 케이스는 검증됨)
-    let memberId;
-    try {
-      const identifierResp = await fetchCustomerIdentifier(customerAccessToken);
-      memberId = identifierResp?.identifier?.user_identifier;
-      console.log('[auth/cafe24/callback] identifier resolved (v28):', memberId);
-    } catch (err) {
-      console.warn('[auth/cafe24/callback] identifier fetch failed, fallback to tokens.user_id:', err?.message || err);
-      memberId = tokens.user_id;
-      console.log('[auth/cafe24/callback] member resolved via fallback:', memberId);
-    }
+    // ★★★ v29 ★★★
+    // tokens.user_id = 카페24가 발급하는 영구 회원 식별자.
+    // 예: 카카오 → 3677479709@k, 네이버 → 20988042@n, 자사몰 → marru212121 등
+    // 결제 webhook order.member_id와 동일 형식 보장.
+    const memberId = tokens.user_id;
 
     if (!memberId) {
-      console.error('[auth/cafe24/callback] no member id resolved');
+      console.error('[auth/cafe24/callback] no user_id in tokens');
       return redirectToApp(res, '/?auth_error=no_member_id');
     }
+
+    console.log('[auth/cafe24/callback] member resolved (v29):', memberId);
 
     const supabase = getSupabase();
     const { data: existing } = await supabase
