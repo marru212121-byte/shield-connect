@@ -1,12 +1,12 @@
 // api/auth/cafe24/callback.js
-// v27: tokens.user_id 를 회원 ID 로 사용 (결제 웹훅과 일치)
-//   - 카페24 토큰 응답에 user_id 가 들어있음 (예: '3677479709@k')
-//   - 이는 결제 웹훅의 order.member_id 와 정확히 같은 값
-//   - 양쪽 ID 가 일치하므로 한 회원으로 적립 가능
-//   - 추가 API 호출, 권한, 매핑 불필요
+// v28: fetchCustomerIdentifier (카페24 공식 진리 ID) 우선 사용
+//   - 자사몰 직접 가입자와 소셜 로그인 회원 모두 동일 형식 ID 보장
+//   - 카페24 권한선택(쇼핑몰 고객) "고객 식별자(Customer Identifier)" 권한 활용
+//   - 1차: fetchCustomerIdentifier → user_identifier (공식 진리 ID)
+//   - 폴백: tokens.user_id (API 일시 장애 시 안전망)
 //
-// 폴백: 어떤 이유로든 tokens.user_id 가 없으면
-//   기존처럼 fetchCustomerIdentifier 로 user_identifier 받음
+// v27까지의 동작: tokens.user_id 우선 사용 → 자사몰 직접 가입자 ID 형식 불확실
+// v28 변경: fetchCustomerIdentifier 우선 → 카페24 공식 통일 ID 보장
 
 import crypto from 'node:crypto';
 import {
@@ -62,30 +62,27 @@ export default async function handler(req, res) {
       return redirectToApp(res, '/?auth_error=no_access_token');
     }
 
-    // ★★★ v27 핵심 변경 ★★★
-    // 카페24 토큰 응답의 user_id 를 회원 ID 로 사용
-    // 형식: '{자사몰_회원번호}@{mall_code}' (예: '3677479709@k')
-    // 결제 웹훅의 order.member_id 와 정확히 동일한 형식
-    let memberId = tokens.user_id;
-
-    // 폴백: user_id 가 없는 비상 상황 (정상 흐름에선 발생 안 함)
-    if (!memberId) {
-      console.warn('[auth/cafe24/callback] tokens.user_id missing, falling back to user_identifier');
-      try {
-        const identifierResp = await fetchCustomerIdentifier(customerAccessToken);
-        memberId = identifierResp?.identifier?.user_identifier;
-      } catch (err) {
-        console.error('[auth/cafe24/callback] identifier fetch failed:', err);
-        return redirectToApp(res, '/?auth_error=identifier_fetch_failed');
-      }
+    // ★★★ v28 핵심 변경 ★★★
+    // 카페24 공식 "진리 ID" (Customer Identifier) API 먼저 호출.
+    // 자사몰 직접 가입자도 소셜 로그인 회원도 카페24 백엔드에서 동일 형식의
+    // 고유 식별자를 발급받음. 결제 webhook의 order.member_id와도 동일 형식 보장.
+    //
+    // 폴백: API 일시 장애 시 tokens.user_id 사용 (소셜 케이스는 검증됨)
+    let memberId;
+    try {
+      const identifierResp = await fetchCustomerIdentifier(customerAccessToken);
+      memberId = identifierResp?.identifier?.user_identifier;
+      console.log('[auth/cafe24/callback] identifier resolved (v28):', memberId);
+    } catch (err) {
+      console.warn('[auth/cafe24/callback] identifier fetch failed, fallback to tokens.user_id:', err?.message || err);
+      memberId = tokens.user_id;
+      console.log('[auth/cafe24/callback] member resolved via fallback:', memberId);
     }
 
     if (!memberId) {
       console.error('[auth/cafe24/callback] no member id resolved');
       return redirectToApp(res, '/?auth_error=no_member_id');
     }
-
-    console.log('[auth/cafe24/callback] member resolved:', memberId);
 
     const supabase = getSupabase();
     const { data: existing } = await supabase
