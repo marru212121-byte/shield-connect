@@ -2753,28 +2753,102 @@ async function saveToArchiveAsync(imageBase64, mimeType, prompt, aspect, yaw, pi
     if (r.ok) {
       // 갤러리 새로고침
       loadGallery();
+    } else {
+      const txt = await r.text().catch(() => '');
+      console.error('[saveToArchive] 서버 응답 실패:', r.status, txt);
     }
-  } catch (e) { /* silent — 보관 실패해도 사용자 흐름 안 끊김 */ }
+  } catch (e) {
+    // 디버깅용 로그 — 사용자 흐름은 안 끊김
+    console.error('[saveToArchive] 실패:', e?.message || e);
+  }
 }
 
 async function compressBase64Image(b64, srcMime) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      let w = img.width, h = img.height;
-      if (w > GALLERY_THUMB_MAX || h > GALLERY_THUMB_MAX) {
-        const r = Math.min(GALLERY_THUMB_MAX / w, GALLERY_THUMB_MAX / h);
-        w = Math.round(w * r); h = Math.round(h * r);
+  // ────────────────────────────────────────────────────────
+  // iOS 사파리 검은 캔버스 버그 대응
+  //   증상: 큰 base64를 <img>에 넣고 캔버스에 그린 직후 toDataURL 하면
+  //         가끔 전부 검은 이미지가 반환됨 (메모리/타이밍 이슈)
+  //   대응:
+  //     1) <img> + decode() 로 디코딩 보장
+  //     2) 1프레임 yield 후 toDataURL (메모리 정착 대기)
+  //     3) 검은 캔버스인지 픽셀 샘플링 검증
+  //     4) 검으면 한 번 재시도, 그래도 검으면 압축 포기하고 원본 반환
+  // ────────────────────────────────────────────────────────
+
+  function isMostlyBlack(canvas) {
+    try {
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+      // 9개 지점 샘플링 (가운데 + 4모서리 + 4중간점)
+      const pts = [
+        [w*0.5, h*0.5],
+        [w*0.1, h*0.1], [w*0.9, h*0.1], [w*0.1, h*0.9], [w*0.9, h*0.9],
+        [w*0.5, h*0.1], [w*0.5, h*0.9], [w*0.1, h*0.5], [w*0.9, h*0.5],
+      ];
+      let darkCount = 0;
+      for (const [x, y] of pts) {
+        const d = ctx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data;
+        if (d[0] < 8 && d[1] < 8 && d[2] < 8) darkCount++;
       }
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      const dataUrl = canvas.toDataURL('image/jpeg', GALLERY_THUMB_QUALITY);
-      resolve({ base64: dataUrl.split(',')[1], mimeType: 'image/jpeg' });
-    };
-    img.onerror = () => reject(new Error('compress failed'));
-    img.src = `data:${srcMime};base64,${b64}`;
-  });
+      // 9개 중 8개 이상이 거의 검은색이면 캔버스가 깨졌다고 판단
+      return darkCount >= 8;
+    } catch (e) {
+      return false; // 검증 실패하면 그냥 통과
+    }
+  }
+
+  async function drawAndEncode() {
+    const img = new Image();
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = () => reject(new Error('image load failed'));
+      img.src = `data:${srcMime};base64,${b64}`;
+    });
+
+    // iOS Safari: decode() 호출로 디코딩 완료 보장 (지원 안 하면 무시)
+    if (typeof img.decode === 'function') {
+      try { await img.decode(); } catch (_) {}
+    }
+
+    // 한 프레임 yield — 메모리 정착 대기 (iOS Safari 핵심)
+    await new Promise(r => requestAnimationFrame(() => r()));
+
+    const canvas = document.createElement('canvas');
+    let w = img.naturalWidth || img.width;
+    let h = img.naturalHeight || img.height;
+    if (w > GALLERY_THUMB_MAX || h > GALLERY_THUMB_MAX) {
+      const r = Math.min(GALLERY_THUMB_MAX / w, GALLERY_THUMB_MAX / h);
+      w = Math.round(w * r); h = Math.round(h * r);
+    }
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    // 흰색 배경 먼저 칠해서 알파 채널 깨짐 대비
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(img, 0, 0, w, h);
+
+    // 검은 캔버스 검증
+    if (isMostlyBlack(canvas)) {
+      return null; // 재시도 신호
+    }
+
+    const dataUrl = canvas.toDataURL('image/jpeg', GALLERY_THUMB_QUALITY);
+    return { base64: dataUrl.split(',')[1], mimeType: 'image/jpeg' };
+  }
+
+  // 1차 시도
+  let result = await drawAndEncode();
+  if (result) return result;
+
+  // 2차 시도 (500ms 대기 후 재시도)
+  console.warn('[compress] 검은 캔버스 감지 — 재시도');
+  await new Promise(r => setTimeout(r, 500));
+  result = await drawAndEncode();
+  if (result) return result;
+
+  // 그래도 안 되면 압축 포기 — 원본 반환 (백엔드 8MB 제한 내라면 통과)
+  console.warn('[compress] 재시도 실패 — 원본 그대로 전송');
+  return { base64: b64, mimeType: srcMime };
 }
 
 /* ═══════════════════════════════════════════════════ 탭 전환 (갤러리 / 즐겨찾기) ═══════════════════════════════════════════════════ */
