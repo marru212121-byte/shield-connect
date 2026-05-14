@@ -2396,7 +2396,7 @@ async function generateImage() {
     return;
   }
   const userPrompt = document.getElementById('promptInput').value.trim();
-  if (!userPrompt) { showToast('프롬프트를 입력해주세요'); return; }
+  if (!userPrompt) { showError('프롬프트를 입력해주세요.'); return; }
   const credits = window.SESSION.member?.credits_remaining ?? 0;
   if (credits < 1) {
     // 사전 체크 — 크레딧 모달 띄움
@@ -2831,13 +2831,14 @@ if ('requestIdleCallback' in window) {
 .credit-modal-btn.charge{background:#1A1814;color:#fff}
 
 /* 비로그인 안내 카드 */
-.hairo-login-card{display:none;margin:24px 16px;padding:28px 24px;background:#fff;border-radius:14px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+.hairo-login-card{display:none;margin:24px 16px;padding:36px 24px 28px;background:#0A0A0A;border:1px solid rgba(199,240,80,0.18);border-radius:16px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,0.3)}
 .hairo-login-card.show{display:block}
-.hairo-login-card .ic{width:44px;height:44px;margin:0 auto 12px;border-radius:50%;background:#F5EDE2;display:flex;align-items:center;justify-content:center;color:#8B7355}
-.hairo-login-card .tit{font-size:15px;font-weight:700;color:#1C1917;margin-bottom:6px;letter-spacing:-0.3px}
-.hairo-login-card .desc{font-size:13px;color:#6B5D4E;line-height:1.7;margin-bottom:18px}
-.hairo-login-card .desc b{color:#8B7355;font-weight:700}
-.hairo-login-card .btn{display:inline-block;padding:11px 32px;background:#1A1814;color:#fff;text-decoration:none;border-radius:11px;font-size:13px;font-weight:700;letter-spacing:-0.2px}
+.hairo-login-card .ic{width:48px;height:48px;margin:0 auto 14px;border-radius:50%;background:rgba(199,240,80,0.1);border:1px solid rgba(199,240,80,0.25);display:flex;align-items:center;justify-content:center;color:#C7F050}
+.hairo-login-card .tit{font-size:15px;font-weight:700;color:#fff;margin-bottom:8px;letter-spacing:-0.3px}
+.hairo-login-card .desc{font-size:12.5px;color:rgba(255,255,255,0.6);line-height:1.7;margin-bottom:20px}
+.hairo-login-card .desc b{color:#C7F050;font-weight:700}
+.hairo-login-card .btn{display:inline-block;padding:12px 36px;background:#C7F050;color:#0A0A0A;text-decoration:none;border-radius:12px;font-size:13.5px;font-weight:700;letter-spacing:-0.2px;-webkit-tap-highlight-color:transparent;transition:opacity .15s, transform .15s}
+.hairo-login-card .btn:active{opacity:.85;transform:scale(.97)}
 </style>
 
 <div class="credit-modal" id="creditModal" aria-hidden="true">
@@ -2849,8 +2850,7 @@ if ('requestIdleCallback' in window) {
       <span id="creditModalRemaining"></span>
     </div>
     <div class="credit-modal-actions">
-      <button type="button" class="credit-modal-btn cancel" onclick="closeCreditModal()">닫기</button>
-      <a href="./charge.html" class="credit-modal-btn charge">충전하기</a>
+      <button type="button" class="credit-modal-btn charge" onclick="closeCreditModal();openChargeModal();return false;">확인</button>
     </div>
   </div>
 </div>
@@ -2858,11 +2858,7 @@ if ('requestIdleCallback' in window) {
 <!-- ════════════ 충전 모달 통합 ════════════ -->
 <script src="./charge-modal.js"></script>
 <script>
-/* 기존 잔액부족 모달(openCreditModal) → 새 충전 모달(openChargeModal)로 라우팅 */
-(function(){
-  if (typeof window.openChargeModal !== 'function') return;
-  window.openCreditModal = function(){ window.openChargeModal(); };
-})();
+/* 크레딧 부족 모달은 그대로 표시. [확인] 버튼이 안내 카드를 띄움 */
 </script>
 
 </body>
