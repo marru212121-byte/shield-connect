@@ -15,6 +15,7 @@
 
 import { getSessionFromRequest } from '../lib/session.js';
 import { getSupabase } from '../lib/supabase.js';
+import { logSuccess, logFailure, logAiCall } from '../lib/ai-log-helper.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
@@ -53,6 +54,18 @@ export default async function handler(req, res) {
   const wantStream = body.stream === true;
   const supabase = getSupabase();
 
+  // ─── ai_call_logs 용 측정 변수 ──────────────────────────
+  const startTime = Date.now();
+  const promptLength = Array.isArray(messages)
+    ? messages.reduce((sum, m) => {
+        if (typeof m?.content === 'string') return sum + m.content.length;
+        if (Array.isArray(m?.content)) {
+          return sum + m.content.reduce((s, c) => s + (c?.text?.length || 0), 0);
+        }
+        return sum;
+      }, 0)
+    : 0;
+
   // ─── 3. 크레딧 차감 (RPC) — skipCharge면 건너뜀 ─────────────
   let analysisRef = null;
   let result = null;
@@ -90,6 +103,18 @@ export default async function handler(req, res) {
       }
 
       if (reason === 'insufficient_credits' || remaining <= 0) {
+        await logAiCall({
+          member_id: memberId,
+          model: 'sonnet',
+          stage: stage || null,
+          status: 'error',
+          user_message: '크레딧이 부족해요. 충전 후 이용해주세요.',
+          internal_reason: 'insufficient_credits',
+          alert_level: 'info',
+          error_code: '402',
+          duration_ms: Date.now() - startTime,
+          prompt_length: promptLength,
+        });
         return res.status(402).json({
           code: 'insufficient_credits',
           message: '크레딧이 부족해요. 충전 후 이용해주세요.',
@@ -131,6 +156,16 @@ export default async function handler(req, res) {
     if (!skipCharge) {
       await refundCredit(supabase, memberId, analysisRef, result.is_admin);
     }
+    await logFailure({
+      member_id: memberId,
+      model: 'sonnet',
+      stage: stage || null,
+      err,
+      user_message: '지금 많은 분이 사용 중이에요. 30초 후 다시 시도해주세요.',
+      duration_ms: Date.now() - startTime,
+      prompt_length: promptLength,
+      refunded: !skipCharge,
+    });
     return res.status(502).json({
       code: 'busy',
       message: '지금 많은 분이 사용 중이에요. 30초 후 다시 시도해주세요.\n크레딧은 차감되지 않았습니다.',
@@ -143,6 +178,16 @@ export default async function handler(req, res) {
     if (!skipCharge) {
       await refundCredit(supabase, memberId, analysisRef, result.is_admin);
     }
+    await logFailure({
+      member_id: memberId,
+      model: 'sonnet',
+      stage: stage || null,
+      err: { message: errorText || `HTTP ${anthropicResponse.status}`, status: anthropicResponse.status },
+      user_message: '지금 많은 분이 사용 중이에요. 30초 후 다시 시도해주세요.',
+      duration_ms: Date.now() - startTime,
+      prompt_length: promptLength,
+      refunded: !skipCharge,
+    });
     return res.status(502).json({
       code: 'busy',
       message: '지금 많은 분이 사용 중이에요. 30초 후 다시 시도해주세요.\n크레딧은 차감되지 않았습니다.',
@@ -151,6 +196,15 @@ export default async function handler(req, res) {
 
   // ─── 5-A. 스트리밍 응답 (SSE 릴레이) ────────────────────────
   if (wantStream) {
+    // 응답 시작 = 호출 성공으로 간주
+    await logSuccess({
+      member_id: memberId,
+      model: 'sonnet',
+      stage: stage || null,
+      duration_ms: Date.now() - startTime,
+      prompt_length: promptLength,
+    });
+
     res.writeHead(200, {
       'Content-Type': 'text/event-stream; charset=utf-8',
       'Cache-Control': 'no-cache, no-transform',
@@ -178,6 +232,13 @@ export default async function handler(req, res) {
 
   // ─── 5-B. 일반(non-stream) 응답 ────────────────────────────
   const aiData = await anthropicResponse.json();
+  await logSuccess({
+    member_id: memberId,
+    model: 'sonnet',
+    stage: stage || null,
+    duration_ms: Date.now() - startTime,
+    prompt_length: promptLength,
+  });
   return res.status(200).json({
     content: aiData.content,
     credits_remaining: skipCharge ? undefined : result.credits_remaining,

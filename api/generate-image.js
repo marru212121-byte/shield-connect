@@ -24,6 +24,7 @@
 import { getSessionFromRequest } from '../lib/session.js';
 import { getSupabase } from '../lib/supabase.js';
 import { getVertexAccessToken, getProjectId } from '../lib/vertex-auth.js';
+import { logSuccess, logFailure, logAiCall } from '../lib/ai-log-helper.js';
 
 // ─── Vertex AI 엔드포인트 (1차/2차) ──────────────────────────────
 const VERTEX_MODEL = 'gemini-3.1-flash-image-preview';
@@ -154,6 +155,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ code: 'method_not_allowed' });
   }
 
+  // ai_call_logs 측정 시작
+  const startTime = Date.now();
+
   // ─── 1. 세션 검증 ────────────────────────────────────────────
   const session = getSessionFromRequest(req);
   if (!session?.memberId) {
@@ -243,6 +247,17 @@ export default async function handler(req, res) {
       return res.status(401).json({ code: 'not_authenticated', message: '로그인이 만료되었어요. 다시 로그인해주세요.' });
     }
     if (reason === 'insufficient_credits' || remaining <= 0) {
+      await logAiCall({
+        member_id: memberId,
+        model: 'nanobanana',
+        stage: 'image',
+        status: 'error',
+        user_message: '크레딧이 부족해요. 충전 후 이용해주세요.',
+        internal_reason: 'insufficient_credits',
+        alert_level: 'info',
+        error_code: '402',
+        duration_ms: Date.now() - startTime,
+      });
       return res.status(402).json({ code: 'insufficient_credits', message: '크레딧이 부족해요. 충전 후 이용해주세요.', credits_remaining: remaining });
     }
     console.error('[generate-image] unknown consume reason:', result);
@@ -385,6 +400,19 @@ export default async function handler(req, res) {
           console.error(`[generate-image] all fallbacks failed: ${e4.name} - ${e4.message}`);
           await refundCredit(supabase, memberId, generationRef, result.is_admin);
 
+          await logFailure({
+            member_id: memberId,
+            model: 'nanobanana',
+            route: null,
+            stage: 'image',
+            err: e4,
+            user_message: '지금 많은 분이 사용 중이에요. 30초 후 다시 시도해주세요.',
+            duration_ms: Date.now() - startTime,
+            prompt_length: typeof userPrompt === 'string' ? userPrompt.length : null,
+            refunded: !result.is_admin,
+            allFallbacksFailed: true,
+          });
+
           // 모든 에러 케이스 통일 — 디자이너는 다시 시도하면 됨
           return res.status(503).json({
             code: 'busy',
@@ -398,6 +426,28 @@ export default async function handler(req, res) {
   // ─── 7. 응답에서 이미지 추출 ────────────────────────────────
   if (!imagePart || !imagePart.data) {
     await refundCredit(supabase, memberId, generationRef, result.is_admin);
+
+    // route 매핑: 'vertex-seoul-stream' → 'vertex-seoul' 등
+    const routeForLog = route?.startsWith('vertex-seoul') ? 'vertex-seoul'
+                      : route?.startsWith('vertex-global') ? 'vertex-global'
+                      : route?.startsWith('legacy') ? 'legacy'
+                      : null;
+
+    await logAiCall({
+      member_id: memberId,
+      model: 'nanobanana',
+      route: routeForLog,
+      stage: 'image',
+      status: 'safety_block',
+      user_message: '제한된 콘텐츠로 분류됐어요. 참조 사진/프롬프트를 변경 후 시도해주세요.',
+      internal_reason: 'safety_block',
+      alert_level: 'info',
+      raw_error: `finishReason: ${finishReason || 'unknown'}`,
+      error_code: 'SAFETY',
+      duration_ms: Date.now() - startTime,
+      prompt_length: typeof userPrompt === 'string' ? userPrompt.length : null,
+    });
+
     // 안전 필터 / 제한 콘텐츠 / 텍스트만 반환 → 모두 통일 메시지 (사용자에겐 동일한 액션이 답)
     return res.status(422).json({
       code: 'content_blocked',
@@ -407,6 +457,21 @@ export default async function handler(req, res) {
   }
 
   // ─── 8. 성공 응답 ───────────────────────────────────────────
+  {
+    const routeForLog = route?.startsWith('vertex-seoul') ? 'vertex-seoul'
+                      : route?.startsWith('vertex-global') ? 'vertex-global'
+                      : route?.startsWith('legacy') ? 'legacy'
+                      : null;
+    await logSuccess({
+      member_id: memberId,
+      model: 'nanobanana',
+      route: routeForLog,
+      stage: 'image',
+      duration_ms: Date.now() - startTime,
+      prompt_length: typeof userPrompt === 'string' ? userPrompt.length : null,
+    });
+  }
+
   return res.status(200).json({
     imageBase64: imagePart.data,
     mimeType: imagePart.mime_type || imagePart.mimeType || 'image/png',
