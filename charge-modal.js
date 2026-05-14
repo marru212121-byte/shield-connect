@@ -347,12 +347,56 @@
     toastTimer = setTimeout(hideToast, 3500);
   }
 
+  /* 신규 가입 환영 토스트 (charge 토스트와 동일 컴포넌트 재사용) */
+  function showSignupToast() {
+    init();
+    var t = document.getElementById('sc-charge-toast');
+    if (!t) return;
+    document.getElementById('sc-toast-line1').textContent = '환영합니다! 1크레딧이 지급되었어요';
+    document.getElementById('sc-toast-line2').textContent = 'HAIRO 사진 1장 무료로 사용해보세요';
+    t.style.display = 'block';
+    t.style.animation = 'sc-toast-in 0.3s ease';
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(hideToast, 4000);
+  }
+
   function hideToast() {
     var t = document.getElementById('sc-charge-toast');
     if (!t) return;
     t.style.animation = 'sc-toast-out 0.25s ease forwards';
     if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; }
     setTimeout(function () { t.style.display = 'none'; }, 260);
+  }
+
+  /* 신규 가입 토스트 — 회원 단위 마크. 한 번 보면 해당 폰에서 다신 안 뜸 */
+  var LS_SIGNUP_TOAST_PREFIX = 'sc_signup_toast_seen:';
+
+  function checkSignupBonusToast() {
+    /* 충전 토스트가 우선 — 이미 마크 있으면 그쪽에서 처리 */
+    try {
+      if (localStorage.getItem(LS_PRE_BALANCE) !== null) return;
+    } catch (e) {}
+
+    fetch('/api/customer/me', { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || !data.member_id) return;
+
+        /* 조건: 보너스 받음 + 결제 0 + 사용 0 (= 진짜 신규) */
+        if (!data.signup_bonus_given) return;
+        if ((data.total_charged || 0) > 0) return;
+        if ((data.total_used    || 0) > 0) return;
+
+        var key = LS_SIGNUP_TOAST_PREFIX + data.member_id;
+        try {
+          if (localStorage.getItem(key)) return; /* 이미 봤음 */
+          localStorage.setItem(key, '1');
+        } catch (e) { return; }
+
+        /* charge 토스트와 충돌 안 나도록 약간 지연 */
+        setTimeout(showSignupToast, 600);
+      })
+      .catch(function () {});
   }
 
   function checkChargeReturn() {
@@ -399,10 +443,11 @@
   }
 
   document.addEventListener('visibilitychange', function () {
-    if (!document.hidden) checkChargeReturn();
+    if (!document.hidden) { checkChargeReturn(); checkSignupBonusToast(); }
   });
   window.addEventListener('pageshow', function () {
     checkChargeReturn();
+    checkSignupBonusToast();
   });
 
   window.openChargeModal   = openChargeModal;
@@ -413,9 +458,11 @@
     document.addEventListener('DOMContentLoaded', function () {
       init();
       checkChargeReturn();
+      checkSignupBonusToast();
     });
   } else {
     init();
     checkChargeReturn();
+    checkSignupBonusToast();
   }
 })();
