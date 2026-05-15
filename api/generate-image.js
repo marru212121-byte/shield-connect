@@ -9,7 +9,7 @@
 //   2. 1크레딧 차감
 //   3. 프롬프트 합성 (4축 직교):
 //      [무드] → [프레이밍] → [앵글(가이드)] → [디자이너 MAIN] → [해상도]
-//      ⭐ 무드 = 'hair_skin_precision'/'editorial_lookbook'/'y2k'/null(자유)
+//      ⭐ 무드 = 'natural'/'editorial_lookbook'/'y2k'/null(자유 입력)
 //      ⭐ 프레이밍 = 'chest_up'/'upper_body'/'knee_up'/null
 //      ⭐ 무드 null = 코어 X = 카탈로그/제품 자유 모드
 //      ⭐ 디자이너 MAIN = 가장 강한 위치 (시선/표정 우선)
@@ -56,81 +56,42 @@ const MAX_REFERENCES = 5;
 // 디자이너가 무드 안 고르면(`null`) 코어 X = 완전 자유 (카탈로그/제품용)
 // 무드 선택 시 해당 프리셋이 코어 역할도 함 (피부/머리 디테일 포함)
 const MOOD_PRESETS = {
-  // 헤어·피부 정밀 — 시술 검토용
-  hair_skin_precision: `photorealistic image,
-authentic raw photo quality,
+  // 룩북 — 잡지 화보 톤. 포트폴리오/매장 비주얼/SNS 마케팅
+  editorial_lookbook: `실사 사진,
+머리카락 한 올 한 올 보임,
+자연스러운 머리 윤기,
+사실적인 모근 밀도,
+인플루언서 소프트 리터치,
+살짝 이상화된 매끈한 피부,
+입술 펄 광택,
+하이엔드 패션 화보,
+미디엄 포맷 카메라 + 프라임 렌즈,
+얕은 심도,
+부드러운 방향성 조명,
+정제된 컬러 그레이딩,
+미세한 필름 그레인`,
 
-smooth natural skin with very fine pore detail,
-flawless yet realistic skin,
-no plastic doll-like skin,
-no acne, no pimples, no scars, no blemishes,
+  // 네츄럴 — 스마트폰 일상 톤. 자연스럽고 친근
+  natural: `실사 사진,
+머리카락 한 올 한 올 보임,
+자연스러운 머리 윤기,
+사실적인 모근 밀도,
+인플루언서 소프트 리터치,
+살짝 이상화된 매끈한 피부,
+입술 펄 광택,
+스마트폰 카메라로 촬영한듯한 사진,
+미세한 노이즈입자 디지털 노이즈`,
 
-individual hair strand visibility,
-visible hair gloss and natural shine,
-a few subtle flyaway strands near hairline,
-realistic hair root density,
-
-natural facial asymmetry,
-realistic catchlight in eyes,
-authentic micro-expressions,
-
-studio or salon natural lighting,
-neutral color tone,
-soft shadows,
-
-no AI smoothing artifacts,
-authentic raw photo grain`,
-
-  // 화보·룩북 — 포트폴리오/매장 비주얼/SNS 마케팅
-  editorial_lookbook: `photorealistic image,
-high-end fashion editorial aesthetic,
-single frame composition,
-
-refined color grading,
-warm highlights with cool shadows,
-balanced contrast with rich blacks,
-soft directional lighting,
-
-clean polished skin,
-editorial-grade skin tone finish,
-defined hair detail with sharp strand separation,
-precise hair texture rendering,
-
-shot on medium format camera with prime lens,
-shallow depth of field with smooth bokeh,
-sharp clear focus on subject,
-
-fine subtle film grain,
-print-quality magazine finish,
-refined studio atmosphere or minimal salon environment,
-professional lighting setup`,
-
-  // Y2K — 트렌디 SNS / 인플루언서 룩
-  y2k: `photorealistic image,
-2000s korean influencer aesthetic,
-single frame composition,
-
-warm peach and pink tones,
-soft pinkish skin glow,
-slightly idealized smooth skin,
-subtle natural blush on cheeks and nose tip,
-glossy lip pearl shine,
-
-pearl highlight on hair strands,
-soft hair sheen,
-gentle flyaway strands,
-
-warm indoor evening lighting,
-yellow-pink ambient warmth,
-soft glow filter,
-
-2000s digital camera nostalgia,
-slight film grain texture,
-vintage digicam color palette,
-
-trendy korean instagram aesthetic,
-influencer-style soft retouch,
-emotional warm atmosphere`,
+  // Y2K — 2000년대 한국 인플루언서 룩. 트렌디 SNS용
+  y2k: `2000년대 디카 노스탤지어,
+미세 필름 그레인,
+빈티지 디카 컬러 팔레트,
+인플루언서 소프트 리터치,
+살짝 이상화된 매끈한 피부,
+입술 펄 광택,
+부드러운 머리 윤기,
+잔머리,
+소프트 글로우 필터`,
 };
 
 // ─── 프레이밍 프리셋 ────────────────────────────────────────────
@@ -182,8 +143,8 @@ export default async function handler(req, res) {
     aspectRatio,
     anglePrompt,
     angle,
-    mood,        // ⭐ NEW: 'hair_skin_precision' | 'editorial_lookbook' | 'y2k' | null
-    framing,     // ⭐ NEW: 'chest_up' | 'upper_body' | 'knee_up' | null
+    mood,        // ⭐ 'natural' | 'editorial_lookbook' | 'y2k' | null
+    framing,     // ⭐ 'chest_up' | 'upper_body' | 'knee_up' | null
     references,
   } = body;
 
