@@ -108,16 +108,17 @@
     .account-logout-btn{padding:8px 18px;background:transparent;color:#888;border:1.5px solid #e5e5e0;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;-webkit-tap-highlight-color:transparent}
     .account-logout-btn:active{border-color:#1A1814;color:#1A1814}
 
-    /* ════════════ 로그인/로그아웃 스피너 (v6, 2026-05-15) ════════════ */
-    /* 회전 원 — 라임색, 버튼 안에서 회전 */
-    .sc-spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(199,240,80,0.25);border-top-color:#C7F050;border-radius:50%;animation:sc-spin .8s linear infinite;vertical-align:middle}
-    .sc-spinner.dark{border:2px solid rgba(26,24,20,0.2);border-top-color:#1A1814}
-    @keyframes sc-spin{to{transform:rotate(360deg)}}
+    /* ════════════ 로그인/로그아웃 스피너 (v6, 2026-05-15 / 속도 0.2s — 2026-05-15 업데이트) ════════════ */
+    /* 회전 원 — 라임색, 빠른 회전(찰나에도 보이도록) */
+    .sc-spinner{display:inline-block;width:16px;height:16px;border:2.5px solid rgba(199,240,80,0.2);border-top-color:#C7F050;border-radius:50%;-webkit-animation:sc-spin 0.2s linear infinite;animation:sc-spin 0.2s linear infinite;vertical-align:middle}
+    .sc-spinner.dark{border:2.5px solid rgba(26,24,20,0.2);border-top-color:#1A1814}
+    @-webkit-keyframes sc-spin{to{-webkit-transform:rotate(360deg);transform:rotate(360deg)}}
+    @keyframes sc-spin{to{-webkit-transform:rotate(360deg);transform:rotate(360deg)}}
 
     /* 클릭 중 상태 — 텍스트 숨기고 스피너만 (버튼 크기 유지) */
     .is-busy{pointer-events:none;opacity:.85;position:relative}
     .is-busy > .sc-btn-label{visibility:hidden}
-    .is-busy > .sc-spinner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+    .is-busy > .sc-spinner{position:absolute;top:50%;left:50%;-webkit-transform:translate(-50%,-50%);transform:translate(-50%,-50%)}
 
     /* ════════════ 첫 로딩 스켈레톤 ════════════ */
     /* 잔액 자리 회색 막대 — 0원/로그인 깜빡임 방지 */
@@ -125,6 +126,28 @@
     .sc-skeleton.light{background:linear-gradient(90deg,rgba(0,0,0,0.04) 0%,rgba(0,0,0,0.10) 50%,rgba(0,0,0,0.04) 100%);background-size:200% 100%}
     .sc-skeleton-pill{width:108px;height:30px;border-radius:18px}
     @keyframes sc-skel-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+    /* ════════════ 메뉴 진입 오버레이 (v6.1, 2026-05-15) ════════════ */
+    /* HAIRO/컬러/컷 카드 클릭 시 화면 전체 반투명 + 중앙 스피너 */
+    #sc-page-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(10,10,10,0.7);z-index:99998;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;-webkit-flex-direction:column;flex-direction:column;opacity:0;-webkit-transition:opacity 0.15s ease;transition:opacity 0.15s ease}
+    #sc-page-overlay.show{display:-webkit-flex;display:flex;opacity:1}
+    #sc-page-overlay .sc-overlay-spinner{width:30px;height:30px;border:3px solid rgba(199,240,80,0.2);border-top-color:#C7F050;border-radius:50%;-webkit-animation:sc-spin 0.2s linear infinite;animation:sc-spin 0.2s linear infinite}
+
+    /* ════════════ 첫 진입 스플래시 (v6.1) — 배너 가운데 1초 표시 후 홈 위치로 모핑 ════════════ */
+    #sc-splash{position:fixed;top:0;left:0;right:0;bottom:0;background:#0A0A0A;z-index:100000;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center}
+    #sc-splash-img{max-width:88%;width:88%;height:auto;display:block;-webkit-transform-origin:center center;transform-origin:center center;-webkit-transition:-webkit-transform 0.42s cubic-bezier(0.4,0,0.2,1);transition:transform 0.42s cubic-bezier(0.4,0,0.2,1)}
+    #sc-splash.hide{opacity:0;-webkit-transition:opacity 0.18s ease;transition:opacity 0.18s ease;pointer-events:none}
+    /* 안전장치 — JS 비활성/이미지 실패 시 1.8초 후 강제 fade out */
+    #sc-splash{-webkit-animation:sc-splash-safety 2.2s ease forwards;animation:sc-splash-safety 2.2s ease forwards}
+    @-webkit-keyframes sc-splash-safety{0%,82%{opacity:1;visibility:visible}100%{opacity:0;visibility:hidden}}
+    @keyframes sc-splash-safety{0%,82%{opacity:1;visibility:visible}100%{opacity:0;visibility:hidden}}
+
+    /* 접근성 — 모션 줄이기 설정한 사용자 대응 */
+    @media (prefers-reduced-motion: reduce){
+      .sc-spinner,.sc-skeleton,#sc-page-overlay .sc-overlay-spinner{-webkit-animation-duration:1s!important;animation-duration:1s!important}
+      #sc-splash{display:none!important;-webkit-animation:none!important;animation:none!important}
+      #sc-splash-img{-webkit-transition:none!important;transition:none!important}
+    }
   </style>
 
   <style id="hairo-dark-override">
@@ -895,6 +918,19 @@
 </script>
 </head>
 <body>
+
+<!-- ════════════ 첫 진입 스플래시 (v6.1, 2026-05-15) ════════════
+     배너를 1초 가운데 표시 → 0.4초 동안 위로 줄어들며 홈 배너 자리로 이동.
+     이미지 로드 실패해도 검정 배경만 보이고 자동 폴백(2.2s 안전장치). -->
+<div id="sc-splash" aria-hidden="true">
+  <img id="sc-splash-img" src="./images/banner.jpeg" alt="" onerror="this.style.display='none'"/>
+</div>
+
+<!-- ════════════ 페이지 진입 오버레이 (v6.1) ════════════
+     HAIRO/컬러/컷 카드 클릭 시 표시. 200ms 딜레이 후 보임(빠른 진입은 깜빡임 X) -->
+<div id="sc-page-overlay" aria-hidden="true">
+  <div class="sc-overlay-spinner"></div>
+</div>
 
 <!-- ════════════════════════════════
      PAGE: HOME
@@ -1979,6 +2015,98 @@
       else renderLoggedOut();
     })
     .catch(function(){ renderLoggedOut(); });
+})();
+</script>
+
+<!-- ════════════ 첫 진입 스플래시 + 메뉴 진입 오버레이 (v6.1, 2026-05-15) ════════════ -->
+<script>
+(function(){
+  'use strict';
+
+  /* ─── A. 첫 진입 스플래시 ─────────────────────────────────────
+   * 흐름: 배너 가운데 1.0s 표시 → 0.42s 동안 줄어들며 위로 이동 → fade out
+   * 안전장치: 이미지 로드 실패 시 검정 배경만 보임 → CSS 안전 애니메이션이 2.2s 후 강제 종료
+   * 이미 한 번 본 사용자도 매번 보임 (사장님 요청대로) — 첫 1회만 보고 싶으면 sessionStorage 분기 추가 가능
+   */
+  var splash = document.getElementById('sc-splash');
+  var splashImg = document.getElementById('sc-splash-img');
+
+  if(splash){
+    // 홈 배너 자리에 도착시킬 좌표 계산: 일단 위로 살짝 + 크기 줄임 (배너 위치 정확히 안 잡혀도 자연스러움)
+    function startMorph(){
+      if(!splash) return;
+      // 1단계: 줄어들며 위로 이동 (1.0초 후 시작)
+      if(splashImg){
+        splashImg.style.webkitTransform = 'translateY(-32vh) scale(0.42)';
+        splashImg.style.transform = 'translateY(-32vh) scale(0.42)';
+      }
+      // 2단계: 0.42s 후 스플래시 자체 fade out
+      setTimeout(function(){
+        splash.classList.add('hide');
+        // 3단계: 완전히 사라진 후 DOM 제거 (메모리 정리)
+        setTimeout(function(){
+          if(splash && splash.parentNode){
+            splash.parentNode.removeChild(splash);
+          }
+        }, 250);
+      }, 420);
+    }
+
+    // 이미지가 늦게 로드되면 첫 페인트가 검정만 보일 수 있음 → 최대 1초 대기
+    var imgReady = false;
+    if(splashImg && splashImg.complete && splashImg.naturalWidth > 0){
+      imgReady = true;
+    } else if(splashImg){
+      splashImg.addEventListener('load', function(){ imgReady = true; });
+      splashImg.addEventListener('error', function(){ imgReady = true; }); // 실패해도 진행
+    }
+
+    // 정확히 1.0초 후 모핑 시작 (이미지 로드 여부 무관 — 안전장치 우선)
+    setTimeout(startMorph, 1000);
+  }
+
+  /* ─── B. 메뉴 진입 오버레이 ──────────────────────────────────
+   * HAIRO/컬러/컷 카드(href로 다른 페이지 이동)를 클릭하면:
+   *   - 200ms 동안 기다림 (캐시된 빠른 페이지는 깜빡임 없이 진입)
+   *   - 200ms 지나도 아직 페이지 이동 안 됐으면 오버레이 표시
+   *   - 페이지 이동되면 자동으로 사라짐
+   */
+  var pageOverlay = document.getElementById('sc-page-overlay');
+  if(pageOverlay){
+    var overlayTimer = null;
+
+    function showOverlayAfterDelay(){
+      if(overlayTimer) clearTimeout(overlayTimer);
+      overlayTimer = setTimeout(function(){
+        pageOverlay.classList.add('show');
+      }, 200);
+    }
+
+    // 외부 페이지로 이동하는 a 태그 클릭 감지
+    // 대상: hairo.html, analyzer.html, cut-analyzer.html, color_journey.html 등 우리 앱 내부 페이지
+    document.addEventListener('click', function(e){
+      var a = e.target.closest && e.target.closest('a');
+      if(!a) return;
+      var href = a.getAttribute('href');
+      if(!href) return;
+      // 같은 origin의 .html 페이지로 이동할 때만
+      if(href.charAt(0) === '#' || href.indexOf('javascript:') === 0) return;
+      if(href.indexOf('http') === 0 && href.indexOf(location.host) === -1) return; // 외부 사이트는 제외
+      if(href.indexOf('mailto:') === 0 || href.indexOf('tel:') === 0) return;
+      // target=_blank는 제외 (새 탭 — 현재 페이지 그대로 유지)
+      if(a.target === '_blank') return;
+      // .html로 끝나는 페이지 이동만 (정적 자산 X)
+      if(href.indexOf('.html') === -1 && href.indexOf('/api/') === -1) return;
+
+      showOverlayAfterDelay();
+    }, true);
+
+    // 페이지가 다시 보일 때 (BFCache 복귀 등) 오버레이 강제 숨김
+    window.addEventListener('pageshow', function(){
+      if(overlayTimer) clearTimeout(overlayTimer);
+      pageOverlay.classList.remove('show');
+    });
+  }
 })();
 </script>
 
