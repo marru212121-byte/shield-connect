@@ -1,17 +1,20 @@
 // api/admin/overview.js
 // ═══════════════════════════════════════════════════════════════
-// 어드민 홈 페이지 데이터 (v2)
+// 어드민 홈 페이지 데이터 (v3)
 // ═══════════════════════════════════════════════════════════════
+// 변경점 (v2 → v3):
+//   1) 결제 1건마다 4관문 검증 결과(gates) 추가
+//      - 관문 1: 웹훅 도착 — webhook_events에 그 order_id 있나
+//      - 관문 2: 회원 식별 — member_id 비어있지 않나 (게스트 아닌가)
+//      - 관문 3: 상품 매핑 — product_credits 활성 행 있나
+//      - 관문 4: DB 적립 — credit_ledger의 charge 행 자체 (이 행이 보인다는 건 적립됨)
+//   2) gates_passed 카운트 추가 (4면 정상, 미만이면 문제)
+//
 // 변경점 (v1 → v2):
-//   1) 가입 경로(자사몰/카카오/네이버) 자동 판별
-//      → ID가 '@k'면 카카오, '@n'이면 네이버, 나머지는 자사몰
-//   2) 오늘 흐름 총합 (불일치 검증)
-//      → 가입 수 = 보너스+1 행 수 ?
-//      → 결제 수 = 충전+30 행 수 ?
-//      → 차이 나면 사장님이 즉시 알아챔
-//   3) 13일 토큰 알림 제거 (cron이 자동 갱신 = 잘못된 경고였음)
-//      → 시스템 페이지에서 자세히 보면 됨. 홈에는 끌어올리지 않음
-//   4) 웹훅 수신 24h 카운트 + 마지막 시각 추가
+//   - 가입 경로 자동 판별
+//   - 오늘 흐름 총합 (불일치 검증)
+//   - 13일 토큰 알림 제거
+//   - 웹훅 수신 24h 카운트
 // ═══════════════════════════════════════════════════════════════
 
 import { requireAdmin } from '../../lib/admin-auth.js';
@@ -97,8 +100,6 @@ export default async function handler(req, res) {
     const lastWebhookAt = webhooks?.[0]?.processed_at || null;
 
     // ─── 6. 오늘 흐름 · 총합 (불일치 검증) ─────────────────
-    // 가입 수 vs 보너스 +1 지급 수 (반드시 같아야 함)
-    // 결제 수 vs 충전 +30 지급 수 (반드시 같아야 함)
     const expectedBonusCredits = (signupCount || 0) * SIGNUP_BONUS;
     const actualBonusCredits = (signups || []).reduce((sum, s) => sum + (s.amount || 0), 0);
     const expectedChargeCredits = (paymentCount || 0) * CREDITS_PER_CHARGE;
@@ -108,7 +109,53 @@ export default async function handler(req, res) {
     const chargeMismatch = expectedChargeCredits !== actualChargeCredits;
     const mismatchCount = (bonusMismatch ? 1 : 0) + (chargeMismatch ? 1 : 0);
 
-    // ─── 7. 응답 ──────────────────────────────────────────
+    // ─── 7. v3: 결제 5건 4관문 검증 (최근 5건만, 부담 적음) ───
+    const recentPayments = (payments || []).slice(0, 5);
+    const recentOrderIds = recentPayments
+      .map(p => p.reference)
+      .filter(Boolean);
+
+    // 한 번에 조회: 최근 결제의 webhook_events 존재 여부
+    let webhookOrderIdSet = new Set();
+    if (recentOrderIds.length > 0) {
+      const { data: webhookRows } = await supabase
+        .from('webhook_events')
+        .select('order_id')
+        .in('order_id', recentOrderIds);
+      webhookOrderIdSet = new Set((webhookRows || []).map(w => w.order_id));
+    }
+
+    // 상품 매핑 활성 행 1개라도 있나 (전역 검사, 결제마다 검사 X)
+    const { count: activeMappingCount } = await supabase
+      .from('product_credits')
+      .select('cafe24_product_no', { count: 'exact', head: true })
+      .eq('active', true);
+    const hasMappingActive = (activeMappingCount || 0) > 0;
+
+    // 각 결제 행에 gates 필드 추가
+    const recentPaymentsWithGates = recentPayments.map(p => {
+      const orderId = p.reference;
+      const gates = {
+        webhook: orderId ? webhookOrderIdSet.has(orderId) : false,
+        member: !!p.member_id,
+        mapping: hasMappingActive,
+        ledger: true, // 이 행이 보인다는 건 ledger에 진짜 있다는 거 (자기 자신)
+      };
+      const gatesPassed = Object.values(gates).filter(v => v === true).length;
+
+      return {
+        member_id: p.member_id,
+        provider: getProviderFromMemberId(p.member_id),
+        amount: p.amount,
+        revenue: PRICE_PER_CHARGE,
+        order_id: p.reference,
+        created_at: p.created_at,
+        gates,             // { webhook, member, mapping, ledger }
+        gates_passed: gatesPassed, // 0~4
+      };
+    });
+
+    // ─── 8. 응답 ──────────────────────────────────────────
     return res.status(200).json({
       today: {
         signups: signupCount || 0,
@@ -143,14 +190,7 @@ export default async function handler(req, res) {
         amount: s.amount,
         created_at: s.created_at,
       })),
-      recent_payments: (payments || []).slice(0, 5).map(p => ({
-        member_id: p.member_id,
-        provider: getProviderFromMemberId(p.member_id),
-        amount: p.amount,
-        revenue: PRICE_PER_CHARGE,
-        order_id: p.reference,
-        created_at: p.created_at,
-      })),
+      recent_payments: recentPaymentsWithGates,
     });
   } catch (err) {
     console.error('[admin/overview] error:', err);
