@@ -1195,55 +1195,90 @@ input, textarea { font-family: inherit; }
 .angle-badge.tl { top: 10px; left: 10px; }
 .angle-badge.tr { top: 10px; right: 10px; }
 
-/* ===== Sphere overlay (transparent ring + lime point) ===== */
+/* ===== Sphere overlay v2 (2026-05-15) — 큰 원 + 격자 + 자석 스냅 ===== */
 .angle-sphere {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 180px;
-  height: 180px;
-  margin-left: -90px;
-  margin-top: -90px;
+  width: 78%;
+  aspect-ratio: 1;
+  height: auto;
+  transform: translate(-50%, -50%);
   border-radius: 50%;
-  border: 1.5px solid rgba(199,240,80,0.55);
-  box-shadow:
-    0 0 0 0.5px rgba(199,240,80,0.18),
-    0 0 18px rgba(199,240,80,0.18);
-  background: radial-gradient(circle at 35% 30%, rgba(199,240,80,0.10), transparent 65%);
+  border: 1.2px solid rgba(199,240,80,0.85);
+  background: rgba(199,240,80,0.025);
   pointer-events: none;
   z-index: 2;
+  overflow: hidden;
 }
-.angle-sphere::before {
-  content: '';
+/* 원 안 SVG 격자 (clip-path 없이 overflow:hidden + border-radius로 자동 잘림) */
+.angle-sphere-grid {
   position: absolute;
   inset: 0;
-  border-radius: 50%;
-  border: 1px solid rgba(199,240,80,0.32);
-  transform: scale(0.62);
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
-.angle-sphere::after {
-  content: '';
+.angle-sphere-grid line {
+  stroke: rgba(199,240,80,0.22);
+  stroke-width: 0.4;
+  stroke-dasharray: 0.9 1.6;
+}
+.angle-sphere-grid line.minor {
+  stroke: rgba(199,240,80,0.10);
+  stroke-width: 0.3;
+  stroke-dasharray: 0.6 1.4;
+}
+.angle-sphere-grid circle.inner {
+  fill: none;
+  stroke: rgba(199,240,80,0.35);
+  stroke-width: 0.5;
+  stroke-dasharray: 0.8 1.4;
+}
+/* 15개 그리드 점 (yaw 5 × pitch 3) */
+.angle-grid-dot {
   position: absolute;
-  inset: 0;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
-  border: 0.5px dashed rgba(199,240,80,0.22);
-  transform: scale(0.85);
+  background: rgba(199,240,80,0.42);
+  transform: translate(-50%, -50%);
+  transition: background 140ms ease-out, width 140ms ease-out, height 140ms ease-out;
+  pointer-events: none;
+  z-index: 3;
 }
+.angle-grid-dot.center {
+  background: rgba(199,240,80,0.7);
+  width: 6px;
+  height: 6px;
+}
+.angle-grid-dot.active {
+  background: #C7F050;
+  width: 8px;
+  height: 8px;
+  box-shadow: 0 0 0 2px rgba(199,240,80,0.25);
+}
+.angle-grid-dot.disabled {
+  background: rgba(255,255,255,0.10);
+  width: 3.5px;
+  height: 3.5px;
+}
+/* 활성 점(라임 큰 점) — sphere 안에서 움직임 */
 .angle-point {
   position: absolute;
-  width: 14px;
-  height: 14px;
+  width: 11px;
+  height: 11px;
   background: var(--accent);
   border-radius: 50%;
   box-shadow:
-    0 0 0 2px rgba(199,240,80,0.25),
-    0 0 14px rgba(199,240,80,0.85),
-    0 0 28px rgba(199,240,80,0.45);
+    0 0 0 3px rgba(199,240,80,0.20),
+    0 0 12px rgba(199,240,80,0.65);
   pointer-events: none;
-  z-index: 3;
-  transition: top 120ms ease-out, left 120ms ease-out;
-  margin-left: -7px;
-  margin-top: -7px;
+  z-index: 4;
+  transition: top 220ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              left 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  margin-left: -5.5px;
+  margin-top: -5.5px;
 }
 
 /* ===== Camera info row ===== */
@@ -1675,9 +1710,9 @@ input, textarea { font-family: inherit; }
           <div class="preset-card-title">상반신</div>
           <div class="preset-card-desc">허리부터 머리까지. 어깨 라인 강조.</div>
         </button>
-        <button class="preset-card" data-framing="full_body" type="button">
-          <div class="preset-card-title">전신</div>
-          <div class="preset-card-desc">머리부터 발끝까지. 룩북·코디 포함.</div>
+        <button class="preset-card" data-framing="knee_up" type="button">
+          <div class="preset-card-title">무릎 위</div>
+          <div class="preset-card-desc">무릎부터 머리까지. 헤어 + 의상까지 함께 보임.</div>
         </button>
       </div>
     </div>
@@ -1702,8 +1737,19 @@ input, textarea { font-family: inherit; }
         <div class="angle-badge tl" id="angleBadgeFrame">FRAME 08 / 15</div>
         <div class="angle-badge tr" id="angleBadgeYaw">YAW −45°</div>
         <div class="angle-placeholder" id="anglePlaceholder">앵글 미리보기</div>
-        <!-- 투명 구 + 라임 포인트 (드래그 가이드) -->
-        <div class="angle-sphere" id="angleSphere"></div>
+        <!-- v2 (2026-05-15): 큰 원 + 격자 + 15 그리드 점 + 자석 스냅 -->
+        <div class="angle-sphere" id="angleSphere">
+          <svg class="angle-sphere-grid" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <line x1="0" y1="50" x2="100" y2="50"/>
+            <line x1="50" y1="0" x2="50" y2="100"/>
+            <line class="minor" x1="0" y1="22" x2="100" y2="22"/>
+            <line class="minor" x1="0" y1="78" x2="100" y2="78"/>
+            <line class="minor" x1="22" y1="0" x2="22" y2="100"/>
+            <line class="minor" x1="78" y1="0" x2="78" y2="100"/>
+            <circle class="inner" cx="50" cy="50" r="22"/>
+          </svg>
+          <div id="angleGridDots"></div>
+        </div>
         <div class="angle-point" id="anglePoint" style="top: 50%; left: 50%;"></div>
       </div>
       <div class="cam-info">
@@ -1845,7 +1891,7 @@ const state = {
   isDragging: false,
   refFiles: [],
   mood: null,        // ⭐ 'hair_skin_precision' | 'editorial_lookbook' | 'y2k' | null(자유)
-  framing: null,     // ⭐ 'chest_up' | 'upper_body' | 'full_body' | null
+  framing: null,     // ⭐ 'chest_up' | 'upper_body' | 'knee_up' | null (v6.1 — 전신 제거, 무릎 위 추가)
   // 결과 모달 모드: 'fresh' (방금 생성) | 'archive' (보관함 재열람)
   resultMode: 'fresh',
   currentItem: null, // 보관함 모드일 때 보고있는 아이템
@@ -2097,8 +2143,19 @@ function prefetchFrames() {
 }
 
 function findClosestFrame(yaw, pitch) {
-  let bestIdx = 0, bestDist = Infinity;
-  FRAME_COORDS.forEach((c, i) => {
+  // v2 (2026-05-15): 프레이밍에 따라 허용 프레임이 다름.
+  // upper_body/knee_up은 정면 + 좌¾ + 우¾ × 아이레벨 3개만 허용.
+  let candidates;
+  if (typeof getAllowedFrameIndices === 'function') {
+    candidates = getAllowedFrameIndices();
+  } else {
+    candidates = FRAME_COORDS.map((_, i) => i);
+  }
+
+  let bestIdx = candidates[0] || 0;
+  let bestDist = Infinity;
+  candidates.forEach((i) => {
+    const c = FRAME_COORDS[i];
     const dy = c.yaw - yaw;
     const dp = (c.pitch - pitch) * 3.5;
     const d = dy * dy + dp * dp;
@@ -2113,13 +2170,66 @@ function fmtAngle(v) {
   return sign + Math.abs(r) + '°';
 }
 
+/* ⭐ v2 (2026-05-15): sphere 내부 좌표 매핑
+   - yaw / pitch → sphere 내 % 좌표 (sphere 가운데가 0,0)
+   - 그리드 점 5×3 배치도 똑같은 함수 사용 → 그리드 점과 활성 점이 정확히 같은 좌표 */
+function yawPitchToSphereXY(yaw, pitch) {
+  // 원 반지름 = sphere 폭의 50%. 점은 그 안 90% 영역에서만 움직임 (가장자리 여유)
+  // yaw = [-90, 90] → x = [10%, 90%]
+  // pitch = [25, -25] → y = [10%, 90%] (위가 +pitch, 아래가 -pitch)
+  const xPct = 50 + (yaw / YAW_RANGE) * 40;
+  const yPct = 50 - (pitch / PITCH_RANGE) * 40;
+  return { x: xPct, y: yPct };
+}
+
+const angleGridDots = document.getElementById('angleGridDots');
+let gridDotEls = []; // FRAME_COORDS 순서와 일치
+
+function buildGridDots() {
+  if (gridDotEls.length) return;
+  FRAME_COORDS.forEach((c) => {
+    const d = document.createElement('div');
+    d.className = 'angle-grid-dot';
+    if (c.yaw === 0 && c.pitch === 0) d.classList.add('center');
+    const xy = yawPitchToSphereXY(c.yaw, c.pitch);
+    d.style.left = xy.x + '%';
+    d.style.top  = xy.y + '%';
+    angleGridDots.appendChild(d);
+    gridDotEls.push(d);
+  });
+}
+
+function refreshGridDotStates() {
+  // 허용/비허용 + 활성 표시
+  const allowed = (typeof getAllowedFrameIndices === 'function')
+    ? getAllowedFrameIndices()
+    : FRAME_COORDS.map((_, i) => i);
+  const allowedSet = new Set(allowed);
+  gridDotEls.forEach((el, i) => {
+    el.classList.remove('active');
+    if (!allowedSet.has(i)) {
+      el.classList.add('disabled');
+    } else {
+      el.classList.remove('disabled');
+    }
+  });
+  if (state.frameIdx >= 0 && gridDotEls[state.frameIdx]) {
+    gridDotEls[state.frameIdx].classList.add('active');
+    gridDotEls[state.frameIdx].classList.remove('disabled');
+  }
+}
+
 function updatePointPosition() {
-  // sphere 가운데 (50%, 50%) 기준으로, yaw/pitch 비율만큼 이동
-  // 구 반지름 80px 안에서 움직임 (아니면 사진 전체 영역)
-  const x = 50 + (state.yaw / YAW_RANGE) * 30;  // ±30%
-  const y = 50 - (state.pitch / PITCH_RANGE) * 22; // ±22%
-  anglePoint.style.left = x + '%';
-  anglePoint.style.top = y + '%';
+  // sphere 내부 좌표로 매핑 (그리드 점과 동일한 함수 사용 → 항상 정확히 그리드 위)
+  const xy = yawPitchToSphereXY(state.yaw, state.pitch);
+  // anglePoint는 sphere 안에 있으므로 sphere 기준 %
+  anglePoint.style.left = xy.x + '%';
+  anglePoint.style.top  = xy.y + '%';
+  // anglePoint를 sphere 안으로 이동 (DOM 구조상 anglePoint가 anglePreview 자식이면 sphere로 옮김)
+  if (anglePoint.parentNode !== angleSphere) {
+    angleSphere.appendChild(anglePoint);
+  }
+  refreshGridDotStates();
 }
 
 function setFrame(i) {
@@ -2147,29 +2257,49 @@ function snapToFront() {
 }
 
 angleChip.addEventListener('click', () => {
-  // 전신 프레이밍이면 앵글 사용 X
-  if (state.framing === 'full_body') {
-    showToast('전신 프레이밍에서는 앵글을 사용할 수 없어요. 가슴선/상반신에서만 가능해요.');
-    return;
-  }
+  // v2 (2026-05-15): 모든 프레이밍에서 앵글 사용 가능. 다만 상반신/무릎 위는 일부 프레임만 활성.
   openAngleSheet();
 });
 
-// 앵글 칩 disable/enable 상태 시각 업데이트
+// ⭐ v2: 프레이밍별로 사용 가능한 프레임 결정
+// 가슴선(또는 미선택): 모든 15프레임 OK
+// 상반신/무릎 위: 정면 + 좌¾ + 우¾ × 아이레벨만 (yaw 3개 × pitch 1개 = 3프레임)
+function getAllowedFrameIndices() {
+  const f = state.framing;
+  if (f === 'upper_body' || f === 'knee_up') {
+    // FRAME_COORDS는 pitch desc, yaw asc 순으로 정렬돼있음.
+    // 허용: yaw ∈ {-45, 0, +45}, pitch === 0
+    const allowed = [];
+    FRAME_COORDS.forEach((c, i) => {
+      if (c.pitch === 0 && (c.yaw === -45 || c.yaw === 0 || c.yaw === 45)) {
+        allowed.push(i);
+      }
+    });
+    return allowed;
+  }
+  // 가슴선 또는 미선택: 전체 허용
+  return FRAME_COORDS.map((_, i) => i);
+}
+
+function isFrameAllowed(idx) {
+  return getAllowedFrameIndices().indexOf(idx) >= 0;
+}
+
+// 앵글 칩 시각 상태 + 프레임 정합성 보정
 function updateAngleChipAvailability() {
-  if (state.framing === 'full_body') {
-    angleChip.classList.add('chip-disabled');
-    // 이미 앵글 켜져있으면 자동 해제
-    if (state.angleEnabled) {
-      state.angleEnabled = false;
-      state.frameIdx = -1;
-      state.yaw = 0;
-      state.pitch = 0;
-      angleChip.classList.remove('has-value');
-      angleChip.textContent = '앵글';
+  // 모든 프레이밍에서 앵글 chip 자체는 활성. (knee_up이라도 정면은 OK니까)
+  angleChip.classList.remove('chip-disabled');
+
+  // 현재 선택된 프레임이 새 프레이밍 정책에서 허용 안 되면 → 정면으로 스냅
+  if (state.angleEnabled && state.frameIdx >= 0 && !isFrameAllowed(state.frameIdx)) {
+    const frontIdx = FRAME_COORDS.findIndex(c => c.yaw === 0 && c.pitch === 0);
+    if (frontIdx >= 0) {
+      setFrame(frontIdx);
+    } else {
+      // 안전망 — 허용 프레임 중 첫 번째로
+      const allowed = getAllowedFrameIndices();
+      if (allowed.length > 0) setFrame(allowed[0]);
     }
-  } else {
-    angleChip.classList.remove('chip-disabled');
   }
 }
 
@@ -2226,7 +2356,7 @@ const framingSheet = document.getElementById('framingSheet');
 const FRAMING_LABELS = {
   chest_up: '가슴선',
   upper_body: '상반신',
-  full_body: '전신',
+  knee_up: '무릎 위',
 };
 
 function openFramingSheet() {
@@ -2267,7 +2397,10 @@ framingSheet.addEventListener('click', (e) => {
 
 function openAngleSheet() {
   buildFrameElements();
+  buildGridDots(); // ⭐ v2: 그리드 점 시각화 (첫 호출 시 한 번만)
   prefetchFrames();
+  // 현재 프레이밍의 허용 프레임으로 보정
+  if (typeof updateAngleChipAvailability === 'function') updateAngleChipAvailability();
   if (state.frameIdx < 0) snapToFront();
   else setFrame(state.frameIdx);
   angleSheet.classList.add('active');
@@ -2285,26 +2418,50 @@ angleSheet.addEventListener('click', (e) => {
 });
 
 /* --- 사진 영역 드래그 (yaw/pitch 동시) --- */
-let dragStartX = 0, dragStartY = 0, dragStartYaw = 0, dragStartPitch = 0;
-const DRAG_YAW_SENS = 1.1;
-const DRAG_PITCH_SENS = 0.9;
+/* --- 사진 영역 드래그 v2 (2026-05-15)
+   기존: anglePreview 전체에서 dx/dy로 yaw/pitch 변화량 누적
+   변경: sphere 내부 절대 좌표 → yaw/pitch 직접 계산 + 원 가장자리 clamp
+   자석 스냅은 findClosestFrame이 이미 처리 (가장 가까운 프레임으로 setFrame) */
+
+function clientToSphereYawPitch(clientX, clientY) {
+  // sphere의 화면상 사각 영역
+  const r = angleSphere.getBoundingClientRect();
+  const cx = r.left + r.width / 2;
+  const cy = r.top + r.height / 2;
+  let dx = clientX - cx;
+  let dy = clientY - cy;
+  // 원 안으로 clamp (가장자리 96% 안)
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  const maxR = (r.width / 2) * 0.96;
+  if (dist > maxR && dist > 0) {
+    dx = dx * maxR / dist;
+    dy = dy * maxR / dist;
+  }
+  // 정규화 (-1 ~ +1)
+  const nx = dx / (r.width / 2);
+  const ny = dy / (r.height / 2);
+  // yawPitchToSphereXY 의 역함수: 0.4 비율 사용 (40% 영역)
+  // x = 50 + (yaw/90)*40  → nx = (yaw/90)*0.8  → yaw = nx/0.8*90
+  // y = 50 - (pitch/25)*40 → ny = -(pitch/25)*0.8 → pitch = -ny/0.8*25
+  const yaw = Math.max(-YAW_RANGE, Math.min(YAW_RANGE, (nx / 0.8) * YAW_RANGE));
+  const pitch = Math.max(-PITCH_RANGE, Math.min(PITCH_RANGE, -(ny / 0.8) * PITCH_RANGE));
+  return { yaw, pitch };
+}
 
 function onPointerDown(e) {
   state.isDragging = true;
   anglePreview.classList.add('dragging');
   const p = e.touches ? e.touches[0] : e;
-  dragStartX = p.clientX; dragStartY = p.clientY;
-  dragStartYaw = state.yaw; dragStartPitch = state.pitch;
+  const yp = clientToSphereYawPitch(p.clientX, p.clientY);
+  const idx = findClosestFrame(yp.yaw, yp.pitch);
+  if (idx !== state.frameIdx) setFrame(idx);
   e.preventDefault();
 }
 function onPointerMove(e) {
   if (!state.isDragging) return;
   const p = e.touches ? e.touches[0] : e;
-  const dx = p.clientX - dragStartX;
-  const dy = p.clientY - dragStartY;
-  const yaw = Math.max(-YAW_RANGE, Math.min(YAW_RANGE, dragStartYaw + dx * DRAG_YAW_SENS));
-  const pitch = Math.max(-PITCH_RANGE, Math.min(PITCH_RANGE, dragStartPitch - dy * DRAG_PITCH_SENS));
-  const idx = findClosestFrame(yaw, pitch);
+  const yp = clientToSphereYawPitch(p.clientX, p.clientY);
+  const idx = findClosestFrame(yp.yaw, yp.pitch);
   if (idx !== state.frameIdx) setFrame(idx);
   e.preventDefault();
 }
