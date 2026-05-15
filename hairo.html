@@ -1634,7 +1634,6 @@ input, textarea { font-family: inherit; }
         </div>
         <button class="chip chip-action" id="moodChip" type="button">무드</button>
         <button class="chip chip-action" id="framingChip" type="button">프레이밍</button>
-        <button class="chip chip-action" id="angleChip" type="button">앵글</button>
       </div>
       <button class="btn-generate" id="generateBtn" type="button">
         <span class="spark">✦</span>생성
@@ -1719,49 +1718,7 @@ input, textarea { font-family: inherit; }
   </div>
 </div>
 
-<!-- ===== Angle Sheet ===== -->
-<div class="sheet-overlay" id="angleSheet">
-  <div class="sheet" id="angleSheetCard">
-    <div class="sheet-handle-area" id="sheetHandle">
-      <div class="sheet-handle"></div>
-    </div>
-    <div class="sheet-header">
-      <div>
-        <div class="sheet-title">angle</div>
-        <div class="sheet-subtitle">CAMERA POSITION · 15 FRAMES</div>
-      </div>
-      <button class="sheet-close" onclick="closeAngleSheet()" type="button" aria-label="닫기">×</button>
-    </div>
-    <div class="sheet-body">
-      <div class="angle-preview" id="anglePreview">
-        <div class="angle-badge tl" id="angleBadgeFrame">FRAME 08 / 15</div>
-        <div class="angle-badge tr" id="angleBadgeYaw">YAW −45°</div>
-        <div class="angle-placeholder" id="anglePlaceholder">앵글 미리보기</div>
-        <!-- v2 (2026-05-15): 큰 원 + 격자 + 15 그리드 점 + 자석 스냅 -->
-        <div class="angle-sphere" id="angleSphere">
-          <svg class="angle-sphere-grid" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            <line x1="0" y1="50" x2="100" y2="50"/>
-            <line x1="50" y1="0" x2="50" y2="100"/>
-            <line class="minor" x1="0" y1="22" x2="100" y2="22"/>
-            <line class="minor" x1="0" y1="78" x2="100" y2="78"/>
-            <line class="minor" x1="22" y1="0" x2="22" y2="100"/>
-            <line class="minor" x1="78" y1="0" x2="78" y2="100"/>
-            <circle class="inner" cx="50" cy="50" r="22"/>
-          </svg>
-          <div id="angleGridDots"></div>
-        </div>
-        <div class="angle-point" id="anglePoint" style="top: 50%; left: 50%;"></div>
-      </div>
-      <div class="cam-info">
-        <div class="cam-text">
-          <div class="cam-label">CAMERA</div>
-          <div class="cam-name" id="camName">left ¾, eye level</div>
-          <div class="cam-frame" id="camFrame">FRAME 08 / 15</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- ===== Angle Sheet (v6.1: 제거됨 — 앵글 기능 완전 삭제) ===== -->
 
 <!-- Loading -->
 <div class="modal-overlay" id="loadingModal">
@@ -2256,14 +2213,16 @@ function snapToFront() {
   setFrame(idx >= 0 ? idx : 0);
 }
 
-angleChip.addEventListener('click', () => {
-  // v6.1 (2026-05-15): 무릎 위는 앵글 차단. 가슴선/상반신은 OK.
-  if (state.framing === 'knee_up') {
-    showToast('무릎 위 프레이밍에서는 앵글이 부정확해요. 가슴선/상반신에서만 가능합니다.');
-    return;
-  }
-  openAngleSheet();
-});
+// v6.1 (2026-05-15): 앵글 chip HTML 제거됨 - addEventListener 가드
+if (angleChip) {
+  angleChip.addEventListener('click', () => {
+    if (state.framing === 'knee_up') {
+      showToast('무릎 위 프레이밍에서는 앵글이 부정확해요. 가슴선/상반신에서만 가능합니다.');
+      return;
+    }
+    openAngleSheet();
+  });
+}
 
 // ⭐ v6.1: 프레이밍별로 사용 가능한 프레임 결정
 // 가슴선(또는 미선택): 모든 15프레임 OK
@@ -2404,7 +2363,7 @@ framingSheet.querySelectorAll('.preset-card').forEach(card => {
       framingChip.classList.remove('has-value');
       framingChip.textContent = '프레이밍';
     }
-    updateAngleChipAvailability();  // ⭐ 전신이면 앵글 비활성화
+    // v6.1 (2026-05-15): 앵글 제거됨 — updateAngleChipAvailability 호출 제거
     closeFramingSheet();
   });
 });
@@ -2432,9 +2391,12 @@ function closeAngleSheet() {
 }
 window.closeAngleSheet = closeAngleSheet;
 
-angleSheet.addEventListener('click', (e) => {
-  if (e.target === angleSheet) closeAngleSheet();
-});
+// v6.1 (2026-05-15): 앵글 시트 제거됨 - 가드
+if (angleSheet) {
+  angleSheet.addEventListener('click', (e) => {
+    if (e.target === angleSheet) closeAngleSheet();
+  });
+}
 
 /* --- 사진 영역 드래그 (yaw/pitch 동시) --- */
 /* --- 사진 영역 드래그 v2 (2026-05-15)
@@ -2489,12 +2451,15 @@ function onPointerUp() {
   state.isDragging = false;
   anglePreview.classList.remove('dragging');
 }
-anglePreview.addEventListener('mousedown', onPointerDown);
-anglePreview.addEventListener('touchstart', onPointerDown, { passive: false });
-window.addEventListener('mousemove', onPointerMove);
-window.addEventListener('touchmove', onPointerMove, { passive: false });
-window.addEventListener('mouseup', onPointerUp);
-window.addEventListener('touchend', onPointerUp);
+// v6.1 (2026-05-15): 앵글 preview 제거됨 - 드래그 핸들러 가드
+if (anglePreview) {
+  anglePreview.addEventListener('mousedown', onPointerDown);
+  anglePreview.addEventListener('touchstart', onPointerDown, { passive: false });
+  window.addEventListener('mousemove', onPointerMove);
+  window.addEventListener('touchmove', onPointerMove, { passive: false });
+  window.addEventListener('mouseup', onPointerUp);
+  window.addEventListener('touchend', onPointerUp);
+}
 
 /* --- 시트 핸들로 ↓ 스와이프 닫기 (실시간 드래그 + 시각 피드백) --- */
 function setupSwipeDown(handleEl, sheetCardEl, closeFn) {
@@ -2554,7 +2519,7 @@ function setupSwipeDown(handleEl, sheetCardEl, closeFn) {
   window.addEventListener('mouseup', onUp);
   window.addEventListener('touchend', onUp);
 }
-setupSwipeDown(document.getElementById('sheetHandle'), document.getElementById('angleSheetCard'), closeAngleSheet);
+// v6.1 (2026-05-15): 앵글 시트 setupSwipeDown 제거됨
 setupSwipeDown(document.getElementById('moodHandle'), document.getElementById('moodSheetCard'), closeMoodSheet);
 setupSwipeDown(document.getElementById('framingHandle'), document.getElementById('framingSheetCard'), closeFramingSheet);
 
@@ -2591,10 +2556,7 @@ async function generateImage() {
   if (state.framing) {
     payload.framing = state.framing;
   }
-  if (state.angleEnabled) {
-    payload.anglePrompt = buildAnglePrompt(state.yaw, state.pitch);
-    payload.angle = { yaw: state.yaw, pitch: state.pitch, frameIdx: state.frameIdx };
-  }
+  // v6.1 (2026-05-15): 앵글 제거됨 — 카메라 각도/포즈는 디자이너 프롬프트에 맡김
   if (state.refFiles.length > 0) {
     payload.references = state.refFiles.map(r => ({ base64: r.base64, mimeType: r.mimeType }));
   }
@@ -2662,10 +2624,8 @@ async function generateImage() {
     // 결과 모달 = 'fresh' 모드로 표시
     showResultFresh(generatedImageUrl, state.aspect);
 
-    // 백그라운드: 압축본을 갤러리에 자동 저장
-    saveToArchiveAsync(imageBase64, generatedMime, userPrompt, state.aspect,
-      state.angleEnabled ? state.yaw : null,
-      state.angleEnabled ? state.pitch : null);
+    // 백그라운드: 압축본을 갤러리에 자동 저장 (v6.1: 앵글 제거됨 — yaw/pitch null)
+    saveToArchiveAsync(imageBase64, generatedMime, userPrompt, state.aspect, null, null);
   } catch (e) {
     stopProgressSimulation(progressTimer);
     document.getElementById('loadingModal').classList.remove('active');
@@ -3100,11 +3060,7 @@ ta.addEventListener('input', () => {
 
 /* ═══════════════════════════════════════════════════ Init ═══════════════════════════════════════════════════ */
 loadSession();
-if ('requestIdleCallback' in window) {
-  requestIdleCallback(prefetchFrames, { timeout: 3000 });
-} else {
-  setTimeout(prefetchFrames, 1500);
-}
+// v6.1 (2026-05-15): 앵글 제거됨 — prefetchFrames 호출 제거 (15장 사진 미리 로드 X)
 </script>
 
 <!-- ════════════ 크레딧 부족 모달 (분석기와 동일 디자인) ════════════ -->
