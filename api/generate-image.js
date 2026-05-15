@@ -10,7 +10,7 @@
 //   3. 프롬프트 합성 (4축 직교):
 //      [무드] → [프레이밍] → [앵글(가이드)] → [디자이너 MAIN] → [해상도]
 //      ⭐ 무드 = 'hair_skin_precision'/'editorial_lookbook'/'y2k'/null(자유)
-//      ⭐ 프레이밍 = 'chest_up'/'upper_body'/'full_body'/null
+//      ⭐ 프레이밍 = 'chest_up'/'upper_body'/'knee_up'/null
 //      ⭐ 무드 null = 코어 X = 카탈로그/제품 자유 모드
 //      ⭐ 디자이너 MAIN = 가장 강한 위치 (시선/표정 우선)
 //   4. 3단 Fallback 체인 호출:
@@ -134,10 +134,12 @@ emotional warm atmosphere`,
 };
 
 // ─── 프레이밍 프리셋 ────────────────────────────────────────────
+// v2 (2026-05-15): full_body 제거 → knee_up 추가
+// 이유: 전신은 차렷 자세 나와 의미 없음. 무릎 위 = 헤어 + 의상 같이 보이는 미디엄 풀샷.
 const FRAMING_PRESETS = {
   chest_up: 'chest-up framing, subject from upper chest to head, hair fully visible',
   upper_body: 'upper body framing, subject from waist to head with shoulders fully shown',
-  full_body: 'full body framing, head to feet visible, subject standing or seated naturally',
+  knee_up: 'medium full shot framing, subject from above the knee to head, hair and outfit visible',
 };
 
 // Vercel 설정
@@ -181,7 +183,7 @@ export default async function handler(req, res) {
     anglePrompt,
     angle,
     mood,        // ⭐ NEW: 'hair_skin_precision' | 'editorial_lookbook' | 'y2k' | null
-    framing,     // ⭐ NEW: 'chest_up' | 'upper_body' | 'full_body' | null
+    framing,     // ⭐ NEW: 'chest_up' | 'upper_body' | 'knee_up' | null
     references,
   } = body;
 
