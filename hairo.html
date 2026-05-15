@@ -1658,25 +1658,24 @@ input, textarea { font-family: inherit; }
     <div class="sheet-body">
       <div class="preset-list">
         <button class="preset-card" data-mood="" type="button">
-          <div class="preset-card-title">무드 없음 (자유)</div>
-          <div class="preset-card-desc">카탈로그·제품·공간 등 자유로운 사용. 코어 적용 안 됨.</div>
+          <div class="preset-card-title">자유 입력</div>
+          <div class="preset-card-desc">코어 없음. 디자이너 프롬프트만 적용. 카탈로그·제품 자유 모드.</div>
         </button>
-        <button class="preset-card" data-mood="hair_skin_precision" type="button">
-          <div class="preset-card-title">헤어·피부 정밀</div>
-          <div class="preset-card-desc">살롱 자연광. 모공·머릿결까지 사실적. 시술 검토용.</div>
+        <button class="preset-card" data-mood="natural" type="button">
+          <div class="preset-card-title">네츄럴</div>
+          <div class="preset-card-desc">스마트폰 일상 톤. 미세 노이즈. 자연스럽고 친근.</div>
         </button>
         <button class="preset-card" data-mood="editorial_lookbook" type="button">
-          <div class="preset-card-title">화보·룩북</div>
-          <div class="preset-card-desc">잡지 마감 톤. 따뜻 하이라이트·쿨 섀도우. 포트폴리오용.</div>
+          <div class="preset-card-title">룩북</div>
+          <div class="preset-card-desc">잡지 화보 톤. 필름 그레인 + 얕은 심도. 포트폴리오용.</div>
         </button>
         <button class="preset-card" data-mood="y2k" type="button">
           <div class="preset-card-title">Y2K</div>
-          <div class="preset-card-desc">2000년대 한국 인플루언서 룩. 핑크·피치 톤. 트렌디 SNS용.</div>
+          <div class="preset-card-desc">2000년대 디카 톤. 핑크·피치 빈티지. SNS용.</div>
         </button>
       </div>
       <div class="preset-tip">
-        <b>팁.</b> 무드를 안 고르면 코어가 빠져 자유 프롬프트만 작동해요.
-        헤어 시뮬레이션엔 무드 선택이 권장돼요.
+        <b>팁.</b> 자유 입력 = 코어 없음. 헤어 시뮬레이션엔 무드 선택 권장.
       </div>
     </div>
   </div>
@@ -1698,20 +1697,20 @@ input, textarea { font-family: inherit; }
     <div class="sheet-body">
       <div class="preset-list">
         <button class="preset-card" data-framing="" type="button">
-          <div class="preset-card-title">자동 (안 고름)</div>
+          <div class="preset-card-title">자유 입력</div>
           <div class="preset-card-desc">디자이너 프롬프트가 결정. 따로 박지 않음.</div>
         </button>
         <button class="preset-card" data-framing="chest_up" type="button">
-          <div class="preset-card-title">가슴선까지</div>
-          <div class="preset-card-desc">상체 가슴 윗부분까지. 헤어 시뮬레이션 표준.</div>
+          <div class="preset-card-title">근접</div>
+          <div class="preset-card-desc">상체 윗부분 위주. 헤어 디테일 강조.</div>
         </button>
         <button class="preset-card" data-framing="upper_body" type="button">
-          <div class="preset-card-title">상반신</div>
-          <div class="preset-card-desc">허리부터 머리까지. 어깨 라인 강조.</div>
+          <div class="preset-card-title">중간</div>
+          <div class="preset-card-desc">허리~상반신 범위. 어깨 라인 살림.</div>
         </button>
         <button class="preset-card" data-framing="knee_up" type="button">
-          <div class="preset-card-title">무릎 위</div>
-          <div class="preset-card-desc">무릎부터 머리까지. 헤어 + 의상까지 함께 보임.</div>
+          <div class="preset-card-title">풀샷</div>
+          <div class="preset-card-desc">무릎~전신 범위. 헤어 + 의상 함께.</div>
         </button>
       </div>
     </div>
@@ -1847,8 +1846,8 @@ const state = {
   frameIdx: -1,
   isDragging: false,
   refFiles: [],
-  mood: null,        // ⭐ 'hair_skin_precision' | 'editorial_lookbook' | 'y2k' | null(자유)
-  framing: null,     // ⭐ 'chest_up' | 'upper_body' | 'knee_up' | null (v6.1 — 전신 제거, 무릎 위 추가)
+  mood: null,        // ⭐ 'natural' | 'editorial_lookbook' | 'y2k' | null(자유 입력)
+  framing: null,     // ⭐ 'chest_up' | 'upper_body' | 'knee_up' | null(자유 입력)
   // 결과 모달 모드: 'fresh' (방금 생성) | 'archive' (보관함 재열람)
   resultMode: 'fresh',
   currentItem: null, // 보관함 모드일 때 보고있는 아이템
@@ -2286,8 +2285,8 @@ const moodChip = document.getElementById('moodChip');
 const moodSheet = document.getElementById('moodSheet');
 
 const MOOD_LABELS = {
-  hair_skin_precision: '헤어·피부 정밀',
-  editorial_lookbook: '화보·룩북',
+  natural: '네츄럴',
+  editorial_lookbook: '룩북',
   y2k: 'Y2K',
 };
 
@@ -2332,9 +2331,9 @@ const framingChip = document.getElementById('framingChip');
 const framingSheet = document.getElementById('framingSheet');
 
 const FRAMING_LABELS = {
-  chest_up: '가슴선',
-  upper_body: '상반신',
-  knee_up: '무릎 위',
+  chest_up: '근접',
+  upper_body: '중간',
+  knee_up: '풀샷',
 };
 
 function openFramingSheet() {
