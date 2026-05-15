@@ -265,7 +265,9 @@ export default async function handler(req, res) {
   // 해상도 비율
   promptParts.push(aspectPrompt || 'vertical 9:16 aspect ratio, portrait orientation');
 
-  const finalPrompt = promptParts.join('\n\n');
+  // ⭐ 통짜 결합 (',\n') — 힉스필드처럼 한 덩어리 프롬프트로 모델에 전달
+  //    이유: '\n\n'(빈 줄)로 분리하면 모델이 여러 섹션으로 인식해 무드 영향 약화됨
+  const finalPrompt = promptParts.join(',\n');
 
   // ─── 6. Gemini API 호출 ─────────────────────────────────────
   const parts = [];
