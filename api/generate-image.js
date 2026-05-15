@@ -12,7 +12,7 @@
 //      ⭐ 무드 = 'natural'/'editorial_lookbook'/'y2k'/null(자유 입력)
 //      ⭐ 프레이밍 = 'chest_up'/'upper_body'/'knee_up'/null
 //      ⭐ 무드 null = 코어 X = 카탈로그/제품 자유 모드
-//      ⭐ 디자이너 MAIN = 가장 강한 위치 (시선/표정 우선)
+//      ⭐ 디자이너 입력 = 본문만 (강조 라벨 제거됨 — Y2K/룩북 무드 살리기)
 //   4. 3단 Fallback 체인 호출:
 //      ① Vertex AI 서울 (asia-northeast3) Streaming     ← 1차
 //      ② Vertex AI 글로벌 (global) Streaming             ← 2차
@@ -239,7 +239,7 @@ export default async function handler(req, res) {
   //   - 무드 선택 시 → 해당 프리셋이 코어 역할 (피부/머리/조명까지 정의)
   //   - 프레이밍 선택 시 → 가슴선/상반신/전신 한 줄 추가
   //   - 앵글 = 가이드라인으로 약화 (시선/표정은 MAIN 우선)
-  //   - 디자이너 MAIN = 가장 강한 위치 + 명시적 라벨
+  //   - 디자이너 입력 = 사용자 프롬프트 본문만 (강조 라벨 X — 무드 충돌 최소화)
   const promptParts = [];
 
   // ⭐ 무드 (선택사항, 디폴트 = 무드 X = 자유)
@@ -259,8 +259,8 @@ export default async function handler(req, res) {
     );
   }
 
-  // 디자이너 입력 = 가장 강한 위치 + 명시적 라벨
-  promptParts.push(`MAIN INSTRUCTION (highest priority - follow this exactly): ${userPrompt.trim()}`);
+  // 디자이너 입력 = 사용자 프롬프트 본문만 전달 (강조 라벨 제거 — 무드 충돌 최소화)
+  promptParts.push(userPrompt.trim());
 
   // 해상도 비율
   promptParts.push(aspectPrompt || 'vertical 9:16 aspect ratio, portrait orientation');
