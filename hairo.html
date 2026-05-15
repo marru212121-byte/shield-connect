@@ -2257,17 +2257,24 @@ function snapToFront() {
 }
 
 angleChip.addEventListener('click', () => {
-  // v2 (2026-05-15): 모든 프레이밍에서 앵글 사용 가능. 다만 상반신/무릎 위는 일부 프레임만 활성.
+  // v6.1 (2026-05-15): 무릎 위는 앵글 차단. 가슴선/상반신은 OK.
+  if (state.framing === 'knee_up') {
+    showToast('무릎 위 프레이밍에서는 앵글이 부정확해요. 가슴선/상반신에서만 가능합니다.');
+    return;
+  }
   openAngleSheet();
 });
 
-// ⭐ v2: 프레이밍별로 사용 가능한 프레임 결정
+// ⭐ v6.1: 프레이밍별로 사용 가능한 프레임 결정
 // 가슴선(또는 미선택): 모든 15프레임 OK
-// 상반신/무릎 위: 정면 + 좌¾ + 우¾ × 아이레벨만 (yaw 3개 × pitch 1개 = 3프레임)
+// 상반신: 정면 + 좌¾ + 우¾ × 아이레벨만 (3프레임)
+// 무릎 위: 앵글 완전 차단 (빈 배열) — 디자이너 프롬프트 + 무드만으로 결정
 function getAllowedFrameIndices() {
   const f = state.framing;
-  if (f === 'upper_body' || f === 'knee_up') {
-    // FRAME_COORDS는 pitch desc, yaw asc 순으로 정렬돼있음.
+  if (f === 'knee_up') {
+    return []; // 무릎 위는 앵글 차단
+  }
+  if (f === 'upper_body') {
     // 허용: yaw ∈ {-45, 0, +45}, pitch === 0
     const allowed = [];
     FRAME_COORDS.forEach((c, i) => {
@@ -2285,9 +2292,22 @@ function isFrameAllowed(idx) {
   return getAllowedFrameIndices().indexOf(idx) >= 0;
 }
 
-// 앵글 칩 시각 상태 + 프레임 정합성 보정
+// 앵글 chip 시각 상태 + 프레임 정합성 보정
 function updateAngleChipAvailability() {
-  // 모든 프레이밍에서 앵글 chip 자체는 활성. (knee_up이라도 정면은 OK니까)
+  if (state.framing === 'knee_up') {
+    // 무릎 위 → 앵글 chip 회색 처리 + 켜져있던 앵글 자동 해제
+    angleChip.classList.add('chip-disabled');
+    if (state.angleEnabled) {
+      state.angleEnabled = false;
+      state.frameIdx = -1;
+      state.yaw = 0;
+      state.pitch = 0;
+      angleChip.classList.remove('has-value');
+      angleChip.textContent = '앵글';
+    }
+    return;
+  }
+  // 가슴선 / 상반신: chip 활성
   angleChip.classList.remove('chip-disabled');
 
   // 현재 선택된 프레임이 새 프레이밍 정책에서 허용 안 되면 → 정면으로 스냅
@@ -2296,7 +2316,6 @@ function updateAngleChipAvailability() {
     if (frontIdx >= 0) {
       setFrame(frontIdx);
     } else {
-      // 안전망 — 허용 프레임 중 첫 번째로
       const allowed = getAllowedFrameIndices();
       if (allowed.length > 0) setFrame(allowed[0]);
     }
@@ -2591,10 +2610,12 @@ async function generateImage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    stopProgressSimulation(progressTimer);
-    document.getElementById('loadingModal').classList.remove('active');
+    // v6.1 (2026-05-15): 게이지바를 사진 표시 직전까지 살려둠.
+    // 기존엔 fetch 응답 헤더 도착 직후 닫혀서 base64 디코딩(0.5~1초) 동안 화면 멍.
 
     if (!res.ok) {
+      stopProgressSimulation(progressTimer);
+      document.getElementById('loadingModal').classList.remove('active');
       const err = await res.json().catch(() => ({}));
       if (res.status === 401) {
         showError(err.message || '로그인이 만료되었어요. 다시 로그인해주세요.');
@@ -2615,6 +2636,8 @@ async function generateImage() {
     const data = await res.json();
     const imageBase64 = data.imageBase64 || data.image || data.data;
     if (!imageBase64) {
+      stopProgressSimulation(progressTimer);
+      document.getElementById('loadingModal').classList.remove('active');
       showError('지금 많은 분이 사용 중이에요. 30초 후 다시 시도해주세요.\n크레딧은 차감되지 않았습니다.');
       return;
     }
@@ -2631,6 +2654,10 @@ async function generateImage() {
     const newCredits = data.credits_remaining ?? data.creditsRemaining;
     if (newCredits !== undefined) updateCreditBadge(newCredits);
     else if (window.SESSION.member) updateCreditBadge(Math.max(0, credits - 1));
+
+    // ⭐ v6.1: 사진 준비 완료. 게이지바 100% 점프 + 모달 닫기 → 즉시 결과 모달
+    stopProgressSimulation(progressTimer);
+    document.getElementById('loadingModal').classList.remove('active');
 
     // 결과 모달 = 'fresh' 모드로 표시
     showResultFresh(generatedImageUrl, state.aspect);
