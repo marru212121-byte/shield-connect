@@ -107,6 +107,24 @@
     .account-login-btn-big:active{opacity:.85;transform:scale(.98)}
     .account-logout-btn{padding:8px 18px;background:transparent;color:#888;border:1.5px solid #e5e5e0;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;-webkit-tap-highlight-color:transparent}
     .account-logout-btn:active{border-color:#1A1814;color:#1A1814}
+
+    /* ════════════ 로그인/로그아웃 스피너 (v6, 2026-05-15) ════════════ */
+    /* 회전 원 — 라임색, 버튼 안에서 회전 */
+    .sc-spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(199,240,80,0.25);border-top-color:#C7F050;border-radius:50%;animation:sc-spin .8s linear infinite;vertical-align:middle}
+    .sc-spinner.dark{border:2px solid rgba(26,24,20,0.2);border-top-color:#1A1814}
+    @keyframes sc-spin{to{transform:rotate(360deg)}}
+
+    /* 클릭 중 상태 — 텍스트 숨기고 스피너만 (버튼 크기 유지) */
+    .is-busy{pointer-events:none;opacity:.85;position:relative}
+    .is-busy > .sc-btn-label{visibility:hidden}
+    .is-busy > .sc-spinner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+
+    /* ════════════ 첫 로딩 스켈레톤 ════════════ */
+    /* 잔액 자리 회색 막대 — 0원/로그인 깜빡임 방지 */
+    .sc-skeleton{display:inline-block;background:linear-gradient(90deg,rgba(255,255,255,0.06) 0%,rgba(255,255,255,0.16) 50%,rgba(255,255,255,0.06) 100%);background-size:200% 100%;border-radius:8px;animation:sc-skel-shimmer 1.2s ease-in-out infinite;vertical-align:middle}
+    .sc-skeleton.light{background:linear-gradient(90deg,rgba(0,0,0,0.04) 0%,rgba(0,0,0,0.10) 50%,rgba(0,0,0,0.04) 100%);background-size:200% 100%}
+    .sc-skeleton-pill{width:108px;height:30px;border-radius:18px}
+    @keyframes sc-skel-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
   </style>
 
   <style id="hairo-dark-override">
@@ -885,14 +903,16 @@
 
   <!-- 쉴드커넥트 계정 바 -->
   <div class="home-account-bar">
+    <!-- 초기 스켈레톤 (서버 응답 전 0.3초 동안) — 깜빡임 방지 -->
+    <span class="sc-skeleton sc-skeleton-pill" id="accountSkeletonHome"></span>
     <!-- 비로그인 상태 -->
-    <a href="/api/auth/cafe24" class="account-login-link" id="loginLinkHome">로그인</a>
+    <a href="/api/auth/cafe24" class="account-login-link" id="loginLinkHome" style="display:none"><span class="sc-btn-label">로그인</span></a>
     <!-- 로그인 상태 -->
     <div class="account-info" id="accountInfoHome" style="display:none">
       <span class="account-credit"><strong id="creditCountHome">0</strong> 크레딧</span>
       <button class="account-charge-btn" id="chargeBtnHome" type="button" onclick="openChargeModal();return false;">+ 충전</button>
       <span class="account-divider">·</span>
-      <a class="account-logout" id="logoutLinkHome">로그아웃</a>
+      <a class="account-logout" id="logoutLinkHome"><span class="sc-btn-label">로그아웃</span></a>
     </div>
   </div>
 
@@ -1562,7 +1582,7 @@
       <!-- 비로그인 -->
       <div id="settingsLoggedOut" class="account-logged-out-wrap">
         <div class="account-logged-out-msg">로그인하면 크레딧 충전 내역과<br>사용 내역을 확인할 수 있어요</div>
-        <a href="/api/auth/cafe24" class="account-login-btn-big">로그인</a>
+        <a href="/api/auth/cafe24" class="account-login-btn-big" id="loginBtnSettings"><span class="sc-btn-label">로그인</span></a>
       </div>
       <!-- 로그인 -->
       <div id="settingsLoggedIn" style="display:none">
@@ -1584,7 +1604,7 @@
             <div class="settings-row-label">로그아웃</div>
             <div class="settings-row-sub">현재 계정에서 나갑니다</div>
           </div>
-          <button class="account-logout-btn" id="logoutBtnSettings">로그아웃</button>
+          <button class="account-logout-btn" id="logoutBtnSettings"><span class="sc-btn-label">로그아웃</span></button>
         </div>
       </div>
     </div>
@@ -1858,6 +1878,7 @@
   'use strict';
 
   // ── UI 엘리먼트 ──
+  var skeletonHome    = document.getElementById('accountSkeletonHome');
   var loginLinkHome   = document.getElementById('loginLinkHome');
   var accountInfoHome = document.getElementById('accountInfoHome');
   var creditCountHome = document.getElementById('creditCountHome');
@@ -1867,11 +1888,39 @@
   var settingsLoggedIn  = document.getElementById('settingsLoggedIn');
   var settingsCredit    = document.getElementById('settingsCreditCount');
   var settingsMemberId  = document.getElementById('settingsMemberId');
+  var loginBtnSettings  = document.getElementById('loginBtnSettings');
   var logoutBtnSettings = document.getElementById('logoutBtnSettings');
+
+  // ── 스피너 헬퍼 (v6) ──
+  // 버튼 텍스트는 .sc-btn-label로 감싸져 있음 → is-busy 클래스 + 스피너 삽입
+  function showBtnSpinner(btn, dark){
+    if(!btn || btn.classList.contains('is-busy')) return;
+    var sp = document.createElement('span');
+    sp.className = 'sc-spinner' + (dark ? ' dark' : '');
+    sp.setAttribute('data-sc-spinner','1');
+    btn.appendChild(sp);
+    btn.classList.add('is-busy');
+  }
+
+  // ── 로그인 버튼 (3곳) 클릭 시 스피너 ──
+  function attachLoginSpinner(el, dark){
+    if(!el) return;
+    el.addEventListener('click', function(){
+      // 기본 동작(href 이동) 막지 않음 — 그냥 스피너만 표시
+      showBtnSpinner(el, dark);
+    });
+  }
+  attachLoginSpinner(loginLinkHome, false);   // 홈 상단 (다크 라임 배경 → 라임)
+  attachLoginSpinner(loginBtnSettings, false); // 설정 페이지 로그인 버튼 (검정 배경 → 라임)
 
   // ── 로그아웃 ──
   function doLogout(e){
     if(e) e.preventDefault();
+    // 어느 버튼이 눌렸는지에 따라 스피너 색상 결정
+    var btn = (e && e.currentTarget) || logoutLinkHome;
+    var isDark = btn === logoutBtnSettings; // 설정 페이지는 밝은 배경
+    showBtnSpinner(btn, isDark);
+
     // 로그아웃 API 호출 후 홈 새로고침
     fetch('/api/auth/logout', { method:'POST', credentials:'include' })
       .catch(function(){})
@@ -1879,6 +1928,11 @@
   }
   if(logoutLinkHome)  logoutLinkHome.addEventListener('click', doLogout);
   if(logoutBtnSettings) logoutBtnSettings.addEventListener('click', doLogout);
+
+  // ── 스켈레톤 제거 헬퍼 ──
+  function hideSkeleton(){
+    if(skeletonHome) skeletonHome.style.display = 'none';
+  }
 
   // ── UI 업데이트 ──
   function renderLoggedIn(data){
@@ -1890,6 +1944,7 @@
     var memberId = data.member_id || data.memberId || '';
 
     // 홈 상단
+    hideSkeleton();
     if(loginLinkHome)   loginLinkHome.style.display   = 'none';
     if(accountInfoHome) accountInfoHome.style.display = 'flex';
     if(creditCountHome) creditCountHome.textContent   = credit;
@@ -1906,13 +1961,16 @@
   }
 
   function renderLoggedOut(){
-    // 이미 기본값이 로그아웃 상태이므로 건드릴 필요 없음
+    // 스켈레톤 → 로그인 버튼으로 교체
+    hideSkeleton();
+    if(loginLinkHome) loginLinkHome.style.display = '';
+
     window.__scLoggedIn = false;
     if(typeof window.__updateChargeFab === 'function') window.__updateChargeFab();
   }
 
   // ── 세션 확인 ──
-  fetch('/api/customer/me', { credentials:'include' })
+  fetch('/api/customer/me', { credentials:'include', cache:'no-store' })
     .then(function(r){ return r.ok ? r.json() : null; })
     .then(function(data){
       if(!data) { renderLoggedOut(); return; }
