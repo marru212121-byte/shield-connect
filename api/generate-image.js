@@ -72,28 +72,41 @@ soft directional lighting,
 refined color grading,
 subtle film grain`,
 
-  // 네츄럴 — 스마트폰 일상 톤. 자연스럽고 친근
+  // 네츄럴 — 인플루언서 셀카 톤 + 아이폰 디테일 (v6.3)
+  // v6.2 → v6.3: smartphone 단어 제거 (핸드폰 등장 버그), 일상톤 키워드 제거 (아줌마톤 회피)
+  //               인플루언서 + 아이폰 + 글로우로 톤 재구성
   natural: `photorealistic image,
 individual hair strand visibility,
 natural hair shine,
 realistic hair root density,
+flyaway hair strands,
 influencer soft retouch,
 slightly idealized smooth skin,
 glossy lip pearl shine,
-casual smartphone photography,
-subtle noise particles,
-digital noise`,
+dewy skin glow,
+Instagram influencer aesthetic,
+iPhone photo realism,
+polished casual look,
+visible film grain,
+digital noise particles,
+authentic camera sensor noise`,
 
-  // Y2K — 2000년대 한국 인플루언서 룩. 트렌디 SNS용
+  // Y2K — 2000년대 파파라치/데카당스 톤 (v6.3)
+  // v6.2 → v6.3: soft glow filter 제거 (파파라치 톤과 충돌)
+  //               그레인/노이즈 강화, 정면 플래시 + 노출 과다 추가
   y2k: `2000s digital camera nostalgia,
-fine film grain,
+heavy film grain,
+digital noise particles,
 vintage digicam color palette,
 influencer soft retouch,
 slightly idealized smooth skin,
 glossy lip pearl shine,
 soft hair shine,
 flyaway hair strands,
-soft glow filter`,
+direct on-camera flash,
+slight overexposure on face,
+high contrast shadows,
+paparazzi flash aesthetic`,
 };
 
 // ─── 프레이밍 프리셋 ────────────────────────────────────────────
