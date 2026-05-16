@@ -24,9 +24,9 @@ import { getSupabase } from '../../lib/supabase.js';
 // ─── 단가 (사장님 어림잡은 값, 한화) ───────────────────────────
 const COST_KRW = {
   // Anthropic 소넷
-  color_step1: 130,   // 컬러 분석 1스텝 (색감 분석, 큰 호출)
+  color_step1: 140,   // 컬러 분석 1스텝 (색감 분석, 큰 호출)
   color_step2: 20,    // 컬러 분석 2스텝 (레시피, 작은 호출)
-  color_total: 150,   // 컬러 1회 (1+2)
+  color_total: 160,   // 컬러 1회 (1+2)
   cut: 60,            // 컷 분석
   // Google 나노바나나
   hairo: 100,         // HAIRO 사진 1장

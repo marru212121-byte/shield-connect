@@ -13,10 +13,18 @@
 import { requireAdmin } from '../../lib/admin-auth.js';
 import { getSupabase } from '../../lib/supabase.js';
 
-// 사용량 추정 단가 (변동 가능, 정확치는 콘솔에서)
-// 보수적으로 잡았으니 실제보단 약간 높게 추정됨 (안전)
-const COST_PER_SONNET_CALL = 0.08;       // USD, 평균 분석 1회
-const COST_PER_NANOBANANA_CALL = 0.04;   // USD, 평균 사진 1회
+// 사용량 추정 단가 — 원화 (v6.3)
+// ai-logs.js의 COST_KRW와 동일 단가 사용 (한 곳 바꾸면 양쪽 다 반영되게 추후 통합 고려)
+// 컬러: 1스텝 140 + 2스텝 20 = 160원 (1회 합계)
+// 컷: 60원
+// 나노바나나: 100원
+const COST_KRW_SONNET = {
+  color: 160,           // 컬러 애널라이저 1회 (1스텝+2스텝 합)
+  cut: 60,              // 컷 애널라이저 1회
+  recipe_only: 20,      // 레시피 단독 호출 (= 컬러 2스텝)
+  customer_message: 0,  // 무료 안내
+};
+const COST_KRW_NANOBANANA = 100;  // HAIRO 사진 1장
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -101,59 +109,102 @@ export default async function handler(req, res) {
       storage: 'Vercel 환경변수',
     });
 
-    // ─── 2. ✨ AI API 사용량 추정 게이지 (NEW) ─────────────
-    // ai_call_logs에서 오늘/이번달 호출 수를 가져와 추정 비용 계산
-    // 정확치는 콘솔에서 확인하되, 폭주 감지 + 추세 보기엔 충분
-    const { count: todaySonnet } = await supabase
-      .from('ai_call_logs')
-      .select('*', { count: 'exact', head: true })
-      .eq('model', 'sonnet')
-      .eq('status', 'success')
-      .gte('created_at', todayStart.toISOString());
+    // ─── 2. ✨ AI API 사용량 추정 게이지 (v6.3: stage별 원화 계산) ─────────────
+    // ai_call_logs에서 오늘/이번달 호출을 stage별로 가져와 원화 합산
+    // 컬러는 1회당 2건(1스텝+2스텝) DB 박힘 → stage별 단가로 자연 합산됨
+    async function fetchByStage(modelName, fromIso, stage) {
+      const q = supabase
+        .from('ai_call_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('model', modelName)
+        .eq('status', 'success')
+        .gte('created_at', fromIso);
+      if (stage === null) {
+        // stage=NULL인 행 (legacy 데이터)
+        q.is('stage', null);
+      } else {
+        q.eq('stage', stage);
+      }
+      const { count } = await q;
+      return count || 0;
+    }
 
+    const todayIso = todayStart.toISOString();
+    const monthIso = monthStart.toISOString();
+
+    // 소넷 — stage별 카운트
+    const [
+      todayColor, todayCut, todayRecipe, todayMsg, todaySonnetNull,
+      monthColor, monthCut, monthRecipe, monthMsg, monthSonnetNull,
+    ] = await Promise.all([
+      fetchByStage('sonnet', todayIso, 'color'),
+      fetchByStage('sonnet', todayIso, 'cut'),
+      fetchByStage('sonnet', todayIso, 'recipe_only'),
+      fetchByStage('sonnet', todayIso, 'customer_message'),
+      fetchByStage('sonnet', todayIso, null),
+      fetchByStage('sonnet', monthIso, 'color'),
+      fetchByStage('sonnet', monthIso, 'cut'),
+      fetchByStage('sonnet', monthIso, 'recipe_only'),
+      fetchByStage('sonnet', monthIso, 'customer_message'),
+      fetchByStage('sonnet', monthIso, null),
+    ]);
+
+    // 나노바나나 — stage='image'만 (단가 단일)
     const { count: todayNanobanana } = await supabase
       .from('ai_call_logs')
       .select('*', { count: 'exact', head: true })
       .eq('model', 'nanobanana')
       .eq('status', 'success')
-      .gte('created_at', todayStart.toISOString());
-
-    const { count: monthSonnet } = await supabase
-      .from('ai_call_logs')
-      .select('*', { count: 'exact', head: true })
-      .eq('model', 'sonnet')
-      .eq('status', 'success')
-      .gte('created_at', monthStart.toISOString());
+      .gte('created_at', todayIso);
 
     const { count: monthNanobanana } = await supabase
       .from('ai_call_logs')
       .select('*', { count: 'exact', head: true })
       .eq('model', 'nanobanana')
       .eq('status', 'success')
-      .gte('created_at', monthStart.toISOString());
+      .gte('created_at', monthIso);
+
+    // 원화 합산 — 컬러 1회 = 1스텝(stage='color') 카운트로만 잡음
+    //   이유: DB엔 color(1스텝) + recipe_only(2스텝) 따로 박히지만,
+    //   사용자 입장에선 1회. 1스텝 카운트 × 160원이 가장 정확.
+    //   recipe_only는 컬러의 2스텝이므로 따로 합산 안 함 (이중계산 방지).
+    //   ※ 단, 컬러 1스텝 실패 후 2스텝만 단독 호출되는 케이스는 별도 추정 X (드물어 무시)
+    const todaySonnetKrw = (todayColor * COST_KRW_SONNET.color)
+                         + (todayCut * COST_KRW_SONNET.cut);
+    const monthSonnetKrw = (monthColor * COST_KRW_SONNET.color)
+                         + (monthCut * COST_KRW_SONNET.cut);
+
+    // "오늘 N건" 표시용 호출 수 (컬러 + 컷, recipe_only는 컬러의 2스텝이므로 제외)
+    const todaySonnetCalls = todayColor + todayCut;
+    const monthSonnetCalls = monthColor + monthCut;
+
+    const todayNanoKrw = (todayNanobanana || 0) * COST_KRW_NANOBANANA;
+    const monthNanoKrw = (monthNanobanana || 0) * COST_KRW_NANOBANANA;
 
     const api_usage = {
       sonnet: {
         title: 'Anthropic 소넷',
-        subtitle: '분석기 (컬러/컷/레시피)',
-        today_calls: todaySonnet || 0,
-        today_cost_usd: Math.round((todaySonnet || 0) * COST_PER_SONNET_CALL * 100) / 100,
-        month_calls: monthSonnet || 0,
-        month_cost_usd: Math.round((monthSonnet || 0) * COST_PER_SONNET_CALL * 100) / 100,
-        unit_cost_usd: COST_PER_SONNET_CALL,
+        subtitle: '분석기 (컬러/컷)',
+        today_calls: todaySonnetCalls,
+        today_cost_krw: todaySonnetKrw,
+        month_calls: monthSonnetCalls,
+        month_cost_krw: monthSonnetKrw,
+        breakdown: {
+          today: { color: todayColor, cut: todayCut },
+          month: { color: monthColor, cut: monthCut },
+        },
         console_url: 'https://console.anthropic.com/settings/billing',
-        note: '추정치 (1회당 약 $' + COST_PER_SONNET_CALL + '). 실제 잔액은 콘솔에서 확인.',
+        note: '추정치 (컬러 160원 / 컷 60원). 실제 잔액은 콘솔에서 확인.',
       },
       nanobanana: {
         title: '나노바나나 (Vertex AI)',
         subtitle: 'HAIRO 사진 생성',
         today_calls: todayNanobanana || 0,
-        today_cost_usd: Math.round((todayNanobanana || 0) * COST_PER_NANOBANANA_CALL * 100) / 100,
+        today_cost_krw: todayNanoKrw,
         month_calls: monthNanobanana || 0,
-        month_cost_usd: Math.round((monthNanobanana || 0) * COST_PER_NANOBANANA_CALL * 100) / 100,
-        unit_cost_usd: COST_PER_NANOBANANA_CALL,
+        month_cost_krw: monthNanoKrw,
         console_url: 'https://console.cloud.google.com/billing',
-        note: '추정치 (1회당 약 $' + COST_PER_NANOBANANA_CALL + '). 실제 잔액은 GCP 콘솔에서 확인.',
+        note: '추정치 (1장당 100원). 실제 잔액은 GCP 콘솔에서 확인.',
       },
     };
 
