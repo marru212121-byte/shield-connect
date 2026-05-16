@@ -722,8 +722,13 @@ function gateGuideMsg(g) {
 }
 
 // 펼침 토글
+// v6.3: btn.parentElement → btn 변경
+//   이유: sys-row/err-card처럼 같은 부모 안에 형제가 여러 개일 때
+//         parentElement.querySelector는 항상 첫 번째 .detail만 찾아 다른 항목 펼침 실패
+//   동작: btn 자체 안에 .detail 있으면 우선 (sys-row, err-card, cost-box)
+//         없으면 형제 (call-head → call-row의 detail)
 function toggleDetail(btn) {
-  const detail = btn.parentElement.querySelector('.detail') || btn.nextElementSibling;
+  const detail = btn.querySelector('.detail') || btn.nextElementSibling;
   const caret = btn.querySelector('.caret');
   if (detail) detail.classList.toggle('open');
   if (caret) caret.classList.toggle('open');
