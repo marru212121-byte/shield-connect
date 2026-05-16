@@ -13,10 +13,11 @@
 //      ⭐ 프레이밍 = 'chest_up'/'upper_body'/'knee_up'/null
 //      ⭐ 무드 null = 코어 X = 카탈로그/제품 자유 모드
 //      ⭐ 디자이너 입력 = 본문만 (강조 라벨 제거됨 — Y2K/룩북 무드 살리기)
-//   4. 3단 Fallback 체인 호출:
-//      ① Vertex AI 서울 (asia-northeast3) Streaming     ← 1차
-//      ② Vertex AI 글로벌 (global) Streaming             ← 2차
-//      ③ Generative Language API (HAIRO_NANOBANANA2)     ← 3차 안전망
+//   4. 2단 Fallback 체인 호출 (v6.3 변경: 4단 → 2단 단순화):
+//      ① Vertex AI 글로벌 (global) Streaming             ← 1차 (90초 timeout)
+//      ② Generative Language API (HAIRO_NANOBANANA2)     ← 2차 안전망 (60초)
+//      ※ 서울 리전 제거: 구글 공식 Gemini 2.5+ preview = global only
+//      ※ 누적 150초 → Vercel 180초 마진 30초 → logFailure 100% 도달
 //   5. 응답에서 이미지 추출 → 프론트로 base64 반환
 //   6. 모든 fallback 실패 시 크레딧 자동 환불
 // ═══════════════════════════════════════════════════════════════
@@ -303,89 +304,64 @@ export default async function handler(req, res) {
     framing: framing || null,
   });
 
-  // ── 3단 Fallback 체인 ─────────────────────────────────────
+  // ── 2단 Fallback 체인 ─────────────────────────────────────
+  // v6.3 변경:
+  //   - 서울 리전 단계 삭제 (구글 공식: Gemini 2.5+ preview 모델은 global only)
+  //   - Legacy normal 단계 삭제 (어차피 도달 못 함, 누적 timeout 단축)
+  //   - 글로벌 stream(90s) → Legacy stream(60s) = 누적 150초
+  //   - Vercel 180초 안에 logFailure 도달 보장 (30초 마진)
   let imagePart = null;
   let textPart = null;
   let finishReason = null;
   let lastError = null;
   let route = null; // 어느 경로로 성공했는지 디버그용
 
-  // ── 1차: Vertex AI 서울 (asia-northeast3) Streaming ──
+  // ── 1차: Vertex AI 글로벌 (global) Streaming ──
   try {
     const accessToken = await getVertexAccessToken();
     const projectId = getProjectId();
-    const seoulUrl = buildVertexUrl('asia-northeast3', projectId);
-    const r1 = await callVertexStream(seoulUrl, accessToken, requestBody);
+    const globalUrl = buildVertexUrl('global', projectId);
+    const r1 = await callVertexStream(globalUrl, accessToken, requestBody);
     imagePart = r1.imagePart;
     textPart = r1.textPart;
     finishReason = r1.finishReason;
-    route = 'vertex-seoul-stream';
-    console.log(`[generate-image] vertex-seoul stream success in ${r1.elapsedMs}ms`);
+    route = 'vertex-global-stream';
+    console.log(`[generate-image] vertex-global stream success in ${r1.elapsedMs}ms`);
   } catch (e1) {
     lastError = e1;
-    console.error(`[generate-image] vertex-seoul stream failed: ${e1.name} - ${e1.message}`);
+    console.error(`[generate-image] vertex-global stream failed: ${e1.name} - ${e1.message}`);
 
-    // ── 2차: Vertex AI 글로벌 (global) Streaming ──
+    // ── 2차 안전망: Generative Language API (Legacy stream) ──
     try {
-      const accessToken = await getVertexAccessToken();
-      const projectId = getProjectId();
-      const globalUrl = buildVertexUrl('global', projectId);
-      const r2 = await callVertexStream(globalUrl, accessToken, requestBody);
+      console.log('[generate-image] falling back to legacy endpoint (Generative Language API)');
+      const r2 = await callGeminiStream(GEMINI_STREAM_URL, geminiKey, requestBody);
       imagePart = r2.imagePart;
       textPart = r2.textPart;
       finishReason = r2.finishReason;
-      route = 'vertex-global-stream';
-      console.log(`[generate-image] vertex-global stream success in ${r2.elapsedMs}ms`);
+      route = 'legacy-stream';
+      console.log(`[generate-image] legacy stream success in ${r2.elapsedMs}ms`);
     } catch (e2) {
-      lastError = e2;
-      console.error(`[generate-image] vertex-global stream failed: ${e2.name} - ${e2.message}`);
+      console.error(`[generate-image] all fallbacks failed: ${e2.name} - ${e2.message}`);
+      await refundCredit(supabase, memberId, generationRef, result.is_admin);
 
-      // ── 3차 안전망: Generative Language API (Legacy) ──
-      try {
-        console.log('[generate-image] falling back to legacy endpoint (Generative Language API)');
-        const r3 = await callGeminiStream(GEMINI_STREAM_URL, geminiKey, requestBody);
-        imagePart = r3.imagePart;
-        textPart = r3.textPart;
-        finishReason = r3.finishReason;
-        route = 'legacy-stream';
-        console.log(`[generate-image] legacy stream success in ${r3.elapsedMs}ms`);
-      } catch (e3) {
-        lastError = e3;
-        console.error(`[generate-image] legacy stream failed: ${e3.name} - ${e3.message}`);
+      await logFailure({
+        member_id: memberId,
+        model: 'nanobanana',
+        route: null,
+        stage: 'image',
+        err: e2,
+        user_message: '지금 많은 분이 사용 중이에요. 30초 후 다시 시도해주세요.',
+        duration_ms: Date.now() - startTime,
+        prompt_length: typeof userPrompt === 'string' ? userPrompt.length : null,
+        refunded: !result.is_admin,
+        allFallbacksFailed: true,
+      });
 
-        // 마지막 시도: legacy normal 호출
-        try {
-          console.log('[generate-image] last resort: legacy normal endpoint');
-          const r4 = await callGeminiNormal(GEMINI_NORMAL_URL, geminiKey, requestBody);
-          imagePart = r4.imagePart;
-          textPart = r4.textPart;
-          finishReason = r4.finishReason;
-          route = 'legacy-normal';
-          console.log(`[generate-image] legacy normal success in ${r4.elapsedMs}ms`);
-        } catch (e4) {
-          console.error(`[generate-image] all fallbacks failed: ${e4.name} - ${e4.message}`);
-          await refundCredit(supabase, memberId, generationRef, result.is_admin);
-
-          await logFailure({
-            member_id: memberId,
-            model: 'nanobanana',
-            route: null,
-            stage: 'image',
-            err: e4,
-            user_message: '지금 많은 분이 사용 중이에요. 30초 후 다시 시도해주세요.',
-            duration_ms: Date.now() - startTime,
-            prompt_length: typeof userPrompt === 'string' ? userPrompt.length : null,
-            refunded: !result.is_admin,
-            allFallbacksFailed: true,
-          });
-
-          // 모든 에러 케이스 통일 — 디자이너는 다시 시도하면 됨
-          return res.status(503).json({
-            code: 'busy',
-            message: '지금 많은 분이 사용 중이에요. 30초 후 다시 시도해주세요.\n크레딧은 차감되지 않았습니다.',
-          });
-        }
-      }
+      // 모든 에러 케이스 통일 — 디자이너는 다시 시도하면 됨
+      return res.status(503).json({
+        code: 'busy',
+        message: '지금 많은 분이 사용 중이에요. 30초 후 다시 시도해주세요.\n크레딧은 차감되지 않았습니다.',
+      });
     }
   }
 
@@ -452,17 +428,15 @@ export default async function handler(req, res) {
 // ════════════════════════════════════════════════════════════
 // Streaming 호출 헬퍼 (SSE 파싱 + 첫 토큰 timeout)
 // ════════════════════════════════════════════════════════════
-// ⭐ 핵심: "첫 토큰 8초 timeout" + "전체 45초 timeout"
-//   - 첫 토큰 8초 안 오면 = Google API hang으로 판단 → 즉시 abort
-//   - 첫 토큰 받으면 전체 timeout만 적용 (정상 응답은 영향 0)
-//   - hang 케이스의 worst case를 60초 → 8초로 단축
+// Legacy fallback (2차)으로 사용. v6.3: timeout 150초 → 60초
+// 누적 (글로벌 90 + Legacy 60 = 150초) → Vercel 180초 마진 30초 → logFailure 도달
 async function callGeminiStream(url, apiKey, requestBody) {
   const startTime = Date.now();
   const controller = new AbortController();
 
-  // 전체 timeout 150초 (Vercel maxDuration 180초 안쪽 안전 마진)
+  // 전체 timeout 60초 (Legacy 안전망 — 글로벌 끝난 뒤 호출되므로 시간 여유 적음)
   // 첫 토큰 timeout 제거 - 정상 응답을 abort하는 부작용 더 큼
-  const TOTAL_TIMEOUT_MS = 150000;
+  const TOTAL_TIMEOUT_MS = 60000;
 
   const totalTimeoutId = setTimeout(() => {
     controller.abort('total_timeout');
@@ -557,16 +531,17 @@ async function callGeminiStream(url, apiKey, requestBody) {
 }
 
 // ════════════════════════════════════════════════════════════
-// Vertex AI Streaming 호출 헬퍼 (1차/2차 fallback)
+// Vertex AI Streaming 호출 헬퍼 (1차 fallback)
 // ════════════════════════════════════════════════════════════
 // callGeminiStream과 동일 구조, 인증만 다름 (Bearer 토큰)
+// v6.3: timeout 150초 → 90초 (Vercel 180초 안에 Legacy 2차 + logFailure 도달 보장)
 async function callVertexStream(url, accessToken, requestBody) {
   const startTime = Date.now();
   const controller = new AbortController();
 
-  // 전체 timeout 150초 (Vercel maxDuration 180초 안쪽 안전 마진)
+  // 전체 timeout 90초 (글로벌 평균 응답 15~25초 → 90초 = 충분 마진)
   // 첫 토큰 timeout 제거 - 정상 응답을 abort하는 부작용 더 큼
-  const TOTAL_TIMEOUT_MS = 150000;
+  const TOTAL_TIMEOUT_MS = 90000;
 
   const totalTimeoutId = setTimeout(() => {
     controller.abort('total_timeout');
