@@ -1533,6 +1533,10 @@ input, textarea { font-family: inherit; }
   <button class="tab" data-tab="favorites" type="button">즐겨찾기</button>
 </nav>
 
+<div class="gallery-notice" id="galleryNotice">
+  저장된 사진은 최대 <b>30장</b>, 생성 <b>30일 후 자동 삭제</b>됩니다. 그전에 저장해두세요.
+</div>
+
 <main class="gallery" id="galleryView">
   <!-- 비로그인 안내 카드 (세션 없을 때만 노출) -->
   <div class="hairo-login-card" id="hairoLoginCard">
@@ -1702,7 +1706,7 @@ input, textarea { font-family: inherit; }
         </button>
         <button class="preset-card" data-mood="y2k" type="button">
           <div class="preset-card-title">Y2K</div>
-          <div class="preset-card-desc">2000년대 디카 톤. 핑크·피치 빈티지. SNS용.</div>
+          <div class="preset-card-desc">2000년대 디카 톤. 전방에서의 조명플래쉬, 파파라치컷, 명암대비, SNS용.</div>
         </button>
       </div>
     </div>
@@ -1911,6 +1915,8 @@ function renderLoggedIn() {
   if (ic) ic.classList.remove('show');
   var tabs = document.getElementById('galleryTabs');
   if (tabs) tabs.style.display = '';
+  var notice = document.getElementById('galleryNotice');
+  if (notice) notice.style.display = '';
   var ge = document.getElementById('galleryEmpty');
   if (ge) ge.style.display = '';
   var dock = document.querySelector('.dock');
@@ -1925,6 +1931,8 @@ function renderLoggedOut() {
   if (ic) ic.classList.add('show');
   var tabs = document.getElementById('galleryTabs');
   if (tabs) tabs.style.display = 'none';
+  var notice = document.getElementById('galleryNotice');
+  if (notice) notice.style.display = 'none';
   var ge = document.getElementById('galleryEmpty');
   if (ge) ge.style.display = 'none';
   var dock = document.querySelector('.dock');
@@ -3146,6 +3154,8 @@ loadSession();
 .hi-spec-desc{font-size:11.5px;color:rgba(255,255,255,0.6);line-height:1.6;flex:1;word-break:keep-all}
 .hi-samples-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
 .hi-sample{width:100%;aspect-ratio:9/16;background-size:cover;background-position:center;background-color:#1a1a1a;border-radius:8px;border:0.5px solid rgba(255,255,255,0.08)}
+.gallery-notice{margin:0 12px 14px;padding:10px 14px;background:rgba(199,240,80,0.06);border:0.5px solid rgba(199,240,80,0.2);border-radius:10px;color:rgba(255,255,255,0.88);font-size:12px;line-height:1.55;text-align:center;letter-spacing:0.1px}
+.gallery-notice b{color:var(--accent);font-weight:600}
 
 </style>
 
