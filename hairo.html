@@ -1563,10 +1563,21 @@ input, textarea { font-family: inherit; }
       <div class="hi-spec-desc">신체 각도별 자동 구도 조절</div>
     </div>
     <div class="hi-spec-row">
+      <div class="hi-spec-label">5장 레퍼런스</div>
+      <div class="hi-spec-desc">참조사진 최대 5장, 헤어·의상 등 역할별 적용</div>
+    </div>
+    <div class="hi-spec-row">
       <div class="hi-spec-label">프리 프롬프트</div>
       <div class="hi-spec-desc">살롱에 필요한 모든 이미지 자유 생성</div>
     </div>
-    <div class="hi-banner" style="background-image:url('/images/hairo-banner.jpg')"></div>
+    <div class="hi-samples-grid">
+      <div class="hi-sample" style="background-image:url('/images/hairo-sample-1.jpg')"></div>
+      <div class="hi-sample" style="background-image:url('/images/hairo-sample-2.jpg')"></div>
+      <div class="hi-sample" style="background-image:url('/images/hairo-sample-3.jpg')"></div>
+      <div class="hi-sample" style="background-image:url('/images/hairo-sample-4.jpg')"></div>
+      <div class="hi-sample" style="background-image:url('/images/hairo-sample-5.jpg')"></div>
+      <div class="hi-sample" style="background-image:url('/images/hairo-sample-6.jpg')"></div>
+    </div>
   </div>
 
   <div id="galleryEmpty">
@@ -1902,6 +1913,8 @@ function renderLoggedIn() {
   if (tabs) tabs.style.display = '';
   var ge = document.getElementById('galleryEmpty');
   if (ge) ge.style.display = '';
+  var dock = document.querySelector('.dock');
+  if (dock) dock.style.display = '';
 }
 function renderLoggedOut() {
   document.getElementById('headerRight').innerHTML = `<a class="btn-link" href="/api/auth/cafe24" style="text-decoration:none;">로그인</a>`;
@@ -1914,6 +1927,8 @@ function renderLoggedOut() {
   if (tabs) tabs.style.display = 'none';
   var ge = document.getElementById('galleryEmpty');
   if (ge) ge.style.display = 'none';
+  var dock = document.querySelector('.dock');
+  if (dock) dock.style.display = 'none';
 }
 function updateCreditBadge(remaining) {
   if (window.SESSION.member) {
@@ -3129,7 +3144,8 @@ loadSession();
 .hi-spec-chips{display:flex;gap:5px;flex-wrap:wrap;flex:1}
 .hi-chip{background:rgba(199,240,80,0.12);border:0.5px solid rgba(199,240,80,0.25);color:#C7F050;font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;letter-spacing:-0.2px}
 .hi-spec-desc{font-size:11.5px;color:rgba(255,255,255,0.6);line-height:1.6;flex:1;word-break:keep-all}
-.hi-banner{width:100%;aspect-ratio:1/1;background-size:cover;background-position:center;background-color:#1a1a1a;border-radius:10px;border:0.5px solid rgba(255,255,255,0.08);margin-top:4px}
+.hi-samples-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
+.hi-sample{width:100%;aspect-ratio:9/16;background-size:cover;background-position:center;background-color:#1a1a1a;border-radius:8px;border:0.5px solid rgba(255,255,255,0.08)}
 
 </style>
 
