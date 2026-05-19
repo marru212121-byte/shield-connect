@@ -577,6 +577,170 @@ p, span, div, h1, h2, h3, h4, h5, h6, li {
 }
 .credit-modal-card *,
 .credit-modal-content * { color:#fff !important; }
+
+/* ═══════════════════════════════════════════
+   비로그인 상세페이지 (인트로 + 라이브 데모)
+   - 세션 없을 때만 노출 (.show 클래스로 토글)
+   - 모든 클래스는 ld- / ldi- 접두어로 격리
+═══════════════════════════════════════════ */
+.login-demo-section{display:none;margin-top:14px}
+.login-demo-section.show{display:block}
+
+.login-demo-intro{
+  padding:14px 14px 12px;
+  margin-bottom:10px;
+}
+.ldi-eyebrow{
+  font-family:"Times New Roman","Noto Serif KR",serif;
+  font-style:italic;font-size:10.5px;
+  color:#C7F050;letter-spacing:1.5px;text-transform:uppercase;
+  margin-bottom:8px;font-weight:500;
+}
+.ldi-title{
+  font-size:14.5px;font-weight:700;color:#fff;line-height:1.5;
+  letter-spacing:-0.3px;margin-bottom:8px;word-break:keep-all;
+}
+.ldi-title b{color:#C7F050;font-weight:700}
+.ldi-sub{
+  font-size:11.5px;color:rgba(255,255,255,0.5);
+  line-height:1.7;word-break:keep-all;
+}
+.ldi-divider{
+  display:flex;align-items:center;gap:10px;margin-top:14px;
+}
+.ldi-divider-line{flex:1;height:0.5px;background:rgba(255,255,255,0.15)}
+.ldi-divider-txt{
+  font-size:9.5px;color:rgba(255,255,255,0.42);
+  letter-spacing:1.5px;text-transform:uppercase;font-weight:500;
+}
+
+.login-demo-frame{
+  background:#0A0A0A;
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:16px;
+  overflow:hidden;position:relative;
+  min-height:780px;
+}
+
+.ld-screen{padding:14px 12px;display:none;animation:ld-screen-in .4s ease forwards}
+.ld-screen.active{display:block}
+@keyframes ld-screen-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.ld-screen.fading-out{animation:ld-screen-out .3s ease forwards}
+@keyframes ld-screen-out{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-8px)}}
+
+.ld-step-row{display:flex;align-items:center;gap:7px;margin-bottom:10px}
+.ld-step-row-txt{font-size:13px;font-weight:700;color:#fff}
+.ld-step-pill{
+  background:rgba(199,240,80,0.12);color:#C7F050;
+  font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;
+  border:1px solid rgba(199,240,80,0.3);
+}
+
+.ld-upload-box{
+  background:#1F1F1F;border:1.5px dashed rgba(255,255,255,0.15);
+  border-radius:12px;padding:50px 14px;
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  position:relative;aspect-ratio:1/1;justify-content:center;
+}
+.ld-upload-box.uploaded{border-style:solid;border-color:rgba(255,255,255,0.08);padding:0;overflow:hidden;background:transparent}
+.ld-upload-box.uploaded .ld-upload-empty{display:none}
+.ld-upload-icon{width:36px;height:36px;border:1.5px solid #C7F050;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#C7F050}
+.ld-upload-empty{display:flex;flex-direction:column;align-items:center;gap:10px}
+.ld-upload-txt{font-size:12px;color:rgba(255,255,255,0.42);text-align:center;line-height:1.55}
+.ld-upload-txt b{color:#fff;font-weight:600}
+.ld-upload-img{width:100%;height:100%;background-size:cover;background-position:center;display:none}
+.ld-upload-box.uploaded .ld-upload-img{display:block}
+
+.ld-analyzing-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.ld-analyzing-overlay.show{display:flex}
+.ld-spinner{width:30px;height:30px;border:3px solid rgba(255,255,255,0.12);border-top-color:#C7F050;border-radius:50%;animation:ld-spin .7s linear infinite}
+@keyframes ld-spin{to{transform:rotate(360deg)}}
+.ld-analyzing-txt{font-size:13px;color:#fff;display:flex;align-items:center;min-height:18px;font-weight:500}
+.ld-analyzing-cursor{display:inline-block;width:2px;height:13px;background:#C7F050;margin-left:2px;animation:ld-blink .8s infinite}
+@keyframes ld-blink{0%,50%{opacity:1}51%,100%{opacity:0}}
+
+.ld-result-card{margin-top:10px;background:#1A1A1A;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px;opacity:0;transform:translateY(8px);transition:opacity .35s,transform .35s}
+.ld-result-card.show{opacity:1;transform:translateY(0)}
+.ld-result-label{font-size:10.5px;font-weight:700;color:#C7F050;margin-bottom:8px}
+.ld-result-top{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.ld-color-chip{width:28px;height:28px;border-radius:8px;background:#EDE8E0;flex-shrink:0;border:1px solid rgba(255,255,255,0.1)}
+.ld-result-title{font-size:13.5px;font-weight:700;color:#fff;line-height:1.3}
+.ld-result-sub{font-size:10.5px;color:rgba(255,255,255,0.42);margin-top:1px}
+.ld-result-desc{font-size:11.5px;color:rgba(255,255,255,0.72);line-height:1.7;margin-bottom:9px;word-break:keep-all}
+.ld-tag-row{display:flex;gap:5px;flex-wrap:wrap}
+.ld-tag{font-size:10px;color:#C0A87A;background:rgba(192,168,122,0.08);border:1px solid rgba(192,168,122,0.15);padding:3px 8px;border-radius:99px}
+
+.ld-cta-btn{margin-top:10px;width:100%;padding:12px;background:#C7F050;color:#000;border:none;border-radius:11px;font-size:13.5px;font-weight:700;font-family:inherit;letter-spacing:-0.2px;opacity:0;transform:translateY(8px);transition:opacity .35s,transform .35s,filter .15s}
+.ld-cta-btn.show{opacity:1;transform:translateY(0)}
+.ld-cta-btn.pressed{filter:brightness(.82)}
+
+.ld-thoughts-box{background:#1A1A1A;border:1px solid rgba(199,240,80,0.3);border-radius:12px;padding:14px 12px;min-height:540px}
+.ld-thoughts-title{font-size:11.5px;font-weight:700;color:#C7F050;margin-bottom:10px;letter-spacing:0.2px}
+.ld-thoughts-list{font-size:12.5px;line-height:2.05;color:rgba(255,255,255,0.72);letter-spacing:0.05px;word-break:keep-all;overflow-wrap:break-word}
+.ld-thoughts-line{display:block;margin:4px 0;opacity:0}
+.ld-thoughts-line.show{opacity:1}
+.ld-thoughts-cursor{display:inline-block;width:7px;color:#C7F050;font-weight:500;margin-left:2px;vertical-align:baseline;animation:ld-blink .7s infinite}
+.ld-thoughts-cursor.done{animation:none;opacity:0}
+.ld-thoughts-list .ld-kw{color:#C7F050;font-weight:500}
+.ld-thoughts-pending{margin-top:16px;font-size:11.5px;color:rgba(255,255,255,0.42);display:none}
+.ld-thoughts-pending.show{display:block}
+
+.ld-recipe-top{display:grid;grid-template-columns:1fr 1.05fr;gap:7px;margin-bottom:9px}
+.ld-consult-card{position:relative;border-radius:11px;overflow:hidden;aspect-ratio:3/4;background:#1a1a1a}
+.ld-consult-img{width:100%;height:100%;background-size:cover;background-position:center}
+.ld-consult-badge{position:absolute;top:7px;left:7px;background:#E84B5A;color:#fff;font-size:9.5px;font-weight:700;padding:3px 7px;border-radius:99px;letter-spacing:-0.2px}
+.ld-consult-bleach{position:absolute;bottom:7px;left:7px;right:7px;background:rgba(0,0,0,0.7);color:#fff;font-size:10.5px;font-weight:700;padding:5px 0;border-radius:6px;text-align:center;backdrop-filter:blur(4px)}
+.ld-recipe-right{display:flex;flex-direction:column;gap:7px}
+.ld-spec-box{background:#1A1A1A;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:9px 10px;position:relative}
+.ld-spec-icon-row{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+.ld-spec-label{font-size:9.5px;color:rgba(255,255,255,0.42);font-weight:600;letter-spacing:0.2px}
+.ld-spec-value{font-size:12px;color:#fff;font-weight:700;line-height:1.3}
+.ld-spec-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+.ld-spec-dot.pink{background:#E8B8C8;box-shadow:0 0 6px rgba(232,184,200,0.4)}
+.ld-spec-dot.swatch1{background:radial-gradient(circle at 30% 30%,#F8F4E8,#D8C8B0)}
+.ld-spec-dot.swatch2{background:radial-gradient(circle at 30% 30%,#fff,#EDE5D0)}
+.ld-spec-dots-right{display:flex;gap:4px;position:absolute;top:9px;right:10px}
+.ld-spec-recipe{font-size:10.5px;color:rgba(255,255,255,0.72);line-height:1.5;margin-top:4px;word-break:keep-all}
+
+.ld-final-card{background:#1A1A1A;border:1px solid rgba(199,240,80,0.3);border-radius:11px;padding:12px;margin-bottom:9px}
+.ld-final-top-row{display:flex;align-items:flex-start;gap:11px;margin-bottom:9px}
+.ld-final-chip-big{width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 28% 28%,#fff 0%,#F5F0E5 45%,#E8E0D0 80%);flex-shrink:0;box-shadow:0 0 12px rgba(255,255,255,0.1)}
+.ld-final-info{flex:1;padding-top:1px}
+.ld-final-label{font-size:9.5px;color:#C7F050;font-weight:700;margin-bottom:3px;letter-spacing:0.2px}
+.ld-final-title{font-size:12.5px;font-weight:700;color:#fff;line-height:1.3}
+.ld-final-hex{font-size:9.5px;color:rgba(255,255,255,0.42);margin-top:2px;font-family:'SF Mono',Menlo,monospace;letter-spacing:0.5px}
+.ld-final-note{font-size:10.5px;color:#fff;line-height:1.6;font-weight:500;padding-top:9px;border-top:1px dashed rgba(255,255,255,0.08);word-break:keep-all}
+.ld-final-base{margin-top:9px;padding-top:9px;border-top:1px dashed rgba(255,255,255,0.08);text-align:center}
+.ld-final-base-label{font-size:10.5px;color:#fff;font-weight:700;margin-bottom:2px;letter-spacing:-0.2px}
+.ld-final-base-sub{font-size:10.5px;color:rgba(255,255,255,0.72)}
+
+.ld-tips-card{background:#1A1A1A;border:1px solid rgba(255,255,255,0.08);border-radius:11px;padding:12px}
+.ld-tips-header{display:flex;align-items:center;gap:6px;margin-bottom:9px;font-size:11px;font-weight:700;color:#C7F050}
+.ld-tips-block{margin-bottom:9px;padding-left:9px;position:relative}
+.ld-tips-block:last-child{margin-bottom:0}
+.ld-tips-block::before{content:'';position:absolute;left:0;top:2px;bottom:2px;width:2px;background:#C7F050;border-radius:2px}
+.ld-tips-block.alt::before{background:rgba(199,240,80,0.45)}
+.ld-tips-block-label{font-size:9.5px;font-weight:700;color:#C7F050;margin-bottom:3px;letter-spacing:0.2px}
+.ld-tips-block.alt .ld-tips-block-label{color:rgba(199,240,80,0.72)}
+.ld-tips-block-recipe{font-size:10.5px;font-weight:700;color:#fff;line-height:1.5;margin-bottom:4px;word-break:keep-all}
+.ld-tips-block-desc{font-size:10px;color:rgba(255,255,255,0.72);line-height:1.6;word-break:keep-all}
+
+.ld-fake-finger{position:absolute;font-size:38px;pointer-events:none;z-index:1000;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.5));transform:translate(-13px,-7px);line-height:1;user-select:none}
+.ld-fake-finger.tapping{animation:ld-finger-tap .35s ease}
+@keyframes ld-finger-tap{0%{transform:translate(-13px,-7px) scale(1)}40%{transform:translate(-13px,-7px) scale(0.82)}100%{transform:translate(-13px,-7px) scale(1)}}
+.ld-tap-ripple{position:absolute;width:36px;height:36px;border-radius:50%;border:2px solid #C7F050;pointer-events:none;z-index:999;transform:translate(-50%,-50%) scale(0.3);opacity:0}
+.ld-tap-ripple.go{animation:ld-ripple .55s ease-out forwards}
+@keyframes ld-ripple{0%{transform:translate(-50%,-50%) scale(0.3);opacity:1}100%{transform:translate(-50%,-50%) scale(1.6);opacity:0}}
+
+.ld-sheet-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;z-index:50}
+.ld-sheet-backdrop.show{display:block}
+.ld-sheet{position:absolute;top:50%;left:50%;transform:translate(-50%,-40%);background:#E8E8E8;border-radius:14px;width:260px;overflow:hidden;z-index:51;opacity:0;transition:opacity .25s,transform .25s;display:none}
+.ld-sheet.show{display:block;opacity:1;transform:translate(-50%,-50%)}
+.ld-sheet-item{padding:13px 16px;display:flex;align-items:center;justify-content:space-between;font-size:13.5px;color:#000;border-bottom:0.5px solid rgba(0,0,0,0.15);background:transparent;transition:background .15s}
+.ld-sheet-item:last-child{border-bottom:none}
+.ld-sheet-item.hover{background:rgba(0,0,0,0.06)}
+.ld-sheet-icon{width:17px;height:17px;color:#000;opacity:.7}
+
 </style>
 
 </head>
@@ -612,6 +776,153 @@ p, span, div, h1, h2, h3, h4, h5, h6, li {
     <div class="login-prompt-title">로그인 후 이용 가능</div>
     <div class="login-prompt-desc">가입 시 <b>1크레딧 무료 지급</b><br>컬러 애널라이저 <b>2크레딧</b> 소모</div>
     <a href="/api/auth/cafe24" class="login-prompt-btn">로그인</a>
+  </div>
+
+  <!-- 비로그인 상세페이지 (인트로 + 라이브 데모) — 비로그인 시에만 노출 -->
+  <div class="login-demo-section" id="loginDemoSection">
+
+    <div class="login-demo-intro">
+      <div class="ldi-eyebrow"><i>how it works</i></div>
+      <div class="ldi-title">목표 사진 한 장으로<br><b>색감 분석부터 염색 레시피까지</b></div>
+      <div class="ldi-sub">시술 전 디자이너에게 레시피 힌트를 제공해<br>쉽고 정확한 시술을 가이드합니다.</div>
+      <div class="ldi-divider">
+        <div class="ldi-divider-line"></div>
+        <div class="ldi-divider-txt">live preview</div>
+        <div class="ldi-divider-line"></div>
+      </div>
+    </div>
+
+    <div class="login-demo-frame" id="loginDemoFrame">
+
+      <div class="ld-screen active" id="ldScreen1">
+        <div class="ld-step-row">
+          <div class="ld-step-row-txt">원하는 컬러 사진</div>
+          <div class="ld-step-pill">STEP 1</div>
+        </div>
+        <div class="ld-upload-box" id="ldUploadBox">
+          <div class="ld-upload-empty">
+            <div class="ld-upload-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </div>
+            <div class="ld-upload-txt">고객이 원하는 헤어 컬러 사진을<br><b>탭하여 업로드</b>해주세요</div>
+          </div>
+          <div class="ld-upload-img" id="ldUploadImg"></div>
+          <div class="ld-analyzing-overlay" id="ldAnalyzingOverlay">
+            <div class="ld-spinner"></div>
+            <div class="ld-analyzing-txt"><span id="ldAnalyzingTxt"></span><span class="ld-analyzing-cursor"></span></div>
+          </div>
+        </div>
+        <div class="ld-result-card" id="ldResultCard">
+          <div class="ld-result-label">AI 분석 결과</div>
+          <div class="ld-result-top">
+            <div class="ld-color-chip"></div>
+            <div>
+              <div class="ld-result-title">미색 베이스 + 잿빛 소량</div>
+              <div class="ld-result-sub">한색(쿨) 계열</div>
+            </div>
+          </div>
+          <div class="ld-result-desc">전체적으로 매우 밝고 하얀 미색 톤이 주를 이루며, 빛이 통과하는 듯한 투명하고 부드러운 느낌이 강하다. 곳곳에 은은한 잿빛이 섞여 있어 차갑고 서늘한 인상을 준다.</div>
+          <div class="ld-tag-row">
+            <div class="ld-tag">투명감</div><div class="ld-tag">윤기</div><div class="ld-tag">잿빛</div><div class="ld-tag">파스텔</div><div class="ld-tag">깊이감</div>
+          </div>
+        </div>
+        <button class="ld-cta-btn" id="ldCtaBtn">조색·레시피 가이드 보기</button>
+      </div>
+
+      <div class="ld-screen" id="ldScreen2">
+        <div class="ld-step-row">
+          <div class="ld-step-row-txt">시술 레시피</div>
+          <div class="ld-step-pill">STEP 2</div>
+        </div>
+        <div class="ld-thoughts-box">
+          <div class="ld-thoughts-title">AI 사고 흐름</div>
+          <div class="ld-thoughts-list" id="ldThoughtsList"></div>
+          <div class="ld-thoughts-pending" id="ldThoughtsPending">총 출력 대기 중...</div>
+        </div>
+      </div>
+
+      <div class="ld-screen" id="ldScreen3">
+        <div class="ld-step-row">
+          <div class="ld-step-row-txt">시술 레시피</div>
+          <div class="ld-step-pill">STEP 2</div>
+        </div>
+        <div class="ld-recipe-top">
+          <div class="ld-consult-card">
+            <div class="ld-consult-img" id="ldConsultImg"></div>
+            <div class="ld-consult-badge">고객 상담 카드</div>
+            <div class="ld-consult-bleach">탈색 3회 이상</div>
+          </div>
+          <div class="ld-recipe-right">
+            <div class="ld-spec-box">
+              <div class="ld-spec-icon-row">
+                <div class="ld-spec-dot pink"></div>
+                <div class="ld-spec-label">보색 컨트롤컬러</div>
+              </div>
+              <div class="ld-spec-value">핑크</div>
+            </div>
+            <div class="ld-spec-box">
+              <div class="ld-spec-label">메인 염모제</div>
+              <div class="ld-spec-dots-right">
+                <div class="ld-spec-dot swatch1"></div>
+                <div class="ld-spec-dot swatch2"></div>
+              </div>
+              <div class="ld-spec-recipe">밝은 톤의 회갈빛브라운 + 핑크 CC 극소량 + 클리어 다량</div>
+            </div>
+          </div>
+        </div>
+        <div class="ld-final-card">
+          <div class="ld-final-top-row">
+            <div class="ld-final-chip-big"></div>
+            <div class="ld-final-info">
+              <div class="ld-final-label">최종 수렴</div>
+              <div class="ld-final-title">미색 베이스 + 잿빛 소량</div>
+              <div class="ld-final-hex">#EDE8E0</div>
+            </div>
+          </div>
+          <div class="ld-final-note">다수의 탈색이 예상되는 시술입니다. 전처리·중간 안정화·후처리 케어가 필수.</div>
+          <div class="ld-final-base">
+            <div class="ld-final-base-label">권장 베이스 · 탈색 3회 이상</div>
+            <div class="ld-final-base-sub">연노랑~아이보리</div>
+          </div>
+        </div>
+        <div class="ld-tips-card">
+          <div class="ld-tips-header">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span>실무조언</span>
+          </div>
+          <div class="ld-tips-block">
+            <div class="ld-tips-block-label">권장 경로</div>
+            <div class="ld-tips-block-recipe">회갈빛브라운 + 핑크 CC 극소량 + 클리어 다량</div>
+            <div class="ld-tips-block-desc">브라운을 극도로 희석해 크리미한 화이트. 핑크 CC가 아이보리 잔류를 눌러 밀크빛 마무리.</div>
+          </div>
+          <div class="ld-tips-block alt">
+            <div class="ld-tips-block-label">대안 경로</div>
+            <div class="ld-tips-block-recipe">바이올렛 + 애쉬 + 클리어 다량 희석</div>
+            <div class="ld-tips-block-desc">잿빛 강조 시. 서늘한 아이스 화이트, 쿨한 플래티넘 방향으로 수렴.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ld-sheet-backdrop" id="ldSheetBackdrop"></div>
+      <div class="ld-sheet" id="ldSheet">
+        <div class="ld-sheet-item" id="ldSheetItem1">
+          <span>사진 보관함</span>
+          <svg class="ld-sheet-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+        </div>
+        <div class="ld-sheet-item">
+          <span>사진 찍기</span>
+          <svg class="ld-sheet-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+        <div class="ld-sheet-item">
+          <span>파일 선택</span>
+          <svg class="ld-sheet-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        </div>
+      </div>
+
+      <div class="ld-tap-ripple" id="ldTapRipple"></div>
+      <div class="ld-fake-finger" id="ldFinger" style="left:50%;top:100%">👆</div>
+    </div>
+
   </div>
 
   <!-- STEP 1: 레퍼런스 사진 -->
@@ -3464,6 +3775,7 @@ function vizRecipeCleanup(){
   var creditCount   = document.getElementById('creditCountHeader');
   var logoutLink    = document.getElementById('headerLogoutLink');
   var loginPrompt   = document.getElementById('loginPromptCard');
+  var loginDemoSec  = document.getElementById('loginDemoSection');
   var step1Card     = document.getElementById('step1Card');
   var recipeBtn     = document.getElementById('recipeBtn');
 
@@ -3478,6 +3790,7 @@ function vizRecipeCleanup(){
     if (creditCount) creditCount.textContent = credit;
 
     if (loginPrompt) loginPrompt.classList.remove('show');
+    if (loginDemoSec) { loginDemoSec.classList.remove('show'); if (window._ldStopDemo) window._ldStopDemo(); }
     if (step1Card)   step1Card.style.display = '';
   };
 
@@ -3489,6 +3802,7 @@ function vizRecipeCleanup(){
     if (accountInfo) accountInfo.classList.remove('show');
 
     if (loginPrompt) loginPrompt.classList.add('show');
+    if (loginDemoSec) { loginDemoSec.classList.add('show'); if (window._ldStartDemo) window._ldStartDemo(); }
     if (step1Card)   step1Card.style.display = 'none';
 
     // 레시피 버튼/결과/다시하기 전부 감춤 (이미 보이고 있었다면)
@@ -3555,6 +3869,281 @@ function vizRecipeCleanup(){
       renderLoggedIn(credit, data.member_id || data.memberId || '');
     })
     .catch(function(){ renderLoggedOut(); });
+})();
+
+/* ═══════════════════════════════════════════
+   비로그인 라이브 데모 (loginDemoSection)
+   - 로그인 상태에 따라 _ldStartDemo / _ldStopDemo 호출
+   - 모든 변수/함수는 _ld 네임스페이스로 격리
+═══════════════════════════════════════════ */
+(function(){
+  var HAIR_IMG = '/images/white-hair-sample.jpg';
+
+  var demoSection = document.getElementById('loginDemoSection');
+  var frame = document.getElementById('loginDemoFrame');
+  if(!demoSection || !frame) return;
+
+  var finger = document.getElementById('ldFinger');
+  var tapRipple = document.getElementById('ldTapRipple');
+  var screen1 = document.getElementById('ldScreen1');
+  var screen2 = document.getElementById('ldScreen2');
+  var screen3 = document.getElementById('ldScreen3');
+  var uploadBox = document.getElementById('ldUploadBox');
+  var uploadImg = document.getElementById('ldUploadImg');
+  var consultImg = document.getElementById('ldConsultImg');
+  var analyzingOverlay = document.getElementById('ldAnalyzingOverlay');
+  var analyzingTxt = document.getElementById('ldAnalyzingTxt');
+  var resultCard = document.getElementById('ldResultCard');
+  var ctaBtn = document.getElementById('ldCtaBtn');
+  var thoughtsList = document.getElementById('ldThoughtsList');
+  var thoughtsPending = document.getElementById('ldThoughtsPending');
+  var sheetBackdrop = document.getElementById('ldSheetBackdrop');
+  var sheet = document.getElementById('ldSheet');
+  var sheetItem1 = document.getElementById('ldSheetItem1');
+
+  uploadImg.style.backgroundImage = 'url("' + HAIR_IMG + '")';
+  consultImg.style.backgroundImage = 'url("' + HAIR_IMG + '")';
+
+  var timeouts = [];
+  var running = false;
+  function delay(ms){
+    return new Promise(function(r){
+      var t = setTimeout(r, ms);
+      timeouts.push(t);
+    });
+  }
+  function clearAll(){
+    timeouts.forEach(function(t){clearTimeout(t)});
+    timeouts = [];
+  }
+
+  function getCenterOf(el){
+    var elRect = el.getBoundingClientRect();
+    var frameRect = frame.getBoundingClientRect();
+    return {
+      x: elRect.left - frameRect.left + elRect.width/2,
+      y: elRect.top - frameRect.top + elRect.height/2
+    };
+  }
+
+  function moveFingerTo(el, ms){
+    ms = ms || 900;
+    var p = getCenterOf(el);
+    finger.style.transition = 'left ' + ms + 'ms cubic-bezier(.4,.0,.2,1), top ' + ms + 'ms cubic-bezier(.4,.0,.2,1)';
+    finger.style.left = p.x + 'px';
+    finger.style.top = p.y + 'px';
+    return delay(ms);
+  }
+
+  function tapAt(){
+    var x = parseFloat(finger.style.left);
+    var y = parseFloat(finger.style.top);
+    tapRipple.style.left = x + 'px';
+    tapRipple.style.top = y + 'px';
+    tapRipple.classList.remove('go');
+    void tapRipple.offsetWidth;
+    tapRipple.classList.add('go');
+    finger.classList.add('tapping');
+    return delay(350).then(function(){
+      finger.classList.remove('tapping');
+      return delay(150);
+    });
+  }
+
+  function switchScreen(from, to){
+    from.classList.add('fading-out');
+    return delay(300).then(function(){
+      from.classList.remove('active');
+      from.classList.remove('fading-out');
+      to.classList.add('active');
+      return delay(400);
+    });
+  }
+
+  var STEP1_PHRASES = ['색감 분석중','언더톤 판독중','명도 체크중','뉘앙스 파악중','반사빛 분석중'];
+  var step1TypingTimer = null;
+  function startStep1Typing(){
+    var idx=0,charIdx=0,state='typing',holdUntil=0;
+    var current = STEP1_PHRASES[0];
+    analyzingTxt.textContent='';
+    step1TypingTimer = setInterval(function(){
+      if(state==='typing'){
+        if(charIdx<current.length){analyzingTxt.textContent=current.slice(0,charIdx+1);charIdx++}
+        else {state='holding';holdUntil=Date.now()+700}
+      } else if(state==='holding'){
+        if(Date.now()>=holdUntil)state='erasing';
+      } else if(state==='erasing'){
+        if(charIdx>0){charIdx--;analyzingTxt.textContent=current.slice(0,charIdx)}
+        else {idx=(idx+1)%STEP1_PHRASES.length;current=STEP1_PHRASES[idx];state='typing'}
+      }
+    },80);
+  }
+  function stopStep1Typing(){if(step1TypingTimer){clearInterval(step1TypingTimer);step1TypingTimer=null}}
+
+  var THOUGHTS = [
+    {text:'전체적으로 거의 하얀 미색이 지배적...', kws:['하얀 미색']},
+    {text:'염료 무게감 거의 없고 빛이 통과하는 느낌...', kws:['빛이 통과']},
+    {text:'잿빛은 부가 뉘앙스 수준, 메인은 미색·크리미 방향...', kws:['미색·크리미']},
+    {text:'탈색 3회 이상으로 연노랑~아이보리 베이스까지 올렸을 듯...', kws:['탈색 3회 이상','연노랑~아이보리']},
+    {text:'회갈빛브라운 메인에 클리어 다량 희석이 핵심일 듯...', kws:['회갈빛브라운','클리어 다량']},
+    {text:'핑크 컨트롤컬러 극소량으로 아이보리 잔류 살짝 잡아줘야 할 듯...', kws:['핑크 컨트롤컬러']},
+    {text:'근데 모질·탈색 횟수에 따라 잿빛 방향 대안도 안내해야 할 듯...', kws:['대안']}
+  ];
+
+  function tokenize(text){
+    var tokens=[];var i=0;
+    while(i<text.length){
+      if(text.slice(i,i+3)==='...'){tokens.push('...');i+=3;continue}
+      var len=Math.floor(Math.random()*3)+2;
+      tokens.push(text.slice(i,i+len));i+=len;
+    }
+    return tokens;
+  }
+  function buildSegments(line){
+    var segments=[];var matches=[];
+    line.kws.forEach(function(kw){
+      var idx=line.text.indexOf(kw);
+      if(idx>=0)matches.push({start:idx,end:idx+kw.length,text:kw});
+    });
+    matches.sort(function(a,b){return a.start-b.start});
+    var pos=0;
+    matches.forEach(function(m){
+      if(m.start>pos)segments.push({text:line.text.slice(pos,m.start),kw:false});
+      segments.push({text:m.text,kw:true});
+      pos=m.end;
+    });
+    if(pos<line.text.length)segments.push({text:line.text.slice(pos),kw:false});
+    return segments;
+  }
+  function playThoughtLine(line){
+    var lineEl=document.createElement('span');
+    lineEl.className='ld-thoughts-line show';
+    var cursorEl=document.createElement('span');
+    cursorEl.className='ld-thoughts-cursor';
+    cursorEl.textContent='▍';
+    thoughtsList.appendChild(lineEl);
+    lineEl.appendChild(cursorEl);
+    var segments=buildSegments(line);
+
+    return segments.reduce(function(p, seg){
+      return p.then(function(){
+        var segSpan=document.createElement('span');
+        if(seg.kw)segSpan.className='ld-kw';
+        lineEl.insertBefore(segSpan,cursorEl);
+        var tokens=tokenize(seg.text);
+        return tokens.reduce(function(pp, tok){
+          return pp.then(function(){
+            segSpan.textContent+=tok;
+            return delay(50+Math.random()*40);
+          });
+        }, Promise.resolve());
+      });
+    }, Promise.resolve()).then(function(){
+      cursorEl.classList.add('done');
+    });
+  }
+
+  function runDemo(){
+    if(!running) return;
+    clearAll();
+    stopStep1Typing();
+
+    uploadBox.classList.remove('uploaded');
+    analyzingOverlay.classList.remove('show');
+    resultCard.classList.remove('show');
+    ctaBtn.classList.remove('show');
+    ctaBtn.classList.remove('pressed');
+    thoughtsList.innerHTML='';
+    thoughtsPending.classList.remove('show');
+    sheetBackdrop.classList.remove('show');
+    sheet.classList.remove('show');
+    sheetItem1.classList.remove('hover');
+    screen1.classList.add('active');
+    screen2.classList.remove('active');
+    screen3.classList.remove('active');
+    finger.style.transition='none';
+    finger.style.left='50%';
+    finger.style.top='100%';
+
+    delay(80)
+      .then(function(){return moveFingerTo(uploadBox, 1100)})
+      .then(function(){return delay(180)})
+      .then(tapAt)
+      .then(function(){
+        sheetBackdrop.classList.add('show');
+        sheet.classList.add('show');
+        return delay(450);
+      })
+      .then(function(){return moveFingerTo(sheetItem1, 700)})
+      .then(function(){
+        sheetItem1.classList.add('hover');
+        return delay(220);
+      })
+      .then(tapAt)
+      .then(function(){
+        sheetItem1.classList.remove('hover');
+        sheet.classList.remove('show');
+        sheetBackdrop.classList.remove('show');
+        return delay(250);
+      })
+      .then(function(){
+        uploadBox.classList.add('uploaded');
+        return delay(350);
+      })
+      .then(function(){
+        analyzingOverlay.classList.add('show');
+        startStep1Typing();
+        return delay(3200);
+      })
+      .then(function(){
+        stopStep1Typing();
+        analyzingOverlay.classList.remove('show');
+        resultCard.classList.add('show');
+        return delay(800);
+      })
+      .then(function(){
+        ctaBtn.classList.add('show');
+        return delay(700);
+      })
+      .then(function(){return moveFingerTo(ctaBtn, 900)})
+      .then(function(){return delay(180)})
+      .then(function(){
+        ctaBtn.classList.add('pressed');
+        return tapAt();
+      })
+      .then(function(){
+        ctaBtn.classList.remove('pressed');
+        finger.style.transition='left .4s,top .4s';
+        finger.style.top='110%';
+        return switchScreen(screen1, screen2);
+      })
+      .then(function(){
+        return THOUGHTS.reduce(function(p, line){
+          return p.then(function(){return playThoughtLine(line)})
+                  .then(function(){return delay(220)});
+        }, Promise.resolve());
+      })
+      .then(function(){
+        thoughtsPending.classList.add('show');
+        return delay(900);
+      })
+      .then(function(){return switchScreen(screen2, screen3)})
+      .then(function(){return delay(5500)})
+      .then(function(){
+        if(running) runDemo();
+      });
+  }
+
+  window._ldStartDemo = function(){
+    if(running) return;
+    running = true;
+    setTimeout(runDemo, 500);
+  };
+  window._ldStopDemo = function(){
+    running = false;
+    clearAll();
+    stopStep1Typing();
+  };
 })();
 </script>
 
