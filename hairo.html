@@ -1528,7 +1528,7 @@ input, textarea { font-family: inherit; }
   <div class="header-right" id="headerRight"></div>
 </header>
 
-<nav class="tabs" role="tablist">
+<nav class="tabs" id="galleryTabs" role="tablist">
   <button class="tab active" data-tab="all" type="button">갤러리</button>
   <button class="tab" data-tab="favorites" type="button">즐겨찾기</button>
 </nav>
@@ -1544,22 +1544,42 @@ input, textarea { font-family: inherit; }
     <a href="/api/auth/cafe24" class="btn">로그인</a>
   </div>
 
+  <!-- 비로그인 인트로 카드 (세션 없을 때만 노출) -->
+  <div class="hairo-intro-card" id="hairoIntroCard">
+    <div class="hi-eyebrow"><i>salon optimized</i></div>
+    <div class="hi-title">살롱에 필요한 모든 사진,<br>살롱 최적화 이미지 생성엔진<br><b>HAIRO (나노바나나 2)</b></div>
+    <div class="hi-cta">로그인 후 지금 바로 생성해주세요!</div>
+    <div class="hi-divider"></div>
+    <div class="hi-spec-row">
+      <div class="hi-spec-label">3가지 무드</div>
+      <div class="hi-spec-chips">
+        <div class="hi-chip">화보·룩북</div>
+        <div class="hi-chip">Y2K 디카</div>
+        <div class="hi-chip">네츄럴</div>
+      </div>
+    </div>
+    <div class="hi-spec-row">
+      <div class="hi-spec-label">3가지 프레이밍</div>
+      <div class="hi-spec-desc">신체 각도별 자동 구도 조절</div>
+    </div>
+    <div class="hi-spec-row">
+      <div class="hi-spec-label">프리 프롬프트</div>
+      <div class="hi-spec-desc">살롱에 필요한 모든 이미지 자유 생성</div>
+    </div>
+    <div class="hi-banner" style="background-image:url('/images/hairo-banner.jpg')"></div>
+  </div>
+
   <div id="galleryEmpty">
     <div class="guide">
       <div class="guide-eyebrow">how to compose</div>
       <div class="guide-sub">PROMPT GUIDE</div>
       <div class="guide-body">
-        <p>무드와 프레이밍은 자유롭게 함께 쓰셔도 됩니다.</p>
-        <p>무드를 안 고르시면 완전 자유 모드로</p>
-        <p>카탈로그·제품 사진도 만드실 수 있어요.</p>
+        <p>무드와 프레이밍을 선택한 뒤 프롬프트를 입력하시거나,</p>
+        <p>완전한 자유도를 원하시면 <b>자유 모드</b>로</p>
+        <p>프롬프트를 직접 입력하세요.</p>
         <div class="guide-divider"></div>
-        <p>앵글까지 정밀 제어를 원하시면,</p>
-        <p>먼저 무드·프레이밍·자유 프롬프트로</p>
-        <p>사진을 만든 뒤 <b>앵글 모드</b>로 다듬는 걸 권장.</p>
-        <p>모든 모드를 한 번에 켜면 충돌이 날 수 있어요.</p>
-        <div class="guide-divider"></div>
-        <p>참조 사진은 최대 5장,</p>
-        <p>"이건 헤어, 이건 의상" 처럼</p>
+        <p>참조사진은 최대 <b>5장</b>까지,</p>
+        <p>1번째 사진은 헤어 참조, 2번째 사진은 의상 참조 등</p>
         <p>역할을 적어주시면 더 정확합니다.</p>
       </div>
     </div>
@@ -1658,8 +1678,8 @@ input, textarea { font-family: inherit; }
     <div class="sheet-body">
       <div class="preset-list">
         <button class="preset-card" data-mood="" type="button">
-          <div class="preset-card-title">자유 입력</div>
-          <div class="preset-card-desc">코어 없음. 디자이너 프롬프트만 적용. 카탈로그·제품 자유 모드.</div>
+          <div class="preset-card-title">자유모드(프롬프트 직접입력)</div>
+          <div class="preset-card-desc">처음부터 끝까지 디자이너가 프롬프트 자유 입력. 나노바나나2 엔진 자체.</div>
         </button>
         <button class="preset-card" data-mood="natural" type="button">
           <div class="preset-card-title">네츄럴</div>
@@ -1673,9 +1693,6 @@ input, textarea { font-family: inherit; }
           <div class="preset-card-title">Y2K</div>
           <div class="preset-card-desc">2000년대 디카 톤. 핑크·피치 빈티지. SNS용.</div>
         </button>
-      </div>
-      <div class="preset-tip">
-        <b>팁.</b> 자유 입력 = 코어 없음. 헤어 시뮬레이션엔 무드 선택 권장.
       </div>
     </div>
   </div>
@@ -1879,14 +1896,22 @@ function renderLoggedIn() {
   // 비로그인 카드 숨김
   var lc = document.getElementById('hairoLoginCard');
   if (lc) lc.classList.remove('show');
+  var ic = document.getElementById('hairoIntroCard');
+  if (ic) ic.classList.remove('show');
+  var tabs = document.getElementById('galleryTabs');
+  if (tabs) tabs.style.display = '';
   var ge = document.getElementById('galleryEmpty');
   if (ge) ge.style.display = '';
 }
 function renderLoggedOut() {
   document.getElementById('headerRight').innerHTML = `<a class="btn-link" href="/api/auth/cafe24" style="text-decoration:none;">로그인</a>`;
-  // 비로그인 카드 노출 + 갤러리 빈 placeholder 숨김
+  // 비로그인 카드 노출 + 탭/갤러리 placeholder 숨김
   var lc = document.getElementById('hairoLoginCard');
   if (lc) lc.classList.add('show');
+  var ic = document.getElementById('hairoIntroCard');
+  if (ic) ic.classList.add('show');
+  var tabs = document.getElementById('galleryTabs');
+  if (tabs) tabs.style.display = 'none';
   var ge = document.getElementById('galleryEmpty');
   if (ge) ge.style.display = 'none';
 }
@@ -3085,6 +3110,27 @@ loadSession();
 .hairo-login-card .desc b{color:#C7F050;font-weight:700}
 .hairo-login-card .btn{display:inline-block;padding:12px 36px;background:#C7F050;color:#0A0A0A;text-decoration:none;border-radius:12px;font-size:13.5px;font-weight:700;letter-spacing:-0.2px;-webkit-tap-highlight-color:transparent;transition:opacity .15s, transform .15s}
 .hairo-login-card .btn:active{opacity:.85;transform:scale(.97)}
+
+/* ═══════════════════════════════════════════
+   비로그인 인트로 카드 (#hairoIntroCard)
+   - 세션 없을 때만 노출 (.show 토글)
+   - 모든 클래스 hi- 접두어로 격리
+═══════════════════════════════════════════ */
+.hairo-intro-card{display:none;margin:14px 16px 24px;padding:18px 18px 16px;background:#0A0A0A;border:1px solid rgba(255,255,255,0.08);border-radius:14px}
+.hairo-intro-card.show{display:block}
+.hi-eyebrow{font-family:"Times New Roman","Noto Serif KR",serif;font-style:italic;font-size:11px;color:#C7F050;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;font-weight:500}
+.hi-title{font-size:15px;font-weight:700;color:#fff;line-height:1.55;letter-spacing:-0.3px;margin-bottom:8px;word-break:keep-all}
+.hi-title b{color:#C7F050;font-weight:700}
+.hi-cta{font-size:13px;font-weight:600;color:#C7F050;letter-spacing:-0.3px;margin-bottom:12px;word-break:keep-all}
+.hi-divider{height:0.5px;background:rgba(255,255,255,0.1);margin:0 0 12px}
+.hi-spec-row{display:flex;gap:9px;align-items:flex-start;margin-bottom:10px}
+.hi-spec-row:last-of-type{margin-bottom:14px}
+.hi-spec-label{font-size:10.5px;color:#C7F050;font-weight:700;margin-top:2px;min-width:64px;letter-spacing:0.2px;flex-shrink:0}
+.hi-spec-chips{display:flex;gap:5px;flex-wrap:wrap;flex:1}
+.hi-chip{background:rgba(199,240,80,0.12);border:0.5px solid rgba(199,240,80,0.25);color:#C7F050;font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;letter-spacing:-0.2px}
+.hi-spec-desc{font-size:11.5px;color:rgba(255,255,255,0.6);line-height:1.6;flex:1;word-break:keep-all}
+.hi-banner{width:100%;aspect-ratio:1/1;background-size:cover;background-position:center;background-color:#1a1a1a;border-radius:10px;border:0.5px solid rgba(255,255,255,0.08);margin-top:4px}
+
 </style>
 
 <div class="credit-modal" id="creditModal" aria-hidden="true">
