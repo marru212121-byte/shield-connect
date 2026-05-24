@@ -18,7 +18,7 @@ import { getSupabase } from '../../../lib/supabase.js';
 import { setSessionCookie } from '../../../lib/session.js';
 
 const STATE_COOKIE = 'sc_oauth_state';
-const SIGNUP_BONUS = 1;
+const SIGNUP_BONUS = 2;
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
