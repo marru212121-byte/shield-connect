@@ -770,10 +770,15 @@
       stroke:#fff !important;
     }
 
-    /* === iOS PWA overscroll 방지 (body 끝에서 외부 노출 차단) — 2026-05-09 === */
+    /* === 스크롤 컨테이너 명확화 (안드로이드 크롬 한손가락 스크롤 복구) — 2026-05-24 ===
+       원인: 인라인의 -webkit-overflow-scrolling:auto !important 가 안드로이드 크롬에서
+             한손가락 세로 스크롤을 막아 두손가락으로만 내려갔음.
+       수정: 그 강제 override를 제거하고 iOS 관성 스크롤(touch)로 되돌림.
+             body에 touch-action은 걸지 않음 → 가로 스크롤 요소(.filter-scroll 등) 보호.
+             height도 고정 안 함 → 콘텐츠가 길어도 잘리지 않음. */
     html, body {
-      overscroll-behavior-y: none !important;
-      -webkit-overflow-scrolling: auto !important;
+      overscroll-behavior-y: none;
+      -webkit-overflow-scrolling: touch;
     }
 
     /* === 홈 메뉴 — 아이콘 박스만 키움 (B안) — 2026-05-09 === */
