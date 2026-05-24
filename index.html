@@ -770,16 +770,12 @@
       stroke:#fff !important;
     }
 
-    /* === 스크롤 컨테이너 명확화 (안드로이드 크롬 한손가락 스크롤 복구) — 2026-05-24 ===
-       원인: 인라인의 -webkit-overflow-scrolling:auto !important 가 안드로이드 크롬에서
-             한손가락 세로 스크롤을 막아 두손가락으로만 내려갔음.
-       수정: 그 강제 override를 제거하고 iOS 관성 스크롤(touch)로 되돌림.
-             body에 touch-action은 걸지 않음 → 가로 스크롤 요소(.filter-scroll 등) 보호.
-             height도 고정 안 함 → 콘텐츠가 길어도 잘리지 않음. */
-    html, body {
-      overscroll-behavior-y: none;
-      -webkit-overflow-scrolling: touch;
-    }
+    /* === 두손가락 스크롤 수정 v2 — 2026-05-24 ===
+       정상 작동하는 애널라이저/컷 페이지는 html,body에 overscroll-behavior나
+       -webkit-overflow-scrolling을 "전혀" 걸지 않는다(그냥 min-height + overflow-x:hidden뿐).
+       index에만 있던 이 두 속성이 안드로이드 크롬에서 한손가락 스크롤을 막은 것으로 보여,
+       정상 페이지와 동일하게 두 속성을 완전히 제거한다. (값만 바꾼 v1으로는 해결 안 됐음)
+       overflow-x:hidden은 170번 줄에서 이미 처리되므로 여기선 비워둠. */
 
     /* === 홈 메뉴 — 아이콘 박스만 키움 (B안) — 2026-05-09 === */
     #page-home .menu-card {
@@ -926,23 +922,22 @@
 </head>
 <body>
 
-<!-- ════════════ 첫 진입 스플래시 (v6.2, 2026-05-15) ════════════
-     배너를 1초 가운데 표시 → 0.4초 동안 위로 줄어들며 홈 배너 자리로 이동.
-     이미지 로드 실패해도 검정 배경만 보이고 자동 폴백(2.2s 안전장치).
-     세션당 1회만 표시 — 메뉴 이동/로그인 콜백 후 복귀 시엔 안 뜸 -->
-<div id="sc-splash" aria-hidden="true">
-  <img id="sc-splash-img" src="./images/banner.jpeg" alt="" onerror="this.style.display='none'"/>
-</div>
+<!-- ════════════ 첫 진입 스플래시 제거됨 — 2026-05-24 ════════════
+     [사유] 배너가 떴다 줄어드는 연출(#sc-splash)이 화면 전체를 position:fixed로
+     덮는데(z-index:100000), 안드로이드 크롬에서 한손가락 스크롤이 막히는 문제의
+     유력 원인이라 제거. 아래 메인 스크립트의 스플래시 로직은 getElementById가
+     null을 반환해 자동으로 건너뜀(if(splash) 가드 있음) — 에러 없음.
+     연출만 사라지고 홈/로그인/결제/크레딧 기능은 전부 그대로 동작함. -->
 <script>
-/* 첫 페인트 전 즉시 체크 — 이미 본 적 있으면 깜빡임 없이 바로 숨김.
-   하단의 메인 스크립트가 표시/제거 로직을 마저 처리한다. */
+/* 스플래시 제거에 따른 안전장치: 혹시 어떤 캐시 상황에서도 잔여 오버레이가
+   터치를 막지 못하도록, 로드 직후 #sc-splash/#sc-page-overlay가 남아있으면 무력화. */
 (function(){
   try {
-    if (sessionStorage.getItem('sc_splash_seen')) {
-      var s = document.getElementById('sc-splash');
-      if (s) s.style.display = 'none';
-    }
-  } catch(e) { /* private 모드 등 — 무시 */ }
+    ['sc-splash','sc-page-overlay'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el && id === 'sc-splash' && el.parentNode){ el.parentNode.removeChild(el); }
+    });
+  } catch(e){}
 })();
 </script>
 
