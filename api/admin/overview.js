@@ -22,7 +22,8 @@ import { getSupabase } from '../../lib/supabase.js';
 
 const PRICE_PER_CHARGE = 7900;
 const CREDITS_PER_CHARGE = 30;
-const SIGNUP_BONUS = 1;
+// 가입 보너스: 2 (callback.js의 SIGNUP_BONUS와 반드시 일치해야 어드민 불일치 경고가 안 뜸)
+const SIGNUP_BONUS = 2;
 
 // ID → 가입 경로 판별
 function getProviderFromMemberId(memberId) {
@@ -75,9 +76,11 @@ export default async function handler(req, res) {
         total: aiCalls?.filter(c => c.model === 'nanobanana').length || 0,
         success: aiCalls?.filter(c => c.model === 'nanobanana' && c.status === 'success').length || 0,
       },
+      // ⚠️ 응답 키 'sonnet'은 유지 (어드민 홈 HTML이 ai_calls.sonnet를 읽을 수 있어
+      //    호환성 위해). 필터 값만 'sonnet' → 'gemini'로 교체 (안 바꾸면 분석 호출이 0으로 잡힘).
       sonnet: {
-        total: aiCalls?.filter(c => c.model === 'sonnet').length || 0,
-        success: aiCalls?.filter(c => c.model === 'sonnet' && c.status === 'success').length || 0,
+        total: aiCalls?.filter(c => c.model === 'gemini').length || 0,
+        success: aiCalls?.filter(c => c.model === 'gemini' && c.status === 'success').length || 0,
       },
       alert_counts: {
         critical: aiCalls?.filter(c => c.alert_level === 'critical').length || 0,

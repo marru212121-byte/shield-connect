@@ -1,6 +1,13 @@
 // api/admin/system.js
 // ═══════════════════════════════════════════════════════════════
-// 시스템 페이지 데이터 (v2)
+// 시스템 페이지 데이터 (v7)
+// ═══════════════════════════════════════════════════════════════
+// 변경점 (v6.3 → v7): ★ 분석 엔진 Anthropic 소넷 → Google Gemini 3.5 Flash ★
+//   1) 사용량 추정 단가 교체: 컬러 160→48원, 컷 60→10원 (생각 끈 상태 실측)
+//   2) ai_call_logs 모델 필터 'sonnet' → 'gemini'
+//   3) 토큰 카드 'anthropic_key'(소넷 키) → 'gemini_key'(Gemini 키)
+//   4) 게이지 표기 'Anthropic 소넷' → 'Gemini 3.5 Flash', 콘솔 링크 → AI Studio/GCP
+//   ※ api_usage 응답 키는 'sonnet' 유지 (어드민 화면 HTML 호환). 나노바나나는 그대로.
 // ═══════════════════════════════════════════════════════════════
 // 변경점 (v1 → v2):
 //   1) Anthropic / 나노바나나 "오늘 사용량 추정 게이지" 추가
@@ -13,18 +20,18 @@
 import { requireAdmin } from '../../lib/admin-auth.js';
 import { getSupabase } from '../../lib/supabase.js';
 
-// 사용량 추정 단가 — 원화 (v6.3)
+// 사용량 추정 단가 — 원화 (v7: 소넷 → Gemini 3.5 Flash 교체)
 // ai-logs.js의 COST_KRW와 동일 단가 사용 (한 곳 바꾸면 양쪽 다 반영되게 추후 통합 고려)
-// 컬러: 1스텝 140 + 2스텝 20 = 160원 (1회 합계)
-// 컷: 60원
-// 나노바나나: 100원
-const COST_KRW_SONNET = {
-  color: 160,           // 컬러 애널라이저 1회 (1스텝+2스텝 합)
-  cut: 60,              // 컷 애널라이저 1회
-  recipe_only: 20,      // 레시피 단독 호출 (= 컬러 2스텝)
+// 컬러: 1스텝 7 + 2스텝 41 = 48원 (1회 합계, 생각 끈 상태 실측)
+// 컷: 10원
+// 나노바나나: 100원 (변경 없음)
+const COST_KRW_GEMINI = {
+  color: 48,            // 컬러 애널라이저 1회 (1스텝+2스텝 합) — stage='color'(1스텝) 카운트에만 부과
+  cut: 10,              // 컷 애널라이저 1회
+  recipe_only: 41,      // 레시피(컬러 2스텝) — color에 이미 포함, 합산 시 이중계산 방지 위해 별도 합산 안 함
   customer_message: 0,  // 무료 안내
 };
-const COST_KRW_NANOBANANA = 100;  // HAIRO 사진 1장
+const COST_KRW_NANOBANANA = 100;  // HAIRO 사진 1장 (나노바나나, 변경 없음)
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -100,13 +107,13 @@ export default async function handler(req, res) {
     });
 
     tokens.push({
-      key: 'anthropic_key',
-      title: '소넷 API 키',
+      key: 'gemini_key',
+      title: 'Gemini API 키',
       subtitle: '분석기용 영구 열쇠',
-      why: 'Anthropic에 분석 요청 보낼 때 쓰는 영구 열쇠. 만료 안 되니까 잃어버리지만 않으면 됩니다.',
+      why: 'Google(AI Studio)에 분석 요청 보낼 때 쓰는 영구 열쇠. 만료 안 되니까 잃어버리지만 않으면 됩니다. (나노바나나 키를 그대로 재활용 중)',
       renewal: 'none',
       status: 'ok',
-      storage: 'Vercel 환경변수',
+      storage: 'Vercel 환경변수 (HAIRO_NANOBANANA2)',
     });
 
     // ─── 2. ✨ AI API 사용량 추정 게이지 (v6.3: stage별 원화 계산) ─────────────
@@ -132,21 +139,21 @@ export default async function handler(req, res) {
     const todayIso = todayStart.toISOString();
     const monthIso = monthStart.toISOString();
 
-    // 소넷 — stage별 카운트
+    // Gemini — stage별 카운트
     const [
-      todayColor, todayCut, todayRecipe, todayMsg, todaySonnetNull,
-      monthColor, monthCut, monthRecipe, monthMsg, monthSonnetNull,
+      todayColor, todayCut, todayRecipe, todayMsg, todayGeminiNull,
+      monthColor, monthCut, monthRecipe, monthMsg, monthGeminiNull,
     ] = await Promise.all([
-      fetchByStage('sonnet', todayIso, 'color'),
-      fetchByStage('sonnet', todayIso, 'cut'),
-      fetchByStage('sonnet', todayIso, 'recipe_only'),
-      fetchByStage('sonnet', todayIso, 'customer_message'),
-      fetchByStage('sonnet', todayIso, null),
-      fetchByStage('sonnet', monthIso, 'color'),
-      fetchByStage('sonnet', monthIso, 'cut'),
-      fetchByStage('sonnet', monthIso, 'recipe_only'),
-      fetchByStage('sonnet', monthIso, 'customer_message'),
-      fetchByStage('sonnet', monthIso, null),
+      fetchByStage('gemini', todayIso, 'color'),
+      fetchByStage('gemini', todayIso, 'cut'),
+      fetchByStage('gemini', todayIso, 'recipe_only'),
+      fetchByStage('gemini', todayIso, 'customer_message'),
+      fetchByStage('gemini', todayIso, null),
+      fetchByStage('gemini', monthIso, 'color'),
+      fetchByStage('gemini', monthIso, 'cut'),
+      fetchByStage('gemini', monthIso, 'recipe_only'),
+      fetchByStage('gemini', monthIso, 'customer_message'),
+      fetchByStage('gemini', monthIso, null),
     ]);
 
     // 나노바나나 — stage='image'만 (단가 단일)
@@ -166,35 +173,37 @@ export default async function handler(req, res) {
 
     // 원화 합산 — 컬러 1회 = 1스텝(stage='color') 카운트로만 잡음
     //   이유: DB엔 color(1스텝) + recipe_only(2스텝) 따로 박히지만,
-    //   사용자 입장에선 1회. 1스텝 카운트 × 160원이 가장 정확.
+    //   사용자 입장에선 1회. 1스텝 카운트 × 48원이 가장 정확.
     //   recipe_only는 컬러의 2스텝이므로 따로 합산 안 함 (이중계산 방지).
     //   ※ 단, 컬러 1스텝 실패 후 2스텝만 단독 호출되는 케이스는 별도 추정 X (드물어 무시)
-    const todaySonnetKrw = (todayColor * COST_KRW_SONNET.color)
-                         + (todayCut * COST_KRW_SONNET.cut);
-    const monthSonnetKrw = (monthColor * COST_KRW_SONNET.color)
-                         + (monthCut * COST_KRW_SONNET.cut);
+    const todayGeminiKrw = (todayColor * COST_KRW_GEMINI.color)
+                         + (todayCut * COST_KRW_GEMINI.cut);
+    const monthGeminiKrw = (monthColor * COST_KRW_GEMINI.color)
+                         + (monthCut * COST_KRW_GEMINI.cut);
 
     // "오늘 N건" 표시용 호출 수 (컬러 + 컷, recipe_only는 컬러의 2스텝이므로 제외)
-    const todaySonnetCalls = todayColor + todayCut;
-    const monthSonnetCalls = monthColor + monthCut;
+    const todayGeminiCalls = todayColor + todayCut;
+    const monthGeminiCalls = monthColor + monthCut;
 
     const todayNanoKrw = (todayNanobanana || 0) * COST_KRW_NANOBANANA;
     const monthNanoKrw = (monthNanobanana || 0) * COST_KRW_NANOBANANA;
 
     const api_usage = {
+      // ⚠️ 응답 키는 'sonnet' 그대로 유지 (어드민 화면 HTML이 api_usage.sonnet를
+      //    읽고 있을 수 있어 호환성 위해 키는 안 바꿈). 내용물은 Gemini 데이터.
       sonnet: {
-        title: 'Anthropic 소넷',
+        title: 'Gemini 3.5 Flash',
         subtitle: '분석기 (컬러/컷)',
-        today_calls: todaySonnetCalls,
-        today_cost_krw: todaySonnetKrw,
-        month_calls: monthSonnetCalls,
-        month_cost_krw: monthSonnetKrw,
+        today_calls: todayGeminiCalls,
+        today_cost_krw: todayGeminiKrw,
+        month_calls: monthGeminiCalls,
+        month_cost_krw: monthGeminiKrw,
         breakdown: {
           today: { color: todayColor, cut: todayCut },
           month: { color: monthColor, cut: monthCut },
         },
-        console_url: 'https://console.anthropic.com/settings/billing',
-        note: '추정치 (컬러 160원 / 컷 60원). 실제 잔액은 콘솔에서 확인.',
+        console_url: 'https://aistudio.google.com/app/usage',
+        note: '추정치 (컬러 48원 / 컷 10원). 실제 사용량/잔액은 AI Studio·GCP 콘솔에서 확인.',
       },
       nanobanana: {
         title: '나노바나나 (Vertex AI)',

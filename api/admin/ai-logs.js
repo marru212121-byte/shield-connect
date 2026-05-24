@@ -1,6 +1,12 @@
 // api/admin/ai-logs.js
 // ═══════════════════════════════════════════════════════════════
-// AI 사용 페이지 데이터 (v3)
+// AI 사용 페이지 데이터 (v4)
+// ═══════════════════════════════════════════════════════════════
+// 변경점 (v3 → v4): ★ 분석 엔진 소넷 → Gemini 3.5 Flash ★
+//   1) 단가 교체: 컬러 1스텝 140→7, 2스텝 20→41 (합 160→48), 컷 60→10
+//   2) classifyStage / 통계·비용 합산: model 'sonnet' → 'gemini' (legacy 'sonnet'도 같이 인식)
+//   3) MODEL_LABELS에 'gemini' 추가, 'success_gemini'/'gemini_key_invalid' 라벨 추가
+//   ※ today_stats / today_breakdown 응답 키('sonnet','anthropic')는 유지 (어드민 HTML 호환)
 // ═══════════════════════════════════════════════════════════════
 // 변경점 (v2 → v3):
 //   1) stage별 분해 추가 (컬러 1스텝/2스텝/컷/HAIRO 사진)
@@ -21,14 +27,15 @@
 import { requireAdmin } from '../../lib/admin-auth.js';
 import { getSupabase } from '../../lib/supabase.js';
 
-// ─── 단가 (사장님 어림잡은 값, 한화) ───────────────────────────
+// ─── 단가 (Gemini 3.5 Flash 실측 기준, 한화) ───────────────────
+// 생각 끈 상태(thinkingBudget:0) 실측: 컬러 1스텝 7 + 2스텝 41 = 48원
 const COST_KRW = {
-  // Anthropic 소넷
-  color_step1: 140,   // 컬러 분석 1스텝 (색감 분석, 큰 호출)
-  color_step2: 20,    // 컬러 분석 2스텝 (레시피, 작은 호출)
-  color_total: 160,   // 컬러 1회 (1+2)
-  cut: 60,            // 컷 분석
-  // Google 나노바나나
+  // 분석 엔진 (Gemini 3.5 Flash)
+  color_step1: 7,     // 컬러 분석 1스텝 (색감 분석)
+  color_step2: 41,    // 컬러 분석 2스텝 (레시피, 출력 토큰 큼)
+  color_total: 48,    // 컬러 1회 (1+2)
+  cut: 10,            // 컷 분석
+  // Google 나노바나나 (변경 없음)
   hairo: 100,         // HAIRO 사진 1장
 };
 
@@ -43,9 +50,10 @@ function getProvider(memberId) {
 // stage → 분류 (어드민이 식별할 메뉴 카테고리)
 // recipe.js에서 보내는 stage 값: 'color', 'cut', 'recipe_only', 'customer_message'
 // generate-image.js에서 보내는 stage 값: 'image'
+// 분석 모델: 신규 'gemini' + 기존 DB에 남은 'sonnet'(legacy) 둘 다 분석 엔진으로 취급
 function classifyStage(stage, model) {
   if (model === 'nanobanana') return 'hairo';
-  if (model === 'sonnet') {
+  if (model === 'gemini' || model === 'sonnet') {
     if (stage === 'recipe_only') return 'color_step2';  // 컬러 Step 2 (레시피)
     if (stage === 'color') return 'color_step1';        // 컬러 Step 1 (색감)
     if (stage === 'cut') return 'cut';                  // 컷 분석
@@ -53,6 +61,11 @@ function classifyStage(stage, model) {
     return 'unknown';
   }
   return 'unknown';
+}
+
+// 분석 엔진 판별 (신규 gemini + 기존 legacy sonnet)
+function isAnalysisModel(model) {
+  return model === 'gemini' || model === 'sonnet';
 }
 
 // ─── 회원이 본 마케팅 언어 (회원 안내 문구 사전) ──────────────
@@ -75,7 +88,8 @@ const INTERNAL_REASON_LABELS = {
   'success_vertex_global':  { label: '글로벌 리전 성공', icon: '🟢', detail: '서울 리전 실패 후 글로벌로 폴백 성공.' },
   'success_legacy':         { label: 'Legacy 폴백 성공', icon: '🟢', detail: 'Vertex 실패 후 Generative Language API로 성공.' },
   'success_nanobanana':     { label: '나노바나나 성공', icon: '🟢', detail: 'HAIRO 사진 생성 성공.' },
-  'success_sonnet':         { label: '소넷 분석 성공', icon: '🟢', detail: 'Claude Sonnet 분석 성공.' },
+  'success_sonnet':         { label: '소넷 분석 성공', icon: '🟢', detail: 'Claude Sonnet 분석 성공. (구 엔진 기록)' },
+  'success_gemini':         { label: 'Gemini 분석 성공', icon: '🟢', detail: 'Gemini 3.5 Flash 분석 성공.' },
   'success':                { label: '성공', icon: '🟢', detail: '정상 처리됨.' },
 
   // 정상 거절 (회원 책임) — 🟢 자연 해소
@@ -98,7 +112,8 @@ const INTERNAL_REASON_LABELS = {
   'api_quota_exceeded':     { label: '일일 한도 소진 (콘솔 충전 필요)', icon: '🔴', detail: '오늘 할당된 API 한도를 다 씀 또는 잔액 부족. 모든 디자이너 차단됨. 콘솔 충전 또는 내일 자동 리셋 대기.' },
   'quota_exceeded':         { label: '일일 한도 소진 (콘솔 충전 필요)', icon: '🔴', detail: '오늘 할당된 API 한도를 다 씀. 모든 디자이너 차단됨. 콘솔 충전 또는 내일 자동 리셋 대기.' },
   'overloaded':             { label: 'API 서버 과부하 (529)', icon: '🔴', detail: 'Anthropic 전체 서버 과부하. 자주 뜨면 콘솔 상태 확인.' },
-  'anthropic_key_invalid':  { label: 'Anthropic 키 만료/잔액 부족', icon: '🔴', detail: 'Anthropic 키가 만료됐거나 잔액이 다 떨어짐. Vercel 환경변수 확인 + 콘솔에서 결제 정보 점검.' },
+  'anthropic_key_invalid':  { label: 'API 키 만료/잔액 부족', icon: '🔴', detail: '분석 API 키가 만료됐거나 잔액이 다 떨어짐. Vercel 환경변수 확인 + 콘솔에서 결제 정보 점검.' },
+  'gemini_key_invalid':     { label: 'Gemini 키 만료/잔액 부족', icon: '🔴', detail: 'Gemini API 키가 만료됐거나 결제·할당 한도 소진. Vercel GEMINI_API_KEY 확인 + AI Studio/GCP 결제 점검.' },
   'auth_failed':            { label: 'API 키 인증 실패', icon: '🔴', detail: 'Anthropic/Vertex 키 만료/오류. Vercel 환경변수 확인 필요. 서비스 전체 마비 상태.' },
   'vertex_auth_failed':     { label: 'Vertex(나노바나나) 인증 만료', icon: '🔴', detail: 'GCP 서비스 계정 인증 실패. 서비스 계정 갱신 필요.' },
   'supabase_down':          { label: '슈파베이스 연결 끊김', icon: '🔴', detail: '슈파베이스 일시 다운. 슈파베이스 상태 페이지 확인.' },
@@ -115,7 +130,8 @@ const ROUTE_LABELS = {
 
 const MODEL_LABELS = {
   nanobanana: '나노바나나',
-  sonnet: '소넷',
+  gemini: 'Gemini',
+  sonnet: '소넷(구)',
 };
 
 const STAGE_LABELS = {
@@ -216,19 +232,21 @@ export default async function handler(req, res) {
     for (const c of todayCalls || []) {
       const m = c.model;
       const cat = classifyStage(c.stage, m);
+      // 분석 엔진(gemini/legacy sonnet)은 기존 'sonnet' 통계 버킷으로 합산 (어드민 HTML 호환)
+      const statKey = isAnalysisModel(m) ? 'sonnet' : m;
 
-      if (todayStats[m]) {
-        todayStats[m].total++;
-        if (c.status === 'success') todayStats[m].success++;
-        else if (c.status === 'safety_block') todayStats[m].safety_block = (todayStats[m].safety_block || 0) + 1;
-        else if (c.status === 'rate_limit') todayStats[m].rate_limit = (todayStats[m].rate_limit || 0) + 1;
-        else todayStats[m].error++;
+      if (todayStats[statKey]) {
+        todayStats[statKey].total++;
+        if (c.status === 'success') todayStats[statKey].success++;
+        else if (c.status === 'safety_block') todayStats[statKey].safety_block = (todayStats[statKey].safety_block || 0) + 1;
+        else if (c.status === 'rate_limit') todayStats[statKey].rate_limit = (todayStats[statKey].rate_limit || 0) + 1;
+        else todayStats[statKey].error++;
       }
 
-      // stage별 분해 (성공만 비용 계산)
+      // stage별 분해 (성공만 비용 계산) — breakdown.anthropic 키는 유지(HTML 호환), 내용은 Gemini
       if (c.status === 'success') {
         const cost = estimateCostKrw({ stage: c.stage, model: c.model, status: 'success' });
-        if (m === 'sonnet' && todayBreakdown.anthropic[cat]) {
+        if (isAnalysisModel(m) && todayBreakdown.anthropic[cat]) {
           todayBreakdown.anthropic[cat].calls++;
           todayBreakdown.anthropic[cat].success++;
           todayBreakdown.anthropic[cat].cost += cost;
@@ -243,7 +261,7 @@ export default async function handler(req, res) {
         }
       } else {
         // 실패도 카운트는 함 (성공 횟수만 비용 계산)
-        if (m === 'sonnet' && todayBreakdown.anthropic[cat]) {
+        if (isAnalysisModel(m) && todayBreakdown.anthropic[cat]) {
           todayBreakdown.anthropic[cat].calls++;
         } else if (m === 'nanobanana' && cat === 'hairo') {
           todayBreakdown.google.hairo.calls++;
