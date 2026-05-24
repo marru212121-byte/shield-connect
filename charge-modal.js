@@ -98,8 +98,8 @@
                 })
     +           featureBlock({
                   title: '컬러 애널라이저',
-                  max: '최대 15회',
-                  cost: '2크레딧 / 회',
+                  max: '최대 30회',
+                  cost: '1크레딧 / 회',
                   desc1: 'AI 사고흐름 · 염색레시피 에이전트',
                   desc2: '사진별 컬러 분석 + 조색 레시피 + 상담 카드'
                 })
@@ -352,7 +352,7 @@
     init();
     var t = document.getElementById('sc-charge-toast');
     if (!t) return;
-    document.getElementById('sc-toast-line1').textContent = '환영합니다! 1크레딧이 지급되었어요';
+    document.getElementById('sc-toast-line1').textContent = '환영합니다! 2크레딧이 지급되었어요';
     document.getElementById('sc-toast-line2').textContent = 'HAIRO 사진 1장 무료로 사용해보세요';
     t.style.display = 'block';
     t.style.animation = 'sc-toast-in 0.3s ease';
