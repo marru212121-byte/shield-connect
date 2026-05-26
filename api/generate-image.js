@@ -755,3 +755,4 @@ async function refundCredit(supabase, memberId, reference, isAdmin) {
     console.error('[generate-image] refund failed:', err);
   }
 }
+
