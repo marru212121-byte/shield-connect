@@ -1555,9 +1555,10 @@ input, textarea { font-family: inherit; }
     <div class="hi-cta">로그인 후 지금 바로 생성해주세요!</div>
     <div class="hi-divider"></div>
     <div class="hi-spec-row">
-      <div class="hi-spec-label">3가지 무드</div>
+      <div class="hi-spec-label">4가지 무드</div>
       <div class="hi-spec-chips">
         <div class="hi-chip">화보·룩북</div>
+        <div class="hi-chip">스튜디오 프로필사진</div>
         <div class="hi-chip">Y2K 디카</div>
         <div class="hi-chip">네츄럴</div>
       </div>
@@ -1707,6 +1708,10 @@ input, textarea { font-family: inherit; }
         <button class="preset-card" data-mood="y2k" type="button">
           <div class="preset-card-title">Y2K</div>
           <div class="preset-card-desc">2000년대 디카 톤. 전방에서의 조명플래쉬, 파파라치컷, 명암대비, SNS용.</div>
+        </button>
+        <button class="preset-card" data-mood="studio_profile" type="button">
+          <div class="preset-card-title">스튜디오 프로필사진</div>
+          <div class="preset-card-desc">깔끔한 스튜디오 매거진·프로필 톤. 균일한 조명 + 선명한 초점. 증명·프로필·커버용.</div>
         </button>
       </div>
     </div>
@@ -2336,6 +2341,7 @@ const MOOD_LABELS = {
   natural: '네츄럴',
   editorial_lookbook: '룩북',
   y2k: 'Y2K',
+  studio_profile: '스튜디오 프로필사진',
 };
 
 function openMoodSheet() {
