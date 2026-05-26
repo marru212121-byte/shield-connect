@@ -29,14 +29,9 @@ header{text-align:center;margin-bottom:10px;}
 
 /* 인앱 경고 배너 (인앱일 때만 표시) */
 .banner{display:none;border:1px solid rgba(199,240,80,0.45);background:rgba(199,240,80,0.07);
-  border-radius:16px;padding:14px 15px;margin-bottom:14px;animation:fadeIn .4s ease;}
+  border-radius:16px;padding:13px 16px;margin-bottom:14px;animation:fadeIn .4s ease;}
 .banner.show{display:block;}
-.banner .bt{font-size:14px;font-weight:800;color:#C7F050;letter-spacing:-0.3px;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
-.banner .bd{font-size:12.5px;line-height:1.55;color:rgba(255,255,255,0.82);word-break:keep-all;}
-.banner .bd b{color:#fff;font-weight:700;}
-.banner .step{margin-top:9px;display:flex;align-items:flex-start;gap:8px;font-size:12px;color:rgba(255,255,255,0.7);line-height:1.45;}
-.banner .step .num{flex-shrink:0;width:17px;height:17px;border-radius:99px;background:#C7F050;color:#0A0A0A;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;margin-top:1px;}
-.banner .kbd{display:inline-block;padding:1px 6px;border-radius:6px;background:#1f1f1f;border:1px solid #333;font-weight:700;color:#fff;font-size:11px;}
+.banner .bt{font-size:15px;font-weight:800;color:#C7F050;letter-spacing:-0.3px;display:flex;align-items:center;gap:7px;word-break:keep-all;}
 
 /* 스테이지 (설치 애니메이션) — flex-grow 제거로 가운데 빈 공간 없앰 */
 .stage{position:relative;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -109,9 +104,6 @@ header{text-align:center;margin-bottom:10px;}
   <!-- 인앱 브라우저일 때만 표시 -->
   <div class="banner" id="banner">
     <div class="bt">⚠ <span id="bannerTitle">인앱 브라우저에서 열렸어요</span></div>
-    <div class="bd">지금 화면은 <b>로그인·결제·메뉴</b>가 정상 동작하지 않을 수 있어요. 아래 방법으로 <b>기본 브라우저</b>에서 열어주세요.</div>
-    <div class="step"><span class="num">1</span><span id="step1">오른쪽 위 <span class="kbd">⋯</span> → <b style="color:#fff;">기본 브라우저로 열기</b></span></div>
-    <div class="step"><span class="num">2</span><span>안 보이면 아래 <b style="color:#C7F050;">주소 복사하기</b> → Safari/크롬 주소창에 붙여넣기</span></div>
   </div>
 
   <!-- 설치 애니메이션 -->
@@ -266,8 +258,6 @@ header{text-align:center;margin-bottom:10px;}
   /* ===== 1) 인앱 브라우저 감지 ===== */
   var ua = navigator.userAgent || '';
   var inAppRe = /instagram|fbav|fban|fb_iab|kakaotalk|naver|daumapps|line\/|band|trill|musical_ly|snapchat|whatsapp|wechat|micromessenger|everytime/i;
-  var isInApp = inAppRe.test(ua);
-  var isIOS = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
   function appName(){
     if(/instagram/i.test(ua)) return '인스타그램';
@@ -280,18 +270,9 @@ header{text-align:center;margin-bottom:10px;}
     return '인앱';
   }
 
-  if(isInApp){
+  if(inAppRe.test(ua)){
     document.getElementById('banner').classList.add('show');
     document.getElementById('bannerTitle').textContent = appName() + ' 앱 안에서 열렸어요';
-    /* 인앱별 탈출 메뉴 위치 안내 */
-    var step1 = document.getElementById('step1');
-    if(/instagram|fbav|fban|fb_iab/i.test(ua)){
-      step1.innerHTML = '오른쪽 위 <span class="kbd">&#8943;</span> &#8594; <b style="color:#fff;">외부 브라우저에서 열기</b>';
-    } else if(/naver/i.test(ua)){
-      step1.innerHTML = '오른쪽 아래 <span class="kbd">&#8943;</span> &#8594; <b style="color:#fff;">다른 브라우저로 열기</b>';
-    } else {
-      step1.innerHTML = '<span class="kbd">&#8943;</span> 메뉴 &#8594; <b style="color:#fff;">다른 브라우저로 열기</b>';
-    }
   }
 
   /* ===== 2) 원탭 주소 복사 ===== */
