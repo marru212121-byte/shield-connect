@@ -9,7 +9,7 @@
 //   2. 1크레딧 차감
 //   3. 프롬프트 합성 (4축 직교):
 //      [무드] → [프레이밍] → [앵글(가이드)] → [디자이너 MAIN] → [해상도]
-//      ⭐ 무드 = 'natural'/'editorial_lookbook'/'y2k'/null(자유 입력)
+//      ⭐ 무드 = 'natural'/'editorial_lookbook'/'y2k'/'studio_profile'/null(자유 입력)
 //      ⭐ 프레이밍 = 'chest_up'/'upper_body'/'knee_up'/null
 //      ⭐ 무드 null = 코어 X = 카탈로그/제품 자유 모드
 //      ⭐ 디자이너 입력 = 본문만 (강조 라벨 제거됨 — Y2K/룩북 무드 살리기)
@@ -106,6 +106,28 @@ direct on-camera flash,
 slight overexposure on face,
 high contrast shadows,
 paparazzi flash aesthetic`,
+
+  // 스튜디오 프로필사진 — 깔끔한 스튜디오 매거진/프로필 톤
+  // 룩북과 차별점: 그레인/얕은심도 없음 → 선명한 초점 + 균일한 하이키 스튜디오 조명 + 클린 리터치
+  studio_profile: `professional studio profile photo,
+studio headshot style,
+photorealistic image,
+individual hair strand visibility,
+natural hair shine,
+realistic hair root density,
+influencer soft retouch,
+seamless neutral studio backdrop,
+even softbox studio lighting,
+bright high-key lighting,
+front key light with catchlight in eyes,
+soft beauty dish lighting,
+crisp sharp focus,
+magazine cover quality,
+commercial beauty retouch,
+slightly idealized smooth skin,
+glossy lip pearl shine,
+clean color grading,
+high clarity and fine detail`,
 };
 
 // ─── 프레이밍 프리셋 ────────────────────────────────────────────
