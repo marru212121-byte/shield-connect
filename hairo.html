@@ -2677,13 +2677,12 @@ async function generateImage() {
     // 결과 모달 = 'fresh' 모드로 표시
     showResultFresh(generatedImageUrl, state.aspect);
 
-    // v6.4: 갤러리 저장은 이제 서버(generate-image)가 생성 직후 직접 처리.
-    // 프론트 저장을 제거 → 응답 유실돼도 사진이 갤러리에 남고, 중복 저장도 방지됨.
-    // (아래 줄은 의도적으로 비움 — 서버 저장으로 일원화)
+    // 백그라운드: 압축본을 갤러리에 자동 저장 (v6.1: 앵글 제거됨 — yaw/pitch null)
+    saveToArchiveAsync(imageBase64, generatedMime, userPrompt, state.aspect, null, null);
   } catch (e) {
     stopProgressSimulation(progressTimer);
     document.getElementById('loadingModal').classList.remove('active');
-    showError('연결이 불안정해요. 생성된 사진은 갤러리에 저장되니, 잠시 후 갤러리에서 확인하거나 다시 시도해주세요.');
+    showError('인터넷 연결이 끊어졌어요. 연결 확인 후 다시 시도해주세요.\n크레딧은 차감되지 않았습니다.');
   }
 }
 
