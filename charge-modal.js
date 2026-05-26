@@ -72,7 +72,7 @@
 
     +       '<div style="text-align:center;margin-bottom:22px">'
     +         '<div style="font-size:19px;font-weight:700;color:#fff;letter-spacing:-0.4px;margin-bottom:4px;line-height:1.3">필요할 때 한 번씩, 저렴한 가격으로</div>'
-    +         '<div style="font-size:11.5px;color:rgba(255,255,255,0.45)">월구독 없이 충전한 만큼만</div>'
+    +         '<div style="font-size:13.5px;color:rgba(255,255,255,0.55)">월구독 없이 충전한 만큼만</div>'
     +       '</div>'
 
     +       '<div style="background:#1A1A1A;border:1px solid rgba(199,240,80,0.18);border-radius:16px;padding:22px 16px 18px;position:relative;margin-bottom:14px">'
@@ -113,7 +113,7 @@
                 })
     +         '</div>'
 
-    +         '<div style="text-align:center;margin-top:14px;font-size:11.5px;color:rgba(199,240,80,0.7);letter-spacing:-0.2px;font-weight:500">충전한 크레딧은 30일간 사용 가능합니다</div>'
+    +         '<div style="text-align:center;margin-top:14px;font-size:13px;color:#C7F050;letter-spacing:-0.2px;font-weight:700">충전한 크레딧은 30일간 사용 가능합니다</div>'
 
     +         '<button id="sc-charge-cta" type="button" style="width:100%;background:#C7F050;color:#0A0A0A;border:none;padding:14px;border-radius:14px;font-size:14.5px;font-weight:700;letter-spacing:-0.2px;cursor:pointer;margin-top:10px;-webkit-tap-highlight-color:transparent;font-family:inherit">충전하기</button>'
     +       '</div>'
