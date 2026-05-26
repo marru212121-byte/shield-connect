@@ -12,6 +12,10 @@
     {
       "path": "/api/cron/warm-image",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/cleanup-hairo",
+      "schedule": "0 18 * * *"
     }
   ]
 }
