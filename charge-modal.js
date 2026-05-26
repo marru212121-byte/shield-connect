@@ -56,7 +56,7 @@
 
   var MODAL_HTML = ''
     + '<div id="sc-charge-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99999;overflow-y:auto;-webkit-overflow-scrolling:touch;opacity:0;transition:opacity 0.25s ease">'
-    +   '<div style="min-height:100%;display:flex;align-items:flex-start;justify-content:center;padding:20px 12px 40px;box-sizing:border-box">'
+    +   '<div style="min-height:100%;display:flex;align-items:flex-start;justify-content:center;padding:max(20px, env(safe-area-inset-top, 0px)) 12px max(40px, env(safe-area-inset-bottom, 0px));box-sizing:border-box">'
     +     '<div id="sc-charge-sheet" style="max-width:380px;width:100%;background:#0A0A0A;border-radius:20px;padding:0 16px 18px;border:1px solid rgba(255,255,255,0.08);box-sizing:border-box;transform:translateY(-100%);transition:transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)">'
 
     +       '<div id="sc-drag-area" style="padding:10px 0 0;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none">'
@@ -201,6 +201,7 @@
   /* 드래그-투-디스미스 */
   function onDragStart(e) {
     if (!e.touches || e.touches.length !== 1) return;
+    if (e.target && e.target.closest && e.target.closest('#sc-charge-close')) return; /* X 버튼 탭은 드래그로 가로채지 않음 */
     dragStartY = e.touches[0].clientY;
     dragCurrentY = dragStartY;
     dragging = true;
@@ -241,6 +242,7 @@
   }
 
   function onMouseDown(e) {
+    if (e.target && e.target.closest && e.target.closest('#sc-charge-close')) return;
     dragStartY = e.clientY;
     dragCurrentY = dragStartY;
     dragging = true;
