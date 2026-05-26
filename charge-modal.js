@@ -362,6 +362,19 @@
     toastTimer = setTimeout(hideToast, 4000);
   }
 
+  /* 크레딧 30일 만료 안내 토스트 (charge 토스트와 동일 컴포넌트 재사용) */
+  function showExpireToast(expiredAmount) {
+    init();
+    var t = document.getElementById('sc-charge-toast');
+    if (!t) return;
+    document.getElementById('sc-toast-line1').textContent = '크레딧이 만료되었어요';
+    document.getElementById('sc-toast-line2').textContent = '30일이 지나 ' + expiredAmount + '크레딧이 소멸되었습니다';
+    t.style.display = 'block';
+    t.style.animation = 'sc-toast-in 0.3s ease';
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(hideToast, 4500);
+  }
+
   function hideToast() {
     var t = document.getElementById('sc-charge-toast');
     if (!t) return;
@@ -397,6 +410,40 @@
 
         /* charge 토스트와 충돌 안 나도록 약간 지연 */
         setTimeout(showSignupToast, 600);
+      })
+      .catch(function () {});
+  }
+
+  /* 크레딧 만료 안내 — 회원+만료시각 단위 마크. 같은 만료 이벤트는 기기당 한 번만 */
+  var LS_EXPIRE_TOAST_PREFIX = 'sc_expire_toast_seen:';
+
+  function checkCreditExpiry() {
+    fetch('/api/customer/me', { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || !data.member_id) return;
+
+        /* 잔액 뱃지 동기화 (만료로 0이 됐을 수 있음) */
+        if (typeof data.credits_remaining === 'number') {
+          var el = document.getElementById('creditCountHeader');
+          if (el) el.textContent = String(data.credits_remaining);
+          if (window.SESSION) window.SESSION.credits = data.credits_remaining;
+          if (typeof window.updateCreditBadge === 'function') {
+            try { window.updateCreditBadge(data.credits_remaining); } catch (e) {}
+          }
+        }
+
+        var exp = data.expired_recent;
+        if (!exp || !exp.amount) return;
+
+        /* 같은 만료 이벤트(만료시각 기준)는 이 기기에서 한 번만 안내 */
+        var key = LS_EXPIRE_TOAST_PREFIX + data.member_id + ':' + exp.at;
+        try {
+          if (localStorage.getItem(key)) return;
+          localStorage.setItem(key, '1');
+        } catch (e) { return; }
+
+        setTimeout(function () { showExpireToast(exp.amount); }, 500);
       })
       .catch(function () {});
   }
@@ -445,26 +492,30 @@
   }
 
   document.addEventListener('visibilitychange', function () {
-    if (!document.hidden) { checkChargeReturn(); checkSignupBonusToast(); }
+    if (!document.hidden) { checkChargeReturn(); checkSignupBonusToast(); checkCreditExpiry(); }
   });
   window.addEventListener('pageshow', function () {
     checkChargeReturn();
     checkSignupBonusToast();
+    checkCreditExpiry();
   });
 
   window.openChargeModal   = openChargeModal;
   window.closeChargeModal  = closeChargeModal;
   window.gotoChargeDirect  = gotoChargeDirect;
+  window.showExpireToast   = showExpireToast;
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () {
       init();
       checkChargeReturn();
       checkSignupBonusToast();
+      checkCreditExpiry();
     });
   } else {
     init();
     checkChargeReturn();
     checkSignupBonusToast();
+    checkCreditExpiry();
   }
 })();
