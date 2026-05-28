@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="theme-color" content="#0A0A0A"/>
+<title>원하는 명도 만들기</title>
+<style>
+  :root{
+    --bg:#0A0A0A; --surface:#0F0F0F; --surface2:#1A1A1A;
+    --lime:#C7F050; --lime-soft:rgba(199,240,80,0.12); --lime-line:rgba(199,240,80,0.32);
+    --txt:#ffffff; --muted:#888888; --faint:#5a5a5a;
+    --line:rgba(255,255,255,0.08);
+    --sans:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard",Roboto,"Helvetica Neue",sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+    --rcard:16px; --rbtn:12px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-text-size-adjust:100%;overflow-x:hidden}
+  input,button{font-family:inherit}
+
+  /* 상단 뒤로가기 헤더 (홈으로 복귀) */
+  .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:8px;
+    padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;
+    background:rgba(10,10,10,0.85);backdrop-filter:saturate(150%) blur(8px);
+    -webkit-backdrop-filter:saturate(150%) blur(8px);border-bottom:1px solid var(--line)}
+  .back-btn{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;
+    border-radius:10px;border:1px solid var(--line);background:var(--surface2);color:var(--txt);
+    cursor:pointer;flex-shrink:0;padding:0}
+  .back-btn:active{transform:scale(.95)}
+  .topbar-title{font-size:15px;font-weight:700;color:var(--txt)}
+
+  .wrap{max-width:440px;margin:0 auto;padding:22px 18px 40px;animation:fade .4s ease both}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .eyebrow{font-size:11px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin:0 0 6px;font-weight:600}
+  .title{font-size:25px;font-weight:800;margin:0 0 4px;letter-spacing:-.01em}
+  .title b{color:var(--lime)}
+  .subtitle{font-size:13px;color:var(--muted);margin:0 0 18px;line-height:1.5}
+  .subtitle .hl{color:var(--lime);font-weight:600}
+  .intro{margin:0 0 22px}
+  .intro-main{font-size:13.5px;color:#dcdcdc;line-height:1.6;margin:0 0 12px}
+  .intro-sub{font-size:13.5px;color:#dcdcdc;line-height:1.6;margin:0;border-top:1px solid var(--line);padding-top:12px}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--rcard);padding:18px 14px 14px;margin-bottom:14px}
+  .card-label{font-size:12px;color:var(--muted);font-weight:600;margin:0 0 14px;letter-spacing:.02em}
+
+  .graph{display:flex;align-items:flex-end;gap:10px}
+  .axis{width:20px;height:260px;position:relative;flex-shrink:0}
+  .axis span{position:absolute;right:0;transform:translateY(-50%);font-size:10px;color:var(--faint);font-family:var(--mono)}
+  .col{flex:1;display:flex;flex-direction:column;align-items:center}
+  .col .head{font-size:12px;font-weight:700;margin:0 0 8px;min-height:48px;display:flex;align-items:flex-end;justify-content:center;text-align:center;line-height:1.3}
+  .col.tgt .head{color:var(--lime)}
+  .col:not(.tgt) .head{color:#cfcfcf}
+  .track{position:relative;width:100%;max-width:80px;height:260px;border-radius:12px;border:1px solid var(--line);overflow:hidden;cursor:pointer;touch-action:none;
+    background:var(--surface2)}
+  .col.tgt .track{border:1.5px solid var(--lime-line)}
+  .fill{position:absolute;left:0;right:0;bottom:0;background:var(--lime-soft);pointer-events:none}
+  .grid{position:absolute;left:0;right:0;height:1px;background:rgba(255,255,255,0.06)}
+  .handle{position:absolute;left:-2px;right:-2px;height:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+  .handle .bar{position:absolute;left:0;right:0;height:3px;background:var(--lime);box-shadow:0 0 0 1px rgba(0,0,0,.4)}
+  .handle .pill{position:relative;font-family:var(--mono);font-size:16px;font-weight:800;color:#0A0A0A;background:var(--lime);border-radius:8px;padding:3px 9px;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+  .handle .pill .lv{font-size:11px;font-weight:700;margin-left:1px}
+
+  .presets{display:flex;gap:8px;margin-bottom:12px}
+  .preset{flex:1;padding:12px 4px;background:var(--surface2);border:1px solid var(--line);border-radius:var(--rbtn);color:var(--txt);font-size:13px;font-weight:600;cursor:pointer;transition:all .12s;text-align:center}
+  .preset .g{display:block;font-size:11px;color:var(--muted);margin-top:2px;font-weight:500}
+  .preset.on{background:#1A1814;border-color:var(--lime);color:var(--lime)}
+  .preset.on .g{color:var(--lime)}
+  .preset:active{transform:scale(.97)}
+  .direct{display:flex;align-items:center;gap:10px}
+  .direct label{font-size:12px;color:var(--muted);min-width:54px}
+  .direct input{flex:1;background:var(--surface2);border:1px solid var(--line);border-radius:var(--rbtn);color:var(--txt);font-family:var(--mono);font-size:16px;padding:11px 12px;outline:none;transition:border-color .12s}
+  .direct input:focus{border-color:var(--lime)}
+  .direct .unit{font-size:13px;color:var(--muted)}
+
+  .results{display:flex;gap:12px;margin:18px 0 10px}
+  .result{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:var(--rcard);padding:18px 12px;text-align:center}
+  .result .rl{font-size:19px;color:#ffffff;font-weight:700;margin:0 0 10px}
+  .result .rg{font-family:var(--mono);font-size:34px;font-weight:800;color:var(--lime);line-height:1}
+  .result .rg .u{font-size:15px;color:var(--muted);font-weight:600;margin-left:1px}
+  .result.dim .rg{color:var(--faint);font-size:30px}
+
+  .ratioline{text-align:center;font-size:13px;color:var(--muted);font-family:var(--mono);margin:0 0 16px;letter-spacing:.02em}
+  .note{font-size:13px;color:#bdbdbd;line-height:1.6;margin:0 0 16px}
+  .note.warn{color:#f0c14b}
+  .disclaimer{font-size:11.5px;color:var(--faint);line-height:1.6;border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button class="back-btn" type="button" onclick="goBackHome();return false;" aria-label="뒤로">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+  </button>
+  <span class="topbar-title">원하는 명도 만들기</span>
+</div>
+
+<div class="wrap">
+  <p class="eyebrow">쉴드 디자이너 커넥트</p>
+  <h1 class="title">원하는 <b>명도</b> 만들기</h1>
+  <p class="subtitle">재고에 없는 명도, 가진 약으로 만들기</p>
+
+  <div class="intro">
+    <p class="intro-main">1~3레벨까지는 색소량이 굉장히 많고, 4~7레벨까지는 색소량이 많고, 8~12레벨은 적정량을 반영하였습니다.</p>
+    <p class="intro-sub">각 회사의 염모제별 알칼리량·블리치력·채도·반사빛·톤·브라운 함유량이 모두 다릅니다. 배합 기준점으로 삼아, 최종 판단은 직접 확인하세요.</p>
+  </div>
+
+  <div class="card">
+    <div class="graph">
+      <div class="axis" id="axis"></div>
+      <div class="col" data-t="la">
+        <p class="head">내가 가지고<br>있는 염색약 1</p>
+        <div class="track" id="track-la"><div class="fill" id="f-la"></div><div class="handle" id="h-la"><span class="bar"></span><span class="pill">6</span></div></div>
+      </div>
+      <div class="col" data-t="lb">
+        <p class="head">내가 가지고<br>있는 염색약 2</p>
+        <div class="track" id="track-lb"><div class="fill" id="f-lb"></div><div class="handle" id="h-lb"><span class="bar"></span><span class="pill">12</span></div></div>
+      </div>
+      <div class="col tgt" data-t="tg">
+        <p class="head">목표</p>
+        <div class="track" id="track-tg"><div class="fill" id="f-tg"></div><div class="handle" id="h-tg"><span class="bar"></span><span class="pill">10</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <p class="card-label">총 사용량</p>
+    <div class="presets">
+      <button class="preset" data-g="40">숏<span class="g">40g</span></button>
+      <button class="preset on" data-g="60">미디움<span class="g">60g</span></button>
+      <button class="preset" data-g="90">롱<span class="g">90g</span></button>
+    </div>
+    <div class="direct">
+      <label>직접 입력</label>
+      <input type="number" id="total" value="60" min="1" max="500" step="5" inputmode="numeric"/>
+      <span class="unit">g</span>
+    </div>
+  </div>
+
+  <div class="results">
+    <div class="result" id="resA">
+      <p class="rl"><span id="capA">6</span>레벨</p>
+      <p class="rg" id="gA">20<span class="u">g</span></p>
+    </div>
+    <div class="result" id="resB">
+      <p class="rl"><span id="capB">12</span>레벨</p>
+      <p class="rg" id="gB">40<span class="u">g</span></p>
+    </div>
+  </div>
+  <p class="ratioline" id="ratioline">비율 약 2 : 4 · 총 60g</p>
+  <p class="note warn" id="note" style="display:none"></p>
+</div>
+
+<script>
+// 홈(인덱스)으로 안전하게 복귀: 직전 페이지가 있으면 뒤로가기, 없으면 디렉터리 루트(index)로
+function goBackHome(){
+  if (window.history.length > 1) { window.history.back(); }
+  else { window.location.href = './'; }
+}
+</script>
+
+<script>
+(function(){
+  var state={la:6,lb:12,tg:10,total:60};
+  var MINL=1, MAXL=12;
+
+  function buildPigment(){
+    var step={};
+    for(var L=1;L<=12;L++){ step[L]=(L<=3)?1.8:(L<=7)?1.6:1.3; }
+    var pig={12:1};
+    for(var l=11;l>=1;l--){ pig[l]=pig[l+1]*step[l+1]; }
+    return pig;
+  }
+  var PIG=buildPigment();
+  function pigAt(L){
+    var lo=Math.floor(L),hi=Math.ceil(L);
+    if(lo===hi) return PIG[lo];
+    var f=L-lo;
+    return PIG[lo]*Math.pow(PIG[hi]/PIG[lo],f);
+  }
+  function fmtLv(v){ return (v%1)? v.toFixed(1):String(v); }
+  var PAD=8;
+  function topPct(L){ return PAD+(MAXL-L)/(MAXL-MINL)*(100-2*PAD); }
+
+  // axis + gridlines
+  var axis=document.getElementById('axis');
+  [12,10,8,6,4,2].forEach(function(L){
+    var s=document.createElement('span'); s.textContent=L; s.style.top=topPct(L)+'%'; axis.appendChild(s);
+  });
+  ['track-la','track-lb','track-tg'].forEach(function(id){
+    var t=document.getElementById(id);
+    [10,8,6,4,2].forEach(function(L){
+      var g=document.createElement('div'); g.className='grid'; g.style.top=topPct(L)+'%'; t.insertBefore(g,t.firstChild);
+    });
+  });
+
+  function setHandle(t){
+    var h=document.getElementById('h-'+t);
+    h.style.top=topPct(state[t])+'%';
+    h.querySelector('.pill').innerHTML=fmtLv(state[t])+'<span class="lv">Lv</span>';
+    var fill=document.getElementById('f-'+t);
+    if(fill) fill.style.height=(100-topPct(state[t]))+'%';
+  }
+
+  function render(){
+    setHandle('la'); setHandle('lb'); setHandle('tg');
+    document.getElementById('capA').textContent=state.la;
+    document.getElementById('capB').textContent=state.lb;
+
+    var gA=document.getElementById('gA'),gB=document.getElementById('gB');
+    var resA=document.getElementById('resA'),resB=document.getElementById('resB');
+    var ratioline=document.getElementById('ratioline'),note=document.getElementById('note');
+    function setG(a,b){ gA.innerHTML=a+'<span class="u">g</span>'; gB.innerHTML=b+'<span class="u">g</span>'; }
+    function dim(on){ resA.classList.toggle('dim',on); resB.classList.toggle('dim',on); }
+
+    if(state.la===state.lb){
+      setG('–','–'); dim(true); ratioline.textContent='';
+      note.className='note warn'; note.style.display='block'; note.textContent='두 약제 레벨이 같아요. 서로 다른 레벨 두 개를 골라주세요.'; return;
+    }
+    var f=(pigAt(state.tg)-pigAt(state.lb))/(pigAt(state.la)-pigAt(state.lb));
+    if(f<-0.001||f>1.001){
+      var lo=Math.min(state.la,state.lb),hi=Math.max(state.la,state.lb);
+      setG('–','–'); dim(true); ratioline.textContent='';
+      note.className='note warn'; note.style.display='block';
+      note.textContent='보유 약제는 '+lo+'~'+hi+'레벨 사이만 만들 수 있어요. '+fmtLv(state.tg)+'레벨은 '+(state.tg<lo?'더 어두운':'더 밝은')+' 약제가 따로 필요해요.';
+      return;
+    }
+    dim(false);
+    f=Math.max(0,Math.min(1,f));
+    var total=state.total||0;
+    var aG=Math.round(f*total),bG=total-aG;
+    setG(aG,bG);
+    var pa=Math.round(f*10),pb=10-pa;
+    ratioline.textContent='비율 약 '+pa+' : '+pb+' · 총 '+total+'g';
+    note.style.display='none';
+  }
+
+  function levelFromY(track,clientY){
+    var r=track.getBoundingClientRect();
+    var y=Math.min(Math.max(clientY-r.top,0),r.height);
+    return MINL+(1-y/r.height)*(MAXL-MINL);
+  }
+  function attach(t){
+    var track=document.getElementById('track-'+t);
+    var step=(t==='tg')?0.5:1;
+    var dragging=false;
+    function apply(clientY){
+      var lv=levelFromY(track,clientY);
+      lv=Math.round(lv/step)*step;
+      lv=Math.max(MINL,Math.min(MAXL,lv));
+      if(lv!==state[t]){ state[t]=lv; render(); }
+      else { state[t]=lv; setHandle(t); }
+    }
+    track.addEventListener('pointerdown',function(e){ dragging=true; track.setPointerCapture(e.pointerId); apply(e.clientY); e.preventDefault(); });
+    track.addEventListener('pointermove',function(e){ if(dragging) apply(e.clientY); });
+    track.addEventListener('pointerup',function(){ dragging=false; });
+    track.addEventListener('pointercancel',function(){ dragging=false; });
+  }
+  attach('la'); attach('lb'); attach('tg');
+
+  var presets=document.querySelectorAll('.preset');
+  presets.forEach(function(p){
+    p.addEventListener('click',function(){
+      presets.forEach(function(x){x.classList.remove('on');});
+      p.classList.add('on');
+      state.total=parseInt(p.getAttribute('data-g'),10);
+      document.getElementById('total').value=state.total; render();
+    });
+  });
+  document.getElementById('total').addEventListener('input',function(e){
+    presets.forEach(function(x){x.classList.remove('on');});
+    state.total=parseInt(e.target.value,10)||0; render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
