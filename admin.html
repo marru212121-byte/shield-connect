@@ -1608,6 +1608,16 @@ function changeFilter(f) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// 분석 내용 펼치기/접기
+function toggleAnalysis(id, head) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'block';
+  const caret = head.querySelector('span');
+  if (caret) caret.textContent = open ? '펼치기 ▾' : '접기 ▴';
+}
+
 // 회원 상세 모달
 // ═══════════════════════════════════════════════════════════════
 let modalMemberId = null;
@@ -1707,6 +1717,33 @@ function renderMemberDetail(d) {
     });
     html += '</div>';
     html += '<p style="font-size:10px; color:#B4B2A9; margin:6px 0 0;">최근 30일 · 무료 기능 + AI 분석 합산</p>';
+  }
+
+  // 최근 분석 내용 (색감/레시피/컷 — 펼치면 전문)
+  const analysisLogs = (d.ai_logs || []).filter(function(l){
+    return l.result_text && String(l.result_text).trim() && (l.model === 'gemini' || l.model === 'sonnet');
+  });
+  if (analysisLogs.length > 0) {
+    const STAGE_KO = { color:'컬러 분석 (색감)', recipe_only:'컬러 레시피', cut:'컷 분석', customer_message:'고객 안내' };
+    html += '<p class="section-label">🔍 최근 분석 내용 (탭하면 펼침)</p>';
+    html += '<div class="card" style="padding:0;">';
+    analysisLogs.slice(0, 10).forEach(function(l, i){
+      const last = i === Math.min(analysisLogs.length, 10) - 1;
+      const title = STAGE_KO[l.stage] || (l.stage || '분석');
+      const txtId = 'anatext-' + (l.id || i);
+      html += '<div style="' + (last?'':'border-bottom:1px solid #F1EFE8;') + '">';
+      html += '<div onclick="toggleAnalysis(\'' + txtId + '\', this)" style="display:flex; justify-content:space-between; align-items:center; padding:12px 14px; cursor:pointer;">';
+      html += '<div><p style="font-size:13px; margin:0; color:#1C1917;">' + esc(title) + '</p>';
+      html += '<p style="font-size:11px; color:#888780; margin:2px 0 0;">' + relativeTime(l.created_at) + '</p></div>';
+      html += '<span style="font-size:12px; color:#185FA5;">펼치기 ▾</span>';
+      html += '</div>';
+      html += '<div id="' + txtId + '" style="display:none; padding:0 14px 14px;">';
+      html += '<pre style="white-space:pre-wrap; word-break:break-word; font-family:inherit; font-size:12px; line-height:1.6; color:#3D3D3A; background:#F8F7F3; border-radius:8px; padding:12px; margin:0;">' + esc(l.result_text) + '</pre>';
+      html += '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+    html += '<p style="font-size:10px; color:#B4B2A9; margin:6px 0 0;">최근 30일 보관 · 색감/레시피/컷 각각 따로 저장</p>';
   }
 
   // 거래 내역
