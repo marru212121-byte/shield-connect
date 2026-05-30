@@ -95,7 +95,7 @@ async function getDetail(req, res, supabase, memberId) {
 
     // 7. 즐겨 쓰는 기능 (feature_events + ai_logs 합산, 최근 30일)
     const FEATURE_LABELS = {
-      hairo: 'HAIRO 살롱 스튜디오', analyzer: '컬러 레시피', 'cut-analyzer': '컷 상담',
+      hairo: 'HAIRO 살롱 스튜디오', analyzer: '컬러 분석', 'cut-analyzer': '컷 상담',
       color_journey: 'Color Journey', calculator: '약제 비율 계산기',
       dye_level_calc: '원하는 명도 만들기', melanin_level: '멜라닌 레벨',
       ingredient: '성분사전', reels: '영상 보기',
@@ -126,7 +126,9 @@ async function getDetail(req, res, supabase, memberId) {
       if (r.model === 'nanobanana') bump('hairo');
       else if (r.model === 'gemini' || r.model === 'sonnet') {
         if (r.stage === 'cut') bump('cut-analyzer');
-        else if (r.stage === 'color' || r.stage === 'recipe_only') bump('analyzer');
+        // 컬러 분석 = 1스텝(color, 차감) + 2스텝(recipe_only, 무료 후반부)이 합쳐 1회.
+        // 차감 기준인 1스텝(color)만 카운트한다. recipe_only까지 세면 컬러 1회가 2회로 중복 집계됨.
+        else if (r.stage === 'color') bump('analyzer');
       }
     }
     const favorite_features = Object.entries(favCount)
