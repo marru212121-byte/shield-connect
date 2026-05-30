@@ -104,10 +104,24 @@ function extractGeminiText(geminiData) {
 // 분석 결과 텍스트를 방금 기록된 ai_call_logs 행에 저장 (어드민에서 펼쳐보기용)
 // - 실패해도 본 흐름에 영향 없음 (조용히 무시)
 // - 가장 최근의 그 회원/그 stage 성공 로그를 찾아 result_text만 채움
-async function saveResultText(supabase, { memberId, stage, text }) {
+async function saveResultText(supabase, { memberId, stage, text, rowId: preferredRowId = null }) {
   try {
     if (!text || !text.trim()) return;
     const trimmed = text.length > 20000 ? text.slice(0, 20000) : text; // 안전 상한
+
+    // ── 우선순위 1: 호출 시점에 미리 잡아둔 로그 행 id가 있으면 그 행을 바로 갱신 ──
+    //   스트리밍 응답은 본문을 다 흘려보낸 "뒤"에 저장하는데, 그 시점엔
+    //   행 조회(SELECT)가 늦거나 누락될 수 있다. 그래서 응답 시작 전에 잡아둔
+    //   id가 있으면 탐색 없이 곧장 그 행에 result_text를 박는다.
+    if (preferredRowId) {
+      await supabase
+        .from('ai_call_logs')
+        .update({ result_text: trimmed })
+        .eq('id', preferredRowId);
+      return;
+    }
+
+    // ── 우선순위 2(기존 동작 그대로): 그 회원/모델/stage의 가장 최근 성공 행 탐색 후 갱신 ──
     let q = supabase
       .from('ai_call_logs')
       .select('id')
@@ -319,6 +333,29 @@ export default async function handler(req, res) {
       prompt_length: promptLength,
     });
 
+    // ★ 방금 만든 성공 로그 행의 id를 "스트리밍 시작 전에" 미리 잡아둔다.
+    //   본문을 다 흘려보낸 뒤에는 행 탐색(SELECT)이 늦거나 누락될 수 있어,
+    //   여기서 함수가 아직 멀쩡할 때 id를 확보해 두면 스트림 종료 후
+    //   result_text를 그 행에 곧장 박을 수 있다.
+    //   (조회 실패 시 null → saveResultText가 기존 탐색 방식으로 자동 폴백. 본 흐름 영향 없음)
+    let streamLogRowId = null;
+    try {
+      let idq = supabase
+        .from('ai_call_logs')
+        .select('id')
+        .eq('member_id', memberId)
+        .eq('model', LOG_MODEL)
+        .eq('status', 'success');
+      if (stage == null) idq = idq.is('stage', null);
+      else idq = idq.eq('stage', stage);
+      const { data: idRows } = await idq
+        .order('created_at', { ascending: false })
+        .limit(1);
+      streamLogRowId = (idRows && idRows[0] && idRows[0].id) || null;
+    } catch (_) {
+      streamLogRowId = null;
+    }
+
     res.writeHead(200, {
       'Content-Type': 'text/event-stream; charset=utf-8',
       'Cache-Control': 'no-cache, no-transform',
@@ -376,7 +413,8 @@ export default async function handler(req, res) {
       } catch (_) {}
     }
     // 스트림 끝 — 모은 텍스트 저장 (어드민 펼쳐보기용, 실패해도 무시)
-    await saveResultText(supabase, { memberId, stage, text: fullText });
+    //   미리 잡아둔 streamLogRowId가 있으면 그 행에 곧장 저장, 없으면 기존 탐색 방식.
+    await saveResultText(supabase, { memberId, stage, text: fullText, rowId: streamLogRowId });
     res.end();
     return;
   }
