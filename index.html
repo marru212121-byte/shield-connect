@@ -2403,6 +2403,34 @@
 })();
 </script>
 
+<script>
+(function(){
+  // 비회원 식별용 익명 ID — 브라우저에 한 번 만들어 재사용 (개인정보 아님)
+  function getAnonId(){
+    try {
+      var k = 'sc_anon_id';
+      var v = localStorage.getItem(k);
+      if(!v){
+        v = 'anon_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4);
+        localStorage.setItem(k, v);
+      }
+      return v;
+    } catch(e){ return 'anon_unknown'; }
+  }
+  // 메뉴 클릭 1건 기록 — 실패해도 앱에 영향 없음
+  window.track = function(feature){
+    try {
+      fetch('/api/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        keepalive: true,
+        body: JSON.stringify({ feature: feature, anonId: getAnonId() })
+      }).catch(function(){});
+    } catch(e){}
+  };
+})();
+</script>
 <script src="./charge-modal.js"></script>
 </body>
 </html>
