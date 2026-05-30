@@ -1149,7 +1149,12 @@ function setActivityFilter(f) {
 }
 
 function renderActivityFeed(d) {
-  const items = d.items || [];
+  // 컬러 분석 2스텝(레시피)은 1스텝과 한 묶음(무료 후반부)이므로
+  // 피드에서는 1스텝("컬러 분석")만 노출하고 2스텝 행은 접는다. → 1회 = 1줄.
+  const items = (d.items || []).filter(function(it){
+    const lb = String(it.label || '');
+    return lb.indexOf('2스텝') < 0 && lb.indexOf('레시피') < 0;
+  });
   if (items.length === 0) {
     return '<div class="empty">아직 활동 기록이 없어요.</div>';
   }
@@ -1221,8 +1226,13 @@ function renderAi(d) {
   const c1 = br.anthropic.color_step1;
   const c2 = br.anthropic.color_step2;
   const cut = br.anthropic.cut;
-  html += '<div class="cost-item' + (c1.success === 0 ? ' zero' : '') + '"><span>· 컬러 분석 1스텝 (색감)</span><span>' + c1.success + '회 · ' + fmtWon(c1.cost).replace('₩','~₩') + '</span></div>';
-  html += '<div class="cost-item' + (c2.success === 0 ? ' zero' : '') + '"><span>· 컬러 분석 2스텝 (레시피)</span><span>' + c2.success + '회 · ' + fmtWon(c2.cost).replace('₩','~₩') + '</span></div>';
+  // 컬러 분석 = 1스텝(색감, 차감) + 2스텝(레시피, 무료)가 합쳐 1회 = 1크레딧.
+  // 어드민 표기도 둘을 "컬러 분석" 한 줄로 합산.
+  //   횟수: 차감 기준인 1스텝(c1.success)을 컬러 분석 횟수로 사용
+  //   비용: 실제 API 비용은 두 스텝 모두 발생하므로 c1+c2 합산
+  const colorCount = c1.success;
+  const colorCost = (c1.cost || 0) + (c2.cost || 0);
+  html += '<div class="cost-item' + (colorCount === 0 ? ' zero' : '') + '"><span>· 컬러 분석</span><span>' + colorCount + '회 · ' + fmtWon(colorCost).replace('₩','~₩') + '</span></div>';
   html += '<div class="cost-item' + (cut.success === 0 ? ' zero' : '') + '"><span>· 컷 분석</span><span>' + cut.success + '회 · ' + fmtWon(cut.cost).replace('₩','~₩') + '</span></div>';
   html += '</div>';
   // Google
@@ -1774,31 +1784,87 @@ function renderMemberDetail(d) {
     html += '<p style="font-size:10px; color:#B4B2A9; margin:6px 0 0;">최근 30일 · 무료 기능 + AI 분석 합산</p>';
   }
 
-  // 최근 분석 내용 (색감/레시피/컷 — 펼치면 전문)
+  // 최근 분석 내용 — 컬러는 색감(1스텝)+레시피(2스텝)를 한 묶음 카드로 합쳐서 표시
   const analysisLogs = (d.ai_logs || []).filter(function(l){
     return l.result_text && String(l.result_text).trim() && (l.model === 'gemini' || l.model === 'sonnet');
   });
   if (analysisLogs.length > 0) {
     const STAGE_KO = { color:'컬러 분석 (색감)', recipe_only:'컬러 레시피', cut:'컷 분석', customer_message:'고객 안내' };
+
+    // ── 컬러 1스텝(color)과 2스텝(recipe_only)을 같은 분석으로 묶기 ──
+    //   둘은 보통 몇 초~몇 분 차이로 연달아 호출되므로 시간 근접(10분)으로 페어링.
+    //   레시피 본문(result_text)이 아직 없으면 색감만 든 묶음이 됨(자동 degrade) →
+    //   recipe.js 저장 수정이 반영되면 같은 카드 안에 레시피가 자동으로 함께 뜸.
+    const PAIR_WINDOW_MS = 10 * 60 * 1000;
+    const used = {};
+    const groups = [];
+    function tms(l){ return new Date(l.created_at).getTime() || 0; }
+    for (let i = 0; i < analysisLogs.length; i++) {
+      if (used[i]) continue;
+      const l = analysisLogs[i];
+      if (l.stage === 'color' || l.stage === 'recipe_only') {
+        const wantStage = l.stage === 'color' ? 'recipe_only' : 'color';
+        let pj = -1, pdiff = Infinity;
+        for (let j = 0; j < analysisLogs.length; j++) {
+          if (j === i || used[j]) continue;
+          const o = analysisLogs[j];
+          if (o.stage !== wantStage) continue;
+          const diff = Math.abs(tms(o) - tms(l));
+          if (diff <= PAIR_WINDOW_MS && diff < pdiff) { pdiff = diff; pj = j; }
+        }
+        if (pj >= 0) used[pj] = true;
+        used[i] = true;
+        const partner   = pj >= 0 ? analysisLogs[pj] : null;
+        const colorLog  = l.stage === 'color'        ? l : partner;
+        const recipeLog = l.stage === 'recipe_only'  ? l : partner;
+        const repTime = Math.max(colorLog ? tms(colorLog) : 0, recipeLog ? tms(recipeLog) : 0);
+        groups.push({ type:'color', colorLog: colorLog, recipeLog: recipeLog, time: repTime });
+      } else {
+        used[i] = true;
+        groups.push({ type:'single', log: l, time: tms(l) });
+      }
+    }
+    groups.sort(function(a, b){ return b.time - a.time; });
+
     html += '<p class="section-label">🔍 최근 분석 내용 (탭하면 펼침)</p>';
     html += '<div class="card" style="padding:0;">';
-    analysisLogs.slice(0, 10).forEach(function(l, i){
-      const last = i === Math.min(analysisLogs.length, 10) - 1;
-      const title = STAGE_KO[l.stage] || (l.stage || '분석');
-      const txtId = 'anatext-' + (l.id || i);
+    const shown = groups.slice(0, 10);
+    shown.forEach(function(g, i){
+      const last = i === shown.length - 1;
+      let title, bodyHtml, keySeed;
+      if (g.type === 'color') {
+        title = '컬러 분석';
+        keySeed = (g.colorLog && g.colorLog.id) || (g.recipeLog && g.recipeLog.id) || ('c' + i);
+        bodyHtml = '';
+        if (g.colorLog) {
+          bodyHtml += '<p style="font-size:11px; color:#185FA5; font-weight:600; margin:0 0 4px;">색감 분석 (1스텝)</p>';
+          bodyHtml += renderAnalysisBody(g.colorLog.result_text);
+        }
+        if (g.recipeLog) {
+          bodyHtml += '<p style="font-size:11px; color:#185FA5; font-weight:600; margin:14px 0 4px;">조색 레시피 (2스텝)</p>';
+          bodyHtml += renderAnalysisBody(g.recipeLog.result_text);
+        } else {
+          bodyHtml += '<p style="font-size:10px; color:#B4B2A9; margin:10px 0 0;">레시피(2스텝) 본문이 아직 저장되지 않았어요.</p>';
+        }
+      } else {
+        title = STAGE_KO[g.log.stage] || (g.log.stage || '분석');
+        keySeed = g.log.id || ('s' + i);
+        bodyHtml = renderAnalysisBody(g.log.result_text);
+      }
+      const txtId = 'anatext-' + keySeed;
       html += '<div style="' + (last?'':'border-bottom:1px solid #F1EFE8;') + '">';
       html += '<div onclick="toggleAnalysis(\'' + txtId + '\', this)" style="display:flex; justify-content:space-between; align-items:center; padding:12px 14px; cursor:pointer;">';
       html += '<div><p style="font-size:13px; margin:0; color:#1C1917;">' + esc(title) + '</p>';
-      html += '<p style="font-size:11px; color:#888780; margin:2px 0 0;">' + relativeTime(l.created_at) + '</p></div>';
+      html += '<p style="font-size:11px; color:#888780; margin:2px 0 0;">' + relativeTime(new Date(g.time).toISOString()) + '</p></div>';
       html += '<span style="font-size:12px; color:#185FA5;">펼치기 ▾</span>';
       html += '</div>';
       html += '<div id="' + txtId + '" style="display:none; padding:0 14px 14px;">';
-      html += renderAnalysisBody(l.result_text);
+      html += bodyHtml;
       html += '</div>';
       html += '</div>';
     });
     html += '</div>';
-    html += '<p style="font-size:10px; color:#B4B2A9; margin:6px 0 0;">최근 30일 보관 · 색감/레시피/컷 각각 따로 저장</p>';
+    html += '<p style="font-size:10px; color:#B4B2A9; margin:6px 0 0;">최근 30일 보관 · 컬러는 색감+레시피 한 묶음</p>';
   }
 
   // 거래 내역
