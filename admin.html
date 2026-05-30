@@ -897,7 +897,7 @@ function renderAnalytics(d) {
     html += '<div class="ledger-card" style="padding:0;">';
     d.top_members.forEach(function(m, i){
       const last = i === d.top_members.length-1;
-      html += '<div onclick="openMemberModal(\'' + esc(m.member_id) + '\')" style="display:flex; justify-content:space-between; align-items:center; padding:12px 14px; cursor:pointer;' + (last?'':' border-bottom:1px solid #F1EFE8;') + '">';
+      html += '<div onclick="openMember(\'' + esc(m.member_id) + '\')" style="display:flex; justify-content:space-between; align-items:center; padding:12px 14px; cursor:pointer;' + (last?'':' border-bottom:1px solid #F1EFE8;') + '">';
       html += '<div><p style="font-size:13px; margin:0; font-family:Menlo,monospace;">' + esc(m.member_id) + '</p>';
       html += '<p style="font-size:11px; color:#888780; margin:2px 0 0;">주로: ' + esc(m.top_feature || '-') + '</p></div>';
       html += '<span style="font-size:13px; color:#5F5E5A;">' + m.count + '회 ›</span>';
@@ -1166,7 +1166,10 @@ function renderActivityFeed(d) {
       ? '<span style="font-size:10px; color:#854F0B; background:#FAEEDA; padding:1px 6px; border-radius:5px; margin-left:6px;">유료</span>'
       : '<span style="font-size:10px; color:#5F5E5A; background:#F1EFE8; padding:1px 6px; border-radius:5px; margin-left:6px;">무료</span>';
 
-    html += '<div style="display:flex; align-items:flex-start; gap:10px; padding:11px 14px;' + (last?'':' border-bottom:1px solid #F1EFE8;') + '">';
+    const isGuest = it.provider === 'guest' || String(it.member_id||'').startsWith('anon_');
+    const clickAttr = isGuest ? '' : ' onclick="openMember(\'' + esc(it.member_id || '') + '\')"';
+    const cursorStyle = isGuest ? '' : ' cursor:pointer;';
+    html += '<div' + clickAttr + ' style="display:flex; align-items:flex-start; gap:10px; padding:11px 14px;' + cursorStyle + (last?'':' border-bottom:1px solid #F1EFE8;') + '">';
     html += '<div style="width:8px; height:8px; border-radius:50%; background:' + dot + '; margin-top:5px; flex-shrink:0;"></div>';
     html += '<div style="flex:1; min-width:0;">';
     html += '<p style="font-size:13px; margin:0; color:#1C1917;">' + esc(it.label) + tag + '</p>';
