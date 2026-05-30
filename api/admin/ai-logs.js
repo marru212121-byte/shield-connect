@@ -100,21 +100,21 @@ const INTERNAL_REASON_LABELS = {
 
   // 🟡 주의 — 패턴 확인 필요 (일시적, 5분 후 자연 해소 가능)
   'busy':                   { label: '사용자가 몰리고 있어요', icon: '🟡', detail: '일시적 트래픽 폭주. 모든 fallback이 실패한 순간. 5분 후 자연 해소. 자주 뜨면 패턴 확인.' },
-  'upstream_busy':          { label: 'AI 서버 일시 과부하', icon: '🟡', detail: 'Anthropic/Vertex 서버 일시 과부하. 자동 환불됨. 5분 후 풀림.' },
-  'timeout':                { label: '응답 지연', icon: '🟡', detail: 'API가 30초 안에 답을 못 줌. 가끔이면 무시. 연속이면 Anthropic/GCP 콘솔 상태 확인.' },
+  'upstream_busy':          { label: 'AI 서버 일시 과부하', icon: '🟡', detail: 'Google(Gemini)/Vertex 서버 일시 과부하. 자동 환불됨. 5분 후 풀림.' },
+  'timeout':                { label: '응답 지연', icon: '🟡', detail: 'API가 30초 안에 답을 못 줌. 가끔이면 무시. 연속이면 AI Studio/GCP 콘솔 상태 확인.' },
   'all_fallbacks_failed':   { label: '서울→글로벌→Legacy 모두 실패', icon: '🟡', detail: '나노바나나 3단 안전망 모두 실패. 자동 환불됨. GCP 콘솔 확인 필요.' },
   'partial_failure':        { label: '일부 라우트 실패', icon: '🟡', detail: '서울 또는 글로벌 일시 장애. 자동 fallback으로 응답은 됐음.' },
 
   // 🔴 긴급 — 즉시 대응 (사장님 액션 필요)
   // ai-log-helper.js v1.1이 실제 INSERT하는 키 이름들 (real_rate_limit, api_quota_exceeded)
-  'real_rate_limit':        { label: '분당 사용자 한도 초과 (티어 한계)', icon: '🔴', detail: 'Anthropic/Vertex 티어의 분당 요청 수를 넘김. 영상 후 바이럴 시 첫날 발생 가능. 콘솔에서 티어 업그레이드 필요.' },
-  'rate_limited':           { label: '분당 사용자 한도 초과 (티어 한계)', icon: '🔴', detail: 'Anthropic/Vertex 티어의 분당 요청 수를 넘김. 콘솔에서 티어 업그레이드 필요.' },
+  'real_rate_limit':        { label: '분당 사용자 한도 초과 (티어 한계)', icon: '🔴', detail: 'Gemini/Vertex 티어의 분당 요청 수를 넘김. 영상 후 바이럴 시 첫날 발생 가능. 콘솔에서 티어 업그레이드 필요.' },
+  'rate_limited':           { label: '분당 사용자 한도 초과 (티어 한계)', icon: '🔴', detail: 'Gemini/Vertex 티어의 분당 요청 수를 넘김. 콘솔에서 티어 업그레이드 필요.' },
   'api_quota_exceeded':     { label: '일일 한도 소진 (콘솔 충전 필요)', icon: '🔴', detail: '오늘 할당된 API 한도를 다 씀 또는 잔액 부족. 모든 디자이너 차단됨. 콘솔 충전 또는 내일 자동 리셋 대기.' },
   'quota_exceeded':         { label: '일일 한도 소진 (콘솔 충전 필요)', icon: '🔴', detail: '오늘 할당된 API 한도를 다 씀. 모든 디자이너 차단됨. 콘솔 충전 또는 내일 자동 리셋 대기.' },
-  'overloaded':             { label: 'API 서버 과부하 (529)', icon: '🔴', detail: 'Anthropic 전체 서버 과부하. 자주 뜨면 콘솔 상태 확인.' },
+  'overloaded':             { label: 'API 서버 과부하 (529)', icon: '🔴', detail: 'Google 전체 서버 과부하. 자주 뜨면 콘솔 상태 확인.' },
   'anthropic_key_invalid':  { label: 'API 키 만료/잔액 부족', icon: '🔴', detail: '분석 API 키가 만료됐거나 잔액이 다 떨어짐. Vercel 환경변수 확인 + 콘솔에서 결제 정보 점검.' },
   'gemini_key_invalid':     { label: 'Gemini 키 만료/잔액 부족', icon: '🔴', detail: 'Gemini API 키가 만료됐거나 결제·할당 한도 소진. Vercel GEMINI_API_KEY 확인 + AI Studio/GCP 결제 점검.' },
-  'auth_failed':            { label: 'API 키 인증 실패', icon: '🔴', detail: 'Anthropic/Vertex 키 만료/오류. Vercel 환경변수 확인 필요. 서비스 전체 마비 상태.' },
+  'auth_failed':            { label: 'API 키 인증 실패', icon: '🔴', detail: 'Gemini/Vertex 키 만료/오류. Vercel 환경변수 확인 필요. 서비스 전체 마비 상태.' },
   'vertex_auth_failed':     { label: 'Vertex(나노바나나) 인증 만료', icon: '🔴', detail: 'GCP 서비스 계정 인증 실패. 서비스 계정 갱신 필요.' },
   'supabase_down':          { label: '슈파베이스 연결 끊김', icon: '🔴', detail: '슈파베이스 일시 다운. 슈파베이스 상태 페이지 확인.' },
 
