@@ -825,6 +825,21 @@ function setAnalyticsRange(r) {
   loadAnalytics();
 }
 
+// 사진 크게 보기 (간단 라이트박스)
+function openPhotoViewer(url) {
+  let ov = document.getElementById('photo-viewer');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'photo-viewer';
+    ov.style.cssText = 'position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.88); display:flex; align-items:center; justify-content:center; padding:20px;';
+    ov.onclick = function(){ ov.style.display = 'none'; };
+    ov.innerHTML = '<img id="photo-viewer-img" style="max-width:100%; max-height:100%; border-radius:8px;" />';
+    document.body.appendChild(ov);
+  }
+  document.getElementById('photo-viewer-img').src = url;
+  ov.style.display = 'flex';
+}
+
 function renderAnalytics(d) {
   const RANGE_LABEL = { today:'오늘', week:'이번 주', month:'이번 달' };
   const BAR_COLORS = ['#639922','#1D9E75','#378ADD','#854F0B','#888780','#888780','#888780','#888780','#888780'];
@@ -1016,7 +1031,7 @@ function renderHome(d) {
   html += '<span class="right" onclick="switchTab(\'ai\')">상세 ↗</span></p>';
   html += '<div class="card" style="background:#F4F2EC; padding:12px;">';
   html += '<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:0.5px solid #E6E2D8">';
-  html += '<span style="font-size:13px; color:#1C1917">컬러 + 컷 분석 (소넷)</span>';
+  html += '<span style="font-size:13px; color:#1C1917">컬러 + 컷 분석 (Gemini)</span>';
   html += '<span style="font-size:12px; color:#5F5E5A">성공 ' + (ai.sonnet.success || 0) + ' / ' + (ai.sonnet.total || 0) + '</span>';
   html += '</div>';
   html += '<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:0.5px solid #E6E2D8">';
@@ -1125,7 +1140,7 @@ function renderAi(d) {
   // Anthropic
   html += '<div class="cost-group cost-group-anthropic">';
   html += '<div class="cost-group-head">';
-  html += '<span class="cost-group-title">Anthropic (Claude Sonnet)</span>';
+  html += '<span class="cost-group-title">Google (Gemini 3.5 Flash)</span>';
   html += '<span class="cost-group-sum">' + fmtWon(br.anthropic.total_cost).replace('₩','~₩') + '</span>';
   html += '</div>';
   const c1 = br.anthropic.color_step1;
@@ -1175,7 +1190,7 @@ function renderAi(d) {
   }
 
   html += '<p style="font-size:10px; color:#888780; margin:0 0 14px; text-align:center; line-height:1.6">';
-  html += '실제 API 잔액은 <a href="https://console.anthropic.com/settings/billing" target="_blank" style="color:#185FA5">Anthropic 콘솔</a> / <a href="https://console.cloud.google.com/billing" target="_blank" style="color:#185FA5">GCP 콘솔</a>에서 확인하세요.';
+  html += '실제 API 잔액은 <a href="https://aistudio.google.com/app/usage" target="_blank" style="color:#185FA5">AI Studio</a> / <a href="https://console.cloud.google.com/billing" target="_blank" style="color:#185FA5">GCP 콘솔</a>에서 확인하세요.';
   html += '</p>';
 
   return html;
@@ -1415,7 +1430,7 @@ function renderSystemRows(s) {
     html += '<div class="sys-head">';
     html += '<span class="sys-icon">🟢</span>';
     html += '<div class="sys-info">';
-    html += '<p class="l1">Anthropic 소넷 사용량</p>';
+    html += '<p class="l1">Gemini 분석 사용량</p>';
     html += '<p class="l2">오늘 ' + sonnet.today_calls + '건 · 이번 달 ' + sonnet.month_calls + '건</p>';
     html += '</div>';
     html += '<span class="caret">▶</span>';
@@ -1429,7 +1444,7 @@ function renderSystemRows(s) {
       html += '<div class="kv"><span style="color:#888780">└ 이번 달 컷</span><span style="color:#888780">' + (bd.cut || 0) + '회 (~₩' + ((bd.cut || 0) * 60).toLocaleString('ko-KR') + ')</span></div>';
     }
     html += '<p style="font-size:10px; color:#888780; margin:6px 0 0; line-height:1.5">' + esc(sonnet.note || '') + '</p>';
-    html += '<a href="' + esc(sonnet.console_url) + '" target="_blank" style="display:inline-block; margin-top:8px; font-size:11px; color:#185FA5">Anthropic 콘솔 열기 ↗</a>';
+    html += '<a href="' + esc(sonnet.console_url) + '" target="_blank" style="display:inline-block; margin-top:8px; font-size:11px; color:#185FA5">AI Studio 열기 ↗</a>';
     html += '</div>';
     html += '</div>';
   }
@@ -1592,6 +1607,22 @@ function renderMemberDetail(d) {
   html += '<div class="stat-cell"><p class="lbl" style="color:#888780">환불</p><p class="val">' + (s.total_refunds || 0) + ' 크레딧</p><p class="sub">자동 환불 포함</p></div>';
   html += '<div class="stat-cell"><p class="lbl" style="color:#888780">마지막 활동</p><p class="val sm">' + relativeTime(d.ai_logs?.[0]?.created_at || d.ledger?.[0]?.created_at || m.updated_at) + '</p></div>';
   html += '</div>';
+
+  // HAIRO 사진 (그 회원이 만든 시안)
+  if (d.gallery && d.gallery.length > 0) {
+    html += '<p class="section-label">📷 HAIRO 사진 (' + d.gallery.length + '장)</p>';
+    html += '<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:4px;">';
+    d.gallery.forEach(function(g){
+      if (!g.image_url) return;
+      const u = esc(g.image_url);
+      html += '<div onclick="openPhotoViewer(\'' + u + '\')" style="position:relative; aspect-ratio:1; border-radius:8px; overflow:hidden; background:#F1EFE8; cursor:pointer;">';
+      html += '<img src="' + u + '" loading="lazy" style="width:100%; height:100%; object-fit:cover;" />';
+      if (g.is_favorite) html += '<span style="position:absolute; top:4px; right:4px; font-size:12px;">⭐</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+    html += '<p style="font-size:10px; color:#B4B2A9; margin:6px 0 0;">최근 12장 · 탭하면 크게 보기</p>';
+  }
 
   // 즐겨 쓰는 기능 (최근 30일)
   if (d.favorite_features && d.favorite_features.length > 0) {
