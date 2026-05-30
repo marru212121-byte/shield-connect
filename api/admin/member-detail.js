@@ -93,12 +93,53 @@ async function getDetail(req, res, supabase, memberId) {
       else if (l.type === 'admin_adjust') stats.total_admin_adjusts += l.amount;
     }
 
+    // 7. 즐겨 쓰는 기능 (feature_events + ai_logs 합산, 최근 30일)
+    const FEATURE_LABELS = {
+      hairo: 'HAIRO 살롱 스튜디오', analyzer: '컬러 레시피', 'cut-analyzer': '컷 상담',
+      color_journey: 'Color Journey', calculator: '약제 비율 계산기',
+      dye_level_calc: '원하는 명도 만들기', melanin_level: '멜라닌 레벨',
+      ingredient: '성분사전', reels: '영상 보기',
+    };
+    const since30 = new Date(Date.now() - 30 * 86400000).toISOString();
+    const favCount = {};
+    function bump(key) {
+      if (!FEATURE_LABELS[key]) return;
+      favCount[key] = (favCount[key] || 0) + 1;
+    }
+    // 무료 메뉴
+    const { data: featEvents } = await supabase
+      .from('feature_events')
+      .select('feature, created_at')
+      .eq('member_id', memberId)
+      .gte('created_at', since30)
+      .limit(5000);
+    for (const e of featEvents || []) bump(e.feature);
+    // API 메뉴 (집계용으로 최근 30일 성공분을 따로 조회 — 화면용 aiLogs 30건과 별개)
+    const { data: aiForFav } = await supabase
+      .from('ai_call_logs')
+      .select('model, stage, status, created_at')
+      .eq('member_id', memberId)
+      .eq('status', 'success')
+      .gte('created_at', since30)
+      .limit(5000);
+    for (const r of aiForFav || []) {
+      if (r.model === 'nanobanana') bump('hairo');
+      else if (r.model === 'gemini' || r.model === 'sonnet') {
+        if (r.stage === 'cut') bump('cut-analyzer');
+        else if (r.stage === 'color' || r.stage === 'recipe_only') bump('analyzer');
+      }
+    }
+    const favorite_features = Object.entries(favCount)
+      .map(([key, count]) => ({ key, label: FEATURE_LABELS[key], count }))
+      .sort((a, b) => b.count - a.count);
+
     return res.status(200).json({
       member,
       ledger: ledger || [],
       gallery: galleryWithUrls,
       ai_logs: aiLogs || [],
       stats,
+      favorite_features,
     });
   } catch (err) {
     console.error('[admin/member-detail GET] error:', err);
