@@ -1739,6 +1739,21 @@ function renderMemberDetail(d) {
   html += '</div>';
   html += '</div>';
 
+  // 홈 화면(standalone) 추가 여부 — track-install.js가 채우는 회원 컬럼 사용
+  //   d.member는 member-detail이 select('*')로 내려주므로 별도 조회 불필요.
+  {
+    const installed = !!(d.member && d.member.is_installed);
+    const lastSa = d.member && d.member.last_standalone_at;
+    const saTxt = lastSa ? (' · 마지막 ' + relativeTime(lastSa)) : '';
+    html += '<div style="display:flex; align-items:center; gap:8px; padding:10px 12px; margin-bottom:14px; border-radius:10px; background:' + (installed ? '#EAF6E1' : '#F1EFE8') + ';">';
+    html += '<span style="font-size:14px;">' + (installed ? '📲' : '🌐') + '</span>';
+    html += '<div style="flex:1; min-width:0;">';
+    html += '<p style="font-size:13px; margin:0; color:#1C1917; font-weight:600;">홈 화면 추가 ' + (installed ? '<span style="color:#3B6D11;">✅ 함</span>' : '<span style="color:#888780;">❌ 안 함(또는 미확인)</span>') + '</p>';
+    html += '<p style="font-size:11px; color:#888780; margin:2px 0 0;">' + (installed ? ('앱(홈 화면)으로 접속한 적 있음' + saTxt) : '아직 홈 화면 아이콘으로 켠 기록 없음') + '</p>';
+    html += '</div>';
+    html += '</div>';
+  }
+
   // 활동 요약
   const s = d.stats;
   html += '<p class="section-label" style="margin-top:0">활동 요약</p>';
