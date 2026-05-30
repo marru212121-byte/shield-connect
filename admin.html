@@ -1608,6 +1608,61 @@ function changeFilter(f) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// 분석 결과 본문 렌더 — JSON이면 예쁘게(스와치 포함), 아니면 글자 그대로
+function renderAnalysisBody(raw) {
+  const plain = '<pre style="white-space:pre-wrap; word-break:break-word; font-family:inherit; font-size:12px; line-height:1.6; color:#3D3D3A; background:#F8F7F3; border-radius:8px; padding:12px; margin:0;">' + esc(raw) + '</pre>';
+  let obj = null;
+  try {
+    const t = String(raw).trim();
+    if (t.startsWith('{') || t.startsWith('[')) obj = JSON.parse(t);
+  } catch (e) { obj = null; }
+  if (!obj || typeof obj !== 'object') return plain;
+
+  let h = '<div style="background:#F8F7F3; border-radius:8px; padding:12px;">';
+
+  // 색 스와치 (hex 있을 때)
+  const hex = obj.hex || obj.color_hex || obj.swatch;
+  if (hex && /^#?[0-9a-fA-F]{6}$/.test(String(hex).replace('#',''))) {
+    const hx = String(hex).startsWith('#') ? hex : ('#' + hex);
+    h += '<div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">';
+    h += '<div style="width:44px; height:44px; border-radius:8px; border:1px solid rgba(0,0,0,0.1); background:' + esc(hx) + '; flex-shrink:0;"></div>';
+    h += '<div>';
+    if (obj.color_name_ko || obj.color_name) h += '<p style="font-size:14px; margin:0; color:#1C1917; font-weight:500;">' + esc(obj.color_name_ko || obj.color_name) + '</p>';
+    h += '<p style="font-size:12px; color:#888780; margin:2px 0 0;">' + esc(hx) + (obj.tone ? ' · ' + esc(obj.tone) : '') + '</p>';
+    h += '</div></div>';
+  } else if (obj.color_name_ko || obj.color_name) {
+    h += '<p style="font-size:14px; margin:0 0 8px; color:#1C1917; font-weight:500;">' + esc(obj.color_name_ko || obj.color_name) + (obj.tone ? ' <span style="font-size:12px; color:#888780;">· ' + esc(obj.tone) + '</span>' : '') + '</p>';
+  }
+
+  // elements (배열) → 작은 칩
+  if (Array.isArray(obj.elements) && obj.elements.length) {
+    h += '<div style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px;">';
+    obj.elements.forEach(function(e){
+      h += '<span style="font-size:11px; color:#5F5E5A; background:#EDEBE3; padding:3px 9px; border-radius:12px;">' + esc(String(e)) + '</span>';
+    });
+    h += '</div>';
+  }
+
+  // 나머지 텍스트 필드들 (description, recipe, steps 등)
+  const LABELS = { description:'설명', recipe:'레시피', recipe_text:'레시피', steps:'스텝', reasoning:'사고 흐름', thinking:'사고 흐름', summary:'요약', note:'메모', advice:'조언' };
+  const SKIP = { hex:1, color_hex:1, swatch:1, color_name_ko:1, color_name:1, tone:1, elements:1 };
+  Object.keys(obj).forEach(function(k){
+    if (SKIP[k]) return;
+    let v = obj[k];
+    if (v == null || v === '') return;
+    if (Array.isArray(v)) v = v.map(function(x){ return typeof x === 'object' ? JSON.stringify(x) : String(x); }).join('\n· ');
+    else if (typeof v === 'object') v = JSON.stringify(v, null, 2);
+    const label = LABELS[k] || k;
+    h += '<div style="margin-bottom:8px;">';
+    h += '<p style="font-size:11px; color:#185FA5; margin:0 0 2px; font-weight:500;">' + esc(label) + '</p>';
+    h += '<p style="font-size:12px; color:#3D3D3A; margin:0; line-height:1.6; white-space:pre-wrap; word-break:break-word;">' + esc(String(v)) + '</p>';
+    h += '</div>';
+  });
+
+  h += '</div>';
+  return h;
+}
+
 // 분석 내용 펼치기/접기
 function toggleAnalysis(id, head) {
   const el = document.getElementById(id);
@@ -1738,7 +1793,7 @@ function renderMemberDetail(d) {
       html += '<span style="font-size:12px; color:#185FA5;">펼치기 ▾</span>';
       html += '</div>';
       html += '<div id="' + txtId + '" style="display:none; padding:0 14px 14px;">';
-      html += '<pre style="white-space:pre-wrap; word-break:break-word; font-family:inherit; font-size:12px; line-height:1.6; color:#3D3D3A; background:#F8F7F3; border-radius:8px; padding:12px; margin:0;">' + esc(l.result_text) + '</pre>';
+      html += renderAnalysisBody(l.result_text);
       html += '</div>';
       html += '</div>';
     });
