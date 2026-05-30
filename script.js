@@ -144,6 +144,7 @@ function navigate(page) {
   if (navEl) navEl.classList.add('active');
 
   State.currentPage = page;
+  if (typeof window.track === 'function') window.track(page);   // 메뉴 클릭 추적
 
   // 성분사전 페이지는 하단 네비 숨김 (뒤로가기 버튼으로 홈 복귀)
   var nav = document.getElementById('bottomNav');
