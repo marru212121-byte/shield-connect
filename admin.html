@@ -1110,9 +1110,81 @@ async function loadAi() {
     }
     const data = await res.json();
     body.innerHTML = renderAi(data);
+    loadActivity();
   } catch (err) {
     body.innerHTML = '<div class="err-msg">불러오기 실패: ' + esc(err.message) + '</div>';
   }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 실시간 활동 흐름 (유료 + 무료 합침)
+// ═══════════════════════════════════════════════════════════════
+let activityFilter = 'all';
+
+async function loadActivity() {
+  const feed = $('activity-feed');
+  if (!feed) return;
+  feed.innerHTML = '<div class="loading">불러오는 중…</div>';
+  try {
+    const res = await fetch('/api/admin/activity?filter=' + activityFilter + '&limit=80', { credentials:'same-origin' });
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    feed.innerHTML = renderActivityFeed(data);
+  } catch (err) {
+    feed.innerHTML = '<div class="err-msg">활동 불러오기 실패: ' + esc(String(err.message || err)) + '</div>';
+  }
+}
+
+function setActivityFilter(f) {
+  activityFilter = f;
+  ['all','paid','free'].forEach(function(k){
+    const b = $('actf-' + k);
+    if (!b) return;
+    const on = (k === f);
+    b.style.border = '1px solid ' + (on ? '#185FA5' : '#E5E3DC');
+    b.style.background = on ? '#E6F1FB' : '#fff';
+    b.style.color = on ? '#185FA5' : '#5F5E5A';
+  });
+  loadActivity();
+}
+
+function renderActivityFeed(d) {
+  const items = d.items || [];
+  if (items.length === 0) {
+    return '<div class="empty">아직 활동 기록이 없어요.</div>';
+  }
+  const PROVIDER_KO = { kakao:'카카오', naver:'네이버', cafe24:'자사몰', guest:'비회원' };
+  let html = '<div class="card" style="padding:0;">';
+  items.forEach(function(it, i){
+    const last = i === items.length - 1;
+    const isPaid = it.kind === 'paid';
+    const ok = it.status === 'success';
+    const dot = ok ? '#639922' : (it.alert_level === 'critical' ? '#E24B4A' : '#EF9F27');
+    const when = relativeTime(it.created_at);
+    const prov = PROVIDER_KO[it.provider] || '';
+    const tag = isPaid
+      ? '<span style="font-size:10px; color:#854F0B; background:#FAEEDA; padding:1px 6px; border-radius:5px; margin-left:6px;">유료</span>'
+      : '<span style="font-size:10px; color:#5F5E5A; background:#F1EFE8; padding:1px 6px; border-radius:5px; margin-left:6px;">무료</span>';
+
+    html += '<div style="display:flex; align-items:flex-start; gap:10px; padding:11px 14px;' + (last?'':' border-bottom:1px solid #F1EFE8;') + '">';
+    html += '<div style="width:8px; height:8px; border-radius:50%; background:' + dot + '; margin-top:5px; flex-shrink:0;"></div>';
+    html += '<div style="flex:1; min-width:0;">';
+    html += '<p style="font-size:13px; margin:0; color:#1C1917;">' + esc(it.label) + tag + '</p>';
+    html += '<p style="font-size:11px; color:#888780; margin:2px 0 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + esc(it.member_id || '') + ' · ' + prov + ' · ' + when;
+    if (isPaid && !ok) {
+      html += ' · <span style="color:#A32D2D;">실패</span>';
+    }
+    html += '</p>';
+    // 유료 실패면 회원에게 뜬 문구를 작게
+    if (isPaid && !ok && it.user_message) {
+      html += '<p style="font-size:11px; color:#A32D2D; margin:4px 0 0; background:#FCEBEB; padding:4px 8px; border-radius:6px;">' + esc(it.user_message) + '</p>';
+    }
+    html += '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  html += '<p style="font-size:10px; color:#B4B2A9; margin:8px 0 14px; text-align:center;">최근 ' + items.length + '건 · 위에서부터 최신순</p>';
+  return html;
 }
 
 function renderAi(d) {
@@ -1161,27 +1233,18 @@ function renderAi(d) {
   html += '</div>';
   html += '</div></div>';
 
-  // 3. 최근 호출 기록 (성공/실패 분리)
+  // 3. 실시간 활동 흐름 (유료+무료 합침) — 컨테이너만, 내용은 loadActivity가 채움
+  html += '<p class="section-label"><span>실시간 활동</span><span class="right gray">유료+무료 합침</span></p>';
+  html += '<div style="display:flex; gap:6px; margin-bottom:10px;">';
+  html += '<button id="actf-all" onclick="setActivityFilter(\'all\')" style="flex:1; font-size:12px; padding:7px 0; border-radius:8px; border:1px solid #185FA5; background:#E6F1FB; color:#185FA5;">전체</button>';
+  html += '<button id="actf-paid" onclick="setActivityFilter(\'paid\')" style="flex:1; font-size:12px; padding:7px 0; border-radius:8px; border:1px solid #E5E3DC; background:#fff; color:#5F5E5A;">유료만</button>';
+  html += '<button id="actf-free" onclick="setActivityFilter(\'free\')" style="flex:1; font-size:12px; padding:7px 0; border-radius:8px; border:1px solid #E5E3DC; background:#fff; color:#5F5E5A;">무료만</button>';
+  html += '</div>';
+  html += '<div id="activity-feed"><div class="loading">불러오는 중…</div></div>';
+
+  // 4. 최근 오류 (있을 때만) — 기존 유지
   const logs = d.recent_logs || [];
-  const successLogs = logs.filter(l => l.status === 'success');
   const errorLogs = logs.filter(l => l.status !== 'success');
-
-  html += '<p class="section-label"><span>최근 호출 기록</span><span class="right gray">최근 ' + logs.length + '건</span></p>';
-
-  if (successLogs.length === 0 && errorLogs.length === 0) {
-    html += '<div class="empty">아직 호출 기록이 없어요.</div>';
-  } else {
-    html += '<div class="card">';
-    for (const log of successLogs.slice(0, 10)) {
-      html += renderCallRow(log);
-    }
-    if (successLogs.length === 0) {
-      html += '<div class="row" style="padding:14px 0; justify-content:center; color:#888780; font-size:12px">아직 성공 호출이 없어요.</div>';
-    }
-    html += '</div>';
-  }
-
-  // 4. 최근 오류 (있을 때만)
   if (errorLogs.length > 0) {
     html += '<p class="section-label"><span>최근 오류</span><span class="right gray">디자이너 메시지 탭하면 펼침</span></p>';
     for (const log of errorLogs.slice(0, 5)) {
