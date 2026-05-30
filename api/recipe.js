@@ -101,6 +101,32 @@ function extractGeminiText(geminiData) {
   return parts.map((p) => (typeof p.text === 'string' ? p.text : '')).join('');
 }
 
+// 분석 결과 텍스트를 방금 기록된 ai_call_logs 행에 저장 (어드민에서 펼쳐보기용)
+// - 실패해도 본 흐름에 영향 없음 (조용히 무시)
+// - 가장 최근의 그 회원/그 stage 성공 로그를 찾아 result_text만 채움
+async function saveResultText(supabase, { memberId, stage, text }) {
+  try {
+    if (!text || !text.trim()) return;
+    const trimmed = text.length > 20000 ? text.slice(0, 20000) : text; // 안전 상한
+    const { data: rows } = await supabase
+      .from('ai_call_logs')
+      .select('id')
+      .eq('member_id', memberId)
+      .eq('model', LOG_MODEL)
+      .eq('status', 'success')
+      .order('created_at', { ascending: false })
+      .limit(1);
+    const rowId = rows && rows[0] && rows[0].id;
+    if (!rowId) return;
+    await supabase
+      .from('ai_call_logs')
+      .update({ result_text: trimmed })
+      .eq('id', rowId);
+  } catch (e) {
+    console.error('[recipe] saveResultText skip:', e?.message || e);
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ code: 'method_not_allowed' });
@@ -296,6 +322,7 @@ export default async function handler(req, res) {
       const reader = geminiResponse.body.getReader();
       const decoder = new TextDecoder();
       let sseBuffer = '';
+      let fullText = '';   // 저장용: 흘려보낸 텍스트 전체 모으기
 
       while (true) {
         const { done, value } = await reader.read();
@@ -318,6 +345,7 @@ export default async function handler(req, res) {
             const parts = (cand && cand.content && cand.content.parts) || [];
             const delta = parts.map((p) => p.text || '').join('');
             if (delta) {
+              fullText += delta;   // 저장용 누적
               // ★ Anthropic 형식 delta 로 변환해서 프론트로 전달
               res.write(
                 'data: ' +
@@ -339,6 +367,8 @@ export default async function handler(req, res) {
         res.write(`event: error\ndata: ${JSON.stringify({ message: 'stream interrupted' })}\n\n`);
       } catch (_) {}
     }
+    // 스트림 끝 — 모은 텍스트 저장 (어드민 펼쳐보기용, 실패해도 무시)
+    await saveResultText(supabase, { memberId, stage, text: fullText });
     res.end();
     return;
   }
@@ -377,6 +407,9 @@ export default async function handler(req, res) {
     duration_ms: Date.now() - startTime,
     prompt_length: promptLength,
   });
+
+  // 분석 결과 텍스트 저장 (어드민 펼쳐보기용) — 실패해도 무시
+  await saveResultText(supabase, { memberId, stage, text });
 
   // 프론트가 기대하는 Anthropic 형식 그대로: content: [{ type:'text', text }]
   return res.status(200).json({
