@@ -108,12 +108,20 @@ async function saveResultText(supabase, { memberId, stage, text }) {
   try {
     if (!text || !text.trim()) return;
     const trimmed = text.length > 20000 ? text.slice(0, 20000) : text; // 안전 상한
-    const { data: rows } = await supabase
+    let q = supabase
       .from('ai_call_logs')
       .select('id')
       .eq('member_id', memberId)
       .eq('model', LOG_MODEL)
-      .eq('status', 'success')
+      .eq('status', 'success');
+    // ★ stage까지 맞춰서 "그 분석 종류의" 가장 최근 행에 저장
+    //   (색감/레시피가 1~2초 차이로 연속 호출돼도 서로 안 섞이게)
+    if (stage == null) {
+      q = q.is('stage', null);
+    } else {
+      q = q.eq('stage', stage);
+    }
+    const { data: rows } = await q
       .order('created_at', { ascending: false })
       .limit(1);
     const rowId = rows && rows[0] && rows[0].id;
