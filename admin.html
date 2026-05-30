@@ -563,17 +563,13 @@
   <div id="ai-body"><div class="loading">불러오는 중…</div></div>
 </div>
 
-<!-- ═══════ 분석 (GA) 페이지 ═══════ -->
+<!-- ═══════ 분석 페이지 ═══════ -->
 <div id="page-analytics" class="page">
-  <div class="ga-card">
-    <h3>분석 대시보드</h3>
-    <p>방문자, 메뉴별 체류시간, 유입 경로 등 마케팅 데이터는<br>Google Analytics에서 확인하세요.</p>
+  <div id="analytics-body"><div class="loading">불러오는 중…</div></div>
+  <div class="ga-card" style="margin-top:18px;">
+    <p style="font-size:11px; color:#888780; line-height:1.6; margin:0 0 8px;">방문 유입경로·체류시간 등 마케팅 지표는 Google Analytics에서 확인하세요.</p>
     <a href="https://analytics.google.com" target="_blank" class="ga-link-btn">GA 대시보드 열기 ↗</a>
   </div>
-  <p style="font-size:10px; color:#888780; text-align:center; line-height:1.6;">
-    측정 ID: <code style="font-family:Menlo,monospace;">G-82LSVB4T6K</code><br>
-    로그인 + 비로그인 방문자 모두 자동 추적 중
-  </p>
 </div>
 
 <!-- ═══════ 더보기 페이지 ═══════ -->
@@ -795,13 +791,107 @@ function switchTab(name) {
     '더보기';
   if (name === 'home') loadHome();
   else if (name === 'ai') loadAi();
+  else if (name === 'analytics') loadAnalytics();
   else if (name === 'more') loadMore();
 }
 
 function reloadCurrent() {
   if (currentTab === 'home') loadHome();
   else if (currentTab === 'ai') loadAi();
+  else if (currentTab === 'analytics') loadAnalytics();
   else if (currentTab === 'more') loadMore();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 분석 탭 — 기능 사용 분석
+// ═══════════════════════════════════════════════════════════════
+let analyticsRange = 'week';
+
+async function loadAnalytics() {
+  const box = $('analytics-body');
+  box.innerHTML = '<div class="loading">불러오는 중…</div>';
+  try {
+    const res = await fetch('/api/admin/analytics?range=' + analyticsRange, { credentials:'same-origin' });
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    box.innerHTML = renderAnalytics(data);
+  } catch (err) {
+    box.innerHTML = '<div class="err-msg">불러오기 실패: ' + esc(String(err.message || err)) + '</div>';
+  }
+}
+
+function setAnalyticsRange(r) {
+  analyticsRange = r;
+  loadAnalytics();
+}
+
+function renderAnalytics(d) {
+  const RANGE_LABEL = { today:'오늘', week:'이번 주', month:'이번 달' };
+  const BAR_COLORS = ['#639922','#1D9E75','#378ADD','#854F0B','#888780','#888780','#888780','#888780','#888780'];
+  let html = '';
+
+  // 요약 카드 2개
+  html += '<div class="stats-grid" style="margin-bottom:14px;">';
+  html += '<div class="stat-cell"><p class="lbl">' + RANGE_LABEL[d.range] + ' 기능 사용</p><p class="val">' + (d.summary.total_hits||0) + ' <span style="font-size:13px;color:#888780">회</span></p></div>';
+  html += '<div class="stat-cell"><p class="lbl">활동한 사람</p><p class="val">' + (d.summary.actors||0) + ' <span style="font-size:13px;color:#888780">명</span></p></div>';
+  html += '</div>';
+
+  // 기간 토글
+  html += '<div style="display:flex; gap:6px; margin-bottom:16px;">';
+  ['today','week','month'].forEach(function(r){
+    const on = d.range === r;
+    html += '<button onclick="setAnalyticsRange(\'' + r + '\')" style="flex:1; font-size:12px; padding:7px 0; border-radius:8px; border:1px solid ' + (on?'#185FA5':'#E5E3DC') + '; background:' + (on?'#E6F1FB':'#fff') + '; color:' + (on?'#185FA5':'#5F5E5A') + ';">' + RANGE_LABEL[r] + '</button>';
+  });
+  html += '</div>';
+
+  // 인기 메뉴 순위
+  html += '<p class="section-label"><span>인기 기능 순위</span></p>';
+  if (!d.ranking || d.ranking.length === 0) {
+    html += '<div class="empty">아직 기록이 없어요. 디자이너가 메뉴를 사용하면 쌓입니다.</div>';
+  } else {
+    html += '<div class="ledger-card" style="padding:14px;">';
+    d.ranking.forEach(function(item, i){
+      const pct = d.max_count ? Math.round(item.count / d.max_count * 100) : 0;
+      const color = BAR_COLORS[i] || '#888780';
+      html += '<div style="margin-bottom:' + (i === d.ranking.length-1 ? '0' : '11px') + ';">';
+      html += '<div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">';
+      html += '<span><span style="color:#B4B2A9; margin-right:6px;">' + (i+1) + '</span>' + esc(item.label) + '</span>';
+      html += '<span style="color:#5F5E5A;">' + item.count + '</span></div>';
+      html += '<div style="background:#F1EFE8; border-radius:99px; height:7px; overflow:hidden;"><div style="width:' + pct + '%; height:100%; background:' + color + '; border-radius:99px;"></div></div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  // 회원 vs 비회원
+  const ms = d.member_split || {};
+  html += '<p class="section-label">회원 vs 비회원</p>';
+  html += '<div class="ledger-card" style="padding:14px;">';
+  html += '<div style="display:flex; height:26px; border-radius:8px; overflow:hidden; margin-bottom:8px;">';
+  html += '<div style="width:' + (ms.member_pct||0) + '%; background:#378ADD; display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; min-width:fit-content; padding:0 4px;">회원 ' + (ms.member_pct||0) + '%</div>';
+  html += '<div style="width:' + (ms.guest_pct||0) + '%; background:#B4B2A9; display:flex; align-items:center; justify-content:center; color:#2C2C2A; font-size:11px; min-width:fit-content; padding:0 4px;">비회원 ' + (ms.guest_pct||0) + '%</div>';
+  html += '</div>';
+  html += '<p style="font-size:11px; color:#888780; margin:0;">회원 ' + (ms.member||0) + '회 · 비회원 ' + (ms.guest||0) + '회</p>';
+  html += '</div>';
+
+  // 회원별 사용 (탭하면 상세)
+  html += '<p class="section-label">회원별 사용 (탭하면 상세)</p>';
+  if (!d.top_members || d.top_members.length === 0) {
+    html += '<div class="empty">회원 활동 기록 없음</div>';
+  } else {
+    html += '<div class="ledger-card" style="padding:0;">';
+    d.top_members.forEach(function(m, i){
+      const last = i === d.top_members.length-1;
+      html += '<div onclick="openMemberModal(\'' + esc(m.member_id) + '\')" style="display:flex; justify-content:space-between; align-items:center; padding:12px 14px; cursor:pointer;' + (last?'':' border-bottom:1px solid #F1EFE8;') + '">';
+      html += '<div><p style="font-size:13px; margin:0; font-family:Menlo,monospace;">' + esc(m.member_id) + '</p>';
+      html += '<p style="font-size:11px; color:#888780; margin:2px 0 0;">주로: ' + esc(m.top_feature || '-') + '</p></div>';
+      html += '<span style="font-size:13px; color:#5F5E5A;">' + m.count + '회 ›</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  return html;
 }
 
 function bootstrap() {
@@ -1502,6 +1592,25 @@ function renderMemberDetail(d) {
   html += '<div class="stat-cell"><p class="lbl" style="color:#888780">환불</p><p class="val">' + (s.total_refunds || 0) + ' 크레딧</p><p class="sub">자동 환불 포함</p></div>';
   html += '<div class="stat-cell"><p class="lbl" style="color:#888780">마지막 활동</p><p class="val sm">' + relativeTime(d.ai_logs?.[0]?.created_at || d.ledger?.[0]?.created_at || m.updated_at) + '</p></div>';
   html += '</div>';
+
+  // 즐겨 쓰는 기능 (최근 30일)
+  if (d.favorite_features && d.favorite_features.length > 0) {
+    const favMax = d.favorite_features[0].count || 1;
+    const FAV_COLORS = ['#639922','#1D9E75','#378ADD','#854F0B','#888780','#888780','#888780','#888780','#888780'];
+    html += '<p class="section-label">⭐ 즐겨 쓰는 기능</p>';
+    html += '<div class="ledger-card" style="padding:14px;">';
+    d.favorite_features.forEach(function(f, i){
+      const pct = Math.round(f.count / favMax * 100);
+      const color = FAV_COLORS[i] || '#888780';
+      const last = i === d.favorite_features.length-1;
+      html += '<div style="margin-bottom:' + (last?'0':'10px') + ';">';
+      html += '<div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;"><span>' + esc(f.label) + '</span><span style="color:#888780;">' + f.count + '회</span></div>';
+      html += '<div style="background:#F1EFE8; border-radius:99px; height:7px; overflow:hidden;"><div style="width:' + pct + '%; height:100%; background:' + color + '; border-radius:99px;"></div></div>';
+      html += '</div>';
+    });
+    html += '</div>';
+    html += '<p style="font-size:10px; color:#B4B2A9; margin:6px 0 0;">최근 30일 · 무료 기능 + AI 분석 합산</p>';
+  }
 
   // 거래 내역
   html += '<p class="section-label">거래 내역</p>';
