@@ -103,6 +103,31 @@ export default async function handler(req, res) {
     items.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     const sliced = items.slice(0, limit);
 
+    // ─── 홈 화면(standalone) 추가 회원 표시용 is_installed 부착 ───
+    //   화면에 보이는 회원들만 한 번에 조회해서 각 항목에 is_installed 붙임.
+    //   실패해도 그냥 배지가 안 뜰 뿐 — 본 응답엔 영향 없음(안전).
+    try {
+      const ids = [...new Set(
+        sliced
+          .map((it) => it.member_id)
+          .filter((id) => id && !String(id).startsWith('anon_'))
+      )];
+      if (ids.length > 0) {
+        const { data: installed } = await supabase
+          .from('cafe24_member_credits')
+          .select('member_id, is_installed')
+          .in('member_id', ids);
+        const installedSet = new Set(
+          (installed || []).filter((m) => m.is_installed).map((m) => m.member_id)
+        );
+        for (const it of sliced) {
+          it.is_installed = installedSet.has(it.member_id);
+        }
+      }
+    } catch (e) {
+      console.error('[admin/activity] is_installed enrich skip:', e?.message || e);
+    }
+
     return res.status(200).json({
       filter,
       count: sliced.length,

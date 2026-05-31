@@ -28,7 +28,7 @@ export default async function handler(req, res) {
     // ─── 1. 전체 회원 + 최근 활동 ───────────────────────────
     let query = supabase
       .from('cafe24_member_credits')
-      .select('member_id, credits_remaining, total_charged, total_used, role, signup_bonus_given, created_at, updated_at')
+      .select('member_id, credits_remaining, total_charged, total_used, role, signup_bonus_given, created_at, updated_at, is_installed, last_standalone_at')
       .order('updated_at', { ascending: false });
 
     if (search) {
@@ -79,6 +79,8 @@ export default async function handler(req, res) {
         is_active: isActive,
         is_dormant: isDormant,
         is_paid: isPaid,
+        is_installed: !!m.is_installed,
+        last_standalone_at: m.last_standalone_at || null,
         stats,
       };
     });
