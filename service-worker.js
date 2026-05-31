@@ -1,4 +1,4 @@
-const CACHE_NAME = 'shield-v5';
+const CACHE_NAME = 'shield-v6';
 
 // 설치: 빈 캐시로 시작
 self.addEventListener('install', e => {
@@ -31,5 +31,56 @@ self.addEventListener('fetch', e => {
         return res;
       })
       .catch(() => caches.match(e.request))
+  );
+});
+
+// ════════════════════════════════════════════════════════════
+// 푸시 알림 (v6, 2026-05-31 추가) — 위 캐시 로직과 완전히 독립
+//   · 서버(web-push)가 보낸 푸시를 받아 알림 표시
+//   · 알림 탭하면 앱(홈)을 열거나 이미 열린 탭으로 포커스
+//   · 캐시/fetch 로직은 전혀 건드리지 않음
+// ════════════════════════════════════════════════════════════
+self.addEventListener('push', e => {
+  let data = {};
+  try {
+    data = e.data ? e.data.json() : {};
+  } catch (_) {
+    // JSON 아니면 텍스트로
+    try { data = { body: e.data.text() }; } catch (__) { data = {}; }
+  }
+
+  const title = data.title || '쉴드 디자이너 커넥트';
+  const options = {
+    body: data.body || '',
+    icon: data.icon || '/icon-192.png',
+    badge: data.badge || '/icon-192.png',
+    data: { url: data.url || '/' },   // 탭했을 때 열 주소
+    tag: data.tag || undefined,        // 같은 tag면 알림 덮어쓰기(중복 방지)
+  };
+
+  e.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const targetUrl = (e.notification.data && e.notification.data.url) || '/';
+
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+      // 이미 열린 창이 있으면 그쪽으로 포커스
+      for (const client of clientList) {
+        if ('focus' in client) {
+          client.focus();
+          if ('navigate' in client) {
+            try { client.navigate(targetUrl); } catch (_) {}
+          }
+          return;
+        }
+      }
+      // 열린 창이 없으면 새로 염
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl);
+      }
+    })
   );
 });
