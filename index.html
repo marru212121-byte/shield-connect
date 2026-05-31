@@ -2028,6 +2028,12 @@
     // 충전 FAB (홈 아닌 페이지에서만 표시)
     window.__scLoggedIn = true;
     if(typeof window.__updateChargeFab === 'function') window.__updateChargeFab();
+
+    // 푸시 알림 구독 유도 (홈 화면 앱 + 미구독 + 아직 안 물어본 경우에만)
+    //   실패해도 로그인/앱 흐름엔 전혀 영향 없음 (내부에서 try/catch)
+    if(typeof window.__maybeOfferPush === 'function') {
+      window.__maybeOfferPush();
+    }
   }
 
   function renderLoggedOut(){
@@ -2452,6 +2458,121 @@
       body: JSON.stringify({ standalone: true })
     }).catch(function(){});
   } catch (e) { /* 무시 */ }
+})();
+</script>
+<!-- ════════════ 푸시 알림 구독 유도 (v1, 2026-06-01) ════════════ -->
+<!--  · 로그인 직후 호출됨 (__maybeOfferPush)
+      · 홈 화면 앱(standalone) + 푸시 지원 + 미구독 + 이번 세션에 아직 안 물어봤을 때만 안내
+      · 안내에서 "받기" → 권한 팝업 → 허용 시 구독 정보를 서버 저장
+      · 전 과정 try/catch — 실패/미지원/거부 어떤 경우든 앱 흐름에 영향 없음 -->
+<script>
+(function(){
+  'use strict';
+
+  var VAPID_PUBLIC = 'BBCsYQca-E4AtPF0dfwaWBt0YupDxYpU37aFboKyaZZAonF1xdLgrcPlIjW_-jSMP4pbWbbeWWoqp01UwZpYpwU';
+
+  // base64url(VAPID 공개키) → Uint8Array (PushManager가 요구하는 형식)
+  function urlBase64ToUint8Array(base64String){
+    var padding = '='.repeat((4 - base64String.length % 4) % 4);
+    var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    var raw = atob(base64);
+    var arr = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+    return arr;
+  }
+
+  function isStandalone(){
+    return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+           window.navigator.standalone === true;
+  }
+
+  // 서비스워커 가져오기 — 이미 등록돼 있으면 그걸 쓰고, 없으면 등록
+  function getSWRegistration(){
+    if (!('serviceWorker' in navigator)) return Promise.reject('no_sw');
+    return navigator.serviceWorker.getRegistration().then(function(reg){
+      if (reg) return reg;
+      return navigator.serviceWorker.register('/service-worker.js');
+    });
+  }
+
+  // 작은 안내 배너 (받기 / 나중에) — 진짜 권한 팝업은 "받기" 눌러야 뜸
+  function showOfferBanner(onAccept){
+    if (document.getElementById('push-offer-banner')) return;
+    var bar = document.createElement('div');
+    bar.id = 'push-offer-banner';
+    bar.style.cssText = 'position:fixed; left:12px; right:12px; bottom:18px; z-index:9999; background:#1C1917; color:#fff; border-radius:14px; padding:14px 16px; box-shadow:0 6px 24px rgba(0,0,0,.25); display:flex; align-items:center; gap:12px; font-size:13px; line-height:1.4;';
+    bar.innerHTML =
+      '<div style="flex:1;">🔔 새 소식·이벤트 알림을 받으시겠어요?</div>' +
+      '<button id="push-later" style="background:transparent; color:#B4B2A9; border:none; font-size:13px; padding:6px 8px;">나중에</button>' +
+      '<button id="push-accept" style="background:#C7F050; color:#0A0A0A; border:none; font-weight:700; font-size:13px; padding:8px 14px; border-radius:10px;">받기</button>';
+    document.body.appendChild(bar);
+
+    function close(){ try { bar.remove(); } catch(e){} }
+    document.getElementById('push-later').onclick = function(){
+      try { sessionStorage.setItem('push_offer_dismissed', '1'); } catch(e){}
+      close();
+    };
+    document.getElementById('push-accept').onclick = function(){
+      close();
+      onAccept();
+    };
+  }
+
+  // 실제 구독 진행 (권한 요청 → 구독 → 서버 저장)
+  function doSubscribe(){
+    getSWRegistration().then(function(reg){
+      // 권한 요청 (iOS는 사용자 제스처 직후여야 떠서, '받기' 클릭 핸들러 안에서 호출됨)
+      return Notification.requestPermission().then(function(perm){
+        if (perm !== 'granted') return; // 거부/무시 — 조용히 종료
+        return reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC)
+        }).then(function(sub){
+          // 서버에 구독 저장 (회원 식별은 세션 쿠키)
+          return fetch('/api/save-push-subscription', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ subscription: sub.toJSON ? sub.toJSON() : sub })
+          }).catch(function(){});
+        });
+      });
+    }).catch(function(){ /* 미지원/실패 — 조용히 무시 */ });
+  }
+
+  // 로그인 직후 renderLoggedIn에서 호출됨
+  window.__maybeOfferPush = function(){
+    try {
+      // 지원 안 하면 종료 (구형/일부 브라우저)
+      if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return;
+      // 홈 화면 앱이 아니면 종료 (iOS는 PWA에서만 권한 가능)
+      if (!isStandalone()) return;
+      // 이미 권한 결정된 상태면(허용/거부) 다시 안 물음
+      if (Notification.permission === 'denied') return;
+      if (Notification.permission === 'granted') {
+        // 이미 허용 상태 — 구독이 비어있을 수 있으니 조용히 재확인/저장만
+        getSWRegistration().then(function(reg){
+          return reg.pushManager.getSubscription().then(function(existing){
+            if (existing) {
+              fetch('/api/save-push-subscription', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ subscription: existing.toJSON ? existing.toJSON() : existing })
+              }).catch(function(){});
+            } else {
+              doSubscribe();
+            }
+          });
+        }).catch(function(){});
+        return;
+      }
+      // permission === 'default' (아직 안 물어봄)
+      // 이번 세션에 이미 "나중에" 눌렀으면 다시 안 띄움
+      try { if (sessionStorage.getItem('push_offer_dismissed')) return; } catch(e){}
+      // 안내 배너 표시 → 받기 누르면 권한 팝업
+      showOfferBanner(doSubscribe);
+    } catch (e) { /* 어떤 경우든 앱 흐름 방해 안 함 */ }
+  };
 })();
 </script>
 <script src="./charge-modal.js"></script>
