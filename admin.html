@@ -1447,8 +1447,136 @@ async function loadMore() {
     const payments = await pRes.json();
     const system = await sRes.json();
     body.innerHTML = renderMore(members, payments, system);
+    loadPushPanel();   // 푸시 구독자 패널 채우기 (비동기, 실패해도 나머지 영향 없음)
   } catch (err) {
     body.innerHTML = '<div class="err-msg">불러오기 실패: ' + esc(err.message) + '</div>';
+  }
+}
+
+// ─── 푸시 발송 패널 ──────────────────────────────────────────
+let pushSubscribers = [];
+function loadPushPanel() {
+  const box = document.getElementById('push-panel');
+  if (!box) return;
+  fetch('/api/admin/send-push', { credentials:'same-origin' })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      if (!d) { box.innerHTML = '<div class="empty">구독자 정보를 불러오지 못했어요.</div>'; return; }
+      pushSubscribers = d.subscribers || [];
+      box.innerHTML = renderPushPanel(d);
+    })
+    .catch(function(){ box.innerHTML = '<div class="empty">구독자 정보를 불러오지 못했어요.</div>'; });
+}
+
+function renderPushPanel(d) {
+  const subs = d.subscribers || [];
+  let html = '<div class="card-white">';
+  if (subs.length === 0) {
+    html += '<div class="empty" style="margin-bottom:8px">아직 알림을 허용한 회원이 없어요.</div>';
+    html += '</div>';
+    return html;
+  }
+
+  html += '<p style="font-size:11px; color:#888780; margin:0 0 10px;">알림 허용 회원 <b style="color:#1C1917;">' + d.total_subscribers + '명</b> · 기기 ' + d.total_devices + '대</p>';
+
+  // 메시지 입력
+  html += '<input type="text" id="push-title" placeholder="알림 제목 (예: 새 기능 출시!)" maxlength="50" style="width:100%; box-sizing:border-box; padding:9px 11px; border:1px solid #E5E3DC; border-radius:8px; font-size:13px; margin-bottom:6px;" />';
+  html += '<textarea id="push-body" placeholder="알림 내용 (선택)" maxlength="120" rows="2" style="width:100%; box-sizing:border-box; padding:9px 11px; border:1px solid #E5E3DC; border-radius:8px; font-size:13px; margin-bottom:10px; resize:none;"></textarea>';
+
+  // 대상 선택 헤더 (전체 선택)
+  html += '<div style="display:flex; align-items:center; justify-content:space-between; padding:6px 0; border-top:1px solid #F1EFE8; border-bottom:1px solid #F1EFE8; margin-bottom:6px;">';
+  html += '<label style="display:flex; align-items:center; gap:8px; font-size:13px; color:#1C1917; cursor:pointer;">';
+  html += '<input type="checkbox" id="push-select-all" onchange="togglePushAll(this)" /> 전체 선택';
+  html += '</label>';
+  html += '<span id="push-selected-count" style="font-size:11px; color:#888780;">0명 선택</span>';
+  html += '</div>';
+
+  // 구독자 목록 (개별 체크)
+  html += '<div style="max-height:220px; overflow-y:auto; margin-bottom:10px;">';
+  for (const s of subs) {
+    const provider = providerOf(s.member_id);
+    html += '<label style="display:flex; align-items:center; gap:10px; padding:8px 4px; border-bottom:1px solid #F6F4EE; cursor:pointer;">';
+    html += '<input type="checkbox" class="push-sub-check" value="' + esc(s.member_id) + '" onchange="updatePushCount()" />';
+    html += avatarHtml(s.member_id, provider);
+    html += '<div style="flex:1; min-width:0;">';
+    html += '<p style="font-size:12px; color:#1C1917; margin:0; word-break:break-all;">' + esc(s.member_id) + '</p>';
+    html += '<p style="font-size:10px; color:#888780; margin:1px 0 0;">기기 ' + s.devices + '대 · ' + relativeTime(s.last) + '</p>';
+    html += '</div>';
+    html += '</label>';
+  }
+  html += '</div>';
+
+  // 발송 버튼
+  html += '<button id="push-send-btn" onclick="sendPush()" style="width:100%; padding:11px; background:#1C1917; color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700;">선택한 회원에게 발송</button>';
+  html += '<p id="push-result" style="font-size:11px; color:#888780; margin:8px 0 0; text-align:center; min-height:14px;"></p>';
+  html += '</div>';
+  return html;
+}
+
+function togglePushAll(el) {
+  const checks = document.querySelectorAll('.push-sub-check');
+  checks.forEach(function(c){ c.checked = el.checked; });
+  updatePushCount();
+}
+
+function updatePushCount() {
+  const checks = document.querySelectorAll('.push-sub-check');
+  let n = 0;
+  checks.forEach(function(c){ if (c.checked) n++; });
+  const cnt = document.getElementById('push-selected-count');
+  if (cnt) cnt.textContent = n + '명 선택';
+  const all = document.getElementById('push-select-all');
+  if (all) all.checked = (n > 0 && n === checks.length);
+}
+
+async function sendPush() {
+  const title = (document.getElementById('push-title') || {}).value || '';
+  const body = (document.getElementById('push-body') || {}).value || '';
+  const result = document.getElementById('push-result');
+  const btn = document.getElementById('push-send-btn');
+
+  if (!title.trim()) {
+    if (result) { result.style.color = '#A32D2D'; result.textContent = '알림 제목을 입력해주세요.'; }
+    return;
+  }
+
+  // 선택된 member_id 모으기
+  const selected = [];
+  document.querySelectorAll('.push-sub-check').forEach(function(c){ if (c.checked) selected.push(c.value); });
+  if (selected.length === 0) {
+    if (result) { result.style.color = '#A32D2D'; result.textContent = '받을 회원을 선택해주세요.'; }
+    return;
+  }
+
+  // 전체 선택이면 'all'로 보냄 (서버 부담 줄임), 아니면 배열
+  const allChecks = document.querySelectorAll('.push-sub-check').length;
+  const target = (selected.length === allChecks) ? 'all' : selected;
+
+  if (!confirm(selected.length + '명에게 "' + title.trim() + '" 알림을 보낼까요?')) return;
+
+  if (btn) { btn.disabled = true; btn.textContent = '발송 중…'; }
+  if (result) { result.style.color = '#888780'; result.textContent = '발송 중…'; }
+
+  try {
+    const res = await fetch('/api/admin/send-push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ title: title.trim(), body: body.trim(), url: '/', target: target }),
+    });
+    const d = await res.json();
+    if (!res.ok || !d.ok) {
+      if (result) { result.style.color = '#A32D2D'; result.textContent = '발송 실패: ' + esc(d.message || '오류'); }
+    } else {
+      if (result) {
+        result.style.color = '#3B6D11';
+        result.textContent = '✅ ' + d.sent + '건 발송 완료' + (d.failed ? (' · 실패 ' + d.failed) : '') + (d.removed ? (' · 만료 ' + d.removed + '건 정리') : '');
+      }
+    }
+  } catch (err) {
+    if (result) { result.style.color = '#A32D2D'; result.textContent = '발송 실패: ' + esc(err.message); }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '선택한 회원에게 발송'; }
   }
 }
 
@@ -1480,6 +1608,10 @@ function renderMore(members, payments, system) {
   html += '<div id="member-search-results">';
   html += renderMemberList(members);
   html += '</div>';
+
+  // 1.5 푸시 발송 — 컨테이너만, 내용은 loadPushPanel이 채움
+  html += '<p class="section-label"><span>🔔 푸시 알림 발송</span><span class="right gray">허용한 회원에게</span></p>';
+  html += '<div id="push-panel"><div class="loading">구독자 불러오는 중…</div></div>';
 
   // 2. 결제 내역
   html += '<p class="section-label"><span>결제 내역 · 전체</span><span class="right gray">최근 ' + (payments.recent_payments?.length || 0) + '건</span></p>';
