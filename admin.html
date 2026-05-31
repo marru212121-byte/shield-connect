@@ -1148,6 +1148,29 @@ function setActivityFilter(f) {
   loadActivity();
 }
 
+// 활동 피드용 — 실패 원인 한국어 라벨 (ai-logs.js의 INTERNAL_REASON_LABELS 축약본)
+//   activity API가 internal_reason을 내려줄 때만 사용. 없으면 그냥 코드 원문/생략.
+var ACTIVITY_REASON_KO = {
+  'upstream_busy':      { icon:'🟡', label:'AI 서버 일시 과부하' },
+  'busy':               { icon:'🟡', label:'일시적 트래픽 폭주' },
+  'timeout':            { icon:'🟡', label:'응답 지연' },
+  'all_fallbacks_failed': { icon:'🟡', label:'폴백 모두 실패' },
+  'safety_block':       { icon:'🟢', label:'안전 필터 차단' },
+  'content_blocked':    { icon:'🟢', label:'안전 필터 차단' },
+  'insufficient_credits': { icon:'🟢', label:'크레딧 부족' },
+  'invalid_input':      { icon:'🟢', label:'입력값 오류' },
+  'real_rate_limit':    { icon:'🔴', label:'분당 한도 초과(티어)' },
+  'rate_limited':       { icon:'🔴', label:'분당 한도 초과(티어)' },
+  'api_quota_exceeded': { icon:'🔴', label:'일일 한도 소진' },
+  'quota_exceeded':     { icon:'🔴', label:'일일 한도 소진' },
+  'overloaded':         { icon:'🔴', label:'서버 과부하(529)' },
+  'gemini_key_invalid': { icon:'🔴', label:'Gemini 키 만료/잔액' },
+  'anthropic_key_invalid': { icon:'🔴', label:'API 키 만료/잔액' },
+  'vertex_auth_failed': { icon:'🔴', label:'Vertex 인증 만료' },
+  'supabase_down':      { icon:'🔴', label:'DB 연결 끊김' },
+  'unknown_error':      { icon:'🔴', label:'미분류 에러' },
+};
+
 function renderActivityFeed(d) {
   // 컬러 분석 2스텝(레시피)은 1스텝과 한 묶음(무료 후반부)이므로
   // 피드에서는 1스텝("컬러 분석")만 노출하고 2스텝 행은 접는다. → 1회 = 1줄.
@@ -1178,7 +1201,8 @@ function renderActivityFeed(d) {
     html += '<div style="width:8px; height:8px; border-radius:50%; background:' + dot + '; margin-top:5px; flex-shrink:0;"></div>';
     html += '<div style="flex:1; min-width:0;">';
     html += '<p style="font-size:13px; margin:0; color:#1C1917;">' + esc(it.label) + tag + '</p>';
-    html += '<p style="font-size:11px; color:#888780; margin:2px 0 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + esc(it.member_id || '') + ' · ' + prov + ' · ' + when;
+    var installBadge = it.is_installed ? '<span title="홈 화면 추가 회원" style="margin-left:4px;">📲</span>' : '';
+    html += '<p style="font-size:11px; color:#888780; margin:2px 0 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + esc(it.member_id || '') + installBadge + ' · ' + prov + ' · ' + when;
     if (isPaid && !ok) {
       html += ' · <span style="color:#A32D2D;">실패</span>';
     }
@@ -1186,6 +1210,16 @@ function renderActivityFeed(d) {
     // 유료 실패면 회원에게 뜬 문구를 작게
     if (isPaid && !ok && it.user_message) {
       html += '<p style="font-size:11px; color:#A32D2D; margin:4px 0 0; background:#FCEBEB; padding:4px 8px; border-radius:6px;">' + esc(it.user_message) + '</p>';
+    }
+    // 유료 실패 — 진짜 원인(있으면)을 사장님용으로 한 줄 더. + 환불 여부.
+    //   activity API가 internal_reason/status를 안 내려주면 자동으로 생략됨(안전).
+    if (isPaid && !ok && (it.internal_reason || it.status === 'refunded')) {
+      const r = ACTIVITY_REASON_KO[it.internal_reason];
+      const reasonTxt = r ? (r.icon + ' ' + r.label) : (it.internal_reason ? esc(it.internal_reason) : '');
+      const refundTxt = it.status === 'refunded' ? ' · ✅ 환불됨' : '';
+      if (reasonTxt || refundTxt) {
+        html += '<p style="font-size:10px; color:#888780; margin:3px 0 0;">원인: ' + reasonTxt + refundTxt + '</p>';
+      }
     }
     html += '</div>';
     html += '</div>';
@@ -1325,6 +1359,9 @@ function renderErrorCard(log) {
   html += '<div class="err-head">';
   html += '<span>' + icon + '</span>';
   html += '<span style="flex:1">' + esc(ko.reason_ko || log.internal_reason || '오류') + ' · ' + esc(log.member_id || '?') + ' · ' + relativeTime(log.created_at) + '</span>';
+  if (log.status === 'refunded') {
+    html += '<span style="font-size:10px; color:#3B6D11; background:#EAF6E1; padding:1px 6px; border-radius:5px; white-space:nowrap;">✅ 환불됨</span>';
+  }
   html += '</div>';
   html += '<div class="err-msg-box">';
   html += '<div style="flex:1; min-width:0">';
@@ -1362,6 +1399,32 @@ function renderErrorCard(log) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// 회원 목록만 그리는 부분 (검색 시 이 부분만 교체 → 입력창 안 건드림)
+function renderMemberList(members) {
+  let html = '';
+  if (!members.members || members.members.length === 0) {
+    html += '<div class="empty" style="margin-bottom:0">검색 결과 없음</div>';
+    return html;
+  }
+  html += '<div style="border-top:0.5px solid #E6E2D8; margin:0 -12px; padding:0 12px;">';
+  for (const m of members.members.slice(0, 20)) {
+    const provider = providerOf(m.member_id);
+    const installBadge = m.is_installed ? '<span title="홈 화면 추가 회원" style="margin-left:4px;">📲</span>' : '';
+    html += '<div class="row clickable" onclick="openMember(\'' + esc(m.member_id) + '\')">';
+    html += avatarHtml(m.member_id, provider);
+    html += '<div style="flex:1; min-width:0">';
+    html += '<p style="font-size:13px; color:#1C1917; margin:0; word-break:break-all">' + esc(m.member_id) + installBadge + '</p>';
+    html += '<p style="font-size:10px; color:#888780; margin:1px 0 0">';
+    html += '충전 ' + (m.stats.charge || 0) + '회 · 사용 ' + (m.stats.use || 0) + '회 · ' + relativeTime(m.last_active);
+    html += '</p>';
+    html += '</div>';
+    html += '<span style="font-size:11px; color:#3B6D11; font-weight:500">' + (m.credits_remaining || 0) + ' 크레딧</span>';
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
 // 더보기 페이지 (회원 검색 + 결제 내역 + 시스템)
 // ═══════════════════════════════════════════════════════════════
 let moreSearchTerm = '';
@@ -1408,29 +1471,14 @@ function renderMore(members, payments, system) {
     { key:'dormant', label:'휴면 ' + members.summary.dormant },
   ];
   for (const f of filters) {
-    html += '<button class="chip' + (moreFilter === f.key ? ' active' : '') + '" onclick="changeFilter(\'' + f.key + '\')">' + esc(f.label) + '</button>';
+    html += '<button class="chip' + (moreFilter === f.key ? ' active' : '') + '" data-filter="' + f.key + '" onclick="changeFilter(\'' + f.key + '\')">' + esc(f.label) + '</button>';
   }
   html += '</div>';
 
-  if (members.members.length === 0) {
-    html += '<div class="empty" style="margin-bottom:0">검색 결과 없음</div>';
-  } else {
-    html += '<div style="border-top:0.5px solid #E6E2D8; margin:0 -12px; padding:0 12px;">';
-    for (const m of members.members.slice(0, 20)) {
-      const provider = providerOf(m.member_id);
-      html += '<div class="row clickable" onclick="openMember(\'' + esc(m.member_id) + '\')">';
-      html += avatarHtml(m.member_id, provider);
-      html += '<div style="flex:1; min-width:0">';
-      html += '<p style="font-size:13px; color:#1C1917; margin:0; word-break:break-all">' + esc(m.member_id) + '</p>';
-      html += '<p style="font-size:10px; color:#888780; margin:1px 0 0">';
-      html += '충전 ' + (m.stats.charge || 0) + '회 · 사용 ' + (m.stats.use || 0) + '회 · ' + relativeTime(m.last_active);
-      html += '</p>';
-      html += '</div>';
-      html += '<span style="font-size:11px; color:#3B6D11; font-weight:500">' + (m.credits_remaining || 0) + ' 크레딧</span>';
-      html += '</div>';
-    }
-    html += '</div>';
-  }
+  // ★ 검색 결과는 이 컨테이너 안에서만 갱신 → 입력창(#search-input)은 다시 안 그림
+  //   (포커스·한글 조합 안 끊김)
+  html += '<div id="member-search-results">';
+  html += renderMemberList(members);
   html += '</div>';
 
   // 2. 결제 내역
@@ -1607,14 +1655,53 @@ function renderSystemRows(s) {
 }
 
 let searchTimer = null;
+let searchSeq = 0;            // 늦게 온 응답이 최신 결과를 덮어쓰지 않게
+let isComposing = false;      // 한글 조합 중 여부
+
+// 회원 목록 부분만 다시 불러와 교체 (입력창은 그대로 → 포커스/조합 유지)
+async function refreshMemberList() {
+  const box = $('member-search-results');
+  if (!box) { loadMore(); return; }   // 컨테이너 없으면(첫 진입 등) 전체 로드
+  const seq = ++searchSeq;
+  try {
+    const res = await fetch('/api/admin/members?filter=' + encodeURIComponent(moreFilter) + '&search=' + encodeURIComponent(moreSearchTerm), { credentials:'same-origin' });
+    if (seq !== searchSeq) return;     // 더 최신 검색이 이미 나갔으면 이 결과는 버림
+    if (!res.ok) { if (res.status === 401) showLock(); return; }
+    const members = await res.json();
+    if (seq !== searchSeq) return;
+    box.innerHTML = renderMemberList(members);
+  } catch (e) { /* 검색 실패는 조용히 무시 */ }
+}
+
 function onSearchInput(e) {
   moreSearchTerm = e.target.value;
+  if (isComposing) return;             // 한글 조합 중엔 검색 안 함 (조합 끝나면 발사)
   if (searchTimer) clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => loadMore(), 300);
+  searchTimer = setTimeout(refreshMemberList, 300);
 }
+
+// 한글 조합 시작/끝 처리 — input에 위임으로 붙임 (입력창이 매번 새로 그려져도 동작)
+document.addEventListener('compositionstart', function(e){
+  if (e.target && e.target.id === 'search-input') isComposing = true;
+});
+document.addEventListener('compositionend', function(e){
+  if (e.target && e.target.id === 'search-input') {
+    isComposing = false;
+    moreSearchTerm = e.target.value;
+    if (searchTimer) clearTimeout(searchTimer);
+    searchTimer = setTimeout(refreshMemberList, 300);
+  }
+});
 function changeFilter(f) {
   moreFilter = f;
-  loadMore();
+  // 칩 active 표시 갱신 (data-filter 기준)
+  const chips = document.querySelectorAll('.filter-chips .chip');
+  chips.forEach(function(c){
+    if (c.getAttribute('data-filter') === f) c.classList.add('active');
+    else c.classList.remove('active');
+  });
+  // 목록만 다시 로드 (입력창 유지)
+  refreshMemberList();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1880,6 +1967,56 @@ function renderMemberDetail(d) {
     });
     html += '</div>';
     html += '<p style="font-size:10px; color:#B4B2A9; margin:6px 0 0;">최근 30일 보관 · 컬러는 색감+레시피 한 묶음</p>';
+  }
+
+  // 실패 내역 — 이 회원의 실패한 AI 호출 (원인/서버원인/회원문구/환불 여부)
+  const failLogs = (d.ai_logs || []).filter(function(l){
+    return l.status && l.status !== 'success';
+  });
+  if (failLogs.length > 0) {
+    const STAGE_KO_F = { color:'컬러 분석', color_step1:'컬러 분석', recipe_only:'컬러 레시피', cut:'컷 분석', image:'HAIRO 사진', customer_message:'고객 안내' };
+    html += '<p class="section-label">⚠️ 실패 내역 <span class="right gray">탭하면 원인 펼침</span></p>';
+    html += '<div class="card" style="padding:0;">';
+    failLogs.slice(0, 10).forEach(function(l, i){
+      const last = i === Math.min(failLogs.length, 10) - 1;
+      const r = ACTIVITY_REASON_KO[l.internal_reason];
+      const icon = r ? r.icon : '🟡';
+      const reasonLabel = r ? r.label : (l.internal_reason || l.status || '실패');
+      const stageName = STAGE_KO_F[l.stage] || (l.stage || '분석');
+      const refunded = l.status === 'refunded';
+      const fid = 'fail-' + (l.id || i);
+      html += '<div style="' + (last?'':'border-bottom:1px solid #F1EFE8;') + '">';
+      html += '<div onclick="toggleAnalysis(\'' + fid + '\', this)" style="display:flex; justify-content:space-between; align-items:center; padding:11px 14px; cursor:pointer;">';
+      html += '<div style="flex:1; min-width:0;">';
+      html += '<p style="font-size:13px; margin:0; color:#1C1917;">' + icon + ' ' + esc(stageName) + ' · ' + esc(reasonLabel);
+      if (refunded) html += ' <span style="font-size:10px; color:#3B6D11; background:#EAF6E1; padding:1px 5px; border-radius:5px;">✅ 환불</span>';
+      html += '</p>';
+      html += '<p style="font-size:11px; color:#888780; margin:2px 0 0;">' + relativeTime(l.created_at) + '</p>';
+      html += '</div>';
+      html += '<span style="font-size:12px; color:#185FA5;">펼치기 ▾</span>';
+      html += '</div>';
+      // 펼침: 서버 원인 + 회원 문구 + 영어 원문
+      html += '<div id="' + fid + '" style="display:none; padding:0 14px 12px;">';
+      html += '<div style="background:#FAFAF7; border-radius:6px; padding:8px; margin-bottom:6px;">';
+      html += '<p style="font-size:10px; color:#888780; margin:0 0 2px;">실제 분류 (internal_reason)</p>';
+      html += '<code style="font-size:11px; color:#1C1917; word-break:break-all;">' + esc(l.internal_reason || '—') + (l.error_code ? ' · HTTP ' + esc(String(l.error_code)) : '') + '</code>';
+      html += '</div>';
+      if (l.user_message) {
+        html += '<div style="background:#FCEBEB; border-radius:6px; padding:8px; margin-bottom:6px;">';
+        html += '<p style="font-size:10px; color:#888780; margin:0 0 2px;">회원에게 표시된 문구</p>';
+        html += '<p style="font-size:11px; color:#A32D2D; margin:0;">' + esc(l.user_message) + '</p>';
+        html += '</div>';
+      }
+      if (l.raw_error) {
+        html += '<div style="background:#FAFAF7; border-radius:6px; padding:8px;">';
+        html += '<p style="font-size:10px; color:#888780; margin:0 0 2px;">영어 원문</p>';
+        html += '<code style="font-size:10px; color:#5F5E5A; word-break:break-all;">' + esc(String(l.raw_error).slice(0, 300)) + '</code>';
+        html += '</div>';
+      }
+      html += '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
   }
 
   // 거래 내역
