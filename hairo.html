@@ -1441,6 +1441,21 @@ input, textarea { font-family: inherit; }
   letter-spacing: 0.2px;
 }
 
+/* ===== 4분할컷 잠금 상태 ===== */
+.chip.locked,
+#promptInput.locked {
+  opacity: 0.4;
+  pointer-events: none;
+}
+.chip.locked::after {
+  content: ' 🔒';
+  font-size: 9px;
+}
+#promptInput.locked {
+  background: rgba(255,255,255,0.03);
+  cursor: not-allowed;
+}
+
 /* ===== Aspect popover ===== */
 .aspect-wrap { position: relative; }
 .aspect-chip {
@@ -2376,9 +2391,46 @@ moodSheet.querySelectorAll('.preset-card').forEach(card => {
       moodChip.classList.remove('has-value');
       moodChip.textContent = '무드';
     }
+    applyQuadLock(m === 'quad_sheet');
     closeMoodSheet();
   });
 });
+
+/* ── 4분할컷: 해상도·프레이밍·프롬프트 잠금 ── */
+const promptInput = document.getElementById('promptInput');
+const QUAD_DEFAULT_PROMPT = 'Use the reference only for the hairstyle, hair color, and face. Replace the background completely with a pure plain white wall. Ignore the original background, lighting, clothing, and surroundings of the reference.';
+
+function applyQuadLock(isQuad) {
+  if (isQuad) {
+    // 해상도 9:16 강제 + 잠금
+    state.aspect = '9:16';
+    aspectChipLabel.textContent = ASPECT_META['9:16'].label;
+    aspectChipIcon.innerHTML = ASPECT_META['9:16'].svg;
+    aspectChip.classList.add('locked');
+    // 프레이밍 해제 + 잠금
+    state.framing = null;
+    framingChip.classList.remove('has-value');
+    framingChip.textContent = '프레이밍';
+    framingChip.classList.add('locked');
+    // 프롬프트 자동 입력(비어있을 때만) + 잠금
+    if (!promptInput.value.trim()) {
+      promptInput.value = QUAD_DEFAULT_PROMPT;
+      promptInput.dataset.quadAuto = '1';
+    }
+    promptInput.classList.add('locked');
+    promptInput.setAttribute('readonly', 'readonly');
+  } else {
+    aspectChip.classList.remove('locked');
+    framingChip.classList.remove('locked');
+    promptInput.classList.remove('locked');
+    promptInput.removeAttribute('readonly');
+    // 자동 입력했던 문구만 비움 (디자이너가 직접 친 건 보존)
+    if (promptInput.dataset.quadAuto === '1') {
+      promptInput.value = '';
+      promptInput.dataset.quadAuto = '';
+    }
+  }
+}
 
 // 외부 클릭/배경 클릭으로 닫기
 moodSheet.addEventListener('click', (e) => {
