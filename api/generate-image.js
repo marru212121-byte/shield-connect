@@ -128,6 +128,15 @@ slightly idealized smooth skin,
 glossy lip pearl shine,
 clean color grading,
 high clarity and fine detail`,
+
+  // 4분할컷 — 동일인물 캐릭터 시트 (정면/¾/옆/뒤) · 핸드폰 실사 · 한국 인플루언서 톤
+  // 힉스필드 9:16 검증 프롬프트 그대로. framing/aspect는 아래 조립부에서 자동 고정.
+  quad_sheet: `Character reference sheet of the SAME woman from the reference photo — identical face, hairstyle, hair color, hair length, and the same bangs and side-swept layers EXACTLY as the reference. One single image, 2x2 grid of 4 panels, same person and identical hair in all panels. Four DIFFERENT angles:
+- TOP-LEFT: front view, face straight to camera.
+- TOP-RIGHT: three-quarter 45 degree view, face and side hair flow visible.
+- BOTTOM-LEFT: side profile view, side silhouette of the hair.
+- BOTTOM-RIGHT: straight back view, back of the head facing camera, face not visible, full hair length from behind.
+MOOD — shot on a smartphone, iPhone photo realism, subtle natural sensor grain, Korean influencer aesthetic, influencer soft retouch, beautified pretty idealized face, slightly idealized smooth skin, glossy lip pearl shine, individual hair strand visibility strand by strand, realistic hair root density at the scalp, natural hair shine and glossy reflection, even soft front lighting, pure plain white wall background, seamless solid white, no texture, no props, true-to-life color grading`,
 };
 
 // ─── 프레이밍 프리셋 ────────────────────────────────────────────
@@ -283,8 +292,8 @@ export default async function handler(req, res) {
     promptParts.push(MOOD_PRESETS[mood]);
   }
 
-  // ⭐ 프레이밍 (선택사항)
-  if (framing && typeof framing === 'string' && FRAMING_PRESETS[framing]) {
+  // ⭐ 프레이밍 (선택사항) — 4분할컷일 땐 그리드 고정이라 스킵
+  if (framing && typeof framing === 'string' && FRAMING_PRESETS[framing] && mood !== 'quad_sheet') {
     promptParts.push(FRAMING_PRESETS[framing]);
   }
 
@@ -298,8 +307,12 @@ export default async function handler(req, res) {
   // 디자이너 입력 = 사용자 프롬프트 본문만 전달 (강조 라벨 제거 — 무드 충돌 최소화)
   promptParts.push(userPrompt.trim());
 
-  // 해상도 비율
-  promptParts.push(aspectPrompt || 'vertical 9:16 aspect ratio, portrait orientation');
+  // 해상도 비율 — 4분할컷은 릴스용 9:16 고정 (사용자가 다른 비율 골라도 강제)
+  if (mood === 'quad_sheet') {
+    promptParts.push('vertical 9:16 aspect ratio, portrait orientation');
+  } else {
+    promptParts.push(aspectPrompt || 'vertical 9:16 aspect ratio, portrait orientation');
+  }
 
   // ⭐ 통짜 결합 (',\n') — 힉스필드처럼 한 덩어리 프롬프트로 모델에 전달
   //    이유: '\n\n'(빈 줄)로 분리하면 모델이 여러 섹션으로 인식해 무드 영향 약화됨
