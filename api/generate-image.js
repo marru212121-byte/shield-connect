@@ -146,7 +146,22 @@ MOOD — shot on a smartphone, iPhone photo realism, soft even front light, clea
 MOOD — shot on a smartphone, iPhone photo realism, soft even front light, clean light neutral backdrop, natural soft shadow cast on the wall behind the subject, gentle shadows along the hair for depth, clear hair strand detail, individual strands visible, realistic hair texture, natural hair shine and glossy light reflection, Korean influencer aesthetic, light soft retouch, no props, true-to-life color grading`,
 };
 
-// ─── 프레이밍 프리셋 ────────────────────────────────────────────
+// ─── 남성 헤어 프리셋 (오토모드 + isMale 토글 ON일 때) ──────────────
+// 여성용과 차이: 사이드뱅 IF 문장 전부 제거 (댄디컷이 리프컷/단발로 변형되는 문제 차단)
+//                각도/포인트 + 원본 컷 충실 유지 + 무드만. 미인보정 키워드도 남성 톤으로.
+const MALE_PRESETS = {
+  quad_sheet: `Character reference sheet of the SAME man from the reference photo — identical face, hairstyle, hair color, hair length, and the same haircut EXACTLY as the reference. One single image, 2x2 grid of 4 panels, same person and identical hair in all panels. Four DIFFERENT angles:
+- TOP-LEFT: front view, face straight to camera.
+- TOP-RIGHT: three-quarter 45 degree view, face and hair visible.
+- BOTTOM-LEFT: side profile view, side silhouette of the hair, keeping the original cut exactly as the reference.
+- BOTTOM-RIGHT: straight back view, back of the head facing camera, face not visible, hair from behind.
+MOOD — shot on a smartphone, iPhone photo realism, soft even front light, clean light neutral backdrop, natural soft shadow cast on the wall behind the subject, gentle shadows along the hair for depth, Korean influencer aesthetic, clean natural retouch, handsome clear face, clean smooth skin, individual hair strand visibility strand by strand, realistic hair texture, natural hair shine, no props, true-to-life color grading`,
+
+  closeup_sheet: `Understand the overall hairstyle of the man in the reference photo, then create a HAIR-FOCUSED detail sheet. Keep the original men's haircut, length, and color EXACTLY as the reference. One single image, 2x2 grid of 4 panels, same person and identical hairstyle and hair color in all panels.
+- TOP-LEFT: front view showing the whole hairstyle and the face, Korean influencer aesthetic, clean natural retouch, handsome clear face.
+- The other three panels: close-up shots where the hair fills most of the frame, focusing on the most flattering DIFFERENT parts of the hair — for example the side flow, a back three-quarter angle, and the hair ends. Each a clearly different part and angle, faces may be partially cropped or turned away. Avoid a straight full back-of-head view.
+MOOD — shot on a smartphone, iPhone photo realism, soft even front light, clean light neutral backdrop, natural soft shadow cast on the wall behind the subject, gentle shadows along the hair for depth, clear hair strand detail, individual strands visible, realistic hair texture, natural hair shine, Korean influencer aesthetic, clean natural retouch, no props, true-to-life color grading`,
+};
 // v2 (2026-05-15): full_body 제거 → knee_up 추가
 // 이유: 전신은 차렷 자세 나와 의미 없음. 무릎 위 = 헤어 + 의상 같이 보이는 미디엄 풀샷.
 const FRAMING_PRESETS = {
@@ -197,6 +212,7 @@ export default async function handler(req, res) {
     angle,
     mood,        // ⭐ 'natural' | 'editorial_lookbook' | 'y2k' | null
     framing,     // ⭐ 'chest_up' | 'upper_body' | 'knee_up' | null
+    isMale,      // ⭐ 남성 헤어 토글 (오토모드에서만 사용 — 사이드뱅 IF 제거)
     references,
   } = body;
 
@@ -296,7 +312,13 @@ export default async function handler(req, res) {
 
   // ⭐ 무드 (선택사항, 디폴트 = 무드 X = 자유)
   if (mood && typeof mood === 'string' && MOOD_PRESETS[mood]) {
-    promptParts.push(MOOD_PRESETS[mood]);
+    // 남성 헤어 토글 ON + 오토모드(quad/closeup)면 → 사이드뱅 IF 뺀 남성 프리셋 사용
+    const isAutoMode = (mood === 'quad_sheet' || mood === 'closeup_sheet');
+    if (isMale === true && isAutoMode && MALE_PRESETS[mood]) {
+      promptParts.push(MALE_PRESETS[mood]);
+    } else {
+      promptParts.push(MOOD_PRESETS[mood]);
+    }
   }
 
   // ⭐ 프레이밍 (선택사항) — 4분할컷/클로즈업시트는 그리드 고정이라 스킵
@@ -775,3 +797,4 @@ async function refundCredit(supabase, memberId, reference, isAdmin) {
     console.error('[generate-image] refund failed:', err);
   }
 }
+
