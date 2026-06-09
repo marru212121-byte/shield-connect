@@ -136,14 +136,14 @@ high clarity and fine detail`,
 - TOP-RIGHT: three-quarter 45 degree view, face and side hair flow visible.
 - BOTTOM-LEFT: side profile view, side silhouette of the hair. IF the hairstyle has side bangs, tuck the side hair behind the ear so the ear is exposed, while the side bangs fall forward along the cheekbone and face line — making the side bangs stand out against the exposed ear.
 - BOTTOM-RIGHT: straight back view, back of the head facing camera, face not visible, full hair length from behind.
-MOOD — shot on a smartphone, iPhone photo realism, subtle natural sensor grain, Korean influencer aesthetic, influencer soft retouch, beautified pretty idealized face, slightly idealized smooth skin, glossy lip pearl shine, individual hair strand visibility strand by strand, realistic hair root density at the scalp, natural hair shine and glossy reflection, even soft front lighting, pure plain white wall background, seamless solid white, no texture, no props, true-to-life color grading`,
+MOOD — shot on a smartphone, iPhone photo realism, bright photo studio, direct frontal flash like a paparazzi photo, soft directional front light, natural soft shadow cast on the wall behind the subject, gentle shadows along the hair for depth, Korean influencer aesthetic, influencer soft retouch, beautified pretty idealized face, slightly idealized smooth skin, glossy lip pearl shine, individual hair strand visibility strand by strand, realistic hair texture, natural hair shine and glossy reflection, clean bright off-white studio wall, no props, true-to-life color grading`,
 
   // 클로즈업 시트 — 첨부 헤어의 포인트를 부위별 클로즈업 (성별·길이 무관, 모델 자율)
   // framing/aspect는 아래 조립부에서 자동 고정.
   closeup_sheet: `Understand the overall hairstyle of the person in the reference photo, then create a HAIR-FOCUSED detail sheet. One single image, 2x2 grid of 4 panels, same person and identical hairstyle and hair color in all panels. Keep the haircut, length, and color EXACTLY as the reference.
 - TOP-LEFT: front view showing the whole hairstyle and the face, Korean influencer aesthetic, influencer soft retouch, beautified pretty idealized face.
 - The other three panels: close-up shots where the hair fills most of the frame, focusing on the most flattering DIFFERENT parts of the hair — for example the side flow, a back three-quarter angle where the cheekbone is barely glimpsed, and the curled ends. IF the hairstyle has side bangs, include one panel where the side hair is tucked behind the ear so the ear is exposed, while the side bangs fall forward along the cheekbone and face line — making the side bangs stand out against the exposed ear. Each a clearly different part and angle, faces may be partially cropped or turned away. Avoid a straight full back-of-head view.
-MOOD — shot on a smartphone, iPhone photo realism, clear hair strand detail, individual strands visible, realistic hair texture, natural hair shine and glossy light reflection, soft even front lighting, Korean influencer aesthetic, light soft retouch, pure plain white wall background, seamless solid white, no props, true-to-life color grading`,
+MOOD — shot on a smartphone, iPhone photo realism, bright photo studio, direct frontal flash like a paparazzi photo, soft directional front light, natural soft shadow cast on the wall behind the subject, gentle shadows along the hair for depth, clear hair strand detail, individual strands visible, realistic hair texture, natural hair shine and glossy light reflection, Korean influencer aesthetic, light soft retouch, clean bright off-white studio wall, no props, true-to-life color grading`,
 };
 
 // ─── 프레이밍 프리셋 ────────────────────────────────────────────
@@ -775,4 +775,3 @@ async function refundCredit(supabase, memberId, reference, isAdmin) {
     console.error('[generate-image] refund failed:', err);
   }
 }
-
