@@ -1490,48 +1490,26 @@ input, textarea { font-family: inherit; }
   flex-shrink: 0;
 }
 
-/* ===== 남성 헤어 토글 ===== */
-.male-toggle {
-  display: none;  /* 오토모드 선택 시에만 표시 (JS로 제어) */
+/* ===== 성별 뱃지 (오토모드 버튼) ===== */
+.sex-badge {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  margin: 9px 2px 2px;
-  cursor: pointer;
-  user-select: none;
-}
-.male-toggle.show { display: flex; }
-.male-toggle input { display: none; }
-.male-toggle-box {
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
-  border: 1.5px solid rgba(255,255,255,0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: all 0.15s;
-}
-.male-toggle-box .ti {
-  font-size: 12px;
-  color: #1a1a1a;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-.male-toggle input:checked + .male-toggle-box {
-  background: #c8f03c;
-  border-color: #c8f03c;
-}
-.male-toggle input:checked + .male-toggle-box .ti { opacity: 1; }
-.male-toggle-text {
-  font-size: 13px;
-  color: #ECECEC;
+  font-size: 9px;
   font-weight: 500;
+  padding: 1px 6px;
+  border-radius: 5px;
+  flex-shrink: 0;
 }
-.male-toggle-sub {
-  font-size: 11px;
-  font-weight: 400;
-  color: rgba(236,236,236,0.5);
+.sex-female { background: #c8f03c; color: #1a1a1a; }
+.sex-male { background: #4a90e2; color: #fff; }
+/* 그룹 라벨 옆 인라인 AUTO 뱃지 */
+.auto-badge-inline {
+  font-size: 8px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+  vertical-align: 1px;
 }
 
 /* ===== Aspect popover ===== */
@@ -1786,28 +1764,37 @@ input, textarea { font-family: inherit; }
     </div>
     <div class="sheet-body">
       <div class="preset-list">
-        <div class="preset-group-label preset-group-auto"><i class="ti ti-bolt" aria-hidden="true"></i> 오토모드 · 사진 걸고 누르면 자동</div>
+        <div class="preset-group-label preset-group-auto"><i class="ti ti-bolt" aria-hidden="true"></i> 오토모드 · 사진 걸고 누르면 자동 <span class="auto-badge auto-badge-inline">AUTO</span></div>
         <div class="preset-grid">
           <button class="preset-card preset-card-auto" data-mood="quad_sheet" type="button">
             <div class="preset-card-head">
               <div class="preset-card-title">4분할컷</div>
-              <span class="auto-badge">AUTO</span>
+              <span class="sex-badge sex-female">여성</span>
             </div>
-            <div class="preset-card-desc">4각도 시트 · 정면·사선·옆·뒤 · 9:16</div>
+            <div class="preset-card-desc">4각도에서 촬영컷 · 9:16</div>
+          </button>
+          <button class="preset-card preset-card-auto" data-mood="quad_sheet_male" type="button">
+            <div class="preset-card-head">
+              <div class="preset-card-title">4분할컷</div>
+              <span class="sex-badge sex-male">남성</span>
+            </div>
+            <div class="preset-card-desc">4각도에서 촬영컷 · 9:16</div>
           </button>
           <button class="preset-card preset-card-auto" data-mood="closeup_sheet" type="button">
             <div class="preset-card-head">
               <div class="preset-card-title">디테일 클로즈업</div>
-              <span class="auto-badge">AUTO</span>
+              <span class="sex-badge sex-female">여성</span>
             </div>
-            <div class="preset-card-desc">헤어 포인트 부위별 · 결·윤기 · 9:16</div>
+            <div class="preset-card-desc">디테일 클로즈업컷 · 9:16</div>
+          </button>
+          <button class="preset-card preset-card-auto" data-mood="closeup_sheet_male" type="button">
+            <div class="preset-card-head">
+              <div class="preset-card-title">디테일 클로즈업</div>
+              <span class="sex-badge sex-male">남성</span>
+            </div>
+            <div class="preset-card-desc">디테일 클로즈업컷 · 9:16</div>
           </button>
         </div>
-        <label class="male-toggle" id="maleToggle">
-          <input type="checkbox" id="maleCheckbox">
-          <span class="male-toggle-box"><i class="ti ti-check" aria-hidden="true"></i></span>
-          <span class="male-toggle-text">남성 헤어 <span class="male-toggle-sub">· 댄디컷·숏컷 변형 방지</span></span>
-        </label>
 
         <div class="preset-group-label">프롬프트 자유 · 분위기</div>
         <button class="preset-card preset-card-wide" data-mood="" type="button">
@@ -2004,7 +1991,6 @@ const state = {
   refFiles: [],
   mood: null,        // ⭐ 'natural' | 'editorial_lookbook' | 'y2k' | null(자유 입력)
   framing: null,     // ⭐ 'chest_up' | 'upper_body' | 'knee_up' | null(자유 입력)
-  isMale: false,     // ⭐ 남성 헤어 토글 (오토모드에서만 — 사이드뱅 IF 제거)
   // 결과 모달 모드: 'fresh' (방금 생성) | 'archive' (보관함 재열람)
   resultMode: 'fresh',
   currentItem: null, // 보관함 모드일 때 보고있는 아이템
@@ -2463,7 +2449,9 @@ const MOOD_LABELS = {
   y2k: 'Y2K',
   studio_profile: '스튜디오 프로필사진',
   quad_sheet: '4분할컷',
+  quad_sheet_male: '4분할컷 (남성)',
   closeup_sheet: '디테일 클로즈업',
+  closeup_sheet_male: '디테일 클로즈업 (남성)',
 };
 
 function openMoodSheet() {
@@ -2493,7 +2481,8 @@ moodSheet.querySelectorAll('.preset-card').forEach(card => {
       moodChip.classList.remove('has-value');
       moodChip.textContent = '무드';
     }
-    applyQuadLock(m === 'quad_sheet' || m === 'closeup_sheet', m);
+    const isAuto = (m === 'quad_sheet' || m === 'quad_sheet_male' || m === 'closeup_sheet' || m === 'closeup_sheet_male');
+    applyQuadLock(isAuto, m);
     closeMoodSheet();
   });
 });
@@ -2504,10 +2493,7 @@ const QUAD_DEFAULT_PROMPT = 'Use the reference only for the hairstyle, hair colo
 const CLOSEUP_DEFAULT_PROMPT = 'Use the reference only for the hairstyle, haircut, and hair color. Pure plain white wall background. Ignore the original background, clothing, and surroundings of the reference.';
 
 function applyQuadLock(isLocked, mood) {
-  const maleToggle = document.getElementById('maleToggle');
   if (isLocked) {
-    // 남성 헤어 토글 표시 (오토모드에서만)
-    if (maleToggle) maleToggle.classList.add('show');
     // 해상도 9:16 강제 + 잠금
     state.aspect = '9:16';
     aspectChipLabel.textContent = ASPECT_META['9:16'].label;
@@ -2522,17 +2508,13 @@ function applyQuadLock(isLocked, mood) {
     if (promptInput.dataset.quadAuto !== '1') {
       promptInput.dataset.prevText = promptInput.value;  // 디자이너가 친 거 보존
     }
-    promptInput.dataset.autoEng = (mood === 'closeup_sheet') ? CLOSEUP_DEFAULT_PROMPT : QUAD_DEFAULT_PROMPT;
+    const isCloseup = (mood === 'closeup_sheet' || mood === 'closeup_sheet_male');
+    promptInput.dataset.autoEng = isCloseup ? CLOSEUP_DEFAULT_PROMPT : QUAD_DEFAULT_PROMPT;
     promptInput.dataset.quadAuto = '1';
     promptInput.value = '🔒 오토모드 — 프롬프트가 자동으로 설정됩니다';
     promptInput.classList.add('locked');
     promptInput.setAttribute('readonly', 'readonly');
   } else {
-    // 오토모드 해제 → 남성 토글 숨기고 초기화
-    if (maleToggle) maleToggle.classList.remove('show');
-    state.isMale = false;
-    const mc = document.getElementById('maleCheckbox');
-    if (mc) mc.checked = false;
     aspectChip.classList.remove('locked');
     framingChip.classList.remove('locked');
     promptInput.classList.remove('locked');
@@ -2545,12 +2527,6 @@ function applyQuadLock(isLocked, mood) {
       promptInput.dataset.prevText = '';
     }
   }
-}
-
-// 남성 헤어 체크박스 → state.isMale 갱신
-{
-  const mc = document.getElementById('maleCheckbox');
-  if (mc) mc.addEventListener('change', () => { state.isMale = mc.checked; });
 }
 
 // 외부 클릭/배경 클릭으로 닫기
@@ -2790,10 +2766,6 @@ async function generateImage() {
   }
   if (state.framing) {
     payload.framing = state.framing;
-  }
-  // 남성 헤어 토글 — 오토모드(4분할/클로즈업)에서 체크 시에만 전송 (서버서 사이드뱅 IF 제거)
-  if (state.isMale && (state.mood === 'quad_sheet' || state.mood === 'closeup_sheet')) {
-    payload.isMale = true;
   }
   // v6.1 (2026-05-15): 앵글 제거됨 — 카메라 각도/포즈는 디자이너 프롬프트에 맡김
   if (state.refFiles.length > 0) {
