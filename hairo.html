@@ -1490,6 +1490,50 @@ input, textarea { font-family: inherit; }
   flex-shrink: 0;
 }
 
+/* ===== 남성 헤어 토글 ===== */
+.male-toggle {
+  display: none;  /* 오토모드 선택 시에만 표시 (JS로 제어) */
+  align-items: center;
+  gap: 8px;
+  margin: 9px 2px 2px;
+  cursor: pointer;
+  user-select: none;
+}
+.male-toggle.show { display: flex; }
+.male-toggle input { display: none; }
+.male-toggle-box {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1.5px solid rgba(255,255,255,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.male-toggle-box .ti {
+  font-size: 12px;
+  color: #1a1a1a;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.male-toggle input:checked + .male-toggle-box {
+  background: #c8f03c;
+  border-color: #c8f03c;
+}
+.male-toggle input:checked + .male-toggle-box .ti { opacity: 1; }
+.male-toggle-text {
+  font-size: 13px;
+  color: #ECECEC;
+  font-weight: 500;
+}
+.male-toggle-sub {
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(236,236,236,0.5);
+}
+
 /* ===== Aspect popover ===== */
 .aspect-wrap { position: relative; }
 .aspect-chip {
@@ -1759,6 +1803,11 @@ input, textarea { font-family: inherit; }
             <div class="preset-card-desc">헤어 포인트 부위별 · 결·윤기 · 9:16</div>
           </button>
         </div>
+        <label class="male-toggle" id="maleToggle">
+          <input type="checkbox" id="maleCheckbox">
+          <span class="male-toggle-box"><i class="ti ti-check" aria-hidden="true"></i></span>
+          <span class="male-toggle-text">남성 헤어 <span class="male-toggle-sub">· 댄디컷·숏컷 변형 방지</span></span>
+        </label>
 
         <div class="preset-group-label">프롬프트 자유 · 분위기</div>
         <button class="preset-card preset-card-wide" data-mood="" type="button">
@@ -1955,6 +2004,7 @@ const state = {
   refFiles: [],
   mood: null,        // ⭐ 'natural' | 'editorial_lookbook' | 'y2k' | null(자유 입력)
   framing: null,     // ⭐ 'chest_up' | 'upper_body' | 'knee_up' | null(자유 입력)
+  isMale: false,     // ⭐ 남성 헤어 토글 (오토모드에서만 — 사이드뱅 IF 제거)
   // 결과 모달 모드: 'fresh' (방금 생성) | 'archive' (보관함 재열람)
   resultMode: 'fresh',
   currentItem: null, // 보관함 모드일 때 보고있는 아이템
@@ -2454,7 +2504,10 @@ const QUAD_DEFAULT_PROMPT = 'Use the reference only for the hairstyle, hair colo
 const CLOSEUP_DEFAULT_PROMPT = 'Use the reference only for the hairstyle, haircut, and hair color. Pure plain white wall background. Ignore the original background, clothing, and surroundings of the reference.';
 
 function applyQuadLock(isLocked, mood) {
+  const maleToggle = document.getElementById('maleToggle');
   if (isLocked) {
+    // 남성 헤어 토글 표시 (오토모드에서만)
+    if (maleToggle) maleToggle.classList.add('show');
     // 해상도 9:16 강제 + 잠금
     state.aspect = '9:16';
     aspectChipLabel.textContent = ASPECT_META['9:16'].label;
@@ -2475,6 +2528,11 @@ function applyQuadLock(isLocked, mood) {
     promptInput.classList.add('locked');
     promptInput.setAttribute('readonly', 'readonly');
   } else {
+    // 오토모드 해제 → 남성 토글 숨기고 초기화
+    if (maleToggle) maleToggle.classList.remove('show');
+    state.isMale = false;
+    const mc = document.getElementById('maleCheckbox');
+    if (mc) mc.checked = false;
     aspectChip.classList.remove('locked');
     framingChip.classList.remove('locked');
     promptInput.classList.remove('locked');
@@ -2487,6 +2545,12 @@ function applyQuadLock(isLocked, mood) {
       promptInput.dataset.prevText = '';
     }
   }
+}
+
+// 남성 헤어 체크박스 → state.isMale 갱신
+{
+  const mc = document.getElementById('maleCheckbox');
+  if (mc) mc.addEventListener('change', () => { state.isMale = mc.checked; });
 }
 
 // 외부 클릭/배경 클릭으로 닫기
@@ -2726,6 +2790,10 @@ async function generateImage() {
   }
   if (state.framing) {
     payload.framing = state.framing;
+  }
+  // 남성 헤어 토글 — 오토모드(4분할/클로즈업)에서 체크 시에만 전송 (서버서 사이드뱅 IF 제거)
+  if (state.isMale && (state.mood === 'quad_sheet' || state.mood === 'closeup_sheet')) {
+    payload.isMale = true;
   }
   // v6.1 (2026-05-15): 앵글 제거됨 — 카메라 각도/포즈는 디자이너 프롬프트에 맡김
   if (state.refFiles.length > 0) {
