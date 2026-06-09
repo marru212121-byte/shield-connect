@@ -1457,6 +1457,13 @@ input, textarea { font-family: inherit; }
 }
 
 /* ===== 오토모드 뱃지·그룹 라벨 ===== */
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 7px;
+}
+.preset-grid .preset-card { width: 100%; }
+.preset-card-wide { margin-bottom: 7px; }
 .preset-group-label {
   font-size: 11px;
   color: rgba(255,255,255,0.4);
@@ -1466,27 +1473,22 @@ input, textarea { font-family: inherit; }
 .preset-group-label:first-child { margin-top: 2px; }
 .preset-group-auto { color: #c8f03c; }
 .preset-group-auto .ti { font-size: 12px; vertical-align: -1px; }
-.preset-card-auto { border-color: rgba(200,240,60,0.22) !important; }
-.preset-card-auto.active { border-color: var(--accent) !important; }
 .preset-card-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 5px;
 }
 .auto-badge {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
   background: #c8f03c;
   color: #1a1a1a;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 500;
-  padding: 2px 7px;
-  border-radius: 6px;
+  padding: 1px 5px;
+  border-radius: 5px;
   flex-shrink: 0;
 }
-.auto-badge .ti { font-size: 11px; }
 
 /* ===== Aspect popover ===== */
 .aspect-wrap { position: relative; }
@@ -1741,42 +1743,46 @@ input, textarea { font-family: inherit; }
     <div class="sheet-body">
       <div class="preset-list">
         <div class="preset-group-label preset-group-auto"><i class="ti ti-bolt" aria-hidden="true"></i> 오토모드 · 사진 걸고 누르면 자동</div>
-        <button class="preset-card preset-card-auto" data-mood="quad_sheet" type="button">
-          <div class="preset-card-head">
-            <div class="preset-card-title">4분할컷</div>
-            <span class="auto-badge"><i class="ti ti-bolt" aria-hidden="true"></i>AUTO</span>
-          </div>
-          <div class="preset-card-desc">동일 인물 4각도 시트(정면·사선·옆·뒤). 헤어 결·사이드뱅 강조. 9:16 자동.</div>
-        </button>
-        <button class="preset-card preset-card-auto" data-mood="closeup_sheet" type="button">
-          <div class="preset-card-head">
-            <div class="preset-card-title">디테일 클로즈업</div>
-            <span class="auto-badge"><i class="ti ti-bolt" aria-hidden="true"></i>AUTO</span>
-          </div>
-          <div class="preset-card-desc">헤어 포인트를 부위별로 클로즈업한 4컷. 결·윤기. 9:16 자동.</div>
-        </button>
+        <div class="preset-grid">
+          <button class="preset-card preset-card-auto" data-mood="quad_sheet" type="button">
+            <div class="preset-card-head">
+              <div class="preset-card-title">4분할컷</div>
+              <span class="auto-badge">AUTO</span>
+            </div>
+            <div class="preset-card-desc">4각도 시트 · 정면·사선·옆·뒤 · 9:16</div>
+          </button>
+          <button class="preset-card preset-card-auto" data-mood="closeup_sheet" type="button">
+            <div class="preset-card-head">
+              <div class="preset-card-title">디테일 클로즈업</div>
+              <span class="auto-badge">AUTO</span>
+            </div>
+            <div class="preset-card-desc">헤어 포인트 부위별 · 결·윤기 · 9:16</div>
+          </button>
+        </div>
 
         <div class="preset-group-label">프롬프트 자유 · 분위기</div>
-        <button class="preset-card" data-mood="" type="button">
-          <div class="preset-card-title">자유모드(프롬프트 직접입력)</div>
+        <button class="preset-card preset-card-wide" data-mood="" type="button">
+          <div class="preset-card-title">자유모드 <span style="font-weight:400;color:rgba(236,236,236,0.55);">· 프롬프트 직접입력</span></div>
           <div class="preset-card-desc">처음부터 끝까지 디자이너가 프롬프트 자유 입력. 나노바나나2 엔진 자체.</div>
         </button>
-        <button class="preset-card" data-mood="natural" type="button">
-          <div class="preset-card-title">네츄럴</div>
-          <div class="preset-card-desc">스마트폰 일상 톤. 미세 노이즈. 자연스럽고 친근.</div>
-        </button>
-        <button class="preset-card" data-mood="editorial_lookbook" type="button">
-          <div class="preset-card-title">룩북</div>
-          <div class="preset-card-desc">잡지 화보 톤. 필름 그레인 + 얕은 심도. 포트폴리오용.</div>
-        </button>
-        <button class="preset-card" data-mood="y2k" type="button">
-          <div class="preset-card-title">Y2K</div>
-          <div class="preset-card-desc">2000년대 디카 톤. 전방에서의 조명플래쉬, 파파라치컷, 명암대비, SNS용.</div>
-        </button>
-        <button class="preset-card" data-mood="studio_profile" type="button">
-          <div class="preset-card-title">스튜디오 프로필사진</div>
-          <div class="preset-card-desc">깔끔한 스튜디오 매거진·프로필 톤. 균일한 조명 + 선명한 초점. 증명·프로필·커버용.</div>
-        </button>
+        <div class="preset-grid">
+          <button class="preset-card" data-mood="natural" type="button">
+            <div class="preset-card-title">네츄럴</div>
+            <div class="preset-card-desc">스마트폰 일상 톤 · 미세 노이즈</div>
+          </button>
+          <button class="preset-card" data-mood="editorial_lookbook" type="button">
+            <div class="preset-card-title">룩북</div>
+            <div class="preset-card-desc">잡지 화보 톤 · 필름 그레인</div>
+          </button>
+          <button class="preset-card" data-mood="y2k" type="button">
+            <div class="preset-card-title">Y2K</div>
+            <div class="preset-card-desc">2000년대 디카 · 플래시·명암대비</div>
+          </button>
+          <button class="preset-card" data-mood="studio_profile" type="button">
+            <div class="preset-card-title">스튜디오 프로필</div>
+            <div class="preset-card-desc">균일한 조명 · 증명·프로필</div>
+          </button>
+        </div>
       </div>
     </div>
   </div>
