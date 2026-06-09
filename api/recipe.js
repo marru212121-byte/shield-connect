@@ -1,39 +1,42 @@
 // api/recipe.js
 // ═══════════════════════════════════════════════════════════════
 // AI 분석 엔드포인트 (member_id 기반 + 크레딧 차감 + 스트리밍 지원)
-// ★ 엔진 교체: Anthropic 소넷 → Google Gemini 3.5 Flash ★
+// ★ 엔진: Google Gemini (텍스트) — 호출 경로를 Vertex AI 글로벌로 이전 ★
 // ═══════════════════════════════════════════════════════════════
-// 호출 주체: analyzer.html, cut-analyzer.html (프론트) — ※ 프론트는 안 바뀜
-// 핵심 설계:
-//   프론트는 예전 그대로 "Anthropic 형식"으로 요청을 보내고,
-//   "Anthropic 형식"으로 응답을 받는다. (content[].text / SSE content_block_delta)
-//   → 이 파일이 안에서만 Gemini 형식으로 변환해서 호출하고,
-//     Gemini 응답을 다시 Anthropic 형식으로 되돌려서 내려준다.
-//   → 따라서 프론트(analyzer/cut-analyzer)는 한 글자도 안 고쳐도 그대로 작동.
+// 호출 주체: analyzer.html(컬러), cut-analyzer.html(컷) — ※ 프론트는 안 바뀜
+//   둘 다 이 한 파일(/api/recipe)을 부른다. stage로만 구분('color' / 'cut' / 'recipe_only').
 //
-// 처리 흐름:
-//   1. 세션 검증 (쿠키에서 member_id 추출) — stage 무관 항상 수행
-//   2. stage가 skip 대상이면 크레딧 차감 skip, 아니면 1크레딧 차감
-//      skip 대상: 'customer_message'(무료 안내), 'recipe_only'(컬러 2스텝=레시피)
-//      → 컬러 분석 1회 = 1스텝(차감) + 2스텝(무료) = 총 1크레딧
-//   3. Gemini API 호출 (요청을 Anthropic→Gemini로 변환)
-//      - body.stream === true 면 SSE 스트리밍 (Gemini SSE → Anthropic SSE 변환 릴레이)
-//      - 아니면 non-stream (Gemini JSON → Anthropic content[] 변환 후 반환)
-//   4. 결과 반환
+// 이번 변경(3가지 한 번에):
+//   ① 엔진 경로 교체: AI Studio 무료 엔드포인트(generativelanguage)
+//        → Vertex AI 글로벌(aiplatform.googleapis.com). 503 "high demand" 급감.
+//        인증은 나노바나나(generate-image)가 쓰는 lib/vertex-auth.js 를 그대로 재사용.
+//   ② 서버 측 짧은 재시도(백오프) + 중단 타이머(timeout).
+//        - 버텍스가 일시적으로 혼잡(503/429/5xx)하면 사용자에게 보이기 전에 한 번 더 시도.
+//        - 60초 함수 한계 전에 빠르게 끊어 환불·로그가 반드시 실행되게 함(504/크레딧 유실 방지).
+//        - 버텍스가 안 되면 기존 AI Studio 경로로 자동 폴백(지금보다 나빠지지 않게).
+//   ③ 'fullText is not defined' 버그 수정: 스트리밍 누적 변수를 try 블록 바깥에서 선언.
+//
+// 프론트 계약은 그대로:
+//   요청은 Anthropic 형식({ system, messages[].content[] })으로 들어오고,
+//   응답도 Anthropic 형식(content[].text / SSE content_block_delta)으로 내려준다.
+//   → 변환은 이 파일 안에서만. analyzer/cut-analyzer 는 수정 불필요.
 // ═══════════════════════════════════════════════════════════════
 
 import { getSessionFromRequest } from '../lib/session.js';
 import { getSupabase } from '../lib/supabase.js';
 import { logSuccess, logFailure, logAiCall } from '../lib/ai-log-helper.js';
+// ★ 나노바나나(generate-image)와 동일한 버텍스 인증 헬퍼 재사용
+import { getVertexAccessToken, getProjectId } from '../lib/vertex-auth.js';
 
-// ─── Gemini 엔드포인트 / 모델 ──────────────────────────────────
-// 모델·키만 환경에 맞게. (나노바나나와 같은 AI Studio 키 재활용 가능)
-const GEMINI_MODEL = 'gemini-3.5-flash';
-const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
-function geminiUrl(stream) {
-  const method = stream ? 'streamGenerateContent?alt=sse' : 'generateContent';
-  return `${GEMINI_BASE}/${GEMINI_MODEL}:${method}`;
-}
+// ─── 모델 ──────────────────────────────────────────────────────
+// 텍스트 분석 모델. 지금까지 쓰던 것과 동일한 모델명을 그대로 유지한다.
+// ※ 만약 버텍스에서 404(모델 없음)가 뜨면, 버텍스에서 부르는 모델 ID 표기만
+//   살짝 다른 것이므로 아래 VERTEX_TEXT_MODEL 한 줄만 바꾸면 된다.
+//   (그래도 자동으로 AI Studio 경로로 폴백하므로 서비스는 안 멈춤.)
+const TEXT_MODEL = 'gemini-3.5-flash';
+
+// 버텍스는 모델 ID가 다를 수 있어 별도 상수로 둠(기본은 동일).
+const VERTEX_TEXT_MODEL = TEXT_MODEL;
 
 // 어드민 통계/로그에 기록되는 모델 이름 (system.js / overview.js / ai-logs.js 와 동일해야 함)
 const LOG_MODEL = 'gemini';
@@ -43,10 +46,32 @@ const LOG_MODEL = 'gemini';
 // - 'recipe_only'     : 컬러 분석 Step 2 (레시피) → 무료. 컬러 1회 = 1크레딧이 되도록 skip.
 const SKIP_CHARGE_STAGES = ['customer_message', 'recipe_only'];
 
+// ─── 타임아웃 / 재시도 설정 ────────────────────────────────────
+// Vercel 함수 한계가 60초이므로, 그 안에서 호출을 끊고 환불·로그까지 끝내야 한다.
+const ATTEMPT_TIMEOUT_MS = 48000; // 한 번의 호출(스트림 전체 포함) 최대 대기
+const RETRY_BUDGET_MS = 25000;    // 이 시간 넘게 흘렀으면 재시도하지 않음(시간 부족)
+const RETRY_BACKOFF_MS = 1500;    // 재시도 전 대기
+const MAX_VERTEX_ATTEMPTS = 2;    // 버텍스 시도 횟수(1차 + 재시도 1회)
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// ─── 엔드포인트 URL ────────────────────────────────────────────
+function vertexUrl(stream, projectId) {
+  const method = stream ? 'streamGenerateContent?alt=sse' : 'generateContent';
+  // 글로벌 리전: 나노바나나와 동일
+  return `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/${VERTEX_TEXT_MODEL}:${method}`;
+}
+function aiStudioUrl(stream) {
+  const method = stream ? 'streamGenerateContent?alt=sse' : 'generateContent';
+  return `https://generativelanguage.googleapis.com/v1beta/models/${TEXT_MODEL}:${method}`;
+}
+
+function isRetryableStatus(s) {
+  return s === 429 || s === 500 || s === 502 || s === 503 || s === 504;
+}
+
 // ─── Anthropic 형식 요청 → Gemini 형식 body 변환 ───────────────
-// 프론트가 보내는 { system, messages[].content[] } (Anthropic 형식)을
-// Gemini의 { systemInstruction, contents[].parts[] } 로 바꾼다.
-// (color-gemini.html / cut-gemini.html 데모에서 검증된 변환 로직과 동일)
+// (Vertex / AI Studio 모두 요청 body 형식은 동일하므로 그대로 재사용)
 function anthropicToGeminiBody({ system, messages, max_tokens }) {
   const contents = [];
 
@@ -60,19 +85,16 @@ function anthropicToGeminiBody({ system, messages, max_tokens }) {
         if (b.type === 'text') {
           parts.push({ text: b.text });
         } else if (b.type === 'image' && b.source && b.source.type === 'base64') {
-          // Anthropic image.source.{media_type,data} → Gemini inlineData.{mimeType,data}
           parts.push({ inlineData: { mimeType: b.source.media_type, data: b.source.data } });
         }
         // 그 외 타입(cache_control 등)은 Gemini에서 의미 없으므로 무시
       });
     }
-    // Anthropic role 'assistant' → Gemini role 'model'
     contents.push({ role: msg.role === 'assistant' ? 'model' : 'user', parts });
   });
 
   const body = { contents };
 
-  // system: 문자열이거나 [{type:'text', text, cache_control?}] 형태 → 텍스트만 합쳐서 systemInstruction
   if (system) {
     let s = '';
     if (typeof system === 'string') {
@@ -84,66 +106,160 @@ function anthropicToGeminiBody({ system, messages, max_tokens }) {
   }
 
   body.generationConfig = {
-    // 답 공간 넉넉히 (잘림 방지) — 데모와 동일하게 +1024 여유
     maxOutputTokens: (max_tokens || 1024) + 1024,
     temperature: 1,
-    // 안 보이는 생각(Thought) 끔 → 즉답·비용 절감·안정성 (★ 핵심)
-    thinkingConfig: { thinkingBudget: 0 },
+    thinkingConfig: { thinkingBudget: 0 }, // 안 보이는 생각 끔 → 즉답·비용 절감·안정성
   };
 
   return body;
 }
 
-// Gemini non-stream 응답에서 텍스트만 뽑아 합치기
 function extractGeminiText(geminiData) {
   const cand = geminiData && geminiData.candidates && geminiData.candidates[0];
   const parts = (cand && cand.content && cand.content.parts) || [];
   return parts.map((p) => (typeof p.text === 'string' ? p.text : '')).join('');
 }
 
-// 분석 결과 텍스트를 방금 기록된 ai_call_logs 행에 저장 (어드민에서 펼쳐보기용)
-// - 실패해도 본 흐름에 영향 없음 (조용히 무시)
-// - 가장 최근의 그 회원/그 stage 성공 로그를 찾아 result_text만 채움
+// ─── 한 번의 업스트림 호출 (timeout 포함) ──────────────────────
+// 반환: { resp, controller, tid, via }  — 스트림이면 tid는 호출자가 끝나고 정리
+async function fetchUpstreamOnce({ via, stream, geminiBody, accessToken, projectId }) {
+  const url = via === 'vertex' ? vertexUrl(stream, projectId) : aiStudioUrl(stream);
+  const headers =
+    via === 'vertex'
+      ? {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+          Accept: 'text/event-stream',
+        }
+      : {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': process.env.HAIRO_NANOBANANA2,
+        };
+
+  const controller = new AbortController();
+  const tid = setTimeout(() => controller.abort('timeout'), ATTEMPT_TIMEOUT_MS);
+
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(geminiBody),
+      signal: controller.signal,
+    });
+    return { resp, controller, tid, via };
+  } catch (err) {
+    clearTimeout(tid);
+    throw err;
+  }
+}
+
+// ─── 업스트림 확보: 버텍스(재시도) → AI Studio 폴백 ────────────
+// ok 응답을 받으면 그 핸들({ resp, tid, via })을 돌려준다.
+// 모두 실패하면 status를 단 Error를 throw.
+async function acquireUpstream({ stream, geminiBody }) {
+  const overallStart = Date.now();
+  let lastErr = null;
+
+  // 버텍스 인증 토큰 확보 (실패해도 AI Studio 폴백으로 진행)
+  let accessToken = null;
+  let projectId = null;
+  try {
+    accessToken = await getVertexAccessToken();
+    projectId = getProjectId();
+  } catch (e) {
+    console.error('[recipe] vertex auth unavailable:', e?.message || e);
+  }
+
+  // ── 1차: 버텍스 글로벌 (재시도 포함) ──
+  if (accessToken && projectId) {
+    for (let attempt = 1; attempt <= MAX_VERTEX_ATTEMPTS; attempt++) {
+      let handle = null;
+      try {
+        handle = await fetchUpstreamOnce({ via: 'vertex', stream, geminiBody, accessToken, projectId });
+        if (handle.resp.ok) {
+          console.log(`[recipe] vertex-global ok (attempt ${attempt})`);
+          return handle; // ★ 성공: tid는 호출자가 정리
+        }
+        // ok 아님
+        const status = handle.resp.status;
+        let detail = '';
+        try { detail = (await handle.resp.text()).slice(0, 300); } catch (_) {}
+        clearTimeout(handle.tid);
+        lastErr = { status, message: detail || `HTTP ${status}` };
+        console.error(`[recipe] vertex error ${status} (attempt ${attempt}):`, detail);
+
+        if (!isRetryableStatus(status)) break; // 404/400/401 등 설정성 오류 → 폴백으로
+        if (attempt < MAX_VERTEX_ATTEMPTS && Date.now() - overallStart < RETRY_BUDGET_MS) {
+          await sleep(RETRY_BACKOFF_MS);
+          continue;
+        }
+        break;
+      } catch (e) {
+        if (handle?.tid) clearTimeout(handle.tid);
+        lastErr = { status: 0, message: e?.message || String(e) };
+        console.error(`[recipe] vertex fetch failed (attempt ${attempt}):`, e?.message || e);
+        if (attempt < MAX_VERTEX_ATTEMPTS && Date.now() - overallStart < RETRY_BUDGET_MS) {
+          await sleep(RETRY_BACKOFF_MS);
+          continue;
+        }
+        break;
+      }
+    }
+  }
+
+  // ── 2차 안전망: AI Studio (generativelanguage) ──
+  // 버텍스가 안 되거나 토큰이 없을 때만 도달. 시간 여유가 있을 때 1회 시도.
+  if (Date.now() - overallStart < RETRY_BUDGET_MS + RETRY_BACKOFF_MS) {
+    let handle = null;
+    try {
+      console.log('[recipe] falling back to AI Studio endpoint');
+      handle = await fetchUpstreamOnce({ via: 'aistudio', stream, geminiBody });
+      if (handle.resp.ok) {
+        console.log('[recipe] ai-studio ok (fallback)');
+        return handle;
+      }
+      const status = handle.resp.status;
+      let detail = '';
+      try { detail = (await handle.resp.text()).slice(0, 300); } catch (_) {}
+      clearTimeout(handle.tid);
+      lastErr = { status, message: detail || `HTTP ${status}` };
+      console.error(`[recipe] ai-studio error ${status}:`, detail);
+    } catch (e) {
+      if (handle?.tid) clearTimeout(handle.tid);
+      lastErr = { status: 0, message: e?.message || String(e) };
+      console.error('[recipe] ai-studio fetch failed:', e?.message || e);
+    }
+  }
+
+  const err = new Error(lastErr?.message || 'upstream failed');
+  err.status = lastErr?.status || 0;
+  throw err;
+}
+
+// 분석 결과 텍스트를 ai_call_logs 행에 저장 (어드민 펼쳐보기용). 실패해도 본 흐름 무관.
 async function saveResultText(supabase, { memberId, stage, text, rowId: preferredRowId = null }) {
   try {
     if (!text || !text.trim()) return;
-    const trimmed = text.length > 20000 ? text.slice(0, 20000) : text; // 안전 상한
+    const trimmed = text.length > 20000 ? text.slice(0, 20000) : text;
 
-    // ── 우선순위 1: 호출 시점에 미리 잡아둔 로그 행 id가 있으면 그 행을 바로 갱신 ──
-    //   스트리밍 응답은 본문을 다 흘려보낸 "뒤"에 저장하는데, 그 시점엔
-    //   행 조회(SELECT)가 늦거나 누락될 수 있다. 그래서 응답 시작 전에 잡아둔
-    //   id가 있으면 탐색 없이 곧장 그 행에 result_text를 박는다.
     if (preferredRowId) {
-      await supabase
-        .from('ai_call_logs')
-        .update({ result_text: trimmed })
-        .eq('id', preferredRowId);
+      await supabase.from('ai_call_logs').update({ result_text: trimmed }).eq('id', preferredRowId);
       return;
     }
 
-    // ── 우선순위 2(기존 동작 그대로): 그 회원/모델/stage의 가장 최근 성공 행 탐색 후 갱신 ──
     let q = supabase
       .from('ai_call_logs')
       .select('id')
       .eq('member_id', memberId)
       .eq('model', LOG_MODEL)
       .eq('status', 'success');
-    // ★ stage까지 맞춰서 "그 분석 종류의" 가장 최근 행에 저장
-    //   (색감/레시피가 1~2초 차이로 연속 호출돼도 서로 안 섞이게)
-    if (stage == null) {
-      q = q.is('stage', null);
-    } else {
-      q = q.eq('stage', stage);
-    }
-    const { data: rows } = await q
-      .order('created_at', { ascending: false })
-      .limit(1);
+    if (stage == null) q = q.is('stage', null);
+    else q = q.eq('stage', stage);
+
+    const { data: rows } = await q.order('created_at', { ascending: false }).limit(1);
     const rowId = rows && rows[0] && rows[0].id;
     if (!rowId) return;
-    await supabase
-      .from('ai_call_logs')
-      .update({ result_text: trimmed })
-      .eq('id', rowId);
+    await supabase.from('ai_call_logs').update({ result_text: trimmed }).eq('id', rowId);
   } catch (e) {
     console.error('[recipe] saveResultText skip:', e?.message || e);
   }
@@ -170,8 +286,6 @@ export default async function handler(req, res) {
     return res.status(400).json({ code: 'invalid_body' });
   }
 
-  // 'model'은 프론트가 'claude-sonnet-4-6'을 보내지만, 실제 호출 모델은
-  // 이 파일이 GEMINI_MODEL로 강제한다. (존재 여부만 검증 — 기존 동작 유지)
   const { model, max_tokens, system, messages, stage } = body;
   if (!model || !messages) {
     return res.status(400).json({ code: 'missing_required_fields' });
@@ -181,7 +295,7 @@ export default async function handler(req, res) {
   const wantStream = body.stream === true;
   const supabase = getSupabase();
 
-  // ─── ai_call_logs 용 측정 변수 ──────────────────────────
+  // ─── 측정 변수 ──────────────────────────────────────────────
   const startTime = Date.now();
   const promptLength = Array.isArray(messages)
     ? messages.reduce((sum, m) => {
@@ -202,11 +316,7 @@ export default async function handler(req, res) {
 
     const { data: consumeResult, error: consumeError } = await supabase.rpc(
       'consume_credit_by_member',
-      {
-        p_member_id: memberId,
-        p_amount: 1,
-        p_reference: analysisRef,
-      }
+      { p_member_id: memberId, p_amount: 1, p_reference: analysisRef }
     );
 
     if (consumeError) {
@@ -215,7 +325,6 @@ export default async function handler(req, res) {
     }
 
     result = Array.isArray(consumeResult) ? consumeResult[0] : consumeResult;
-
     const ok = result?.consumed === true || result?.success === true;
 
     if (!ok) {
@@ -253,31 +362,19 @@ export default async function handler(req, res) {
       return res.status(500).json({ code: 'server_error' });
     }
 
-    if (result.is_admin) {
-      console.log('[recipe] admin bypass:', memberId);
-    }
+    if (result.is_admin) console.log('[recipe] admin bypass:', memberId);
   } else {
     console.log('[recipe] skipCharge (' + stage + '):', memberId);
   }
 
-  // ─── 4. Gemini API 호출 ─────────────────────────────────────
+  // ─── 4. 업스트림 호출 (버텍스 글로벌 → 재시도 → AI Studio 폴백) ──
   const geminiBody = anthropicToGeminiBody({ system, messages, max_tokens });
 
-  let geminiResponse;
+  let handle;
   try {
-    geminiResponse = await fetch(geminiUrl(wantStream), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // ★ 기존 나노바나나 AI Studio 키(AIza...)를 그대로 재활용.
-        //   AI Studio 키는 모델 잠금이 없어 gemini-3.5-flash 분석도 이 키로 호출됨.
-        //   별도 GEMINI_API_KEY를 만들고 싶으면 아래 이름만 바꾸면 됨.
-        'x-goog-api-key': process.env.HAIRO_NANOBANANA2,
-      },
-      body: JSON.stringify(geminiBody),
-    });
+    handle = await acquireUpstream({ stream: wantStream, geminiBody });
   } catch (err) {
-    console.error('[recipe] gemini fetch failed:', err);
+    console.error('[recipe] all upstreams failed:', err?.status, err?.message);
     if (!skipCharge) {
       await refundCredit(supabase, memberId, analysisRef, result.is_admin);
     }
@@ -285,7 +382,7 @@ export default async function handler(req, res) {
       member_id: memberId,
       model: LOG_MODEL,
       stage: stage || null,
-      err,
+      err: { message: err?.message || 'upstream failed', status: err?.status || 0 },
       user_message: '지금 많은 분이 사용 중이에요. 30초 후 다시 시도해주세요.',
       duration_ms: Date.now() - startTime,
       prompt_length: promptLength,
@@ -297,34 +394,11 @@ export default async function handler(req, res) {
     });
   }
 
-  if (!geminiResponse.ok) {
-    const errorText = await geminiResponse.text();
-    console.error('[recipe] gemini error:', geminiResponse.status, errorText);
-    if (!skipCharge) {
-      await refundCredit(supabase, memberId, analysisRef, result.is_admin);
-    }
-    await logFailure({
-      member_id: memberId,
-      model: LOG_MODEL,
-      stage: stage || null,
-      err: { message: errorText || `HTTP ${geminiResponse.status}`, status: geminiResponse.status },
-      user_message: '지금 많은 분이 사용 중이에요. 30초 후 다시 시도해주세요.',
-      duration_ms: Date.now() - startTime,
-      prompt_length: promptLength,
-      refunded: !skipCharge,
-    });
-    return res.status(502).json({
-      code: 'busy',
-      message: '지금 많은 분이 사용 중이에요. 30초 후 다시 시도해주세요.\n크레딧은 차감되지 않았습니다.',
-    });
-  }
+  const upstream = handle.resp;
+  const upstreamTid = handle.tid; // 스트림 끝까지 살려두는 timeout
 
   // ─── 5-A. 스트리밍 응답 (Gemini SSE → Anthropic SSE 변환 릴레이) ───
-  // 프론트는 { type:'content_block_delta', delta:{ type:'text_delta', text } } 형식만 읽음.
-  // Gemini SSE는 { candidates:[{ content:{ parts:[{text}] } }] } 형식이므로
-  // 여기서 텍스트만 뽑아 Anthropic delta 형식으로 다시 써준다.
   if (wantStream) {
-    // 응답 시작 = 호출 성공으로 간주 (기존 동작과 동일)
     await logSuccess({
       member_id: memberId,
       model: LOG_MODEL,
@@ -333,11 +407,7 @@ export default async function handler(req, res) {
       prompt_length: promptLength,
     });
 
-    // ★ 방금 만든 성공 로그 행의 id를 "스트리밍 시작 전에" 미리 잡아둔다.
-    //   본문을 다 흘려보낸 뒤에는 행 탐색(SELECT)이 늦거나 누락될 수 있어,
-    //   여기서 함수가 아직 멀쩡할 때 id를 확보해 두면 스트림 종료 후
-    //   result_text를 그 행에 곧장 박을 수 있다.
-    //   (조회 실패 시 null → saveResultText가 기존 탐색 방식으로 자동 폴백. 본 흐름 영향 없음)
+    // 방금 만든 성공 로그 행 id를 스트리밍 시작 전에 미리 확보
     let streamLogRowId = null;
     try {
       let idq = supabase
@@ -348,9 +418,7 @@ export default async function handler(req, res) {
         .eq('status', 'success');
       if (stage == null) idq = idq.is('stage', null);
       else idq = idq.eq('stage', stage);
-      const { data: idRows } = await idq
-        .order('created_at', { ascending: false })
-        .limit(1);
+      const { data: idRows } = await idq.order('created_at', { ascending: false }).limit(1);
       streamLogRowId = (idRows && idRows[0] && idRows[0].id) || null;
     } catch (_) {
       streamLogRowId = null;
@@ -359,23 +427,24 @@ export default async function handler(req, res) {
     res.writeHead(200, {
       'Content-Type': 'text/event-stream; charset=utf-8',
       'Cache-Control': 'no-cache, no-transform',
-      'Connection': 'keep-alive',
+      Connection: 'keep-alive',
       'X-Accel-Buffering': 'no',
     });
 
+    // ★ 버그 수정: 누적 변수를 try 바깥에서 선언해야 스트림 종료 후에도 접근 가능
+    //   (이전엔 try 안에서 선언해 'fullText is not defined' 에러 발생 — recipe.js:417)
+    let fullText = '';
+
     try {
-      const reader = geminiResponse.body.getReader();
+      const reader = upstream.body.getReader();
       const decoder = new TextDecoder();
       let sseBuffer = '';
-      let fullText = '';   // 저장용: 흘려보낸 텍스트 전체 모으기
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
         sseBuffer += decoder.decode(value, { stream: true });
-
-        // SSE 라인 단위 파싱 (마지막 미완성 라인은 다음 청크와 합치기)
         const lines = sseBuffer.split('\n');
         sseBuffer = lines.pop();
 
@@ -390,8 +459,7 @@ export default async function handler(req, res) {
             const parts = (cand && cand.content && cand.content.parts) || [];
             const delta = parts.map((p) => p.text || '').join('');
             if (delta) {
-              fullText += delta;   // 저장용 누적
-              // ★ Anthropic 형식 delta 로 변환해서 프론트로 전달
+              fullText += delta;
               res.write(
                 'data: ' +
                   JSON.stringify({
@@ -407,24 +475,29 @@ export default async function handler(req, res) {
         }
       }
     } catch (err) {
-      console.error('[recipe] stream relay failed:', err);
+      console.error('[recipe] stream relay failed:', err?.message || err);
       try {
         res.write(`event: error\ndata: ${JSON.stringify({ message: 'stream interrupted' })}\n\n`);
       } catch (_) {}
+    } finally {
+      clearTimeout(upstreamTid); // 스트림 끝 → 중단 타이머 해제
     }
-    // 스트림 끝 — 모은 텍스트 저장 (어드민 펼쳐보기용, 실패해도 무시)
-    //   미리 잡아둔 streamLogRowId가 있으면 그 행에 곧장 저장, 없으면 기존 탐색 방식.
+
     await saveResultText(supabase, { memberId, stage, text: fullText, rowId: streamLogRowId });
     res.end();
     return;
   }
 
   // ─── 5-B. 일반(non-stream) 응답 (Gemini JSON → Anthropic content[]) ───
-  const geminiData = await geminiResponse.json();
+  let geminiData;
+  try {
+    geminiData = await upstream.json();
+  } finally {
+    clearTimeout(upstreamTid);
+  }
   const text = extractGeminiText(geminiData);
 
-  // 빈 응답/안전필터 차단 등으로 쓸 내용이 없으면 → 환불 + busy 처리
-  // (Gemini는 차단 시에도 HTTP 200 + 빈 candidates를 줄 수 있어 별도 가드)
+  // 빈 응답/안전필터 차단 → 환불 + busy
   if (!text.trim()) {
     console.error('[recipe] gemini empty/blocked:', JSON.stringify(geminiData).slice(0, 500));
     if (!skipCharge) {
@@ -454,10 +527,8 @@ export default async function handler(req, res) {
     prompt_length: promptLength,
   });
 
-  // 분석 결과 텍스트 저장 (어드민 펼쳐보기용) — 실패해도 무시
   await saveResultText(supabase, { memberId, stage, text });
 
-  // 프론트가 기대하는 Anthropic 형식 그대로: content: [{ type:'text', text }]
   return res.status(200).json({
     content: [{ type: 'text', text }],
     credits_remaining: skipCharge ? undefined : result.credits_remaining,
@@ -466,7 +537,7 @@ export default async function handler(req, res) {
 }
 
 // ============================================================
-// 크레딧 환불 (Gemini 호출 실패 시) — AI 모델 무관, 로직 그대로
+// 크레딧 환불 (호출 실패 시) — 로직 그대로
 // ============================================================
 async function refundCredit(supabase, memberId, reference, isAdmin) {
   if (isAdmin) return;
