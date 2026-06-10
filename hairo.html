@@ -2071,8 +2071,11 @@ function showCreditModalForce(remaining) {
   if (rEl) rEl.innerHTML = '현재 잔액: <span class="remaining">' + r + '크레딧</span>';
   const m = document.getElementById('creditModal');
   if (m) {
+    // 갤러리 등 다른 요소의 쌓임맥락에 가리지 않도록 body 최상위로 이동
+    if (m.parentElement !== document.body) document.body.appendChild(m);
     m.classList.add('show');
-    m.style.setProperty('display', 'flex', 'important');   // 외부 CSS/스크립트가 눌러도 강제 표시
+    m.style.setProperty('display', 'flex', 'important');     // 강제 표시
+    m.style.setProperty('z-index', '2147483000', 'important'); // 갤러리보다 무조건 위
     m.setAttribute('aria-hidden', 'false');
   } else {
     showError('크레딧이 부족해요. 충전 후 다시 시도해주세요.');
@@ -3294,10 +3297,10 @@ loadSession();
 
 <!-- ════════════ 크레딧 부족 모달 (분석기와 동일 디자인) ════════════ -->
 <style>
-.credit-modal{display:none;position:fixed;inset:0;z-index:1000;align-items:center;justify-content:center;padding:20px}
+.credit-modal{display:none;position:fixed;inset:0;z-index:2147483000;align-items:center;justify-content:center;padding:20px}
 .credit-modal.show{display:flex}
 .credit-modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(2px)}
-.credit-modal-box{position:relative;background:#fff;border-radius:18px;padding:28px 24px 20px;width:100%;max-width:320px;box-shadow:0 10px 40px rgba(0,0,0,0.2)}
+.credit-modal-box{position:relative;z-index:1;background:#fff;border-radius:18px;padding:28px 24px 20px;width:100%;max-width:320px;box-shadow:0 10px 40px rgba(0,0,0,0.2)}
 .credit-modal-title{font-size:16px;font-weight:800;color:#1C1917;margin:0 0 10px;text-align:center;letter-spacing:-0.3px}
 .credit-modal-desc{font-size:13px;color:#6B5D4E;line-height:1.7;text-align:center;margin-bottom:20px}
 .credit-modal-desc .remaining{font-weight:700;color:#8B7355}
