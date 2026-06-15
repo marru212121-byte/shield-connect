@@ -609,10 +609,10 @@ const RECIPE_PROMPT = `═══════════════════
 
 전제: 명도(12·13·14) 판정 안 함. 고명도 논컬러(리프팅 전용) 염모제로 최소 14레벨까지 리프팅 깔고 그 위에 입힘. (못 보는 언더톤은 통일로 회피, 보이는 타겟 색감만 추론)
 
-색 해석 두 갈래 (명도 아닌 색 방향 — 칼분할 X, "~쪽이면 ~ 더" 연속):
-  ① 주황 브라운에 가까움  → 블루·애쉬·마레그린 (주황=블루 보색 / 적색기=마레그린(그린+애쉬) / 붉은기 강할수록 블루 세게)
-  ② 황갈주황 브라운에 가까움 → 슈퍼노바그레이·섀도우애쉬 (노랑끼니 청+애쉬+보라기 복합중화. 16레벨 쨍노랑 절대 아님)
-  ★ 이 영역은 한끝 차이로 갈리는 애매구간 → 둘 중 하나로 단정하지 말고 두 갈래를 다 나열(시술자가 사진 보고 고름). main과 alt_branch로 ①②를 각각 펼친다.
+★ 출력 규칙: 14레벨 도달하면 베이스를 두 갈래로 나눠 판정하고, 각 갈래를 부염료 성격으로 서술해 둘 다 내라 (회사 약 이름 X — 2층이 부염료 보고 매칭) —
+   ① 노랑기 조금 있는 브라운 → 보라 부염료로 노랑 중화하는 애쉬 (노랑=보라 보색. 16레벨 쨍노랑 절대 아님)
+   ② 주황기에 가까운 브라운 → 블루/청 부염료로 주황 중화하는 애쉬·블루·마레그린 (주황=블루 보색 / 적색기=마레그린 / 붉은기 강할수록 블루 세게)
+   한끝 차이 애매구간이라 하나로 단정 X → main(①)과 alt_branch(②)로 둘 다 펼쳐 시술자가 사진 보고 고르게.
 
 잿빛 강도 = 누름(레벨)으로 (별도 갈래 아님 — 두 갈래 안의 옵션):
   · 잿빛 강함 → 낮은 레벨로 눌러 깊게 (브라운에 가까운 애쉬·오묘한 잿빛) · 진하면 오센틱
@@ -1326,6 +1326,15 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
           blocked = "R1 · LOOK 채도색 9레벨 미만 비활성";
         return Object.assign({},p,{lv:lv,blocked:blocked});
       });
+      // ★ 부염료 매칭: LLM이 "보라 부염료 애쉬"라 하면 bu에 보라 든 약을 앞으로 (회사 무관 — 밀본도 bu 보고 자동 매칭)
+      if(item.nuance==="보라" || item.nuance==="블루"){
+        var nkey = (item.nuance==="보라") ? /보라|라벤더|노랑\s*중화|미세노랑/ : /블루|청/;
+        usable.sort(function(a,b){
+          var sa = nkey.test((a.bu||"")+(a.tex||"")) ? 1 : 0;
+          var sb = nkey.test((b.bu||"")+(b.tex||"")) ? 1 : 0;
+          return sb - sa;
+        });
+      }
       var primary = usable.filter(function(p){return !p.blocked;})[0] || usable[0];
       var alts = usable.filter(function(p){return p!==primary;});
       var promote = null;
@@ -1402,6 +1411,11 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
     return null;
   }
   function detectWeight(s){ if(/밝은\s*톤/.test(s)) return "light"; if(/어두운\s*톤/.test(s)) return "dark"; return null; }
+  function detectNuance(s){ // LLM이 말한 부염료 성격 (회사약명 X, 성격만) — 2층이 이걸로 약 매칭
+    if(/보라|라벤더|바이올렛/.test(s)) return "보라";
+    if(/블루|청/.test(s)) return "블루";
+    return null;
+  }
   function detectChroma(analysis){
     var els=(analysis&&analysis.elements)||[];
     var j=els.join(" ")+" "+((analysis&&analysis.description)||"")+" "+((analysis&&analysis.color_name_ko)||"");
@@ -1427,7 +1441,7 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
       var w = detectWeight(m);
       var lvMatch = m.match(/(\d{1,2})\s*레벨/);        // LLM이 쓴 레벨 추출 ("11레벨 클리어애쉬")
       var llmLevel = lvMatch ? parseInt(lvMatch[1],10) : null;
-      var item = { role:role, dye:dye, nuance:null, llmLevel:llmLevel,
+      var item = { role:role, dye:dye, nuance:detectNuance(m), llmLevel:llmLevel,
         ratio: role==="cc"?"small":(mainSeen?"sub":"main"), is_main_color:false };
       if(w) item.weight=w;
       if(role!=="cc" && !mainSeen) mainSeen=true;
