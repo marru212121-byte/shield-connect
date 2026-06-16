@@ -612,10 +612,11 @@ const RECIPE_PROMPT = `═══════════════════
 
 전제: 명도(12·13·14) 판정 안 함. 고명도 논컬러(리프팅 전용) 염모제로 최소 14레벨까지 리프팅 깔고 그 위에 입힘. (못 보는 언더톤은 통일로 회피, 보이는 타겟 색감만 추론)
 
-★ 출력 규칙: 14레벨 도달하면 베이스를 두 갈래로 나눠 판정하고, 각 갈래를 부염료 성격으로 서술해 둘 다 내라 (회사 약 이름 X — 2층이 부염료 보고 매칭) —
-   ① 노랑기 조금 있는 브라운 → 보라 부염료로 노랑 중화하는 애쉬 (노랑=보라 보색. 16레벨 쨍노랑 절대 아님)
-   ② 주황기에 가까운 브라운 → 블루/청 부염료로 주황 중화하는 애쉬·블루·마레그린 (주황=블루 보색 / 적색기=마레그린 / 붉은기 강할수록 블루 세게)
-   한끝 차이 애매구간이라 하나로 단정 X → main(①)과 alt_branch(②)로 둘 다 펼쳐 시술자가 사진 보고 고르게.
+★ 출력 규칙 (14레벨 + 잿빛/애쉬 타겟일 때만): 14레벨 = 탈색 전 염색약으로 가장 밝게 밝힐 수 있는 언더톤. 브라운에서 노랑 나오기 직전 — 브라운은 잔존하되 주황기~황갈 브라운 직전이다. 언더톤을 사진으로 못 보니(공용 색감으로 구현), 두 갈래 약제를 나열한다:
+   · 디폴트 = 주황기 있는 브라운 → 블루/청 부염료 애쉬·블루·마레그린 (주황=블루 보색 / 적색기=마레그린 / 붉은기 강할수록 블루 세게)
+   · 황갈 브라운에 가깝다면 → 위 약 대신 "보라 내장 애쉬"(노랑 직전을 보라기로 눌러 잿빛) 사용, 또는 바이올렛 소량 믹스 권유
+   main = 디폴트(주황), alt_branch = 황갈 대안. 회사 약 이름 X — 2층이 부염료(보라/블루) 보고 매핑.
+   ★ 난색(웜·핑크·레드 등) 타겟이면 이 두 갈래 안 나눔 — 그 색감대로. (주황/황갈 갈래는 한색=잿빛/애쉬일 때만)
 
 잿빛 강도 = 누름(레벨)으로 (별도 갈래 아님 — 두 갈래 안의 옵션):
   · 잿빛 강함 → 낮은 레벨로 눌러 깊게 (브라운에 가까운 애쉬·오묘한 잿빛) · 진하면 오센틱
@@ -1384,11 +1385,15 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
       seen[sig] = true;
       out.push({ label:label, meta:meta, base:abs.base, chroma:abs.chroma, mapped:mapped });
     }
-    // ★ LLM이 낸 그대로 렌더 — 코드가 카드를 지어내지 않는다.
+    // ★ LLM이 낸 경로 그대로 매핑 — 갈래 판단(주황/황갈, 난색 여부)은 1층 LLM이, 2층은 약 번역만.
+    //   잿빛+14면 LLM이 main(주황 디폴트)+alt_branch(황갈 대안) 줌 → 둘 다 매핑. 난색이면 main만 줌.
     if(raw.main && raw.main.materials)            add("권장",        (raw.main && raw.main.desc) || "권장 경로", mkAbs(raw.main.materials));
-    if(raw.alt_branch && raw.alt_branch.materials) add("대안 갈래",   (raw.alt_branch.desc) || "다른 색해석 갈래", mkAbs(raw.alt_branch.materials));
-    if(raw.alt_path && raw.alt_path.materials)     add("베이스 변형", (raw.alt_path.desc) || "다른 베이스에서의 수렴", mkAbs(raw.alt_path.materials, raw.alt_path.base));
-    if(raw.virgin_alt && raw.virgin_alt.materials) add("버진모 경로", (raw.virgin_alt.desc) || "버진모 1스텝", mkAbs(raw.virgin_alt.materials));
+    if(raw.alt_branch && raw.alt_branch.materials) add("황갈이면",     (raw.alt_branch.desc) || "황갈 브라운에 가까우면", mkAbs(raw.alt_branch.materials));
+    // 저공정(case A)은 다른 베이스/버진모 카드 제외(14 안에서만) — 탈색모는 LLM 경로 그대로
+    if(raw.case !== "A"){
+      if(raw.alt_path && raw.alt_path.materials)     add("베이스 변형", (raw.alt_path.desc) || "다른 베이스에서의 수렴", mkAbs(raw.alt_path.materials, raw.alt_path.base));
+      if(raw.virgin_alt && raw.virgin_alt.materials) add("버진모 경로", (raw.virgin_alt.desc) || "버진모 1스텝", mkAbs(raw.virgin_alt.materials));
+    }
     return out;
   }
 
