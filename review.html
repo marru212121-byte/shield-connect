@@ -224,7 +224,7 @@ const RECIPE_PROMPT = `═══════════════════
   "quick_thoughts": ["사고 흐름 요약 5~8줄. 한 줄 8~25자, '...'으로 끝남, 한국어 친근체."],
   "reasoning": "[1] K4 자체 관찰 / [2] STEP1 비교 / [3] K1 역추론 ([1] 신호 인용 의무) / [4] [M6][b] 매핑 (베이지 갈림+회갈빛브라운 자기검증 의무) — 4단계 양식 강제, 자유 산문 금지",
   "case": "A | B | C | D | E",
-  "base": "lv14 | lv16 | lv18 | lv12_lift | virgin | white",
+  "base": "lv14 | lv16 | lv18 | virgin | white",
   "chroma": "vivid | mid | pastel  (타겟 채도: 고채도=vivid / 중채도=mid / 파스텔=pastel. 직접 판정)",
   "weight": "light | mid | dark  (타겟 무게/투명도: 투명·가벼움=light / 중간=mid / 무겁고 진함=dark. 직접 판정)",
   "main": {
@@ -233,10 +233,11 @@ const RECIPE_PROMPT = `═══════════════════
     "desc": "결과 색감 1~2문장 서술"
   },
   "alt_branch": null,
-  "alt_path": { "base": "<다른 베이스 키>", "slots": [ ... ], "desc": "이 다른 베이스(=너프 대안)에서 같은 타겟이 어떻게 수렴되는지 1~2문장" },
+  "alt_path": null,
   "virgin_alt": null,
   "practical_tips": ["실무조언 문장 1", "실무조언 문장 2"]
 }
+★ alt_branch / alt_path / virgin_alt 는 항상 null. 다른 베이스로 빼지 않는다(다양성은 프론트가 같은 base 위에서 생성).
 
 ══════════════════════════════════════════════
 ■ [SLOTS] 공용 슬롯 계약 — ★ 출력의 진짜 본체 (프론트가 회사염모제로 변환하는 단 하나의 접점)
@@ -246,7 +247,8 @@ const RECIPE_PROMPT = `═══════════════════
 ★ slots는 [P] 팔레트의 "공용 계열"을 키로 출력한다. 색감명·제품명·회사 넘버 출력 금지(그건 2층·3층 몫).
 
 [family — 공용 계열 키 (이 값만 허용. [P] 팔레트 재료 ↔ 키 대응)]
-- ash          = 애쉬 염모제
+- ash          = 애쉬 염모제 (근본 잿빛 — 미세 블루/보라 결)
+- ash_violet    = 라벤더/애쉬바이올렛 (청+애쉬+보라 동시 보유 → 적갈·주황·노랑 한 번에 중화). 14브라운에 노랑기까지 깔렸을 때 = 슈퍼노바그레이 결
 - blue         = 블루 염모제
 - violet       = 바이올렛 염모제
 - beige_brown  = 회갈빛브라운 (찬 계열 · 고공정 빈 캔버스 전용)
@@ -377,6 +379,9 @@ const RECIPE_PROMPT = `═══════════════════
     고공정(탈색모)=투명한 핑크베이지 / 저공정·버진모선=밑 난색 자산 비쳐 더 따뜻.
     노랑기 있으면 핑크 가미가 노랑을 눌러 베이지로 안착(핑크 CC 추가 불필요할 수 있음).
   ★ 베이지 갈림: 핑크·붉은기·따뜻함 보이면 → 난색 웜베이지 / 차고·재빛·쿨 보이면 → 회갈빛브라운. 둘 섞지 말 것.
+- 내추럴 브라운(자연갈 캔버스): 적색이 깔린 동양인 자연 갈색. 약간 난색. 빈 캔버스를 자연 브라운으로 깔거나 보강하는 용도.
+  · 11레벨↑ 또는 클리어 동반 → 붉은빛 소량 도는 웜베이지(탈색모에서 예쁨). 회갈빛브라운(찬)과 반대로 붉은빛을 살림.
+  · 빈티지 = 내추럴 브라운 + 오렌지 컨트롤컬러(오렌지베이지브라운 느낌).
 - 바이올렛: 노랑의 보색. 동양인 모발에서 적보라 아닌 난색 가까운 중성색.
   · 단독(순 바이올렛): 라벤더 방향 메인 (한색 아님, 중성)
   · 애쉬 바이올렛(바이올렛+애쉬 결): 차분한 보라. 고채도 쪽.
@@ -980,37 +985,37 @@ B. 쿨·잿빛 방향:
    ② 보라기 동반
    ③ 깊이감·무게감
 
-→ 권장 = 12~13레벨 리프팅 후 재염색 (case = "D")
-→ 사진이 14·16·18로 보여도 [K2] 적색 자산 보존 우선
+→ 권장 = 14레벨 브라운 밴드 (탈색 아님 · 리프팅 후, 적색 자산 보존) (case = "A", base = "lv14")
+→ 사진이 16·18로 보여도 [K2] 적색 자산 보존 우선
 → 발동 시 reasoning에 "[K2] 딥 난색 게이트 발동" 명시
 
 ★ 3신호 모두 매칭일 때만. 단일·이중은 비활성.
 
 ────────────────────
 
-**케이스 결정 (최종):**
+**케이스 결정 (최종) — base는 main 기준 단일 확정. alt_path·alt_branch·virgin_alt는 쓰지 않는다(전부 null). 다양성은 프론트가 같은 base 위에서 만든다.**
 
-- **권장 = 14레벨 황갈 (탈색 아님 · 리프팅 후 밴드)** → case = "A", base = "lv14"
-  · main + (alt_branch 갈래 활성 시) + alt_path(12~13 리프팅 대안) + virgin_alt + practical_tips
+★ 큰 갈림은 둘뿐:
+  · 탈색 캔버스(16·18·백모) = 자연 멜라닌 거의 없음 → 공용 계열을 "채워서" 색을 만든다.
+  · 브라운 자산 밴드(리프팅 후 12~15레벨, 탈색 아님) = 적갈색이 디폴트로 깔림 → 그 자산을 "살리며" 잔류만 중화한다. 출력 base는 전부 lv14 하나로 합친다(12~13을 따로 쪼개지 않는다).
+
+- **권장 = 브라운 자산 밴드 (리프팅 후, 탈색 아님)** → case = "A", base = "lv14"
+  ★ 14레벨 브라운은 적갈색이 디폴트다. 사진을 보고 두 갈래로 나눠 서로 다른 레시피를 낸다(base는 둘 다 lv14, 약·레벨만 다르게):
+    · 주황기 도는 브라운(적갈·주황 우세) → 주황의 보색 한색(애쉬·블루) 위주로 약중화. 자산 살리려 11레벨 중심. (노랑 거의 없음 → 보라 불필요)
+    · 약간 황갈 브라운(적갈 + 노랑기 미세 동반) → 노랑은 보라로 눌러야 하므로 보라 가미. 적갈·주황·노랑이 동시에 깔렸으면 라벤더 애쉬(청+애쉬+보라 한 약에 보유)로 셋을 한 번에 중화 → family: "ash_violet" (슈퍼노바그레이 결). 노랑만 깔끔히 남았으면 family: "violet" 또는 바이올렛 CC 소량.
+  ★ 이 두 갈래는 같은 base(lv14)에서 main.slots만 다르게 낸다. 다른 base로 빼지 않는다.
 
 - **권장 = 탈색 2회 이상** → case = "B", base = "lv16"
-  · main + (alt_branch) + alt_path(14레벨 너프) + practical_tips
-  · virgin_alt = null (16레벨 타겟은 버진모 불가)
+  · 빈 캔버스 → 공용 계열을 채워 색 구성.
 
 - **권장 = 탈색 3회 이상** → case = "C", base = "lv18"
-  · main + (alt_branch) + alt_path(16레벨 너프) + practical_tips
-  · virgin_alt = null
-
-- **권장 = 고명도 리프팅 후 재염색** → case = "D", base = "lv12_lift"
-  · main(2차 착색 조합) + (alt_branch) + virgin_alt(버진모 1스텝) + practical_tips
-  · alt_path = null
+  · 빈 캔버스 → 공용 계열을 채워 색 구성.
 
 - **권장 = 백모 (K5)** → case = "E", base = "white"
-  · main(K5 2갈래 중 하나) + alt_path(K5 나머지 갈래) + practical_tips
-  · alt_branch = null, virgin_alt = null
+  · K5 메커니즘대로 main.slots 한 벌만 확정.
 
-★ "버진모 고명도 테크닉"은 항상 virgin_alt(대안)로만. 권장 호출 금지.
-★ alt_branch는 [M6][c] 갈래 활성 시만. 단일 메인이면 null.
+★ 버진모는 main이 버진모 1스텝이어야만 base="virgin". 평소엔 호출하지 않는다.
+★ case D(lv12_lift)는 폐지. 리프팅 후 염색은 전부 case A · lv14로 흡수.
 
 
 ══════════════════════════════
@@ -1035,10 +1040,10 @@ JSON 객체 하나. 코드블록·설명·인사 금지. 첫 글자 {, 마지막
 1. 메인 색감 + 부가 뉘앙스 관찰
 2. 무게감·깊이·투명감 관찰
 3. 베이스 레벨 추정 (가능성 톤)
-   - "탈색 N회 이상 X레벨 정도 도달해야 할 듯..."
-   - 12~13: "탈색까진 아니여도 12~13레벨 언더톤까지는 리프팅하고 염색해야 할 듯..."
+   - 탈색 캔버스: "탈색 N회 이상 X레벨 정도 도달해야 할 듯..."
+   - 브라운 자산 밴드(탈색 아님·리프팅 후): "탈색까진 아니여도 리프팅해서 14레벨 정도 브라운 자산 살려 염색해야 할 듯..." (12~15는 전부 14레벨로 본다)
    - 버진모: "버진모에서 한번에 가도 될 듯..."
-   ★ "12~13레벨 정도 도달" 금지 — "리프팅" 명시
+   ★ 14레벨 브라운은 "리프팅" 명시. 12~13을 따로 도달점으로 쪼개지 말 것.
 4. 메인 재료 1순위 검토
 5. 잔류·보색·CC 검토 (직관어 사용)
    - "주황기 있을 수" / "노랑기만 남아" / "세게 눌러줌"
@@ -1047,12 +1052,9 @@ JSON 객체 하나. 코드블록·설명·인사 금지. 첫 글자 {, 마지막
    - 광택: "빛 반사 영역은 살짝 투명한데... / 근데 전체적인 색감 보면..."
    - 발레아쥬: "뿌리·중간·끝 명확히 다른데... / 일단 전체적인 색감으로..."
 7. 최종 확정 (확정형) — "○○ + ○○로 마무리..."
-8. **(필수)** 대안 경로 안내 — "근데 모질이나 디자이너마다 판단이 다를 수 있으니 ○○ 대안경로도 안내하고, 변질될 수 있는 가능성 안내하고..."
-   - 권장 lv18: 탈색 2회 이상 대안
-   - 권장 lv16: 14레벨 황갈(리프팅 후 밴드) 너프 대안
-   - 권장 lv14: 12~13 리프팅 또는 버진모 대안
-   - 권장 lv12_lift: 버진모 대안
-   - 권장 white: "단계별 시술 권장도 안내해야 할 듯..."
+8. **(필수)** 변형·변질 안내 — "근데 모질이나 디자이너마다 판단이 다를 수 있으니, 같은 베이스에서 약을 바꾼 다른 레시피도 같이 보고, 변질될 수 있는 가능성도 안내하고..."
+   ★ 다른 베이스(너프)로 빼는 안내 금지. 도달 베이스는 [3]에서 정한 하나로 고정.
+   ★ 14레벨 브라운이면 "주황기로 보면 ~, 노랑기로 보면 ~ 두 갈래로 안내해야 할 듯..." 식으로 같은 14 위 두 갈래만.
 
 [어조]
 - 가능성 톤 ("...해야 할 듯...")
@@ -1098,43 +1100,26 @@ JSON 객체 하나. 코드블록·설명·인사 금지. 첫 글자 {, 마지막
 
 ──────────────────────────────
 
-■ main / alt_branch / alt_path / virgin_alt 필드
+■ main 필드 — 출력은 slots로만 (상단 [SLOTS] 공용 슬롯 계약이 본체)
 
-각각 다음 구조:
+main = { "slots":[ ... ], "materials":[], "desc":"결과 색감 1~2문장" } 만 채운다.
+alt_branch / alt_path / virgin_alt 는 쓰지 않는다 → 전부 null.
 
-{
-  "materials": ["재료1", "재료2", ...],
-  "desc": "결과 색감 1~2문장 서술 (또는 권장과의 차이 / 이 베이스에서의 수렴 방향)",
-  "base": "..." (alt_path만 — 대안 베이스 영역 키)
-}
+★ slots 채우는 법 (상단 계약 요약):
+- 각 칸 = { role, family, level, ratio, nuance(선택) }
+- family 는 [P] 팔레트의 공용 계열 키만 (색감명·제품명·회사 넘버 금지 — 그건 2층 몫)
+- level = [K1] 도달 언더톤 깊이에서 도출 (깊을수록 낮은 숫자). 14브라운 약중화면 11 중심, 잔류 강하면 9. cc·clear는 null
+- 메인 염모제 → 보조 염모제 → cc → clear 순서로 배열
+- 칸 최대 4개(클리어 제외). 딥 난색만 3성분 필수
+- materials 배열은 사람이 눈으로 확인하는 보조 표기일 뿐(비워도 동작). 프론트는 slots만 읽는다.
 
-**materials 배열의 각 항목 작성 규칙:**
-- 정확한 재료명 사용 ([P] 팔레트)
-- 레벨 직접 표기: "11레벨 ○○ 염모제" / "9레벨 ○○ 염모제" / "7레벨 ○○ 염모제" 등 (재료에 레벨 숫자를 붙임)
-  · 베이스·잔류 보고 레벨 선택 (높을수록 약중화·자산살림 / 낮을수록 강중화·진함). 여러 레벨 믹스 가능.
-- 컨트롤컬러: "○○ 컨트롤컬러" + 강도 마커 ("소량" / "극소량")
-- 버진모 1단계: "13·15레벨 ○○ 염모제 (리프팅용)"
-- 클리어: "클리어 다량 희석" / "클리어 희석"
-- 산화제는 버진모 1스텝·리프팅 1차에서만 별도 항목으로: "산화제 9%/12%"
-- 그 외 착색 조합엔 산화제 표기 X
+**클라이언트 자동 처리 (모델은 신경 X):**
+- 회사 넘버 변환, 라인(오센틱/LOOK) 선택, 블록 헤더·b 태그·라벨 풀네임 렌더링
+- 같은 base 위 다른 레시피 N개 생성(변형)
+- K5 백모 강제 tips 2개·파스텔 클리어 안내 자동 주입
 
-**조합 순서 (배열 순서):**
-염모제 메인 → 염모제 보조 → CC 메인 → CC 보조 → 클리어 (→ 산화제)
-
-**조합 최대 4개 항목** (산화제 제외). 단 딥 난색은 3성분 필수.
-
-**클라이언트 자동 처리되는 부분 (모델은 신경 X):**
-- "핑크 염모제" → "핑크 염모제(레드바이올렛 계열)" 자동 보정
-- 블록 헤더, b 태그, 라벨 풀네임 자동 렌더링
-- 케이스 D의 "1차 리프트" 안내 자동 삽입
-- K5 백모 강제 tips 2개 자동 주입
-- 파스텔+클리어 안내 문구 자동 주입
-
-**desc 작성:**
-- main.desc: "결과 색감"이 어떻게 발색되는지 1~2문장
-- alt_branch.desc: 권장과의 차이 1~2문장 (어떤 디자이너 선호일 때 이 대안인지)
-- alt_path.desc: 같은 조합이 그 대안 베이스에서 어떻게 수렴되는지 1~2문장 + 마지막에 "이 베이스에서의 최선입니다" 마무리 권장
-- virgin_alt.desc: "버진모에서 최대한 연출하는 방법입니다. 반사빛이 원하는 정도만큼 투명하지 않을 수 있습니다." 정도 짧게
+■ desc 작성:
+- main.desc: 결과 색감이 어떻게 발색되는지 1~2문장
 
 ──────────────────────────────
 
@@ -1260,6 +1245,9 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
               {code:"CA",name:"클리어 애쉬",ju:"애쉬(맑은)",bu:"미세 블루",tex:"플래티넘·실버",confirmed:true,lowLevelOK:true},
               {code:"SA",name:"섀도우 애쉬",ju:"애쉬",bu:"보라",tex:"LOOK·투명. ①투명 애쉬바이올렛(고레벨 18서 보라 비침) ②노랑기 있을때 보라가 노랑 중화+애쉬 톤. Spa.G(오센틱 진한그레이·보라묻힘)·Sup.G(라벤더)와 채도·역할 차이",confirmed:true}],
             CC:[{code:"ASH",name:"애쉬 컨트롤러",confirmed:true}] },
+      ash_violet:{ "오센틱":[{code:"Sup.G",name:"슈퍼노바 그레이",ju:"라벤더(보라)",bu:"청+애쉬",tex:"청·애쉬·보라를 한 약에 보유한 라벤더 그레이(고채도). 적갈·주황·노랑을 동시 중화 → 14브라운에 노랑기까지 깔렸을 때 한 번에 정리. 근본 애쉬(Gra·Spa)와 결이 다름",confirmed:true}],
+                   "LOOK":[{code:"SA",name:"섀도우 애쉬",ju:"애쉬+보라",bu:"보라",tex:"투명 애쉬바이올렛. 노랑기를 보라가 눌러 차분한 잿빛. 18선 보라 비침. 라벤더(Sup.G)의 투명 버전 역할",confirmed:true}],
+                   CC:[{code:"VIOLET",name:"바이올렛 컨트롤러",confirmed:true}] },
       blue:{ "오센틱":[{code:"Blu.M",name:"블루 문",ju:"블루",bu:"청자(청보라·미세)",tex:"근본 블루. 백모선 노랑 억제 위해 청자 부염료로 보라기 비침. 13레벨 황갈/주황 브라운서 스모키, 일반 애쉬보다 더 그레이. 강한 블루→브라운 잿빛으로",confirmed:true}],
              "LOOK":[
               {code:"BA",name:"블루 애쉬",ju:"블루",bu:"애쉬",tex:"차분한 잿빛 블루",confirmed:true},
@@ -1383,6 +1371,7 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
   var ADJACENT = {
     warm_beige:"brown_canvas", beige_brown:"warm_beige", brown_canvas:"warm_beige",
     ash:"khaki_ash", khaki_ash:"ash", blue:"ash",
+    ash_violet:"ash",
     violet:"red_violet", red_violet:"pink", pink:"red_violet"
   };
   function recipeSig(mapped){
@@ -1390,7 +1379,9 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
       .map(function(m){return (m.level||"")+(m.code||"")+(m.role||"");}).join("+");
   }
   function cloneAbs(o){ return JSON.parse(JSON.stringify(o)); }
-  /* ── 같은 도달 베이스에서 희망색의 다른 길 N개(결정론·환각0) ── */
+  /* ── 같은 도달 베이스에서 희망색의 다른 길 N개(결정론·환각0) ──
+     ★ 회사별 명도-염료 강도차(미해결 과제)에 의존하던 레벨 STEP_UP은 뺐다.
+       대신 "라인 스왑(진한↔투명) · 인접 계열 · 보조 약 추가"로 같은 base 위 다른 길을 만든다. */
   function mapVariants(abstract, brandKey){
     var dict = BRANDS[brandKey], out = [], seen = {};
     function add(label, meta, abs){
@@ -1401,17 +1392,15 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
       seen[sig] = true;
       out.push({ label:label, meta:meta, base:abs.base, chroma:abs.chroma, mapped:mapped });
     }
-    // 1) 권장 — 그대로 (LOOK/투명 위주)
+    // 1) 권장 — 그대로
     add("권장", "권장 경로", abstract);
-    // 2) 고채도(오센틱) 라인 — 메인색을 vivid 라인으로 + 레벨 한 칸 위로(오센틱 진하니 연한 레벨로) + 클리어 동반
-    var ov = cloneAbs(abstract); ov.chroma = "vivid";
-    var STEP_UP = {5:7, 7:9, 9:11, 11:13, 13:13};   // 기본보다 한 단계 높은(=연한 염료) 레벨
-    ov.recipe.forEach(function(it){
-      if(it.role==="cc" || it.role==="clear") return;
-      if(it.llmLevel) it.llmLevel = STEP_UP[it.llmLevel] || it.llmLevel;
-    });
-    if(!ov.recipe.some(function(it){return it.role==="clear";})) ov.recipe.push({role:"clear",dye:null,ratio:"sub"});
-    add("고채도 라인", "오센틱 진함 · 기본보다 한 단계 높은 레벨 + 클리어로 농도 조절", ov);
+    // 2) 라인 스왑 — 같은 base·같은 계열에서 진한 라인↔투명 라인 반대쪽 (레벨은 표가 알아서, 회사강도 가정 안 함)
+    var sv = cloneAbs(abstract);
+    sv.chroma = (abstract.chroma === "vivid") ? "mid" : "vivid";  // vivid면 투명쪽, 아니면 진한(오센틱)쪽
+    if(sv.chroma === "vivid" && !sv.recipe.some(function(it){return it.role==="clear";}))
+      sv.recipe.push({role:"clear",dye:null,ratio:"sub"});       // 진한 라인은 클리어로 농도 조절
+    add(sv.chroma==="vivid" ? "진한 라인" : "투명 라인",
+        sv.chroma==="vivid" ? "오센틱 진함 · 클리어로 농도 조절" : "LOOK 투명 · 가볍게", sv);
     // 3) 조합 변형 — 메인 염모제를 인접 계열 바구니로 (예: 난색웜베이지→내추럴브라운)
     var cv = cloneAbs(abstract);
     var mainIt = cv.recipe.filter(function(it){return it.role!=="cc" && it.role!=="clear";})[0];
@@ -1449,7 +1438,7 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
     return "mid";
   }
   // ── 공용 계열 키 화이트리스트 (slots.family 검증) ──
-  var FAMILY_KEYS = {ash:1,blue:1,violet:1,beige_brown:1,warm_beige:1,brown_canvas:1,
+  var FAMILY_KEYS = {ash:1,ash_violet:1,blue:1,violet:1,beige_brown:1,warm_beige:1,brown_canvas:1,
                      khaki_ash:1,red_violet:1,red:1,pink:1,green:1,orange:1,yellow:1};
 
   /* ── 1순위: 구조화 slots → recipe (정규식 0, 환각 0) ── */
@@ -1510,6 +1499,7 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
   function v1ToAbstract(raw, analysis){
     if(!raw) return null;
     var base = raw.base || "lv16";
+    if(base==="lv12_lift") base = "lv14";   // ★ 12~13 리프팅 후는 14레벨 브라운 밴드로 합침
     var VALID_CH = {vivid:1,mid:1,pastel:1};
     var chroma = (raw.chroma && VALID_CH[raw.chroma]) ? raw.chroma : detectChroma(analysis);
     var chromaFromLLM = !!(raw.chroma && VALID_CH[raw.chroma]);
@@ -1657,7 +1647,7 @@ async function runPipeline(){
     setStatus("레시피 역추론 중…", true);
     const hint = "\n\n[참고 — 1차 분석]\n- color_name_ko: "+(ST.analysis.color_name_ko||"")+"\n- tone: "+(ST.analysis.tone||"")+"\n- elements: "+((ST.analysis.elements||[]).join(", "))+"\n- description: "+(ST.analysis.description||"");
     const rTxt = await callLLM(ST.apiKey,"",12000,RECIPE_PROMPT,
-      [img,{type:"text",text:"이 사진 속 모발 색감을 직접 관찰하여 조색 레시피를 역추론해. JSON 하나만 출력해 (코드블록·설명·인사 금지). 필드: quick_thoughts, reasoning, case(A~E), base, chroma(vivid/mid/pastel 직접 판정), weight(light/mid/dark 직접 판정), main{materials,desc}, alt_branch, alt_path, virgin_alt, practical_tips."+hint}]);
+      [img,{type:"text",text:"이 사진 속 모발 색감을 직접 관찰하여 조색 레시피를 역추론해. JSON 하나만 출력해 (코드블록·설명·인사 금지). 필드: quick_thoughts, reasoning, case(A~E), base(lv14|lv16|lv18|virgin|white — lv12_lift 폐지, 리프팅 후는 lv14), chroma(vivid/mid/pastel 직접 판정), weight(light/mid/dark 직접 판정), main{slots,desc}. ★ main.slots = [{role,family,level,ratio,nuance}] 구조화 배열이 본체다(상단 [SLOTS] 계약 준수). materials는 비워도 됨. alt_branch·alt_path·virgin_alt 는 전부 null(다른 베이스로 분기 금지 — base는 main 기준 하나로 확정). 14레벨 브라운이면 주황기/황갈(노랑기) 둘 중 어느 쪽인지 판정해 그에 맞는 slots를 낸다."+hint}]);
     ST.raw = parseJSON(rTxt);
 
     await rerunMapping();   // 2층 매핑 + 설명(호출3)
