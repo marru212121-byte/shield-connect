@@ -128,6 +128,7 @@
     <details class="thoughts" id="thoughtsBox"><summary>사고 흐름</summary><div id="thoughtsList"></div></details>
     <div class="interp" id="interp"></div>
     <div id="recCards"></div>
+    <div id="hedgeBox"></div>
     <details id="rawBox"><summary>원본 JSON 펼치기 (분석 · 레시피 · 설명 사실패키지)</summary><pre id="rawPre"></pre></details>
     <div class="acts">
       <span class="q">이 두 레시피, 미용 논리에 맞나요?</span>
@@ -239,6 +240,7 @@ const RECIPE_PROMPT = `═══════════════════
       "desc": "권장과 어떻게 다른지 1문장"
     }
   ],
+  "hedge": { "when":"발동 조건 한 줄 — 14인데 주황~노랑 사이라 노랑기가 조금 더 보일 때만. 그 외엔 hedge 전체를 null", "how":"방법 한 줄 — 위 recipes에 소량 섞기 또는 메인 교체", "add":[ { "family":"<공용 결 키 — 팔레트 보고 네가 고름>", "note":"이 결이 왜·무엇을 하는지 한 줄" } ] },
   "practical_tips": ["실무조언 문장 1", "실무조언 문장 2"]
 }
 ★ recipes = 1~2개. 네가 사고해서 "이 조합이 맞겠다" 싶은 경로를 직접 낸다(권장 1개 + 필요하면 대안 1개). 3개 이상 금지. 프론트는 네가 준 경로를 회사 넘버로 번역만 한다(변형을 코드가 지어내지 않는다).
@@ -424,7 +426,9 @@ const RECIPE_PROMPT = `═══════════════════
 
 적용:
 - 진노랑(16레벨) → 바이올렛 염모제 + 바이올렛 CC
-- 주황 잔류 → 블루. 단 14 황갈은 강도 매칭: 주황 약하면 애쉬(브라운 자산 살림), 강하면 블루. 바이올렛 호출 X.
+- 14 잔류 = 주황~황갈 폭. 14는 탈색 직전 가장 애매한 구간이라 적갈·주황이 디폴트지만 노랑기가 조금 더 보일 수 있다 (★ 그래도 노랑 본격은 16부터 — 14를 "노랑"이라 부르지 마라).
+  · 디폴트(적갈·주황): recipes 2경로 — 주황을 한색 보색으로 억제. 어떤 결로 잡을지는 팔레트 보고 네가 골라라 (= 베이스→잔류→보색, [M1] 그대로. 약을 박지 마라).
+  · 노랑기가 조금 더 보이면: recipes 본체는 주황 디폴트로 두고, 보강은 hedge 필드에 따로 채운다. hedge의 약도 팔레트 보고 네가 고른다.
 - 연노랑(18레벨) → 바이올렛 CC 소량 또는 핑크 CC 소량
 - 부재(백모) → 핑크 CC 극소량 + 클리어 다량 희석
 
@@ -581,7 +585,6 @@ const RECIPE_PROMPT = `═══════════════════
     ① 메인 색감 판정(희망색=원하는 발색) → ② 도달 언더톤(이 색 내려면 몇 레벨까지 빼나) → ③ 그 언더톤 조건(깔린 잔류=빨강/주황/노랑/없음)
     → ④ 색감·명도 선택(틴트=메인재료+보색방향 / 명도숫자=③ 언더톤 깊이) → ⑤(2층 코드)회사 넘버 변환 → ⑥ 레시피 3가지 나열.
 - ★ 중화만 하면 깨끗한 베이스로 끝난다. 희망색(틴트)이 반드시 그 위에 얹혀야 한다. "언더톤 처리(②③명도·보색)" 와 "목표 발색(①④틴트)" 둘 다 출력에 들어가야 함.
-- ★ 같은 틴트라도 언더톤이 바뀌면 결과색이 달라진다 → 그 변주를 alt_path(다른 베이스에서의 수렴)로 함께 제시.
 
 ■ 탈색 순서 = 멜라닌 분해 순서
 검정(버진) → 적갈색(12~13) → 주황(14) → 노랑(16) → 연노랑·아이보리(18) → 백모(부재)
@@ -602,7 +605,6 @@ const RECIPE_PROMPT = `═══════════════════
    - 단정 금지: 중립~황색 멜라닌 브라운(주황 적음) / 주황기 도는 브라운. 노랑 거의 없음 → 노랑·바이올렛은 16부터.
    - 한색 강도 매칭: 애쉬·블루는 같은 주황-보색 축, 강도 차이. 미세 잿빛(브라운 자산 위)→애쉬(애쉬브라운), 진한 잿빛·스모키→블루, 그 사이→애쉬+블루 소량. "잿빛 보이면 무조건 블루" 금지.
    - 과중화 원리: 잔류 약한데 보색 세게=탁해짐. 주황 적으면 애쉬, 더 돌면 블루 10%미만. 강도는 디자이너 선택으로 설명에 나열.
-   - 주황 많이 도는 14는 16으로 올려 주황 빼는 너프가 더 깨끗할 수 있음 → alt_path.
 4. **탈색 2회 이상 (16레벨 · 노랑기 잔류)**
 5. **탈색 3회 이상 (18레벨 · 연노랑~아이보리 · 잔류 거의 없음)**
 
@@ -1005,7 +1007,7 @@ B. 쿨·잿빛 방향:
      → 14에서 할 일은 단 하나: **자산(적갈·주황)을 살리면서 한색(애쉬·블루·카키)으로 적색·주황만 억제**. 브라운을 더하는 게 아니라 잔류만 누른다.
      → 브라운 보충(NB·회갈빛브라운)은 자연 자산이 없는 빈 캔버스(16·18·백모)에서만.
   · 권장 경로 = 주황 기준: 주황의 보색 한색(애쉬·블루)으로 약중화, 자산 살리려 11레벨 중심. 보라·바이올렛 호출 X(노랑 거의 없음).
-  · 모질 따라 황갈(노랑기)이 살짝 낄 수 있다 → 이건 **대안 경로(recipes 2번째)나 practical_tips**로만: "노랑기 더 보이면 바이올렛 컨트롤컬러 극소량 더해 잡으세요" 정도. 메인 정체성(주황)은 그대로.
+  · 모질 따라 황갈(노랑기)이 살짝 낄 수 있다 → 이건 hedge 필드로 따로 안내한다(recipes 본체는 주황 디폴트 유지, 약은 팔레트 보고 고름). 메인 정체성(주황)은 그대로.
   ★ 주황 메인 단일 확정. 황갈을 별도 베이스/메인으로 분기하지 않는다.
 
 - **권장 = 탈색 2회 이상** → case = "B", base = "lv16"
@@ -1044,7 +1046,7 @@ JSON 객체 하나. 코드블록·설명·인사 금지. 첫 글자 {, 마지막
 2. 무게감·깊이·투명감 관찰
 3. 베이스 레벨 추정 (가능성 톤)
    - 탈색 캔버스: "탈색 N회 이상 X레벨 정도 도달해야 할 듯..."
-   - 브라운 자산 밴드(탈색 아님·리프팅 후): "탈색까진 아니여도 리프팅해서 14레벨 정도 브라운 자산 살려 염색해야 할 듯..." (12~15는 전부 14레벨로 본다)
+   - 브라운 자산(탈색 아님·리프팅 후): "탈색까진 아니여도 간단한 리프팅으로 최소 14레벨까지는 도달해야 할 듯..." (12~15는 전부 14레벨로 본다. "밴드"라는 말은 쓰지 마라)
    - 버진모: "버진모에서 한번에 가도 될 듯..."
    ★ 14레벨 브라운은 "리프팅" 명시. 12~13을 따로 도달점으로 쪼개지 말 것.
 4. 메인 재료 1순위 검토
@@ -1533,6 +1535,24 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
     return materialsToRecipe(block.materials);
   }
 
+  function mapHedge(abstract, brandKey){
+    var h = abstract && abstract.hedge; if(!h) return null;
+    var lineMap = LINE_OF[brandKey], dict = BRANDS[brandKey];
+    var lineKey = (abstract.chroma==="vivid")?lineMap.vivid:lineMap.other;
+    var items = (h.add||[]).map(function(a){
+      var fam = a && a.family;
+      var obj = (fam && FAMILY_KEYS[fam]) ? resolveFine(brandKey, fam, lineKey, lineMap) : null;
+      if(!obj && fam){
+        var dp = dict.dye[fam];
+        if(dp){ var k = dp[lineKey] ? lineKey : Object.keys(dp).filter(function(x){return x!=="CC";})[0];
+                var arr = dp[k]; if(arr && arr.length) obj = arr[0]; }
+      }
+      return { code: obj?obj.code:null, name: obj?obj.name:null, family:fam, note:(a&&a.note)||"" };
+    }).filter(function(x){ return x.code; });
+    if(!items.length) return null;
+    return { when:(h.when||""), how:(h.how||""), items:items };
+  }
+
   function v1ToAbstract(raw, analysis){
     if(!raw) return null;
     var base = raw.base || "lv16";
@@ -1564,7 +1584,7 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
     }).filter(function(p){ return p.recipe && p.recipe.length; });
 
     return { case:raw.case, base:base, chroma:chroma, weight:weight,
-             paths:paths, recipe:(paths[0]&&paths[0].recipe)||[],
+             paths:paths, recipe:(paths[0]&&paths[0].recipe)||[], hedge:(raw.hedge||null),
              _inferred:true, chromaFromLLM:chromaFromLLM, weightFromLLM:weightFromLLM };
   }
 
@@ -1644,7 +1664,7 @@ function buildFactPackage(companyName, abstract, variants){
    상태 + 오케스트레이션
    ════════════════════════════════════════════════════════════ */
 const ST = { apiKey:"", b64:null, media:null, fname:"", company:"sasaki", analysis:null, raw:null, abstract:null,
-             variants:null, explain:null };
+             variants:null, explain:null, hedge:null };
 const $ = id => document.getElementById(id);
 function setStatus(t, busy){ $("status").innerHTML = t ? ((busy?'<span class="spin"></span>':'')+t) : ""; }
 function showErr(t){ const e=$("err"); if(t){ e.textContent=t; e.classList.remove("hide"); } else e.classList.add("hide"); }
@@ -1689,7 +1709,7 @@ async function runPipeline(){
     setStatus("레시피 역추론 중…", true);
     const hint = "\n\n[참고 — 1차 분석]\n- color_name_ko: "+(ST.analysis.color_name_ko||"")+"\n- tone: "+(ST.analysis.tone||"")+"\n- elements: "+((ST.analysis.elements||[]).join(", "))+"\n- description: "+(ST.analysis.description||"");
     const rTxt = await callLLM(ST.apiKey,"",12000,RECIPE_PROMPT,
-      [img,{type:"text",text:"이 사진 속 모발 색감을 직접 관찰하여 조색 레시피를 역추론해. JSON 하나만 출력해 (코드블록·설명·인사 금지). 필드: quick_thoughts, reasoning, case(A~E), base(lv14|lv16|lv18|virgin|white — lv12_lift 폐지, 리프팅 후는 lv14), chroma(vivid/mid/pastel 직접 판정), weight(light/mid/dark 직접 판정), recipes, practical_tips. ★ recipes = 네가 사고한 레시피 경로 1~2개. 각 경로 = {label, slots:[{role,family,ratio,nuance}], desc}. ★ family는 결까지 직접 골라라(ash_silver/ash_violet_tint/ash_lavender/blue_ash/blue_smoky/warm_beige_sheer/warm_beige_rich/beige_brown/brown_canvas/khaki_ash 등) — '애쉬'로 뭉뚱그리지 마라. ★ 웜/쿨 매칭: 타겟이 웜(핑크·따뜻)이면 웜 결 메인, 쿨(잿빛·올리브)이면 쿨 결 메인. 반대 성격을 메인/보조로 얹으면 탁해진다(핑크 사진에 ash_lavender(쿨) 금지). ★ 14·리프팅 = 브라운 자산이 곧 베이스. brown_canvas(NB)·beige_brown 같은 브라운 보충을 14에서 얹지 마라(톤 이중 쌓임=탁). 빈 캔버스(16·18·백모)에서만 브라운 보충. ★ 대안(2번째)은 권장에서 쓴 약과 겹치면 안 됨. 한 벌이 명백하면 1개만, 3개 이상 금지. ★ 절제: 자체완성형(warm_beige_*)은 단독, 보색 더 얹으면 탁. 한 약이 두 색감 머금으면 쪼개지 마라. 딥 난색만 3성분. ★ 14 본질은 주황(노랑은 16부터). cc 슬롯은 보색 계열 키(blue/violet/green/pink). 회사 넘버 금지."+hint}]);
+      [img,{type:"text",text:"이 사진 속 모발 색감을 직접 관찰하여 조색 레시피를 역추론해. JSON 하나만 출력해 (코드블록·설명·인사 금지). 필드: quick_thoughts, reasoning, case(A~E), base(lv14|lv16|lv18|virgin|white — lv12_lift 폐지, 리프팅 후는 lv14), chroma(vivid/mid/pastel 직접 판정), weight(light/mid/dark 직접 판정), recipes, practical_tips. ★ recipes = 네가 사고한 레시피 경로 1~2개. 각 경로 = {label, slots:[{role,family,ratio,nuance}], desc}. ★ family는 결까지 직접 골라라(ash_silver/ash_violet_tint/ash_lavender/blue_ash/blue_smoky/warm_beige_sheer/warm_beige_rich/beige_brown/brown_canvas/khaki_ash 등) — '애쉬'로 뭉뚱그리지 마라. ★ 웜/쿨 매칭: 타겟이 웜(핑크·따뜻)이면 웜 결 메인, 쿨(잿빛·올리브)이면 쿨 결 메인. 반대 성격을 메인/보조로 얹으면 탁해진다(핑크 사진에 ash_lavender(쿨) 금지). ★ 14·리프팅 = 브라운 자산이 곧 베이스. brown_canvas(NB)·beige_brown 같은 브라운 보충을 14에서 얹지 마라(톤 이중 쌓임=탁). 빈 캔버스(16·18·백모)에서만 브라운 보충. ★ 대안(2번째)은 권장에서 쓴 약과 겹치면 안 됨. 한 벌이 명백하면 1개만, 3개 이상 금지. ★ 절제: 자체완성형(warm_beige_*)은 단독, 보색 더 얹으면 탁. 한 약이 두 색감 머금으면 쪼개지 마라. 딥 난색만 3성분. ★ 14 본질은 주황(노랑은 16부터). cc 슬롯은 보색 계열 키(blue/violet/green/pink). 회사 넘버 금지. ★ hedge = 14인데 주황~노랑 애매해 노랑기 더 보일 때만 채운다(when/how/add[{family,note}]); add의 약은 팔레트 보고 네가 고른다. 14 아니거나 명확하면 hedge:null."+hint}]);
     ST.raw = parseJSON(rTxt);
 
     await rerunMapping();   // 2층 매핑 + 설명(호출3)
@@ -1705,7 +1725,9 @@ async function rerunMapping(){
   const companyName = BRANDS[company].name;
   ST.abstract = v1ToAbstract(ST.raw, ST.analysis);
   ST.variants = mapLLMRecipes(ST.abstract, company);   // ★ LLM이 뱉은 경로(최대 2개)를 회사 넘버로 번역만. 코드가 변형 안 지어냄.
+  ST.hedge = mapHedge(ST.abstract, company);   // ★ 황갈 갈래(조건부) — LLM이 채웠을 때만
   renderStatic();                 // 넘버는 즉시 렌더
+  renderHedge();
   $("results").classList.remove("hide");
 
   // 설명(호출3) — 카드별 로딩 표시
@@ -1770,6 +1792,24 @@ function renderStatic(){
     "// 분석\n"+JSON.stringify(ST.analysis,null,2)
     +"\n\n// 레시피(추상)\n"+JSON.stringify({case:ST.raw.case,base:ST.raw.base,recipes:ST.raw.recipes||ST.raw.main,quick_thoughts:ST.raw.quick_thoughts},null,2)
     +"\n\n// 사실패키지(설명 입력)\n"+buildFactPackage(BRANDS[ST.company].name, ST.abstract, ST.variants);
+}
+function renderHedge(){
+  var box = $("hedgeBox"); if(!box) return;
+  var h = ST.hedge;
+  if(!h || !h.items || !h.items.length){ box.innerHTML=""; return; }
+  var items = h.items.map(function(it){
+    return '<div style="border:1px solid var(--line);border-radius:8px;padding:9px 11px;margin-top:6px">'
+      +'<span style="font-weight:700;color:var(--ink)">'+it.code+'</span>'
+      +(it.name?'<span style="color:var(--ink2);font-size:12px"> · '+it.name+'</span>':'')
+      +(it.note?'<div style="color:var(--ink2);font-size:12px;margin-top:3px">'+it.note+'</div>':'')
+      +'</div>';
+  }).join("");
+  box.innerHTML = '<div style="border-top:1px solid var(--line);margin-top:14px;padding-top:12px">'
+    +'<span style="display:inline-block;font-size:12px;font-weight:700;background:var(--panel3);color:var(--brown);padding:3px 10px;border-radius:6px;margin-bottom:8px">황갈 갈래 · 조건부</span>'
+    +(h.when?'<div style="font-size:13px;color:var(--ink2);line-height:1.7"><b style="color:var(--ink)">언제:</b> '+h.when+'</div>':'')
+    +(h.how?'<div style="font-size:13px;color:var(--ink2);line-height:1.7;margin-top:4px"><b style="color:var(--ink)">방법:</b> '+h.how+'</div>':'')
+    +items
+    +'</div>';
 }
 function renderExplain(){
   const ex=ST.explain||{};
