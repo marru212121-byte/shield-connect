@@ -1387,13 +1387,15 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
     "SA":{"애쉬":80,"보라":20}, "CA":{"애쉬":100}, "BC":{"베이지":60,"보라":25,"애쉬":15}
   };
   // ── 사사키 레벨 환산 (2층 자료): 슬롯 depth + 라인 → 레벨 숫자. LLM은 depth(추상)만, 숫자는 여기서. ──
-  var LEVEL_TABLE = {
-    "오센틱": { light:11, mid:11, dark:7,  deep:5 },
+  var LEVEL_TABLE2 = {
+    "오센틱": { light:11, mid:11, dark:7,  deep:5 },   // 단 base=lv14면 위에서 11 고정
     "LOOK":   { light:11, mid:9,  dark:9,  deep:9 }
   };
-  function levelFor(line, depth){
+  function levelFor(line, depth, base){
     var d = (depth==="light"||depth==="mid"||depth==="dark"||depth==="deep") ? depth : "mid";
-    var T = LEVEL_TABLE[line] || LEVEL_TABLE["LOOK"];
+    // ★ 14 브라운 언더톤: 오센틱은 무조건 11 (자산이 이미 어두워 5/7은 과함 — 5/7은 탈색모/빈 도화지 전용)
+    if(line==="오센틱" && base==="lv14") return 11;
+    var T = LEVEL_TABLE2[line] || LEVEL_TABLE2["LOOK"];
     return T[d];
   }
   // ── 약 코드 → 실제 소속 라인 (오센틱/LOOK). 레벨은 레시피 chroma가 아니라 약의 라인을 따른다. ──
@@ -1456,7 +1458,7 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
       var alts = usable.filter(function(p){return p!==primary;});
       var promote = null;
       if(primary.promote) promote = item.is_main_color ? {open:true,path:primary.promote.path} : {open:false,when:primary.promote.when};
-      out.push({ role:item.role, level:levelFor((CODE_LINE[brandKey]&&CODE_LINE[brandKey][primary.code])||lineKey, item.depth), code:primary.code, name:primary.name, roleLabel:item.roleLabel||null,
+      out.push({ role:item.role, level:levelFor((CODE_LINE[brandKey]&&CODE_LINE[brandKey][primary.code])||lineKey, item.depth, abstract.base), code:primary.code, name:primary.name, roleLabel:item.roleLabel||null,
         ju:primary.ju, bu:primary.bu, tex:primary.tex, ratio:RATIO_BAND[item.ratio]||"", line:lineKey,
         confirmed:primary.confirmed!==false, nuance:item.nuance||null, blocked:primary.blocked,
         alts:alts.map(function(a){return {label:a.code,name:a.name,tex:a.tex,confirmed:a.confirmed!==false};}),
