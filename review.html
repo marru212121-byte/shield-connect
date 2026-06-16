@@ -251,21 +251,28 @@ const RECIPE_PROMPT = `═══════════════════
   자유 문자열(materials)을 파싱하지 않는다. materials는 비워도 됨.
 ★ slots는 [P] 팔레트의 "공용 계열"을 키로 출력한다. 색감명·제품명·회사 넘버 출력 금지(그건 2층·3층 몫).
 
-[family — 공용 계열 키 (이 값만 허용. [P] 팔레트 재료 ↔ 키 대응)]
-- ash          = 애쉬 염모제 (근본 잿빛 — 미세 블루/보라 결)
-- ash_violet    = 라벤더/애쉬바이올렛 (청+애쉬+보라 동시 보유 → 적갈·주황·노랑 한 번에 중화). 14브라운에 노랑기까지 깔렸을 때 = 슈퍼노바그레이 결
-- blue         = 블루 염모제
-- violet       = 바이올렛 염모제
-- beige_brown  = 회갈빛브라운 (찬 계열 · 고공정 빈 캔버스 전용)
-- warm_beige   = 난색 웜베이지(핑크 가미 · 자체 시어)
-- brown_canvas = 내추럴 브라운(자연갈 캔버스 · 적색 깔림)
-- khaki_ash    = 카키빛애쉬
-- red_violet   = 레드바이올렛
-- red          = 레드
-- pink         = 핑크(레드바이올렛 계열)
-- green        = 그린
-- orange       = 오렌지
-- yellow       = 옐로우
+[family — 공용 계열 키 (이 값만 허용). ★ 결까지 직접 골라라 — 같은 애쉬여도 결이 다르면 다른 약이 된다]
+애쉬 결:
+- ash_silver       = 맑은 실버·플래티넘 애쉬 (투명·차가운 잿빛)
+- ash_violet_tint  = 보라기 도는 잿빛 (노랑기 보라가 눌러 차분)
+- ash_lavender     = 라벤더 애쉬·고채도 (청+애쉬+보라 보유 → 적갈·주황·노랑 동시 중화)
+블루 결:
+- blue_ash         = 잿빛 블루 (차분)
+- blue_smoky       = 근본 블루·스모키 (더 그레이·무게감)
+- blue_black       = 딥 네이비·블랙 (딥 난색용)
+바이올렛 결:
+- violet_pure      = 순 바이올렛 (라벤더 방향)
+- violet_ash       = 애쉬바이올렛 (차분·고채도)
+베이지/브라운 결:
+- warm_beige       = 난색 웜베이지(핑크 가미·자체완성 — 보색 더 얹지 마라)
+- beige_brown      = 회갈빛베이지(쿨·미세 보라 — 빈 캔버스 전용)
+- brown_canvas     = 내추럴브라운(자연갈·붉은빛 살림)
+- brown_matte      = 매트브라운(붉은빛 억제)
+난색·기타:
+- khaki_ash        = 카키빛애쉬
+- red_violet / red / pink / orange / yellow / green = 난색·매트 메인
+★ 위 결 키로 메인·보조를 직접 지정한다. "애쉬" 같이 뭉뚱그리지 말고 어느 결인지 골라라 — 그래야 사진에 맞는 약이 나온다.
+★ 같은 색감도 결을 달리해 다른 길을 낼 수 있다(예: 권장 ash_silver / 대안 ash_lavender+소량 blue_smoky). 사진 보고 판단.
 
 [role]
 - main  = 메인 염모제(색감+농도 1순위)
@@ -1314,6 +1321,48 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
   var BRANDS = { sasaki:SASAKI, milbon:MILBON };
   var LINE_OF = { sasaki:{vivid:"오센틱",other:"LOOK"}, milbon:{vivid:"어딕시",other:"올디브"} };
 
+  /* ── 결(텍스처) 키 → 회사 약 코드 (라인별). LLM이 슬롯에 이 결 키를 직접 적으면 그 약으로 번역 ──
+     vivid=오센틱(진한 라인), 그 외=LOOK(투명 라인). 한쪽 라인밖에 없으면 그쪽으로 폴백. */
+  var FINE = {
+    sasaki: {
+      ash_silver:      { 오센틱:"Gra.G", LOOK:"CA" },        // 맑은 실버·플래티넘 애쉬
+      ash_violet_tint: { 오센틱:"Spa.G", LOOK:"SA" },        // 보라기 도는 잿빛
+      ash_lavender:    { 오센틱:"Sup.G", LOOK:"Sup.G" },     // 라벤더·고채도(적·주황·노랑 동시중화)
+      blue_ash:        { 오센틱:"BA",    LOOK:"BA" },         // 잿빛 블루
+      blue_smoky:      { 오센틱:"Blu.M", LOOK:"Blu.M" },      // 근본 블루·스모키
+      blue_black:      { 오센틱:"BLUE BLACK", LOOK:"BLUE BLACK" },
+      violet_pure:     { 오센틱:"VL",    LOOK:"VL" },         // 순 바이올렛(라벤더 방향)
+      violet_ash:      { 오센틱:"Nit.V", LOOK:"Nit.V" },      // 애쉬바이올렛·차분
+      warm_beige:      { 오센틱:"Qua.B", LOOK:"PM" },         // 웜베이지(핑크 가미·자체완성)
+      beige_brown:     { 오센틱:"BC",    LOOK:"BC" },         // 회갈빛베이지(쿨·미세보라)
+      brown_canvas:    { 오센틱:"NB",    LOOK:"NB" },         // 내추럴브라운(붉은빛 살림)
+      brown_matte:     { 오센틱:"CB",    LOOK:"CB" },         // 매트브라운(붉은빛 억제)
+      khaki_ash:       { 오센틱:"Mar.G", LOOK:"Mar.G" }       // 카키빛애쉬 (GR은 평소 비활성)
+    },
+    milbon: {}
+  };
+  // 코드 → 약 객체 인덱스 (사전 평탄화, CC 제외)
+  var CODE_INDEX = (function(){
+    var idx = {};
+    Object.keys(BRANDS).forEach(function(bk){
+      idx[bk] = {};
+      var dye = BRANDS[bk].dye || {};
+      Object.keys(dye).forEach(function(fam){
+        Object.keys(dye[fam]).forEach(function(line){
+          if(line==="CC") return;
+          (dye[fam][line]||[]).forEach(function(p){ if(p && p.code && !idx[bk][p.code]) idx[bk][p.code]=p; });
+        });
+      });
+    });
+    return idx;
+  })();
+  function resolveFine(brandKey, famKey, lineKey, lineMap){
+    var t = FINE[brandKey] && FINE[brandKey][famKey];
+    if(!t) return null;
+    var code = (lineKey===lineMap.vivid ? t.오센틱 : t.LOOK) || t.LOOK || t.오센틱;
+    return (CODE_INDEX[brandKey]||{})[code] || null;
+  }
+
   /* ── 매퍼 ── */
   function mapRecipe(abstract, brandKey){
     var dict = BRANDS[brandKey], lineMap = LINE_OF[brandKey], out = [];
@@ -1346,7 +1395,9 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
       }
       var lineKey = (abstract.chroma==="vivid")?lineMap.vivid:lineMap.other;
       var cands = null;
-      if(dyePool){ cands = dyePool[lineKey] || dyePool[Object.keys(dyePool).filter(function(k){return k!=="CC";})[0]]; }
+      var fineObj = resolveFine(brandKey, item.dye, lineKey, lineMap);   // ★ 결 키면 특정 약으로
+      if(fineObj){ cands = [fineObj]; }
+      else if(dyePool){ cands = dyePool[lineKey] || dyePool[Object.keys(dyePool).filter(function(k){return k!=="CC";})[0]]; }
       if(!cands||!cands.length){ out.push({role:item.role,missing:true,dyeLabel:item.dye,line:lineKey}); return; }
       var w = item.weight || abstract.weight || "mid";
       var tableLevel = (LEVEL_TABLE[abstract.base]||LEVEL_TABLE.lv16)[w];
@@ -1389,16 +1440,22 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
   function cloneAbs(o){ return JSON.parse(JSON.stringify(o)); }
   /* ── LLM이 사고해서 뱉은 레시피 경로(최대 2개)를 그대로 회사 넘버로 번역만 한다 (코드가 변형 안 지어냄) ── */
   function mapLLMRecipes(abstract, brandKey){
-    var out = [], seen = {};
+    var out = [], seen = {}, usedCodes = {};
     var paths = (abstract && abstract.paths && abstract.paths.length) ? abstract.paths
               : [{label:"권장", desc:"", recipe:(abstract&&abstract.recipe)||[]}];
     paths.slice(0,2).forEach(function(p, i){
       var absP = { base:abstract.base, chroma:abstract.chroma, weight:abstract.weight, recipe:p.recipe||[] };
       var mapped = mapRecipe(absP, brandKey);
-      if(!mapped.some(function(m){return !m.missing;})) return;   // 전부 비면 버림(억지 매핑 안 함)
+      if(!mapped.some(function(m){return !m.missing;})) return;   // 전부 비면 버림
+      // ★ 대안(2번째 이후) 경로가 앞 경로에서 쓴 염모제(메인·보조)를 재사용하면 버림 — 진짜 다른 길만
+      if(i>0){
+        var reuse = mapped.some(function(m){ return (m.role==="main"||m.role==="sub") && m.code && usedCodes[m.code]; });
+        if(reuse) return;
+      }
       var sig = recipeSig(mapped);
-      if(seen[sig]) return;                                        // LLM이 똑같은 거 두 번 주면 하나만
+      if(seen[sig]) return;
       seen[sig] = true;
+      mapped.forEach(function(m){ if((m.role==="main"||m.role==="sub") && m.code) usedCodes[m.code]=true; });
       out.push({ label:p.label || (i===0?"권장":"대안"), meta:p.desc||"", base:abstract.base, chroma:abstract.chroma, mapped:mapped });
     });
     return out;
@@ -1432,7 +1489,10 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
   }
   // ── 공용 계열 키 화이트리스트 (slots.family 검증) ──
   var FAMILY_KEYS = {ash:1,ash_violet:1,blue:1,violet:1,beige_brown:1,warm_beige:1,brown_canvas:1,
-                     khaki_ash:1,red_violet:1,red:1,pink:1,green:1,orange:1,yellow:1};
+                     khaki_ash:1,red_violet:1,red:1,pink:1,green:1,orange:1,yellow:1,
+                     // 결(텍스처) 키 — LLM이 직접 결을 골라 다양한 레시피를 낼 수 있게
+                     ash_silver:1,ash_violet_tint:1,ash_lavender:1,blue_ash:1,blue_smoky:1,blue_black:1,
+                     violet_pure:1,violet_ash:1,brown_matte:1};
 
   /* ── 1순위: 구조화 slots → recipe (정규식 0, 환각 0) ── */
   function slotsToRecipe(slots){
@@ -1645,7 +1705,7 @@ async function runPipeline(){
     setStatus("레시피 역추론 중…", true);
     const hint = "\n\n[참고 — 1차 분석]\n- color_name_ko: "+(ST.analysis.color_name_ko||"")+"\n- tone: "+(ST.analysis.tone||"")+"\n- elements: "+((ST.analysis.elements||[]).join(", "))+"\n- description: "+(ST.analysis.description||"");
     const rTxt = await callLLM(ST.apiKey,"",12000,RECIPE_PROMPT,
-      [img,{type:"text",text:"이 사진 속 모발 색감을 직접 관찰하여 조색 레시피를 역추론해. JSON 하나만 출력해 (코드블록·설명·인사 금지). 필드: quick_thoughts, reasoning, case(A~E), base(lv14|lv16|lv18|virgin|white — lv12_lift 폐지, 리프팅 후는 lv14), chroma(vivid/mid/pastel 직접 판정), weight(light/mid/dark 직접 판정), recipes, practical_tips. ★ recipes = 네가 사고한 레시피 경로 1~2개 배열. 각 경로 = {label, slots:[{role,family,level,ratio,nuance}], desc}. 권장 1개 + '이 조합도 맞겠다' 싶으면 대안 1개(같은 base 위, 약·명도·비율은 네 판단). 한 벌이 명백하면 1개만. 3개 이상 금지. ★ 절제: 색감 요소 수만큼 약 늘리지 마라. 자체 완성형 약(웜베이지 등)은 단독이 정답, 보색·보조 더 얹으면 탁해진다. 한 약이 두 색감 머금으면 쪼개지 마라. 딥 난색만 3성분. ★ 14레벨 본질은 주황. 노랑은 16부터 — 14를 노랑으로 부르지 마라. slots의 family는 [P] 공용 계열 키만, 회사 넘버 금지."+hint}]);
+      [img,{type:"text",text:"이 사진 속 모발 색감을 직접 관찰하여 조색 레시피를 역추론해. JSON 하나만 출력해 (코드블록·설명·인사 금지). 필드: quick_thoughts, reasoning, case(A~E), base(lv14|lv16|lv18|virgin|white — lv12_lift 폐지, 리프팅 후는 lv14), chroma(vivid/mid/pastel 직접 판정), weight(light/mid/dark 직접 판정), recipes, practical_tips. ★ recipes = 네가 사고한 레시피 경로 1~2개. 각 경로 = {label, slots:[{role,family,level,ratio,nuance}], desc}. ★ family는 결까지 직접 골라라(ash_silver/ash_violet_tint/ash_lavender/blue_ash/blue_smoky/warm_beige/beige_brown/brown_canvas 등) — '애쉬'로 뭉뚱그리지 마라. 같은 색감도 결을 달리하면 다른 약이 된다. ★ 대안(2번째) 경로는 권장에서 쓴 염모제(결)와 겹치면 안 된다 — 다른 결/약으로. 한 벌이 명백하면 1개만, 3개 이상 금지. ★ 절제: 색감 요소 수만큼 약 늘리지 마라. 자체완성형(warm_beige 등)은 단독, 보색 더 얹으면 탁. 한 약이 두 색감 머금으면 쪼개지 마라. 딥 난색만 3성분. ★ 14 본질은 주황(노랑은 16부터). cc 슬롯은 보색 계열 키(blue/violet/green/pink). 회사 넘버 금지."+hint}]);
     ST.raw = parseJSON(rTxt);
 
     await rerunMapping();   // 2층 매핑 + 설명(호출3)
