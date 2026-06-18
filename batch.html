@@ -1065,7 +1065,7 @@ JSON 객체 하나. 코드블록·설명·인사 금지. 첫 글자 {, 마지막
 - 메인 + 부가 1개가 기본. 자체 완성형 약(난색 웜베이지 등 핑크·애쉬를 자체보유)은 단독이 정답 — 같은 성격 보조(핑크CC·보라·애쉬) 더 얹으면 탁해진다.
 - "베이지+핑크" 처럼 한 약이 두 색감을 머금으면 약 1개로(쪼개지 마라).
 - 예외(3성분 필수): 딥 난색(블랙커런트·체리·딥와인 등) = 레드 + 레드CC + 블루블랙(딥).
-- ★ 블루블랙(딥 네이비·블랙에 가까움)은 딥난색 전용이 아니다 — 한색 흑보라·네이비·블루블랙 타겟(어두운 브라운 자산 위 또는 탈색모)에도 부/소량(5~10%, depth deep)으로 끼얹어 어두운 보라·네이비 깊이를 낸다. base가 14여도 부 슬롯이면 깔린다(메인 아님).
+- ★ 블루블랙(딥 네이비·블랙에 가까움)은 블랙커런트류 딥난색 전용 — 레드 본체 위에 흑네이비 그림자를 얹는 3성분(레드 + 레드CC + 블루블랙)일 때만, 소량(10~20%). ★ 한색 흑보라·네이비·잿빛을 아무리 어둡게 가도 블루블랙 쓰지 마라(blue_black family 슬롯 만들지 마라) — 어둠은 애쉬·네이비 결을 저레벨(2층이 오센틱 5·7로 깐다)로 낸다. 14·16·18 전부 동일(저레벨 약이 어둠 책임, 딥난색만 블루블랙).
 
 ★ 레시피 경로 개수는 base로 고정: lv14=2개(권장+대안), lv16/lv18=3개(권장+대안+대안2), 그 외=2개. 1개만 내는 것 금지, 정해진 개수보다 많이 내는 것도 금지. (절제 원칙은 "한 경로 안의 약 개수"에만 적용 — 경로 개수와 별개.)
 
@@ -1402,9 +1402,11 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
         return Object.assign({},p,{lv:lv,blocked:blocked});
       });
       var primary = usable.filter(function(p){return !p.blocked;})[0] || usable[0];
-      // ★ 어두운 부재료(부/소량 + deep·dark)면 풀 안의 딥 변종(블루블랙처럼 고정 딥레벨 약)을 우선 선택 — 흑보라·네이비 액센트. 메인엔 적용 안 함.
+      // ★ 고정 딥약(블루블랙)은 블랙커런트류 딥난색에서만 — 같은 경로에 레드 본체가 있을 때만 발동. 한색 깊이는 일반 약을 저레벨(오센틱 5·7)로 깐다(아래 levelFor).
       var isAccentSlot = (item.ratio==="sub"||item.ratio==="small"||item.ratio==="trace");
-      if(isAccentSlot && (item.depth==="deep"||item.depth==="dark")){
+      var hasRedMain = out.some(function(o){ return o.role!=="cc" && o.role!=="clear" && !o.missing &&
+        [o.ju,o.bu,o.code].some(function(x){ return x && /레드|빨강|와인|체리|마룬|RED|WINE/i.test(x); }); });
+      if(isAccentSlot && (item.depth==="deep"||item.depth==="dark") && hasRedMain){
         var deepCand = usable.filter(function(p){return !p.blocked && p.fixedLevel!=null;})[0];
         if(deepCand) primary = deepCand;
       }
