@@ -57,7 +57,10 @@ td{padding:3px 6px;border-top:1px solid #2f2a21;color:#B9AC95} td:first-child{co
   <button class="btn" id="runBtn" disabled>10장 돌리기</button>
   <div class="toggle">
     <button class="tg on" data-co="sasaki">사사키</button>
-    <button class="tg" data-co="milbon">밀본 (뼈대)</button>
+    <button class="tg" data-co="milbon">밀본</button>
+    <button class="tg" data-co="biscos">비스코스</button>
+    <button class="tg" data-co="miel">미엘</button>
+    <button class="tg" data-co="amos">아모스</button>
   </div>
 </div>
 <div id="progwrap"><div id="progbar"></div></div>
@@ -1193,7 +1196,7 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
     lv14:{light:11,mid:9,dark:7}, lv16:{light:13,mid:11,dark:9},
     lv18:{light:13,mid:11,dark:9}, white:{light:13,mid:11,dark:11}
   };
-  var LINE_LEVELS = { "오센틱":[5,7,9,11], "LOOK":[3,5,7,9,11,13], "어딕시":[3,5,7,9,11,13], "올디브":[1,3,5,7,9,11,13], CONTROLLER:[] };
+  var LINE_LEVELS = { "오센틱":[5,7,9,11], "LOOK":[3,5,7,9,11,13], "어딕시":[3,5,7,9,11,13], "올디브":[1,3,5,7,9,11,13], "INNOCENT":[5,7,9,11,13], "BleachLine":[7,9,11,12], "BlackLine":[7,9,11], "잇츠에이블":[1,3,5,7,9,11,13], "트루싱크":[2,5,6,7,8,9,11,12], CONTROLLER:[] };
   function clampLevel(level, line){
     var a=LINE_LEVELS[line]; if(!a||!a.length) return level;
     return a.reduce(function(x,y){ return Math.abs(y-level)<Math.abs(x-level)?y:x; });
@@ -1277,8 +1280,84 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
     satColorsLOOK:[]
   };
 
-  var BRANDS = { sasaki:SASAKI, milbon:MILBON };
-  var LINE_OF = { sasaki:{vivid:"오센틱",other:"LOOK"}, milbon:{vivid:"어딕시",other:"올디브"} };
+  var BISCOS = {
+    name:"비스코스", stub:true,
+    dye:{
+      ash:{ "INNOCENT":[{code:"CA",name:"클리어애쉬",ju:"애쉬(무채)",bu:"—",tex:"모노톤 은회색 순수무채",confirmed:true}], CC:[{code:"ASH",name:"스팟 애쉬",confirmed:true}] },
+      blue:{ "INNOCENT":[
+              {code:"BA",name:"블루애쉬",ju:"애쉬",bu:"청",tex:"청가미로 적빛 확실억제, 투명애쉬",confirmed:true},
+              {code:"BBK",name:"블루블랙",ju:"블랙",bu:"청(다량)",tex:"딥 네이비/블루블랙. 저레벨 고정",confirmed:true}], CC:[{code:"BLUE",name:"스팟 블루",confirmed:true}] },
+      violet:{ "INNOCENT":[
+              {code:"LA",name:"라벤더애쉬",ju:"애쉬",bu:"보라",tex:"보라치우친 애쉬, 노란빛 중화(회보라)",confirmed:true},
+              {code:"VL",name:"바이올렛",ju:"보라",bu:"청(다량)",tex:"차분·시크·신비",confirmed:true}], CC:[{code:"VIOLET",name:"스팟 바이올렛",confirmed:true}] },
+      brown:{ "INNOCENT":[
+              {code:"NB",name:"내추럴브라운",ju:"브라운(적멜라닌계)",bu:"—",tex:"건강·윤기 자연갈. 붉은빛 살림(캔버스). 웜베이지=NB+핑크소량",confirmed:true},
+              {code:"CB",name:"쿨브라운",ju:"브라운",bu:"그린(옅은녹빛)",tex:"매트로 붉은빛 억제, 투명·시크. 회갈빛 베이지브라운",confirmed:true}], CC:[{code:"GREEN",name:"스팟 그린",confirmed:true}] },
+      green:{ "INNOCENT":[{code:"GR",name:"그린",ju:"그린(매트)",bu:"옐로우(소량)",tex:"적빛 중화, 맑고 투명. 칩=카키베이지",confirmed:true}], CC:[{code:"GREEN",name:"스팟 그린",confirmed:true}] },
+      yellow:{ "INNOCENT":[{code:"YL",name:"옐로우",ju:"옐로우(리얼골드)",bu:"—",tex:"화사·투명·볼륨",confirmed:true}], CC:[{code:"YELLOW",name:"스팟 옐로우",confirmed:true}] },
+      orange:{ "INNOCENT":[{code:"OR",name:"오렌지",ju:"오렌지(카퍼)",bu:"—",tex:"시각적 윤기 극대",confirmed:true}], CC:[{code:"ORANGE",name:"스팟 오렌지",confirmed:true}] },
+      red:{ "INNOCENT":[{code:"RD",name:"레드",ju:"레드",bu:"핑크",tex:"피부 화사 톤업",confirmed:true}], CC:[{code:"RED",name:"스팟 레드",confirmed:true}] },
+      pink:{ "INNOCENT":[{code:"RD",name:"레드",ju:"레드",bu:"핑크",tex:"피부 화사 톤업",confirmed:true}], CC:[{code:"PINK",name:"스팟 핑크",confirmed:true}] },
+      white:{ "INNOCENT":[{code:"WHITE",name:"화이트",ju:"화이트(난색)",bu:"보라(웜)",tex:"웜바이올렛 파스텔라이저, 베이지로 퇴색",confirmed:true}], CC:[] }
+    },
+    clear:{code:"CLEAR",name:"클리어",note:"파스텔/감속 — 물·샴푸 희석과 동급 토닝페달"},
+    satColorsLOOK:[]
+  };
+
+  var MIEL = {
+    name:"미엘", stub:true,
+    dye:{
+      ash:{ "BleachLine":[{code:"AS",name:"Ash",ju:"애쉬",bu:"미세 한색",tex:"순 애쉬·그레이(맑은 잿빛). 탈색위 실버~그레이. ★ash_lavender=AS본체+울트라바이올렛 다량(레시피2925)",confirmed:true}],
+             "BlackLine":[{code:"AS",name:"Ash(흑모)",ju:"애쉬",bu:"미세 한색",tex:"톤다운 위 차분한 애쉬브라운",confirmed:true}], CC:[{code:"UltraViolet",name:"믹스톤 울트라바이올렛",confirmed:true}] },
+      blue:{ "BleachLine":[
+              {code:"BA",name:"Blue Ash",ju:"블루",bu:"애쉬",tex:"잿빛 블루(미엘 간판). 9BA단독 블루본체. 16~17Lv 쨍",confirmed:true},
+              {code:"NY",name:"Navy",ju:"블루(딥네이비)",bu:"—",tex:"딥네이비·블루블랙. 7NY 매우 어두움",confirmed:true}], CC:[{code:"Blue",name:"믹스톤 블루",confirmed:true}] },
+      violet:{ "BleachLine":[
+              {code:"AV",name:"Ash Violet",ju:"바이올렛",bu:"애쉬",tex:"애쉬 바이올렛(차분 회보라)",confirmed:true},
+              {code:"V",name:"Violet",ju:"바이올렛(순)",bu:"—",tex:"순 바이올렛. 11V 깊음",confirmed:true}], CC:[{code:"UltraViolet",name:"믹스톤 울트라바이올렛",confirmed:true}] },
+      khaki:{ "BleachLine":[{code:"K",name:"Khaki",ju:"카키(그린)",bu:"애쉬",tex:"카키 애쉬그린. 매트. ★brown_matte도 K(적빛억제), khaki_ash와 레벨/CC로 가름",confirmed:true}], CC:[{code:"Green",name:"믹스톤 그린",confirmed:false}] },
+      beige:{ "BleachLine":[{code:"BE",name:"Beige",ju:"웜 베이지(중립)",bu:"부염료 약함",tex:"중립 베이지(사사키NB포지션). 미세 난색브라운기. PM/퀀텀급 강웜 절대아님. ★beige_brown=BE+BA쿨화(레시피2952)",confirmed:true}], CC:[] },
+      copper:{ "BleachLine":[{code:"C",name:"Copper",ju:"코퍼(오렌지난색)",bu:"—",tex:"★이름함정: 9C단독 붉은빛 자연갈 캔버스(brown_canvas). 9C+애쉬=모카무스",confirmed:true}], CC:[{code:"Orange",name:"믹스톤 오렌지",confirmed:true}] },
+      gold:{ "BleachLine":[{code:"G",name:"Gold",ju:"골드(옐로우난색)",bu:"—",tex:"12MG=최고명도 골드",confirmed:true}], CC:[{code:"Yellow",name:"믹스톤 옐로우",confirmed:true}] },
+      orange:{ "BleachLine":[{code:"OG",name:"Orange",ju:"오렌지",bu:"—",confirmed:true}], CC:[{code:"Orange",name:"믹스톤 오렌지",confirmed:true}] },
+      red:{ "BleachLine":[{code:"R",name:"Red",ju:"레드",bu:"—",tex:"9R 단독 선명레드",confirmed:true}], CC:[{code:"Red",name:"믹스톤 레드",confirmed:true}] },
+      red_violet:{ "BleachLine":[{code:"RV",name:"Rose Violet",ju:"레드바이올렛",bu:"—",confirmed:true}], CC:[{code:"PinkViolet",name:"믹스톤 핑크바이올렛",confirmed:true}] },
+      pink:{ "BleachLine":[{code:"NeonPink",name:"Neon Pink",ju:"핑크",bu:"—",tex:"전용 패션핑크 없음→믹스톤 네온핑크+클리어",confirmed:true}], CC:[{code:"NeonPink",name:"믹스톤 네온핑크",confirmed:true}] }
+    },
+    clear:{code:"Clear",name:"클리어",note:"믹스톤 희석제(파스텔·시어). 클리어 배수로 농도"},
+    satColorsLOOK:[]
+  };
+
+  var AMOS = {
+    name:"아모스", stub:true,
+    dye:{
+      ash:{ "잇츠에이블":[{code:"METALLIC SILVER",name:"메탈릭실버",ju:"애쉬(실버)",bu:"미세 한색",tex:"은은한 실버그레이. 아모스 유일 순애쉬",confirmed:true}],
+            "트루싱크":[{code:".1",name:"애쉬(.1)",ju:"애쉬(블루빛)",bu:"블루",tex:"푸른 모던 회색. 세부 .18/.17/.13/.11. 저레벨 2.11=블루블랙급",confirmed:true}], CC:[] },
+      blue:{ "잇츠에이블":[{code:"CLASSIC BLUE",name:"클래식블루",ju:"블루",bu:"애쉬",tex:"도시적 차가운 블루·애쉬블루·데님블루",confirmed:true}], CC:[] },
+      violet:{ "잇츠에이블":[
+            {code:"INDIGO PURPLE",name:"인디고퍼플",ju:"바이올렛(블루빛)",bu:"블루",tex:"블루빛 딥퍼플. ★순보라 전용약 없음=아모스 갭, 근사",confirmed:true},
+            {code:"LAVENDER BEIGE",name:"라벤더베이지",ju:"베이지(보라빛)",bu:"바이올렛",tex:"베이지+보라 한스푼·스모키베이지",confirmed:true}], CC:[] },
+      beige:{ "잇츠에이블":[
+            {code:"GREIGE",name:"그레이지",ju:"그레이+베이지",bu:"약애쉬",tex:"뉴트럴 그레이지·회갈. 약애쉬베이지(미엘BE 중립<그레이지<밀본시나몬 강애쉬). 밝으면 그레이끼=투명. ⚠️웜베이지/베이지브라운 경계, 검수때 헥스로",confirmed:true},
+            {code:"COOL BEIGE",name:"쿨베이지",ju:"베이지(쿨)",bu:"매트",tex:"절제된 매트감 쿨베이지·토프브라운. 적빛억제",confirmed:true},
+            {code:"BASIC BROWN",name:"베이직브라운",ju:"자연갈(웜)",bu:"적빛",tex:"따뜻한 내추럴/모카 브라운. 붉은빛 자연갈 캔버스",confirmed:true}], CC:[] },
+      green:{ "잇츠에이블":[{code:"PINE GREEN",name:"파인그린",ju:"그린",bu:"애쉬",tex:"퇴색 언더톤 잡는 딥 포레스트그린. ⚠️청록 강함→카키엔 소량",confirmed:true}], CC:[] },
+      orange:{ "잇츠에이블":[{code:"MELLOW ORANGE",name:"멜로우오렌지",ju:"오렌지",bu:"—",tex:"소프트/피치 오렌지(중채도)",confirmed:true}],
+               "트루싱크":[{code:".4",name:"코퍼(.4)",ju:"오렌지(구리)",bu:"—",tex:"화사 고채도 구리오렌지. 세부 .41/.46/.04",confirmed:true}], CC:[] },
+      red:{ "잇츠에이블":[{code:"HOLLY RED",name:"홀리레드",ju:"레드",bu:"브라운빛",tex:"레드브라운·시크레드",confirmed:true}],
+            "트루싱크":[{code:".6",name:"마호가니(.6)",ju:"레드(자주)",bu:"보라빛",tex:"우아한 자주(마호가니). 세부 .66/.6/.68",confirmed:true}], CC:[] },
+      red_violet:{ "트루싱크":[{code:".6",name:"마호가니(.6)",ju:"레드바이올렛",bu:"보라빛",tex:"자주 보라빛",confirmed:true}], CC:[] },
+      pink:{ "잇츠에이블":[{code:"PLUM PINK",name:"플럼핑크",ju:"핑크",bu:"—",tex:"캔디/베이비 핑크",confirmed:true}], CC:[] }
+    },
+    clear:{code:"CLEAR",name:"클리어",note:"채도/농도 감속·시어"},
+    satColorsLOOK:[]
+  };
+
+  var BRANDS = { sasaki:SASAKI, milbon:MILBON, biscos:BISCOS, miel:MIEL, amos:AMOS };
+  var LINE_OF = {
+    sasaki:{vivid:"오센틱",other:"LOOK"}, milbon:{vivid:"어딕시",other:"올디브"},
+    biscos:{vivid:"INNOCENT",other:"INNOCENT"}, miel:{vivid:"BleachLine",other:"BlackLine"}, amos:{vivid:"트루싱크",other:"잇츠에이블"}
+  };
 
   /* ── 결(텍스처) 키 → 회사 약 코드 (라인별). LLM이 슬롯에 이 결 키를 직접 적으면 그 약으로 번역 ──
      vivid=오센틱(진한 라인), 그 외=LOOK(투명 라인). 한쪽 라인밖에 없으면 그쪽으로 폴백. */
@@ -1321,6 +1400,57 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
       // ── 카키/그린 칸 ──
       khaki_ash:       { 오센틱:"에메랄드",   LOOK:"에메랄드" }    // 카키빛 애쉬그린
       // (red_violet=퍼플가넷 / pink=루벨라이트 는 FINE 안 거치고 dye 패밀리로 직접 작동 / 보르도루비·오렌지카넬리안 제외)
+    },
+    biscos: {
+      // 단일선(INNOCENT) → 오센틱/LOOK 같은 코드. 쨍↔중간은 라인 아니라 SPOTLIGHT CC량+레벨로.
+      ash_silver:      { 오센틱:"CA",  LOOK:"CA" },   // 순무채 클리어애쉬
+      ash_violet_tint: { 오센틱:"LA",  LOOK:"LA" },   // 회보라
+      ash_lavender:    { 오센틱:"LA",  LOOK:"LA" },   // 고채도=VIOLET CC 다량
+      blue_ash:        { 오센틱:"BA",  LOOK:"BA" },
+      blue_smoky:      { 오센틱:"BA",  LOOK:"BA" },   // 근본블루 전용약 없음→BA, 쨍=BLUE CC
+      blue_black:      { 오센틱:"BBK", LOOK:"BBK" },  // 저레벨 고정
+      violet_pure:     { 오센틱:"VL",  LOOK:"VL" },
+      violet_ash:      { 오센틱:"VL",  LOOK:"VL" },
+      warm_beige_sheer:{ 오센틱:"NB",  LOOK:"NB" },   // ★확정 NB+핑크소량 밝게(13/11)
+      warm_beige_rich: { 오센틱:"NB",  LOOK:"NB" },   // ★확정 NB+핑크소량 어둡게(9), 시어와 명도만 분기
+      beige_brown:     { 오센틱:"CB",  LOOK:"CB" },   // ★확정 쿨브라운=적빛억제 회갈
+      brown_canvas:    { 오센틱:"NB",  LOOK:"NB" },   // 적멜라닌 자연갈
+      brown_matte:     { 오센틱:"CB",  LOOK:"CB" },   // 그린부염료로 적빛억제
+      khaki_ash:       { 오센틱:"GR",  LOOK:"GR" }    // 칩=카키베이지
+    },
+    miel: {
+      // 오센틱=BleachLine(탈색·쨍) / LOOK=BlackLine(흑모·탁). 같은 코드 2발색.
+      ash_silver:      { 오센틱:"AS", LOOK:"AS" },   // 백모/17Lv 순실버
+      ash_violet_tint: { 오센틱:"AV", LOOK:"AV" },
+      ash_lavender:    { 오센틱:"AS", LOOK:"AS" },   // ★확정 AS본체+울트라바이올렛(레시피2925, AV아님)
+      blue_ash:        { 오센틱:"BA", LOOK:"BA" },   // 미엘 간판
+      blue_smoky:      { 오센틱:"BA", LOOK:"BA" },   // 블루 본체=BA, 쨍=믹스톤블루
+      blue_black:      { 오센틱:"NY", LOOK:"NY" },   // 7NY 딥네이비
+      violet_pure:     { 오센틱:"V",  LOOK:"V" },
+      violet_ash:      { 오센틱:"AV", LOOK:"AV" },
+      warm_beige_sheer:{ 오센틱:"BE", LOOK:"BE" },   // 중립베이지(NB포지션)+클리어희석
+      warm_beige_rich: { 오센틱:"BE", LOOK:"BE" },   // 같은 BE 저레벨(9), 명도만 분기
+      beige_brown:     { 오센틱:"BE", LOOK:"BE" },   // ★확정 BE+BA쿨화(레시피2952, AS아님)
+      brown_canvas:    { 오센틱:"C",  LOOK:"C" },    // ★이름함정 코퍼=붉은 자연갈
+      brown_matte:     { 오센틱:"K",  LOOK:"K" },    // 카키로 적빛억제
+      khaki_ash:       { 오센틱:"K",  LOOK:"K" }     // 7K+믹스톤애쉬
+    },
+    amos: {
+      // 길A: 오센틱(트루싱크) 키 없으면 resolveFine이 LOOK(잇츠에이블)로 폴백. 트루싱크=고채도 부스터만.
+      ash_silver:      {            LOOK:"METALLIC SILVER" }, // 맑은 순실버(트루싱크 .1은 푸른끼라 부적합)
+      ash_violet_tint: {            LOOK:"LAVENDER BEIGE" },
+      ash_lavender:    {            LOOK:"LAVENDER BEIGE" },  // ★확정 라벤더베이지 단독 고레벨(인디고믹스 근거없음)
+      blue_ash:        { 오센틱:".1", LOOK:"CLASSIC BLUE" },
+      blue_smoky:      { 오센틱:".1", LOOK:"CLASSIC BLUE" },
+      blue_black:      { 오센틱:".1", LOOK:"CLASSIC BLUE" },  // 트루싱크 .1 저레벨(2.11)
+      violet_pure:     {            LOOK:"INDIGO PURPLE" },  // ⚠️순보라 전용약 없음=갭
+      violet_ash:      { 오센틱:".1", LOOK:"INDIGO PURPLE" },
+      warm_beige_sheer:{            LOOK:"GREIGE" },         // ★확정 그레이지 단독 고레벨(애쉬믹스 근거없음)
+      warm_beige_rich: {            LOOK:"GREIGE" },         // 그레이지 저레벨
+      beige_brown:     {            LOOK:"GREIGE" },         // ⚠️웜베이지와 겹침, 검수때 헥스로
+      brown_canvas:    {            LOOK:"BASIC BROWN" },    // 붉은 자연갈
+      brown_matte:     {            LOOK:"COOL BEIGE" },     // 올리브매트 적빛억제
+      khaki_ash:       {            LOOK:"PINE GREEN" }      // ⚠️청록 강함
     }
   };
   // 코드 → 약 객체 인덱스 (사전 평탄화, CC 제외)
@@ -1361,7 +1491,12 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
     "오센틱": { light:11, mid:11, dark:7,  deep:5 },   // 단 base=lv14면 위에서 11 고정
     "LOOK":   { light:11, mid:9,  dark:9,  deep:9 },
     "어딕시": { light:11, mid:11, dark:7,  deep:5 },   // 밀본 비비드 라인 = 오센틱과 명도 동일(사용자 확인)
-    "올디브": { light:11, mid:9,  dark:9,  deep:9 }    // 밀본 기존 라인 = LOOK과 동일
+    "올디브": { light:11, mid:9,  dark:9,  deep:9 },   // 밀본 기존 라인 = LOOK과 동일
+    "INNOCENT":   { light:11, mid:9,  dark:9,  deep:9 }, // 비스코스 단일선(LOOK/올디브와 동일)
+    "BleachLine": { light:11, mid:11, dark:9,  deep:7 }, // 미엘 Based Bleach(쨍·밝은캔버스, 12~7)
+    "BlackLine":  { light:11, mid:9,  dark:7,  deep:7 }, // 미엘 Based Black(탁·11~7)
+    "잇츠에이블":  { light:11, mid:9,  dark:9,  deep:9 }, // 아모스 본체선(LOOK과 동일, 1~13)
+    "트루싱크":    { light:11, mid:11, dark:7,  deep:2 }  // 아모스 고채도 부스터(deep=2 블루블랙급)
   };
   function levelFor(line, depth, base, ratio){
     var d = (depth==="light"||depth==="mid"||depth==="dark"||depth==="deep") ? depth : "mid";
@@ -1700,7 +1835,7 @@ function pill(m){
   return '<span class="pill"><b>'+(m.level!=null?'<u>'+m.level+'</u>':'')+esc(m.code)+'</b><small>'+esc(m.roleLabel||"")+'</small></span>';
 }
 // ★ 리프팅제 (회사별 14레벨 도달 약) — 14레벨일 때만 도달언더톤 줄에 붙음
-var LIFT_AGENT = { sasaki:"사사키 15-00", milbon:"밀본 13cl" };
+var LIFT_AGENT = { sasaki:"사사키 15-00", milbon:"밀본 13cl", biscos:"비스코스 15LT", miel:"미엘 Based Bleach", amos:"아모스 라이트너" };
 // ★ 판단근거 블록: 줄의 등장·순서는 약칸(mapped)이 강제, 텍스트는 눈(reason)이 채움. 빈 슬롯엔 약칸 색감으로 폴백(엇박 차단).
 function reasonBlock(v){
   var rz = v.reason && typeof v.reason==="object" ? v.reason : null;
@@ -1747,7 +1882,7 @@ function renderCard(rec,i){
   var vn=(rec.raw&&rec.raw.virgin_note)?String(rec.raw.virgin_note).trim():"";
   if(vn&&vn.toLowerCase()!=="none"){ h+='<div style="border-top:1px dashed var(--line);margin-top:11px;padding-top:9px;font-size:12px;color:#9a8d77;line-height:1.6"><b style="color:var(--gold);font-weight:700">버진모 참고</b> · '+esc(vn)+'</div>'; }
   h+='<div class="disc">※ 쉴드커넥트는 AI이며 실수할 수 있습니다. 도달 언더톤·각 회사 염모제 특징·명도 선택 근거를 다시 확인하여 레시피를 최종 결정하세요.</div>';
-  if(COMPANY==="milbon") h+='<div class="disc">※ 밀본은 2층 자료(FINE)가 아직 뼈대라 매핑이 비어있을 수 있음.</div>';
+  if(COMPANY==="biscos"||COMPANY==="miel"||COMPANY==="amos") h+='<div class="disc">※ 비스코스·미엘·아모스는 2층 주입 직후(정답지 검수 전) 단계라 일부 칸 매핑이 조정될 수 있음.</div>';
   c.innerHTML=h; $("cards").appendChild(c);
 }
 function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
