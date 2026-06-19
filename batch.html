@@ -1265,6 +1265,9 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
       violet:{ "어딕시":[{code:"아메지스트",name:"Amethyst",ju:"바이올렛",bu:"청기?",tex:"청보라 추정",confirmed:false}], CC:[] },
       beige_brown:{ "어딕시":[{code:"스모키토파즈",name:"Smoky Topaz",ju:"베이지",bu:"?",tex:"차트보다 진하게 박힘",confirmed:false}], CC:[] },
       khaki_ash:{ "어딕시":[{code:"에메랄드",name:"Emerald",ju:"그린",bu:"?",confirmed:false}], CC:[] },
+      warm_beige:{ "올디브":[
+              {code:"헬시헤이즐",name:"Healthy Hazel",ju:"웜 베이지(헤이즐)",bu:"미세 한색?",tex:"투명 웜베이지(기본라인). 시어",confirmed:false},
+              {code:"헬시시나몬",name:"Healthy Cinnamon",ju:"회갈빛 브라운(진한)",bu:"애쉬빛",tex:"★이름함정: 이름은 시나몬(난색)이나 실제 난색 아님. 탈색모서 애쉬/그레이로 빠짐(실버만큼 맑진 않음). 회갈빛 진한 브라운 결",confirmed:false}], CC:[] },
       red_violet:{ "어딕시":[{code:"퍼플가넷",name:"Purple Garnet",ju:"레드바이올렛",bu:"?",confirmed:false}], CC:[] },
       red:{ "어딕시":[{code:"보르도루비",name:"Bordeaux Ruby",ju:"레드(와인)",bu:"보라?",confirmed:false}], CC:[] },
       pink:{ "어딕시":[{code:"루벨라이트",name:"Rubellite",ju:"핑크",bu:"?",confirmed:false}], CC:[] },
@@ -1296,7 +1299,29 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
       brown_matte:     { 오센틱:"CB",    LOOK:"CB" },         // 매트브라운(붉은빛 억제)
       khaki_ash:       { 오센틱:"Mar.G", LOOK:"Mar.G" }       // 카키빛애쉬 (GR은 평소 비활성)
     },
-    milbon: {}
+    milbon: {
+      // 오센틱 슬롯 = 어딕시(vivid·진한) / LOOK 슬롯 = 올디브·기본라인(투명). 한쪽뿐이면 폴백.
+      // ── 애쉬 칸 ── 어딕시=실버(질감) / 기본=N-10(명도운반)
+      ash_silver:      { 오센틱:"실버",     LOOK:"N-10" },      // 맑은 실버 애쉬
+      ash_violet_tint: { 오센틱:"아메지스트", LOOK:"N-10" },     // 보라기 잿빛 → 아메지스트(추정·검수)
+      ash_lavender:    { 오센틱:"아메지스트", LOOK:"아메지스트" }, // 라벤더 고채도 → 아메지스트(추정·검수)
+      // ── 블루 칸 (검증완료) ── 채도로 자동 갈림: 쨍=사파이어 / 중채도=코발트
+      blue_smoky:      { 오센틱:"사파이어",   LOOK:"코발트블루" }, // 근본 블루
+      blue_ash:        { 오센틱:"코발트블루", LOOK:"코발트블루" }, // 잿빛블루 전용약 없음 → 코발트 폴백
+      blue_black:      { 오센틱:"코발트블루", LOOK:"코발트블루" }, // 딥블랙 전용약 없음 → 코발트 폴백(추정·검수)
+      // ── 보라 칸 ── 전용약=아메지스트 하나 → 순/애쉬 공용(추정·검수)
+      violet_pure:     { 오센틱:"아메지스트", LOOK:"아메지스트" },
+      violet_ash:      { 오센틱:"아메지스트", LOOK:"아메지스트" },
+      // ── 웜베이지/브라운 칸 ──
+      warm_beige_sheer:{ 오센틱:"헬시헤이즐",  LOOK:"헬시헤이즐" },  // 투명 웜베이지 = 헤이즐(밀본 유일한 웜)
+      warm_beige_rich: { 오센틱:"헬시헤이즐",  LOOK:"헬시헤이즐" },  // 진한 웜베이지 전용약 없음 → 헤이즐+레벨로
+      beige_brown:     { 오센틱:"헬시시나몬", LOOK:"스모키토파즈" }, // 회갈빛: 진한=시나몬 / 여린=스모키토파즈. depth-proxy(현재 채도로 가름, 추후 depth코드)
+      // brown_canvas(붉은빛 살림 난색캔버스): 밀본 전용약 없음 → 갭(메모리: 밀본은 청/그레이 루트, 난색캔버스 약 부재)
+      brown_matte:     { 오센틱:"코발트블루", LOOK:"코발트블루" }, // 매트브라운: 밀본은 청으로 주황잔류 중화(메모리 근거)
+      // ── 카키/그린 칸 ──
+      khaki_ash:       { 오센틱:"에메랄드",   LOOK:"에메랄드" }    // 카키빛 애쉬그린
+      // (red_violet=퍼플가넷 / pink=루벨라이트 는 FINE 안 거치고 dye 패밀리로 직접 작동 / 보르도루비·오렌지카넬리안 제외)
+    }
   };
   // 코드 → 약 객체 인덱스 (사전 평탄화, CC 제외)
   var CODE_INDEX = (function(){
@@ -1334,7 +1359,9 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
   // ── 사사키 레벨 환산 (2층 자료): 슬롯 depth + 라인 → 레벨 숫자. LLM은 depth(추상)만, 숫자는 여기서. ──
   var LEVEL_TABLE2 = {
     "오센틱": { light:11, mid:11, dark:7,  deep:5 },   // 단 base=lv14면 위에서 11 고정
-    "LOOK":   { light:11, mid:9,  dark:9,  deep:9 }
+    "LOOK":   { light:11, mid:9,  dark:9,  deep:9 },
+    "어딕시": { light:11, mid:11, dark:7,  deep:5 },   // 밀본 비비드 라인 = 오센틱과 명도 동일(사용자 확인)
+    "올디브": { light:11, mid:9,  dark:9,  deep:9 }    // 밀본 기존 라인 = LOOK과 동일
   };
   function levelFor(line, depth, base, ratio){
     var d = (depth==="light"||depth==="mid"||depth==="dark"||depth==="deep") ? depth : "mid";
@@ -1346,8 +1373,8 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
         var Ta = LEVEL_TABLE2[line] || LEVEL_TABLE2["LOOK"];
         return Ta[d];
       }
-      if(line==="오센틱") return 11;
-      if(line==="LOOK") return 9;
+      if(line==="오센틱"||line==="어딕시") return 11;
+      if(line==="LOOK"||line==="올디브") return 9;
     }
     var T = LEVEL_TABLE2[line] || LEVEL_TABLE2["LOOK"];
     return T[d];
