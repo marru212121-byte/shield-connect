@@ -1332,16 +1332,31 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
     name:"아모스", stub:true,
     dye:{
       ash:{ "잇츠에이블":[{code:"METALLIC SILVER",name:"메탈릭실버",ju:"애쉬(실버)",bu:"미세 한색",tex:"은은한 실버그레이. 아모스 유일 순애쉬",confirmed:true}],
-            "트루싱크":[{code:".1",name:"애쉬(.1)",ju:"애쉬(블루빛)",bu:"블루",tex:"푸른 모던 회색. 세부 .18/.17/.13/.11. 저레벨 2.11=블루블랙급",confirmed:true}], CC:[] },
+            "트루싱크":[
+              {code:".1", name:"애쉬(.1)",        ju:"애쉬(블루빛)", bu:"블루",        tex:"푸른 모던 회색 #AAA8B5",confirmed:true},
+              {code:".11",name:"강애쉬(.11)",      ju:"애쉬",        bu:"애쉬",         tex:"애쉬+애쉬 강애쉬. 저레벨 2.11=블루블랙급",confirmed:true},
+              {code:".13",name:"실버애쉬(.13)",    ju:"애쉬",        bu:"골드중화",     tex:"애쉬+골드중화=맑은 순실버(12.13)",confirmed:true},
+              {code:".17",name:"애쉬바이올렛(.17)",ju:"애쉬",        bu:"바이올렛(.7중화)",tex:"애쉬+정통보라. 보라가 중화로만 작용=클린 회색(7.17)",confirmed:true},
+              {code:".18",name:"쿨라벤더애쉬(.18)",ju:"애쉬",        bu:"청보라펄(.8)", tex:"애쉬+청보라펄=발색되는 쿨 라벤더/푸른애쉬(9.18·6.18)",confirmed:true}
+            ], CC:[] },
       blue:{ "잇츠에이블":[{code:"CLASSIC BLUE",name:"클래식블루",ju:"블루",bu:"애쉬",tex:"도시적 차가운 블루·애쉬블루·데님블루",confirmed:true}], CC:[] },
       violet:{ "잇츠에이블":[
             {code:"INDIGO PURPLE",name:"인디고퍼플",ju:"바이올렛(블루빛)",bu:"블루",tex:"블루빛 딥퍼플. ★순보라 전용약 없음=아모스 갭, 근사",confirmed:true},
-            {code:"LAVENDER BEIGE",name:"라벤더베이지",ju:"베이지(보라빛)",bu:"바이올렛",tex:"베이지+보라 한스푼·스모키베이지",confirmed:true}], CC:[] },
+            {code:"LAVENDER BEIGE",name:"라벤더베이지",ju:"베이지(보라빛)",bu:"바이올렛",tex:"베이지+보라 한스푼·스모키베이지",confirmed:true}],
+            "트루싱크":[
+              {code:".7", name:"바이올렛(.7)",     ju:"바이올렛",bu:"—",  tex:"정통 바이올렛(살짝 붉은끼). 순보라 발색",confirmed:true},
+              {code:".71",name:"바이올렛애쉬(.71)",ju:"바이올렛",bu:"애쉬",tex:"보라우세+애쉬=애미시스트/퍼플가넷",confirmed:true}], CC:[] },
       beige:{ "잇츠에이블":[
             {code:"GREIGE",name:"그레이지",ju:"그레이+베이지",bu:"약애쉬",tex:"뉴트럴 그레이지·회갈. 약애쉬베이지(미엘BE 중립<그레이지<밀본시나몬 강애쉬). 밝으면 그레이끼=투명. ⚠️웜베이지/베이지브라운 경계, 검수때 헥스로",confirmed:true},
             {code:"COOL BEIGE",name:"쿨베이지",ju:"베이지(쿨)",bu:"매트",tex:"절제된 매트감 쿨베이지·토프브라운. 적빛억제",confirmed:true},
-            {code:"BASIC BROWN",name:"베이직브라운",ju:"자연갈(웜)",bu:"적빛",tex:"따뜻한 내추럴/모카 브라운. 붉은빛 자연갈 캔버스",confirmed:true}], CC:[] },
-      green:{ "잇츠에이블":[{code:"PINE GREEN",name:"파인그린",ju:"그린",bu:"애쉬",tex:"퇴색 언더톤 잡는 딥 포레스트그린. ⚠️청록 강함→카키엔 소량",confirmed:true}], CC:[] },
+            {code:"BASIC BROWN",name:"베이직브라운",ju:"자연갈(웜)",bu:"적빛",tex:"따뜻한 내추럴/모카 브라운. 붉은빛 자연갈 캔버스",confirmed:true}],
+            "트루싱크":[
+              {code:".0", name:"자연(.0)",     ju:"자연갈",bu:"—",  tex:"자연스럽고 따뜻한 브라운 척추(1.0~13.0)",confirmed:true},
+              {code:".01",name:"애쉬자연(.01)",ju:"자연갈",bu:"애쉬",tex:"자연(브라운)+애쉬=브라운가미 약애쉬 베이지=그레이지. 고명도일수록 브라운 여려져 애쉬 가시화",confirmed:true}], CC:[] },
+      green:{ "잇츠에이블":[{code:"PINE GREEN",name:"파인그린",ju:"그린",bu:"애쉬",tex:"퇴색 언더톤 잡는 딥 포레스트그린. ⚠️청록 강함→카키엔 소량",confirmed:true}],
+              "트루싱크":[
+                {code:".2", name:"매트(.2)",     ju:"매트(올리브)",bu:"—",  tex:"올리브 매트. 적빛억제",confirmed:true},
+                {code:".21",name:"카키애쉬(.21)",ju:"매트(올리브)",bu:"애쉬",tex:"매트+애쉬=카키애쉬",confirmed:true}], CC:[] },
       orange:{ "잇츠에이블":[{code:"MELLOW ORANGE",name:"멜로우오렌지",ju:"오렌지",bu:"—",tex:"소프트/피치 오렌지(중채도)",confirmed:true}],
                "트루싱크":[{code:".4",name:"코퍼(.4)",ju:"오렌지(구리)",bu:"—",tex:"화사 고채도 구리오렌지. 세부 .41/.46/.04",confirmed:true}], CC:[] },
       red:{ "잇츠에이블":[{code:"HOLLY RED",name:"홀리레드",ju:"레드",bu:"브라운빛",tex:"레드브라운·시크레드",confirmed:true}],
@@ -1436,21 +1451,21 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
       khaki_ash:       { 오센틱:"K",  LOOK:"K" }     // 7K+믹스톤애쉬
     },
     amos: {
-      // 길A: 오센틱(트루싱크) 키 없으면 resolveFine이 LOOK(잇츠에이블)로 폴백. 트루싱크=고채도 부스터만.
-      ash_silver:      {            LOOK:"METALLIC SILVER" }, // 맑은 순실버(트루싱크 .1은 푸른끼라 부적합)
-      ash_violet_tint: {            LOOK:"LAVENDER BEIGE" },
-      ash_lavender:    {            LOOK:"LAVENDER BEIGE" },  // ★확정 라벤더베이지 단독 고레벨(인디고믹스 근거없음)
-      blue_ash:        { 오센틱:".1", LOOK:"CLASSIC BLUE" },
-      blue_smoky:      { 오센틱:".1", LOOK:"CLASSIC BLUE" },
-      blue_black:      { 오센틱:".1", LOOK:"CLASSIC BLUE" },  // 트루싱크 .1 저레벨(2.11)
-      violet_pure:     {            LOOK:"INDIGO PURPLE" },  // ⚠️순보라 전용약 없음=갭
-      violet_ash:      { 오센틱:".1", LOOK:"INDIGO PURPLE" },
-      warm_beige_sheer:{            LOOK:"GREIGE" },         // ★확정 그레이지 단독 고레벨(애쉬믹스 근거없음)
-      warm_beige_rich: {            LOOK:"GREIGE" },         // 그레이지 저레벨
-      beige_brown:     {            LOOK:"GREIGE" },         // ⚠️웜베이지와 겹침, 검수때 헥스로
-      brown_canvas:    {            LOOK:"BASIC BROWN" },    // 붉은 자연갈
-      brown_matte:     {            LOOK:"COOL BEIGE" },     // 올리브매트 적빛억제
-      khaki_ash:       {            LOOK:"PINE GREEN" }      // ⚠️청록 강함
+      // 길A′: 트루싱크 넘버=본체(오센틱), 잇츠에이블 완성색=보강(LOOK). 반사빛 .8=청보라펄(발색)·.7=정통보라(중화). 명도는 통일명도로 별도 처리.
+      ash_silver:      { 오센틱:".13", LOOK:"METALLIC SILVER" }, // 애쉬+골드중화 순실버, 완성색 보강
+      ash_violet_tint: { 오센틱:".17", LOOK:"LAVENDER BEIGE" },  // 애쉬+정통보라(중화끼)
+      ash_lavender:    { 오센틱:".18", LOOK:"LAVENDER BEIGE" },  // 애쉬+청보라펄=쿨 라벤더
+      blue_ash:        { 오센틱:".1",  LOOK:"CLASSIC BLUE" },    // 트루싱크는 잿빛블루, 비비드블루는 CLASSIC BLUE 보강
+      blue_smoky:      { 오센틱:".18", LOOK:"CLASSIC BLUE" },    // 연무 청회
+      blue_black:      { 오센틱:".11", LOOK:"CLASSIC BLUE" },    // 강애쉬 저레벨=블루블랙(2.11)
+      violet_pure:     { 오센틱:".7",  LOOK:"INDIGO PURPLE" },   // 순보라 갭해소(.7)
+      violet_ash:      { 오센틱:".71", LOOK:"INDIGO PURPLE" },   // 보라+애쉬=애미시스트
+      warm_beige_sheer:{ 오센틱:".01", LOOK:"GREIGE" },          // 자연+애쉬, 고명도 그레이지
+      warm_beige_rich: { 오센틱:".01", LOOK:"GREIGE" },          // 저명도 그레이지
+      beige_brown:     { 오센틱:".01", LOOK:"COOL BEIGE" },      // 진회갈(warm_beige와 통일명도로 갈림)
+      brown_canvas:    { 오센틱:".0",  LOOK:"BASIC BROWN" },     // 자연 브라운 척추
+      brown_matte:     { 오센틱:".2",  LOOK:"COOL BEIGE" },      // 올리브 매트
+      khaki_ash:       { 오센틱:".21", LOOK:"PINE GREEN" }       // 매트+애쉬=카키애쉬
     }
   };
   // 코드 → 약 객체 인덱스 (사전 평탄화, CC 제외)
