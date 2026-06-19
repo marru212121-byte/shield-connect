@@ -1266,7 +1266,8 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
       blue:{ "어딕시":[{code:"사파이어",name:"Sapphire",ju:"블루(순청)",bu:"없음",tex:"적색·아이보리 모두 찐블루",confirmed:true},
                       {code:"코발트블루",name:"Cobalt Blue",ju:"블루",bu:"청자",tex:"16레벨 노랑 동시중화",confirmed:true}], CC:[] },
       violet:{ "어딕시":[{code:"아메지스트",name:"Amethyst",ju:"바이올렛",bu:"청기?",tex:"청보라 추정",confirmed:false}], CC:[] },
-      beige_brown:{ "어딕시":[{code:"스모키토파즈",name:"Smoky Topaz",ju:"베이지",bu:"?",tex:"차트보다 진하게 박힘",confirmed:false}], CC:[] },
+      beige_brown:{ "어딕시":[{code:"스모키토파즈",name:"Smoky Topaz",ju:"베이지",bu:"?",tex:"차트보다 진하게 박힘",confirmed:false},
+                      {code:"매트브라운조합",name:"매트브라운(스모키토파즈+에메랄드)",ju:"브라운",bu:"그린(녹)",tex:"브라운 본체(스모키토파즈/헬시시나몬)+에메랄드(녹)=매트브라운. ★코발트블루(파랑) 아님. 헬시시나몬 단독은 회갈=애쉬브라운이라 매트 아님",confirmed:false}], CC:[] },
       khaki_ash:{ "어딕시":[{code:"에메랄드",name:"Emerald",ju:"그린",bu:"?",confirmed:false}], CC:[] },
       warm_beige:{ "올디브":[
               {code:"헬시헤이즐",name:"Healthy Hazel",ju:"웜 베이지(헤이즐)",bu:"미세 한색?",tex:"투명 웜베이지(기본라인). 시어",confirmed:false},
@@ -1315,7 +1316,8 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
       violet:{ "BleachLine":[
               {code:"AV",name:"Ash Violet",ju:"바이올렛",bu:"애쉬",tex:"애쉬 바이올렛(차분 회보라)",confirmed:true},
               {code:"V",name:"Violet",ju:"바이올렛(순)",bu:"—",tex:"순 바이올렛. 11V 깊음",confirmed:true}], CC:[{code:"UltraViolet",name:"믹스톤 울트라바이올렛",confirmed:true}] },
-      khaki:{ "BleachLine":[{code:"K",name:"Khaki",ju:"카키(그린)",bu:"애쉬",tex:"카키 애쉬그린. 매트. ★brown_matte도 K(적빛억제), khaki_ash와 레벨/CC로 가름",confirmed:true}], CC:[{code:"Green",name:"믹스톤 그린",confirmed:false}] },
+      khaki:{ "BleachLine":[{code:"K",name:"Khaki",ju:"카키(그린)",bu:"애쉬",tex:"카키 애쉬그린. 매트. 고공정 단독=녹빛 카키애쉬",confirmed:true},
+              {code:"CK",name:"매트브라운(C+K)",ju:"브라운(코퍼)",bu:"카키(녹)",tex:"C(브라운 캔버스)+K(카키그린)=적빛 없는 매트브라운. 고공정서도 브라운 받쳐 카키로 안 빠짐. 카키애쉬(K단독)와 구분",confirmed:true}], CC:[{code:"Green",name:"믹스톤 그린",confirmed:false}] },
       beige:{ "BleachLine":[{code:"BE",name:"Beige",ju:"웜 베이지(중립)",bu:"부염료 약함",tex:"중립 베이지(사사키NB포지션). 미세 난색브라운기. PM/퀀텀급 강웜 절대아님. ★beige_brown=BE+BA쿨화(레시피2952)",confirmed:true}], CC:[] },
       copper:{ "BleachLine":[{code:"C",name:"Copper",ju:"코퍼(오렌지난색)",bu:"—",tex:"★이름함정: 9C단독 붉은빛 자연갈 캔버스(brown_canvas). 9C+애쉬=모카무스",confirmed:true}], CC:[{code:"Orange",name:"믹스톤 오렌지",confirmed:true}] },
       gold:{ "BleachLine":[{code:"G",name:"Gold",ju:"골드(옐로우난색)",bu:"—",tex:"12MG=최고명도 골드",confirmed:true}], CC:[{code:"Yellow",name:"믹스톤 옐로우",confirmed:true}] },
@@ -1352,7 +1354,8 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
             {code:"BASIC BROWN",name:"베이직브라운",ju:"자연갈(웜)",bu:"적빛",tex:"따뜻한 내추럴/모카 브라운. 붉은빛 자연갈 캔버스",confirmed:true}],
             "트루싱크":[
               {code:".0", name:"자연(.0)",     ju:"자연갈",bu:"—",  tex:"자연스럽고 따뜻한 브라운 척추(1.0~13.0)",confirmed:true},
-              {code:".01",name:"애쉬자연(.01)",ju:"자연갈",bu:"애쉬",tex:"자연(브라운)+애쉬=브라운가미 약애쉬 베이지=그레이지. 고명도일수록 브라운 여려져 애쉬 가시화",confirmed:true}], CC:[] },
+              {code:".01",name:"애쉬자연(.01)",ju:"자연갈",bu:"애쉬",tex:"자연(브라운)+애쉬=브라운가미 약애쉬 베이지=그레이지. 고명도일수록 브라운 여려져 애쉬 가시화",confirmed:true},
+              {code:".02",name:"자연매트(.02)",ju:"자연갈",bu:"매트(.2 올리브)",tex:"브라운 척추(.0)+매트(.2)=적빛 없는 매트브라운(녹빠짐). .2단독(순올리브)과 달리 브라운 본체가 받침",confirmed:true}], CC:[] },
       green:{ "잇츠에이블":[{code:"PINE GREEN",name:"파인그린",ju:"그린",bu:"애쉬",tex:"퇴색 언더톤 잡는 딥 포레스트그린. ⚠️청록 강함→카키엔 소량",confirmed:true}],
               "트루싱크":[
                 {code:".2", name:"매트(.2)",     ju:"매트(올리브)",bu:"—",  tex:"올리브 매트. 적빛억제",confirmed:true},
@@ -1411,7 +1414,7 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
       warm_beige_rich: { 오센틱:"헬시헤이즐",  LOOK:"헬시헤이즐" },  // 진한 웜베이지 전용약 없음 → 헤이즐+레벨로
       beige_brown:     { 오센틱:"헬시시나몬", LOOK:"스모키토파즈" }, // 회갈빛: 진한=시나몬 / 여린=스모키토파즈. depth-proxy(현재 채도로 가름, 추후 depth코드)
       // brown_canvas(붉은빛 살림 난색캔버스): 밀본 전용약 없음 → 갭(메모리: 밀본은 청/그레이 루트, 난색캔버스 약 부재)
-      brown_matte:     { 오센틱:"코발트블루", LOOK:"코발트블루" }, // 매트브라운: 밀본은 청으로 주황잔류 중화(메모리 근거)
+      brown_matte:     { 오센틱:"매트브라운조합", LOOK:"매트브라운조합" }, // 매트브라운=브라운본체+에메랄드(녹). ★코발트블루(파랑) 폐기
       // ── 카키/그린 칸 ──
       khaki_ash:       { 오센틱:"에메랄드",   LOOK:"에메랄드" }    // 카키빛 애쉬그린
       // (red_violet=퍼플가넷 / pink=루벨라이트 는 FINE 안 거치고 dye 패밀리로 직접 작동 / 보르도루비·오렌지카넬리안 제외)
@@ -1425,7 +1428,7 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
       blue_smoky:      { 오센틱:"BA",  LOOK:"BA" },   // 근본블루 전용약 없음→BA, 쨍=BLUE CC
       blue_black:      { 오센틱:"BBK", LOOK:"BBK" },  // 저레벨 고정
       violet_pure:     { 오센틱:"VL",  LOOK:"VL" },
-      violet_ash:      { 오센틱:"VL",  LOOK:"VL" },
+      violet_ash:      { 오센틱:"LA",  LOOK:"LA" },   // ★보라애쉬=LA 그 자체(보라베이스+애쉬). 잿빛 더=애쉬CC, 보라 보충=바이올렛CC. VL은 순보라 전용
       warm_beige_sheer:{ 오센틱:"NB",  LOOK:"NB" },   // ★확정 NB+핑크소량 밝게(13/11)
       warm_beige_rich: { 오센틱:"NB",  LOOK:"NB" },   // ★확정 NB+핑크소량 어둡게(9), 시어와 명도만 분기
       beige_brown:     { 오센틱:"CB",  LOOK:"CB" },   // ★확정 쿨브라운=적빛억제 회갈
@@ -1447,7 +1450,7 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
       warm_beige_rich: { 오센틱:"BE", LOOK:"BE" },   // 같은 BE 저레벨(9), 명도만 분기
       beige_brown:     { 오센틱:"BE", LOOK:"BE" },   // ★확정 BE+BA쿨화(레시피2952, AS아님)
       brown_canvas:    { 오센틱:"C",  LOOK:"C" },    // ★이름함정 코퍼=붉은 자연갈
-      brown_matte:     { 오센틱:"K",  LOOK:"K" },    // 카키로 적빛억제
+      brown_matte:     { 오센틱:"CK", LOOK:"K" },    // 탈색모=C+K(브라운 받쳐 매트브라운) / 흑모=K단독(브라운 이미 있음)
       khaki_ash:       { 오센틱:"K",  LOOK:"K" }     // 7K+믹스톤애쉬
     },
     amos: {
@@ -1464,7 +1467,7 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
       warm_beige_rich: { 오센틱:".01", LOOK:"GREIGE" },          // 저명도 그레이지
       beige_brown:     { 오센틱:".01", LOOK:"COOL BEIGE" },      // 진회갈(warm_beige와 통일명도로 갈림)
       brown_canvas:    { 오센틱:".0",  LOOK:"BASIC BROWN" },     // 자연 브라운 척추
-      brown_matte:     { 오센틱:".2",  LOOK:"COOL BEIGE" },      // 올리브 매트
+      brown_matte:     { 오센틱:".02", LOOK:"COOL BEIGE" },      // 브라운척추+매트=매트브라운(.2 순올리브 아님)
       khaki_ash:       { 오센틱:".21", LOOK:"PINE GREEN" }       // 매트+애쉬=카키애쉬
     }
   };
