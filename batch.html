@@ -1618,7 +1618,7 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
   };
   function recipeSig(mapped){
     return mapped.filter(function(m){return !m.missing;})
-      .map(function(m){return (m.level||"")+(m.code||"")+(m.role||"");}).join("+");
+      .map(function(m){return (m.level||"")+(m.code||"")+(m.role||"")+(m.ratio||m.band||"");}).join("+");
   }
   function cloneAbs(o){ return JSON.parse(JSON.stringify(o)); }
   /* ── LLM이 사고해서 뱉은 레시피 경로(최대 2개)를 그대로 회사 넘버로 번역만 한다 (코드가 변형 안 지어냄) ── */
@@ -1630,11 +1630,8 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
       var absP = { base:abstract.base, chroma:abstract.chroma, weight:abstract.weight, recipe:p.recipe||[] };
       var mapped = mapRecipe(absP, brandKey);
       if(!mapped.some(function(m){return !m.missing;})) return;   // 전부 비면 버림
-      // ★ 대안(2번째 이후) 경로가 앞 경로에서 쓴 염모제(메인·보조)를 재사용하면 버림 — 진짜 다른 길만
-      if(i>0){
-        var reuse = mapped.some(function(m){ return (m.role==="main"||m.role==="sub") && m.code && usedCodes[m.code]; });
-        if(reuse) return;
-      }
+      // ★ 청소: 완전히 동일한 레시피(약+명도+역할+비율 전부 같음)만 제거. 컨트롤러·부염모제·
+      //   명도(메인반사/부반사)·비율이 다르면 정당한 다른 길 → 살린다(나열 보존, 골라쓸 폭 확보).
       var sig = recipeSig(mapped);
       if(seen[sig]) return;
       seen[sig] = true;
