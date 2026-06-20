@@ -61,6 +61,8 @@ td{padding:3px 6px;border-top:1px solid #2f2a21;color:#B9AC95} td:first-child{co
     <button class="tg" data-co="biscos">비스코스</button>
     <button class="tg" data-co="miel">미엘</button>
     <button class="tg" data-co="amos">아모스</button>
+    <button class="tg" data-co="demi">데미</button>
+    <button class="tg" data-co="hoyu">호유</button>
   </div>
 </div>
 <div id="progwrap"><div id="progbar"></div></div>
@@ -1376,10 +1378,90 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
     satColorsLOOK:[]
   };
 
-  var BRANDS = { sasaki:SASAKI, milbon:MILBON, biscos:BISCOS, miel:MIEL, amos:AMOS };
+  var DEMI = {
+    name:"데미",
+    dye:{
+      /* 14결은 FINE이 코드 직지정 → 아래 컨테이너는 코드 평탄화(CODE_INDEX)·넓은난색키 폴백용. 라인명이 레벨(쩅11/본체9) 결정. */
+      ash:{ "어솔트C":[{code:"AC-A",name:"애쉬(어솔트C A)",ju:"애쉬(무채)",bu:"—",tex:"어솔트C 순 애쉬. 노란기·붉은기 다 누른 무채 잿빛 본체",confirmed:true},
+                       {code:"AC-BV",name:"블루바이올렛(어솔트C BV)",ju:"애쉬(청보라)",bu:"보라",tex:"청보라 애쉬=핑크끼 없는 정통 라벤더",confirmed:true},
+                       {code:"AC-Gray",name:"그레이(어솔트C 컨트롤)",ju:"애쉬(무채)",bu:"—",tex:"무채 잿빛 보정(반사빛 컨트롤)",confirmed:true}],
+            "퓨저니스트":[{code:"Fu-Plat",name:"플라티나(퓨저니스트)",ju:"애쉬(실버)",bu:"청",tex:"실버~청보라 실버 #62638D. 쩅 잿빛 실버",confirmed:true}], CC:[] },
+      violet:{ "어솔트C비비드":[{code:"AC-Vi",name:"바이올렛(어솔트C 비비드)",ju:"바이올렛(고채도)",bu:"—",tex:"어솔트C 비비드 바이올렛. 쨍 보라 발색",confirmed:true}],
+               "어솔트C":[{code:"AC-RV",name:"레드바이올렛(어솔트C RV)",ju:"레드바이올렛(적보라)",bu:"—",tex:"붉은기 도는 보라=애미시스트",confirmed:true},
+                          {code:"AC-PV",name:"핑크바이올렛(어솔트C PV)",ju:"핑크바이올렛",bu:"—",tex:"핑크끼 머금은 보라",confirmed:true}],
+               "퓨저니스트":[{code:"Fu-Pu",name:"퍼플(퓨저니스트)",ju:"바이올렛(순청보라)",bu:"청",tex:"순보라 직접염료 #693293. 마젠타 아닌 순청보라 → 순보라 갭 해소",confirmed:true}], CC:[] },
+      blue:{ "어솔트C":[{code:"AC-BA",name:"블루애쉬(어솔트C BA)",ju:"블루(애쉬)",bu:"청",tex:"청끼 머금은 잿빛 블루 본체",confirmed:true},
+                        {code:"AC-BG",name:"블루그린(어솔트C BG)",ju:"블루(청록스모키)",bu:"그린",tex:"연무 청록 스모키",confirmed:true},
+                        {code:"AC-BP",name:"블루펄(어솔트C 컨트롤)",ju:"블루(펄)",bu:"—",tex:"난색중화 블루 반사빛 보정",confirmed:true}],
+             "어솔트C비비드":[{code:"AC-Blue",name:"블루(어솔트C 비비드)",ju:"블루(순청)",bu:"—",tex:"쨍 순청 발색",confirmed:true},
+                             {code:"AC-BlBk",name:"블루블랙(어솔트C 비비드 2레벨)",ju:"블루블랙",bu:"—",tex:"청흑 섀도(2레벨)",confirmed:true}],
+             "퓨저니스트":[{code:"Fu-Navy",name:"네이비(퓨저니스트)",ju:"블루(딥네이비)",bu:"—",tex:"딥 청 직접염료 #045CA8=블루블랙",confirmed:true},
+                          {code:"Fu-SB",name:"섀도블루(퓨저니스트)",ju:"블루(청보라)",bu:"보라",tex:"청보라 직접염료 #5A66AF. 블루애쉬·스모키 쩅보강",confirmed:true}], CC:[] },
+      beige:{ "어솔트C":[{code:"AC-BB",name:"베이지브라운(어솔트C BB)",ju:"베이지브라운",bu:"—",tex:"기본 밀크/베이지 브라운",confirmed:true},
+                         {code:"AC-GD",name:"골드(어솔트C GD)",ju:"골드(난색)",bu:"—",tex:"윤기 난색 골드베이지",confirmed:true},
+                         {code:"AC-PB",name:"플라티나브라운(어솔트C PB)",ju:"브라운(애쉬끼)",bu:"애쉬",tex:"노란기 억제 애쉬 브라운",confirmed:true}],
+              "토이록션":[{code:"Toi-FIB",name:"플로트베이지(토이록션)",ju:"웜 베이지(투명)",bu:"—",tex:"투명 시어 베이지 #BDAA85(1:5 희석)",confirmed:true},
+                          {code:"Toi-CaG",name:"카페그레쥬(토이록션)",ju:"베이지",bu:"애쉬",tex:"회갈빛 그레쥬 #C3B6AA(토너 단골)",confirmed:true}], CC:[] },
+      brown:{ "어솔트C":[{code:"AC-WB",name:"웜브라운(어솔트C WB)",ju:"브라운(적빛)",bu:"—",tex:"동양인 최적 적색계 자연갈 캔버스",confirmed:true},
+                         {code:"AC-CB",name:"쿨브라운(어솔트C CB)",ju:"브라운(매트)",bu:"그린",tex:"붉은기 억제 카키 매트브라운 #B6A86E. ★데미 매트브라운 단품",confirmed:true}], CC:[] },
+      green:{ "어솔트C":[{code:"AC-YG",name:"엘로우그린(어솔트C YG)",ju:"카키(매트)",bu:"—",tex:"매트끼 카키",confirmed:true}],
+              "어솔트C비비드":[{code:"AC-Green",name:"그린(어솔트C 비비드)",ju:"그린(매트)",bu:"—",tex:"적빛중화 쨍 그린",confirmed:true}],
+              "퓨저니스트":[{code:"Fu-Mat",name:"매트(퓨저니스트)",ju:"그린(매트)",bu:"—",tex:"매트 #00AA69→카키 #3C5139. 적빛중화·카키애쉬 쩅",confirmed:true}], CC:[] },
+      red:{ "어솔트C비비드":[{code:"AC-Red",name:"레드(어솔트C 비비드)",ju:"레드",bu:"—",tex:"보색·강조 쨍 레드",confirmed:true}],
+            "퓨저니스트":[{code:"Fu-Red",name:"레드(퓨저니스트)",ju:"레드",bu:"—",tex:"레드 직접염료 #DE1351",confirmed:true},
+                         {code:"Fu-Rose",name:"로즈(퓨저니스트)",ju:"로즈(마젠타)",bu:"—",tex:"로즈 직접염료 #C22590",confirmed:true}], CC:[] },
+      pink:{ "어솔트C":[{code:"AC-PP",name:"핑크펄(어솔트C 컨트롤)",ju:"핑크(펄)",bu:"—",tex:"핑크 반사빛 보정",confirmed:true}],
+             "퓨저니스트":[{code:"Fu-Pink",name:"핑크(퓨저니스트)",ju:"핑크",bu:"—",tex:"핑크 직접염료 #E93193",confirmed:true}], CC:[] },
+      orange:{ "어솔트C":[{code:"AC-O",name:"오렌지(어솔트C O)",ju:"오렌지",bu:"—",tex:"어솔트C 오렌지",confirmed:true},
+                          {code:"AC-RO",name:"레드오렌지(어솔트C RO)",ju:"레드오렌지",bu:"—",tex:"적주황",confirmed:true}],
+               "퓨저니스트":[{code:"Fu-Or",name:"오렌지(퓨저니스트)",ju:"오렌지(카퍼)",bu:"—",tex:"오렌지 직접염료 #F0543F",confirmed:true}], CC:[] },
+      yellow:{ "어솔트C비비드":[{code:"AC-Yellow",name:"옐로우(어솔트C 비비드)",ju:"옐로우",bu:"—",tex:"어솔트C 비비드 옐로우",confirmed:true}],
+               "퓨저니스트":[{code:"Fu-Ye",name:"옐로우(퓨저니스트)",ju:"옐로우",bu:"—",tex:"옐로우 직접염료 #F3BF28(고명도)",confirmed:true}], CC:[] },
+      /* ── 넓은 난색키 폴백 전용(코드 재사용 → CODE_LINE은 위 첫 등장 라인 따름) ── */
+      red_violet:{ "어솔트C":[{code:"AC-RV",name:"레드바이올렛(어솔트C RV)",ju:"레드바이올렛(적보라)",bu:"—",tex:"붉은기 도는 보라",confirmed:true}],
+                   "퓨저니스트":[{code:"Fu-Rose",name:"로즈(퓨저니스트)",ju:"로즈(마젠타)",bu:"—",tex:"로즈 직접염료 #C22590",confirmed:true}], CC:[] }
+    },
+    clear:{code:"CL",name:"클리어",note:"과도한 색소침투 막고 파스텔. 1:N 배수로 농도/시어(비비드·클리어 1:1)"},
+    satColorsLOOK:[]
+  };
+
+  /* ── 호유(프로스텝 루미셔스 본체 + 프로마스터 보라 V·SV 액센트) — 갤러리 실레시피 32장 역산 백킹.
+        누디=본체(LOOK) / 글리터=고채도(오센틱) / 컨트롤(IB·FS·ER)은 보정약(고채도선에 합류). 순보라 부재분만 프로마스터 V·SV 폴백 ── */
+  var HOYU = {
+    name:"호유",
+    dye:{
+      /* 14결은 FINE이 코드 직지정 → 아래 컨테이너는 코드 평탄화(CODE_INDEX)용. 넓은 난색키 폴백은 맨 아래 별도 family */
+      ash:{ "누디":[{code:"I GY",name:"이노센트 그레이",ju:"애쉬(무채)",bu:"보라(약)",tex:"회보라끼 머금은 무채 그레이. 잿빛 본체 (카드01 IGY10=9Lv 깨끗한 그레이)",confirmed:true},
+                    {code:"A MV",name:"에어리 모브",ju:"애쉬(보라)",bu:"청",tex:"청끼 머금은 소프트 회보라 모브. 라벤더애쉬 (카드03 AMV10=13Lv 애쉬모브)",confirmed:true}],
+            "글리터":[{code:"G SV",name:"글로우 실버",ju:"애쉬(실버)",bu:"청",tex:"청끼 빛나는 고채도 실버 (카드14 GSV10=11Lv 마렝고그레이)",confirmed:true}], CC:[] },
+      violet:{ "누디":[{code:"D PL",name:"더스티 플럼",ju:"레드바이올렛",bu:"—",tex:"탁한 와인/플럼. 차분한 자주 (카드25 DPL10)",confirmed:true}],
+               "글리터":[{code:"R CS",name:"리치 카시스",ju:"바이올렛(자색)",bu:"레드",tex:"짙은 마젠타와인 카시스 (카드15 RCS10=13Lv 다크비올라)",confirmed:true},
+                        {code:"V",name:"바이올렛(프로마스터)",ju:"바이올렛(순)",bu:"—",tex:"프로마스터 순보라. ★프로스텝 순보라 부재분 액센트 폴백(violet_pure)",confirmed:true},
+                        {code:"SV",name:"사파이어 바이올렛(프로마스터)",ju:"바이올렛(청보라)",bu:"청",tex:"프로마스터 청색 띠는 고채도 보라. 라벤더애쉬 보강 폴백",confirmed:true}], CC:[] },
+      blue:{ "누디":[{code:"S ID",name:"시어 인디고",ju:"블루(애쉬)",bu:"—",tex:"청회 인디고. 블루애쉬 본체 (카드28 SID 8:6+10=12Lv)",confirmed:true},
+                     {code:"F AQ",name:"포기 아쿠아",ju:"블루(스모키)",bu:"그린",tex:"잿빛 베일 두른 회청록 안개 아쿠아 (카드27 FAQ10)",confirmed:true}],
+             "글리터":[{code:"B BL",name:"브릴리언트 블루",ju:"블루(순청)",bu:"—",tex:"맑고 선명한 순청 블루. 탁함없음",confirmed:true},
+                      {code:"IB",name:"인피니티 블루(컨트롤)",ju:"블루(딥)",bu:"—",tex:"선명·깊은 진한 블루. 순발색 컨트롤(블루블랙용)",confirmed:true}], CC:[] },
+      beige:{ "누디":[{code:"E BE",name:"에크루 베이지",ju:"베이지브라운(쿨)",bu:"—",tex:"붉은기 억제한 회갈빛 쿨 베이지브라운 (카드31 EBE10 / 카드18 밀크티)",confirmed:true}], CC:[] },
+      brown:{ "누디":[{code:"M CA",name:"멜로우 카멜",ju:"브라운(난색)",bu:"—",tex:"따뜻한 카퍼브라운. 난색 캔버스 (카드30 MCA10 / 카드19 애프리콧)",confirmed:true},
+                      {code:"FS",name:"포그 세피아(컨트롤)",ju:"브라운블랙(섀도)",bu:"—",tex:"안개 낀 딥 브라운블랙. 톤다운/섀도 보정",confirmed:true}], CC:[] },
+      green:{ "누디":[{code:"C OL",name:"시폰 올리브",ju:"카키(올리브)",bu:"—",tex:"올리브그린 매트. 적빛없는 카키 (카드16 COL8=11Lv 다크엄버)",confirmed:true}], CC:[] },
+      red:{ "글리터":[{code:"ER",name:"익스트림 레드(컨트롤)",ju:"레드(순)",bu:"—",tex:"탁함없는 강렬 순레드. 순발색 (카드04 DPL+ER 9:1)",confirmed:true}], CC:[] },
+      /* ── 넓은 난색키 폴백 전용(코드는 위 컨테이너 재사용 → CODE_LINE은 위 첫 등장 라인 따름) ── */
+      red_violet:{ "누디":[{code:"D PL",name:"더스티 플럼",ju:"레드바이올렛",bu:"—",tex:"탁한 와인/플럼",confirmed:true}], CC:[] },
+      pink:{ "글리터":[{code:"R CS",name:"리치 카시스",ju:"핑크(마젠타)",bu:"레드",tex:"짙은 마젠타와인. 프로스텝 핑크 근사",confirmed:true}], CC:[] },
+      orange:{ "누디":[{code:"M CA",name:"멜로우 카멜",ju:"오렌지(카퍼)",bu:"—",tex:"카퍼브라운=쥬시 애프리콧 오렌지 (카드19)",confirmed:true}], CC:[] },
+      yellow:{ "누디":[{code:"M CA",name:"멜로우 카멜",ju:"골드(난색)",bu:"—",tex:"프로스텝 단품 옐로우 부재 → 난색 카멜로 대응",confirmed:false}], CC:[] }
+    },
+    clear:{code:"CL",name:"클리어",note:"과도한 색소침투 막고 투명·파스텔. 염색효과 없는 희석"},
+    satColorsLOOK:[]
+  };
+
+  var BRANDS = { sasaki:SASAKI, milbon:MILBON, biscos:BISCOS, miel:MIEL, amos:AMOS, demi:DEMI, hoyu:HOYU };
   var LINE_OF = {
     sasaki:{vivid:"오센틱",other:"LOOK"}, milbon:{vivid:"어딕시",other:"올디브"},
-    biscos:{vivid:"INNOCENT",other:"INNOCENT"}, miel:{vivid:"BleachLine",other:"BlackLine"}, amos:{vivid:"트루싱크",other:"잇츠에이블"}
+    biscos:{vivid:"INNOCENT",other:"INNOCENT"}, miel:{vivid:"BleachLine",other:"BlackLine"}, amos:{vivid:"트루싱크",other:"잇츠에이블"},
+    demi:{vivid:"퓨저니스트",other:"어솔트C"}, hoyu:{vivid:"글리터",other:"누디"}
   };
 
   /* ── 결(텍스처) 키 → 회사 약 코드 (라인별). LLM이 슬롯에 이 결 키를 직접 적으면 그 약으로 번역 ──
@@ -1474,6 +1556,40 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
       brown_canvas:    { 오센틱:".0",  LOOK:"BASIC BROWN" },     // 자연 브라운 척추
       brown_matte:     { 오센틱:".02", LOOK:"COOL BEIGE" },      // 브라운척추+매트=매트브라운(.2 순올리브 아님)
       khaki_ash:       { 오센틱:".21", LOOK:"PINE GREEN" }       // 매트+애쉬=카키애쉬
+    },
+    demi: {
+      // 오센틱=쩅(퓨저니스트·어솔트C 비비드) / LOOK=본체(어솔트C 내츄럴·클리어·토이록션). 어솔트C 153색+퓨저니스트 직접염료 근거.
+      ash_silver:      { 오센틱:"Fu-Plat",  LOOK:"AC-A" },      // 쩅=플라티나 실버 / 본체=순애쉬
+      ash_violet_tint: { 오센틱:"Fu-Plat",  LOOK:"AC-BV" },     // 청보라애쉬에 실버끼
+      ash_lavender:    { 오센틱:"Fu-Pu",    LOOK:"AC-BV" },     // 본체=청보라애쉬(정통 라벤더) / 쩅=순보라 미량
+      blue_ash:        { 오센틱:"Fu-SB",    LOOK:"AC-BA" },     // 본체=블루애쉬 / 쩅=섀도블루
+      blue_smoky:      { 오센틱:"Fu-SB",    LOOK:"AC-BG" },     // 본체=블루그린(청록연무) / 쩅=섀도블루
+      blue_black:      { 오센틱:"Fu-Navy",  LOOK:"AC-BlBk" },   // 쩅=딥네이비 / 본체=어솔트C 블루블랙(2레벨)
+      violet_pure:     { 오센틱:"Fu-Pu",    LOOK:"AC-Vi" },     // 쩅=퓨저니스트 순청보라(#693293) / 본체=비비드 바이올렛
+      violet_ash:      { 오센틱:"Fu-Pu",    LOOK:"AC-RV" },     // 본체=적보라(애미시스트) / 쩅=순보라
+      warm_beige_sheer:{ 오센틱:"Toi-FIB",  LOOK:"Toi-FIB" },   // 투명 플로트베이지(1:5 희석)
+      warm_beige_rich: { 오센틱:"AC-WB",    LOOK:"AC-WB" },     // 진한 웜브라운(명도만 분기)
+      beige_brown:     { 오센틱:"AC-BB",    LOOK:"AC-BB" },     // 베이지브라운(밀크)
+      brown_canvas:    { 오센틱:"AC-WB",    LOOK:"AC-WB" },     // 붉은빛 자연갈 웜브라운 캔버스
+      brown_matte:     { 오센틱:"AC-CB",    LOOK:"AC-CB" },     // ★데미 진짜 매트브라운약(쿨브라운 #B6A86E)
+      khaki_ash:       { 오센틱:"Fu-Mat",   LOOK:"AC-YG" }      // 쩅=매트그린 / 본체=엘로우그린(매트 카키)
+    },
+    hoyu: {
+      // 오센틱=글리터/컨트롤(고채도) / LOOK=누디(본체). ★갤러리 실레시피 32장 역산 백킹. 순보라 부재분만 프로마스터 V·SV.
+      ash_silver:      { 오센틱:"G SV",        LOOK:"I GY" },        // 청끼 실버(글리터) / 회보라 무채 그레이(누디)
+      ash_violet_tint: { 오센틱:"A MV",        LOOK:"A MV" },        // 회보라 모브(약한 보라끼)
+      ash_lavender:    { 오센틱:"SV",          LOOK:"A MV" },        // 청보라(프로마스터 SV)+회보라(A MV)=라벤더애쉬
+      blue_ash:        { 오센틱:"B BL",        LOOK:"S ID" },        // 순청 블루(쨍) / 청회 인디고 본체
+      blue_smoky:      { 오센틱:"F AQ",        LOOK:"F AQ" },        // 회청록 연무 아쿠아
+      blue_black:      { 오센틱:"IB",          LOOK:"S ID" },        // 딥블루(인피니티) / 인디고 저명도 청흑
+      violet_pure:     { 오센틱:"V",           LOOK:"D PL" },        // 순보라(프로마스터 V) / 더스티플럼 본체톤
+      violet_ash:      { 오센틱:"R CS",        LOOK:"A MV" },        // 자색 카시스+회보라 애쉬
+      warm_beige_sheer:{ 오센틱:"M CA",        LOOK:"E BE" },        // 난색 카멜 / 투명 에크루베이지
+      warm_beige_rich: { 오센틱:"M CA",        LOOK:"M CA" },        // 진한 난색 카멜(밀크티)
+      beige_brown:     { 오센틱:"E BE",        LOOK:"E BE" },        // 회갈빛 쿨 베이지브라운
+      brown_canvas:    { 오센틱:"M CA",        LOOK:"M CA" },        // 난색 카퍼 캔버스
+      brown_matte:     { 오센틱:"C OL",        LOOK:"E BE" },        // 올리브 매트 / 회갈 본체에 올리브 중화
+      khaki_ash:       { 오센틱:"C OL",        LOOK:"C OL" }         // 순 올리브 카키
     }
   };
   // 코드 → 약 객체 인덱스 (사전 평탄화, CC 제외)
@@ -1855,7 +1971,7 @@ function pill(m){
   return '<span class="pill"><b>'+(m.level!=null?'<u>'+m.level+'</u>':'')+esc(m.code)+'</b><small>'+esc(m.roleLabel||"")+'</small></span>';
 }
 // ★ 리프팅제 (회사별 14레벨 도달 약) — 14레벨일 때만 도달언더톤 줄에 붙음
-var LIFT_AGENT = { sasaki:"사사키 15-00", milbon:"밀본 13cl", biscos:"비스코스 15LT", miel:"미엘 Based Bleach", amos:"아모스 라이트너" };
+var LIFT_AGENT = { sasaki:"사사키 15-00", milbon:"밀본 13cl", biscos:"비스코스 15LT", miel:"미엘 Based Bleach", amos:"아모스 라이트너", demi:"데미 LT/SH(14Lv)", hoyu:"호유 LT/SH(14Lv)" };
 // ★ 판단근거 블록: 줄의 등장·순서는 약칸(mapped)이 강제, 텍스트는 눈(reason)이 채움. 빈 슬롯엔 약칸 색감으로 폴백(엇박 차단).
 function reasonBlock(v){
   var rz = v.reason && typeof v.reason==="object" ? v.reason : null;
@@ -1902,7 +2018,8 @@ function renderCard(rec,i){
   var vn=(rec.raw&&rec.raw.virgin_note)?String(rec.raw.virgin_note).trim():"";
   if(vn&&vn.toLowerCase()!=="none"){ h+='<div style="border-top:1px dashed var(--line);margin-top:11px;padding-top:9px;font-size:12px;color:#9a8d77;line-height:1.6"><b style="color:var(--gold);font-weight:700">버진모 참고</b> · '+esc(vn)+'</div>'; }
   h+='<div class="disc">※ 쉴드커넥트는 AI이며 실수할 수 있습니다. 도달 언더톤·각 회사 염모제 특징·명도 선택 근거를 다시 확인하여 레시피를 최종 결정하세요.</div>';
-  if(COMPANY==="biscos"||COMPANY==="miel"||COMPANY==="amos") h+='<div class="disc">※ 비스코스·미엘·아모스는 2층 주입 직후(정답지 검수 전) 단계라 일부 칸 매핑이 조정될 수 있음.</div>';
+  if(COMPANY==="biscos"||COMPANY==="miel"||COMPANY==="amos"||COMPANY==="demi") h+='<div class="disc">※ 비스코스·미엘·아모스·데미는 2층 주입 직후(정답지 검수 전) 단계라 일부 칸 매핑이 조정될 수 있음.</div>';
+  if(COMPANY==="hoyu") h+='<div class="disc">※ 호유는 공식 색번호 레시피가 앱게이트로 미확보 상태라 색상환 원리로만 추론 주입됨(미검증). 칸 매핑이 크게 조정될 수 있음.</div>';
   c.innerHTML=h; $("cards").appendChild(c);
 }
 function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
