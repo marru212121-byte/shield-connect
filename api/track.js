@@ -15,7 +15,7 @@ import { getSupabase } from '../lib/supabase.js';
 // 허용된 메뉴 키만 기록 (오타·장난 데이터 방지). 메뉴 추가하면 여기에 한 줄 추가.
 const ALLOWED_FEATURES = new Set([
   // 별도 페이지 (.html)
-  'hairo', 'analyzer', 'cut-analyzer', 'color_journey', 'dye_level_calc', 'melanin_level',
+  'hairo', 'analyzer', 'cut-analyzer', 'color_journey', 'dye_level_calc', 'melanin_level', 'helix',
   // 앱 안 메뉴 (navigate)
   'calculator', 'perm-calc', 'ingredient', 'theory', 'theory-hair', 'reels',
   'sales', 'stats', 'settings', 'memo', 'feedback', 'timer',
