@@ -45,22 +45,22 @@ html,body{height:100%;background:var(--ink);overflow:hidden;
 .crumb{font-size:12px;letter-spacing:.04em;color:#aab3a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .crumb b{color:var(--lime);font-weight:700}
 .body{position:absolute;inset:0;top:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
-  padding-top:74px;padding-bottom:46px}
+  padding-top:calc(env(safe-area-inset-top,8px) + 60px);padding-bottom:46px}
 .body::-webkit-scrollbar{display:none}
 
 /* ===== HELIX OS 코어 루트 ===== */
-.helix{position:absolute;inset:0;overflow:hidden}
-.hx-head{position:absolute;top:calc(env(safe-area-inset-top,8px) + 26px);left:0;right:0;text-align:center;z-index:4}
-.hx-kicker{font-size:10px;letter-spacing:.52em;color:var(--lime2);margin-bottom:8px}
-.hx-os{font-size:34px;font-weight:800;letter-spacing:.14em;color:#fff;
+.helix{position:absolute;top:env(safe-area-inset-top,0);right:0;bottom:env(safe-area-inset-bottom,0);left:0;overflow:hidden}
+.hx-head{position:absolute;top:18px;left:0;right:0;text-align:center;z-index:4}
+.hx-kicker{font-size:10px;letter-spacing:.52em;color:var(--lime2);margin-bottom:5px}
+.hx-os{font-size:32px;font-weight:800;letter-spacing:.14em;color:#fff;
   text-shadow:0 0 26px rgba(199,240,80,.4)}
 .hx-os span{color:var(--lime)}
-.hx-sub{font-size:10.5px;letter-spacing:.26em;color:var(--dim);margin-top:7px}
+.hx-sub{font-size:10.5px;letter-spacing:.26em;color:var(--dim);margin-top:5px}
 .hx-lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
 .hx-line{stroke:rgba(199,240,80,.22);stroke-width:.35;stroke-dasharray:1.1 1.5;fill:none}
 .hx-spark{fill:var(--lime)}
 /* 코어 */
-.hx-core{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:184px;height:184px;z-index:2;
+.hx-core{position:absolute;left:50%;top:53%;transform:translate(-50%,-50%);width:184px;height:184px;z-index:2;
   display:grid;place-items:center}
 .hx-core svg{width:184px;height:184px;overflow:visible}
 .hx-core .clabel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
@@ -119,7 +119,7 @@ html,body{height:100%;background:var(--ink);overflow:hidden;
 .screen.diving .bar,.screen.diving .cj-top,.screen.diving .cj-pig,.screen.diving .cj-spine,
 .screen.diving .cj-hint,.screen.diving .cj-hud{opacity:0}
 .screen .bar,.screen .cj-top,.screen .cj-pig,.screen .cj-spine,.screen .cj-hint,.screen .cj-hud{transition:opacity .45s ease .05s}
-.hx-here{position:absolute;bottom:calc(env(safe-area-inset-bottom,0) + 26px);left:0;right:0;text-align:center;
+.hx-here{position:absolute;bottom:16px;left:0;right:0;text-align:center;
   font-size:10px;letter-spacing:.24em;color:#5c6356;z-index:4}
 
 /* ===== HUB (목차: 그룹 + 모듈) ===== */
@@ -253,7 +253,7 @@ html,body{height:100%;background:var(--ink);overflow:hidden;
 #ov .cls{margin-top:22px;text-align:center;font-size:12px;letter-spacing:.2em;color:var(--lime2);opacity:.75;cursor:pointer}
 
 /* ===== 레시피 추론 (멜라닌 저니) ===== */
-.ij-wrap{position:absolute;inset:0;top:60px;bottom:0}
+.ij-wrap{position:absolute;inset:0;top:calc(env(safe-area-inset-top,8px) + 60px);bottom:0}
 .ij-screen{position:absolute;inset:0;opacity:0;pointer-events:none;transform:scale(.96);
   transition:opacity .5s ease,transform .5s cubic-bezier(.2,.8,.3,1);overflow-y:auto;
   padding:6px 16px 96px;-webkit-overflow-scrolling:touch}
@@ -318,7 +318,7 @@ html,body{height:100%;background:var(--ink);overflow:hidden;
 .lead-next .chev{font-size:13px;color:var(--lime);animation:chevB 1.8s ease-in-out infinite;text-shadow:0 0 8px var(--lime)}
 @keyframes chevB{0%,100%{transform:translateY(0);opacity:.6}50%{transform:translateY(4px);opacity:1}}
 /* 컬러져니 단일 현황판 (HELIX 보드) */
-.cj-board{position:absolute;inset:0;top:46px;overflow:hidden;background:radial-gradient(125% 85% at 50% 4%,#0c1108 0%,#060806 62%);perspective:1300px}
+.cj-board{position:absolute;inset:0;top:calc(env(safe-area-inset-top,8px) + 60px);overflow:hidden;background:radial-gradient(125% 85% at 50% 4%,#0c1108 0%,#060806 62%);perspective:1300px}
 .cj-bg{position:absolute;inset:0;z-index:1;touch-action:none;cursor:ns-resize;transform-style:preserve-3d}
 .cj-bgimg{position:absolute;inset:0;background-size:cover;background-position:center top;opacity:0;transition:opacity .55s ease;filter:saturate(1.06) contrast(1.03) brightness(1.08)}
 .cj-bgimg.on{opacity:1}
@@ -370,7 +370,7 @@ html,body{height:100%;background:var(--ink);overflow:hidden;
 .cj-hud.lay .ch-routes{animation:holoRow .5s .21s both}
 @keyframes holoRow{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 /* ===== 컬러 베이스캠프 — 머리카락 단면 홀로 작업대 (마인드맵) ===== */
-.cb-board{position:absolute;inset:0;top:46px;overflow:hidden;background:radial-gradient(125% 92% at 50% 2%,#0c1108 0%,#060806 64%);perspective:1300px}
+.cb-board{position:absolute;inset:0;top:calc(env(safe-area-inset-top,8px) + 60px);overflow:hidden;background:radial-gradient(125% 92% at 50% 2%,#0c1108 0%,#060806 64%);perspective:1300px}
 .cb-veil{position:absolute;inset:0;z-index:2;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(199,240,80,.03) 0,rgba(199,240,80,.03) 1px,transparent 1px,transparent 3px)}
 .cb-scan{position:absolute;left:0;right:0;height:70px;z-index:3;pointer-events:none;background:linear-gradient(rgba(199,240,80,0),rgba(199,240,80,.1),rgba(199,240,80,0));animation:sweepMove 4.4s ease-in-out infinite}
 .cb-frame{position:absolute;inset:14px 14px 0;z-index:4;pointer-events:none}
@@ -461,7 +461,7 @@ html,body{height:100%;background:var(--ink);overflow:hidden;
 .cb-note .cb-note-ic{color:var(--lime);font-size:11px;line-height:1.7;flex-shrink:0}
 @keyframes cbNoteIn{from{opacity:0;transform:translate(-50%,-7px)}to{opacity:1;transform:translate(-50%,0)}}
 /* ===== 펌 베이스캠프 — 홀로 아이콘 + 촤르륵 펼침 ===== */
-.pb-board{position:absolute;inset:0;top:46px;overflow:hidden;background:radial-gradient(125% 92% at 50% 2%,#0c1108 0%,#060806 64%)}
+.pb-board{position:absolute;inset:0;top:calc(env(safe-area-inset-top,8px) + 60px);overflow:hidden;background:radial-gradient(125% 92% at 50% 2%,#0c1108 0%,#060806 64%)}
 .pb-scroll{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px 16px calc(env(safe-area-inset-bottom,0) + 44px)}
 .pb-scroll::-webkit-scrollbar{display:none}
 .pb-head{text-align:center;margin:2px 0 22px}
@@ -650,7 +650,7 @@ svg{display:block;overflow:visible}
 .floatv{animation:floatv 5s ease-in-out infinite}
 @keyframes floatv{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 /* ===== 멜라닌레벨 — 언더톤별 염색이론 ===== */
-.mel-wrap{position:absolute;inset:0;top:46px;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px calc(env(safe-area-inset-bottom,0) + 30px)}
+.mel-wrap{position:absolute;inset:0;top:calc(env(safe-area-inset-top,8px) + 60px);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px calc(env(safe-area-inset-bottom,0) + 30px)}
 .mel-tip{border:1px solid var(--line2);border-radius:12px;padding:10px 12px;margin-bottom:12px;background:rgba(199,240,80,.03)}
 .mel-tip .tt{display:inline-block;font-size:9px;letter-spacing:.14em;color:var(--lime2);margin-bottom:5px}
 .mel-tip p{font-size:11.5px;line-height:1.65;color:var(--txt)}
@@ -3708,10 +3708,10 @@ function trim(html){const LIMIT=64;let out='',shown=0,i=0;while(i<html.length){i
 
 /* ---------- HELIX OS 루트 ---------- */
 const NODES=[
- {k:'perm', nn:'펌 베이스캠프', ns:'결합·연화·열·중화', ic:'heat', pos:[50,22], badge:'MODULE', coil:true},
- {k:'color',nn:'컬러 베이스캠프',ns:'모발·색·언더·약제', ic:'colorhub',pos:[19,48], badge:'MODULE'},
- {k:'mel',  nn:'멜라닌레벨', ns:'언더톤별 염색이론', ic:'melanin',pos:[81,48], badge:'THEORY', img:'https://raw.githubusercontent.com/marru212121-byte/shield-connect/main/base.jpg', cells:true},
- {k:'infer',nn:'레시피 추론', ns:'진단→잔류→보색', ic:'infer',pos:[50,78], badge:'LIVE', pho:'05', cyc:true}
+ {k:'perm', nn:'펌 베이스캠프', ns:'결합·연화·열·중화', ic:'heat', pos:[50,29], badge:'MODULE', coil:true},
+ {k:'color',nn:'컬러 베이스캠프',ns:'모발·색·언더·약제', ic:'colorhub',pos:[19,53], badge:'MODULE'},
+ {k:'mel',  nn:'멜라닌레벨', ns:'언더톤별 염색이론', ic:'melanin',pos:[81,53], badge:'THEORY', img:'https://raw.githubusercontent.com/marru212121-byte/shield-connect/main/base.jpg', cells:true},
+ {k:'infer',nn:'레시피 추론', ns:'진단→잔류→보색', ic:'infer',pos:[50,83], badge:'LIVE', pho:'05', cyc:true}
 ];
 function coreSVG(){return `<svg viewBox="0 0 200 200">
   <defs><radialGradient id="cg" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#C7F050" stop-opacity=".95"/><stop offset="55%" stop-color="#C7F050" stop-opacity=".18"/><stop offset="100%" stop-color="#C7F050" stop-opacity="0"/></radialGradient></defs>
@@ -3743,7 +3743,7 @@ function viewRoot(){
      <span class="nbadge">${n.badge}</span>
      ${core}
      <div class="nn">${n.nn}</div><div class="ns">${n.ns}</div></div>`}).join('');
-  const lines=`<svg class="hx-lines" viewBox="0 0 100 100" preserveAspectRatio="none">${NODES.map(n=>`<line class="hx-line" x1="50" y1="46" x2="${n.pos[0]}" y2="${n.pos[1]}"/>`).join('')}</svg>`;
+  const lines=`<svg class="hx-lines" viewBox="0 0 100 100" preserveAspectRatio="none">${NODES.map(n=>`<line class="hx-line" x1="50" y1="53" x2="${n.pos[0]}" y2="${n.pos[1]}"/>`).join('')}</svg>`;
   return `<div class="helix">
     <div class="grid"></div>${lines}
     <div class="hx-head"><div class="hx-kicker">HAIR THEORY</div><div class="hx-os">HELIX <span>OS</span></div><div class="hx-sub">SYSTEM CORE · 미용 이론 플랫폼</div></div>
