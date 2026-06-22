@@ -56,6 +56,10 @@ html,body{height:100%;background:var(--ink);overflow:hidden;
   text-shadow:0 0 26px rgba(199,240,80,.4)}
 .hx-os span{color:var(--lime)}
 .hx-sub{font-size:10.5px;letter-spacing:.26em;color:var(--dim);margin-top:5px}
+.hx-exit{position:absolute;top:12px;left:14px;z-index:6;width:36px;height:36px;border:1px solid var(--line);border-radius:50%;
+  display:grid;place-items:center;color:var(--lime);font-size:19px;background:rgba(199,240,80,.04);cursor:pointer;
+  transition:border-color .2s,transform .14s,box-shadow .2s}
+.hx-exit:active{transform:scale(.92);border-color:var(--lime);box-shadow:0 0 18px rgba(199,240,80,.35)}
 .hx-lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
 .hx-line{stroke:rgba(199,240,80,.22);stroke-width:.35;stroke-dasharray:1.1 1.5;fill:none}
 .hx-spark{fill:var(--lime)}
@@ -3746,6 +3750,7 @@ function viewRoot(){
   const lines=`<svg class="hx-lines" viewBox="0 0 100 100" preserveAspectRatio="none">${NODES.map(n=>`<line class="hx-line" x1="50" y1="53" x2="${n.pos[0]}" y2="${n.pos[1]}"/>`).join('')}</svg>`;
   return `<div class="helix">
     <div class="grid"></div>${lines}
+    <button class="hx-exit" type="button" data-exit aria-label="앱으로 돌아가기">‹</button>
     <div class="hx-head"><div class="hx-kicker">HAIR THEORY</div><div class="hx-os">HELIX <span>OS</span></div><div class="hx-sub">SYSTEM CORE · 미용 이론 플랫폼</div></div>
     <div class="hx-core">${coreSVG()}</div>
     ${nodes}
@@ -4355,6 +4360,7 @@ function undive(p){
 
 /* ---------- events ---------- */
 stage.addEventListener('click',e=>{
+  if(e.target.closest('[data-exit]')){if(history.length>1)history.back();else location.href='/';return}
   if(e.target.closest('[data-back]')){back();return}
   const tw=e.target.closest('[data-town]');
   if(tw){const k=tw.dataset.town;if(k==='infer')diveInto(tw,{v:'infer'});else if(k==='mel')diveInto(tw,{v:'mel'});else if(k==='color')go({v:'cboard'},origin(tw));else if(k==='perm')go({v:'pboard'},origin(tw));else go({v:'hub',k},origin(tw));return}
