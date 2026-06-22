@@ -4341,9 +4341,10 @@ function diveInto(node,next){
   requestAnimationFrame(()=>{
     inc.style.transition='transform .62s cubic-bezier(.6,0,.22,1)';
     inc.style.transform='none';});
-  const done=ev=>{if(ev.propertyName!=='transform')return;inc.removeEventListener('transitionend',done);
+  const done=ev=>{if(ev&&ev.propertyName!=='transform')return;inc.removeEventListener('transitionend',done);
     inc.classList.remove('diving');inc.style.transition='';inc.style.transform='';inc.style.transformOrigin='';};
   inc.addEventListener('transitionend',done);
+  setTimeout(()=>done(),720);
   stack.push({state:{v:'root'},diveBack:{root,node}});
 }
 function undive(p){
