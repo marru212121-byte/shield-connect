@@ -4390,6 +4390,26 @@ cur=el(build(state));stage.appendChild(cur);
     .catch(function(){ gate.classList.add('on'); });
 })();
 </script>
+<script>
+(function(){
+  function getAnonId(){
+    try {
+      var k='sc_anon_id', v=localStorage.getItem(k);
+      if(!v){ v='anon_'+Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4); localStorage.setItem(k,v); }
+      return v;
+    } catch(e){ return 'anon_unknown'; }
+  }
+  try {
+    fetch('/api/track', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'same-origin',
+      keepalive:true,
+      body: JSON.stringify({ feature:'helix', anonId:getAnonId() })
+    }).catch(function(){});
+  } catch(e){}
+})();
+</script>
 </body>
 </html>
 </body>
