@@ -18,6 +18,7 @@ const FREE_LABELS = {
   melanin_level: '멜라닌 레벨',
   ingredient: '성분사전',
   reels: '영상 보기',
+  helix: 'HELIX OS',
   // 분석에서 숨겼던 것도 활동 흐름엔 참고로 둘 수 있으나, 일단 위 6개만 라벨링
 };
 
