@@ -1269,7 +1269,7 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
     name:"밀본", stub:true,
     dye:{
       ash:{ "어딕시":[{code:"실버",name:"Silver",ju:"애쉬",bu:"미세 한색",tex:"질감 담당",confirmed:true}],
-             "올디브":[{code:"N-10",name:"애쉬",ju:"애쉬",bu:"?",tex:"11-10=명도 운반체",confirmed:false}], CC:[] },
+             "올디브":[{code:"그레이펄",name:"GrayPearl",ju:"애쉬(무채회색)",bu:"청+녹갈+적갈 복합",tex:"무채 회색(블루그레이 #6F7080). 적색기 억제 차분 애쉬. 실버보다 채도 낮은 본체 회색(투명 애쉬의 실제 약)",confirmed:true}], CC:[] },
       blue:{ "어딕시":[{code:"사파이어",name:"Sapphire",ju:"블루(순청)",bu:"없음",tex:"적색·아이보리 모두 찐블루",confirmed:true},
                       {code:"코발트블루",name:"Cobalt Blue",ju:"블루",bu:"청자",tex:"16레벨 노랑 동시중화",confirmed:true}], CC:[] },
       violet:{ "어딕시":[{code:"아메지스트",name:"Amethyst",ju:"바이올렛",bu:"청기?",tex:"청보라 추정",confirmed:false}], CC:[] },
@@ -1485,9 +1485,9 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
     },
     milbon: {
       // 오센틱 슬롯 = 어딕시(vivid·진한) / LOOK 슬롯 = 올디브·기본라인(투명). 한쪽뿐이면 폴백.
-      // ── 애쉬 칸 ── 어딕시=실버(질감) / 기본=N-10(명도운반)
-      ash_silver:      { 오센틱:"실버",     LOOK:"N-10" },      // 맑은 실버 애쉬
-      ash_violet_tint: { 오센틱:"아메지스트", LOOK:"N-10" },     // 보라기 잿빛 → 아메지스트(추정·검수)
+      // ── 애쉬 칸 ── 어딕시=실버(질감 쨍) / 기본=그레이펄(무채 회색 본체). ★N-10 유령폐기: 실제 약 그레이펄로
+      ash_silver:      { 오센틱:"실버",     LOOK:"그레이펄" },   // 쨍 실버 / 차분 무채 그레이지
+      ash_violet_tint: { 오센틱:"아메지스트", LOOK:"그레이펄" },  // 쨍 보라끼 잿빛=아메지스트 / 무채 그레이지=그레이펄(보라 강제 안 함)
       ash_lavender:    { 오센틱:"아메지스트", LOOK:"아메지스트" }, // 라벤더 고채도 → 아메지스트(추정·검수)
       // ── 블루 칸 (검증완료) ── 채도로 자동 갈림: 쨍=사파이어 / 중채도=코발트
       blue_smoky:      { 오센틱:"사파이어",   LOOK:"코발트블루" }, // 근본 블루
@@ -1682,8 +1682,17 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
         // ★ [K3] 보색 2채널 위계 집행: 메인 염모제의 부염료(bu)가 이 CC의 보색을 이미 머금었으면 중복 → 제거.
         //   성질 기반(약 이름 아님): 노랑↔보라/핑크 / 주황↔블루·청 / 빨강↔그린·카키. NB·CB(bu 없음)는 통과.
         var COMP = { violet:["보라","핑크"], blue:["블루","청"], green:["그린","카키"] };
+        // ★ [K3-boost] 같은 색 계열의 본색(메인/서브)이 이미 처방에 있으면 = 컨트롤러는 '채도 강조'용 → 절대 제거 안 함.
+        //   (메인이 그 색을 부염료로만 갖고 적빛 억제하더라도, 타깃 본색 계열이 같으면 컨트롤러는 쩅함을 살리는 역할)
+        var HUE_GROUP = { blue:"blue", blue_ash:"blue", blue_smoky:"blue", blue_black:"blue",
+                          violet:"violet", ash_violet:"violet", ash_violet_tint:"violet", ash_lavender:"violet",
+                          violet_pure:"violet", violet_ash:"violet", red_violet:"violet", pink:"violet",
+                          green:"green", khaki_ash:"green" };
+        var isBoost = abstract.recipe.some(function(it){
+          return (it.role==="main"||it.role==="sub") && HUE_GROUP[it.dye]===item.dye;
+        });
         var compKey = COMP[item.dye];
-        if(compKey){
+        if(compKey && !isBoost){
           var selfNeutral = out.some(function(o){
             return o.role!=="cc" && o.role!=="clear" && !o.missing && o.bu &&
                    compKey.some(function(k){ return o.bu.indexOf(k)>=0; });
