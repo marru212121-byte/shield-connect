@@ -1679,8 +1679,12 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
         return;
       }
       if(item.role==="cc"){
-        if(!dyePool||!dyePool.CC||!dyePool.CC.length){ out.push({role:"cc",missing:true,dyeLabel:item.dye}); return; }
-        var cc=dyePool.CC[0];
+        // ★ 컨트롤러 family 정규화: 본체 결 이름(violet_pure·blue_ash·khaki_ash 등)으로 와도 보색 기본키로 접어 회사 CC를 찾는다.
+        var CC_FAM = { blue_ash:"blue", blue_smoky:"blue", blue_black:"blue", violet_pure:"violet", ash_violet:"violet", ash_violet_tint:"violet", ash_lavender:"violet", violet_ash:"violet", red_violet:"violet", khaki_ash:"green" };
+        var ccDye = CC_FAM[item.dye] || item.dye;
+        var ccPool = dict.dye[ccDye] || dyePool;
+        if(!ccPool||!ccPool.CC||!ccPool.CC.length){ out.push({role:"cc",missing:true,dyeLabel:item.dye}); return; }
+        var cc=ccPool.CC[0];
         // ★ [K3] 보색 2채널 위계 집행: 메인 염모제의 부염료(bu)가 이 CC의 보색을 이미 머금었으면 중복 → 제거.
         //   성질 기반(약 이름 아님): 노랑↔보라/핑크 / 주황↔블루·청 / 빨강↔그린·카키. NB·CB(bu 없음)는 통과.
         var COMP = { violet:["보라","핑크"], blue:["블루","청"], green:["그린","카키"] };
@@ -1691,9 +1695,9 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
                           violet_pure:"violet", violet_ash:"violet", red_violet:"violet", pink:"violet",
                           green:"green", khaki_ash:"green" };
         var isBoost = abstract.recipe.some(function(it){
-          return (it.role==="main"||it.role==="sub") && HUE_GROUP[it.dye]===item.dye;
+          return (it.role==="main"||it.role==="sub") && HUE_GROUP[it.dye]===ccDye;
         });
-        var compKey = COMP[item.dye];
+        var compKey = COMP[ccDye];
         if(compKey && !isBoost){
           var selfNeutral = out.some(function(o){
             return o.role!=="cc" && o.role!=="clear" && !o.missing && o.bu &&
