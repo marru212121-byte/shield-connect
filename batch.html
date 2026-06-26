@@ -1520,7 +1520,7 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
     violet_ash:{hue:258,chroma:40}, violet_pure:{hue:285,chroma:42},
     blue_ash:{hue:218,chroma:35}, blue_smoky:{hue:215,chroma:18}, blue_black:{hue:232,chroma:33},
     khaki_ash:{hue:95,chroma:20}, beige_brown:{hue:30,chroma:20}, warm_beige_sheer:{hue:32,chroma:16},
-    warm_beige_rich:{hue:26,chroma:26}, brown_canvas:{hue:20,chroma:26}
+    warm_beige_rich:{hue:26,chroma:26}, brown_canvas:{hue:20,chroma:26}, brown_matte:{hue:100,chroma:18}
   };
   // cc 결 → 색별 컨트롤러(딥블루 기계남발 폐기). 컨트롤러 없는 색은 동색 약으로.
   var MLBN_CC_CTRL = { blue:"C8-BL 블루", violet:"C8-VL 바이올렛", red:"C8-RD 레드", orange:"C8-OR 오렌지" };
@@ -2417,7 +2417,7 @@ async function runBatch(){
 function compText(m){
   if(m.role==="clear") return "클리어 · 농도조절";
   if(m.code==="BLUE BLACK") return "블랙 · 딥 네이비";
-  if(m.role==="cc"){const N={VIOLET:"보라",BLUE:"블루",GREEN:"그린",ASH:"애쉬",PINK:"핑크",RED:"레드","BLUE BLACK":"블루블랙"};return (N[m.code]||m.code)+" 컨트롤러";}
+  if(m.role==="cc"){const N={VIOLET:"보라",BLUE:"블루",GREEN:"그린",ASH:"애쉬",PINK:"핑크",RED:"레드","BLUE BLACK":"블루블랙"};var _c=String(m.code||"").replace(/^C\d+-\w+\s*/,"");return (N[_c]||_c)+" 컨트롤러";}
   return [m.ju,m.bu].filter(x=>x&&x!=="—").join(" · ").replace(/\([^)]*\)/g,"");
 }
 function pill(m){
@@ -2617,10 +2617,10 @@ function morphRecipe(v,gauge,tone,base){
   var nv=JSON.parse(JSON.stringify(v)); var warm=/warm/i.test(tone||"");
   nv.mapped=(nv.mapped||[]).map(function(m){
     if(m.role==="cc"){
-      if(warm){ m.suppressed=false; m.code="레드/오렌지 컨트롤러"; m.name="레드/오렌지 컨트롤러"; m.hex="#b85837"; m.ratio=__rband(Math.round(gauge/100*5)*10); }
-      else if(base==="lv16"){ var p2=Math.round((100-gauge)/100*2)*10; if(p2<10){m.suppressed=true;m.reason="노랑 약 → 본체 소량+클리어로 맑게";} else {m.suppressed=false;m.code="C8-VL 바이올렛";m.name="바이올렛 컨트롤러";m.hex="#633c64";m.ratio=__rband(p2);} }
-      else { if(gauge<45){m.suppressed=false;m.code="C8-BL 블루";m.name="블루 컨트롤러";m.hex="#72829f";m.ratio=__rband(Math.round((45-gauge)/45*2)*10);}
-             else if(gauge>55){m.suppressed=false;m.code="C8-VL 바이올렛";m.name="바이올렛 컨트롤러";m.hex="#633c64";m.ratio=__rband(Math.round((gauge-55)/45*3)*10);}
+      if(warm){ m.suppressed=false; m.code="레드/오렌지"; m.name="레드/오렌지 컨트롤러"; m.hex="#b85837"; m.ratio=__rband(Math.round(gauge/100*5)*10); }
+      else if(base==="lv16"){ var p2=Math.round((100-gauge)/100*2)*10; if(p2<10){m.suppressed=true;m.reason="노랑 약 → 본체 소량+클리어로 맑게";} else {m.suppressed=false;m.code="바이올렛";m.name="바이올렛 컨트롤러";m.hex="#633c64";m.ratio=__rband(p2);} }
+      else { if(gauge<45){m.suppressed=false;m.code="블루";m.name="블루 컨트롤러";m.hex="#72829f";m.ratio=__rband(Math.round((45-gauge)/45*2)*10);}
+             else if(gauge>55){m.suppressed=false;m.code="바이올렛";m.name="바이올렛 컨트롤러";m.hex="#633c64";m.ratio=__rband(Math.round((gauge-55)/45*3)*10);}
              else {m.suppressed=true;m.reason="무채 — 보색 거의 0";} }
     }
     if((m.role==="main"||m.role==="sub") && /실버|포기그레이지|Silver|Foggy/i.test((m.name||"")+(m.code||""))){
