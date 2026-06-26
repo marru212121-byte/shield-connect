@@ -1516,9 +1516,9 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
   //   ★손표(약 묶음) 폐기 — 트렌드 포함 "전체 약"을 후보로 매칭해야 데이터가 안 뭉개진다. neutral=무채라 색상각 약하게.
   var MLBN_FAMILY_HUE = {
     ash_silver:{hue:240,chroma:8,neutral:true}, silver:{hue:240,chroma:8,neutral:true}, white:{hue:240,chroma:4,neutral:true},
-    ash_violet_tint:{hue:285,chroma:12,neutral:true}, ash_lavender:{hue:288,chroma:15},
+    ash_violet_tint:{hue:285,chroma:12,neutral:true}, ash_lavender:{hue:262,chroma:8,neutral:true},
     violet_ash:{hue:258,chroma:40}, violet_pure:{hue:285,chroma:42},
-    blue_ash:{hue:218,chroma:35}, blue_smoky:{hue:215,chroma:18}, blue_black:{hue:230,chroma:42},
+    blue_ash:{hue:218,chroma:35}, blue_smoky:{hue:215,chroma:18}, blue_black:{hue:232,chroma:33},
     khaki_ash:{hue:95,chroma:20}, beige_brown:{hue:30,chroma:20}, warm_beige_sheer:{hue:32,chroma:16},
     warm_beige_rich:{hue:26,chroma:26}, brown_canvas:{hue:20,chroma:26}
   };
@@ -2029,7 +2029,7 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
             // 색=결 각도, 명도=헥스 val, 채도=결기준+경로편향(고채도→+12 / 기본→-12). 전체 약(트렌드 포함)이 후보 = 데이터 안 뭉갬.
             var _lkP=linePolicy?linePolicy(item,_ri,abstract,lineMap):((abstract.chroma==="vivid")?lineMap.vivid:lineMap.other);
             var _cbias=(_lkP==="어딕시")?12:(_lkP==="올디브")?-12:0;
-            var _hueW=_fa.neutral?0.15:1.0, _tgtC=_fa.chroma+_cbias;
+            var _hueW=_fa.neutral?0.15:1.0, _tgtC=_fa.neutral?_fa.chroma:_fa.chroma+_cbias;
             // ★ 라인 특징을 "약한 선호"로 복원(하드필터 아님): 고채도루트→어딕시 가산점·기본루트→올디브 가산점.
             //   트렌드/딴라인이 훨씬 가까우면 여전히 픽(=뭉갬 방지). + 저레벨 깊은색은 올디브 본체가 브라운에 파묻히니 페널티→자연히 어딕시.
             var _prefG=(_lkP==="어딕시")?"어딕시(고채도)":(_lkP==="올디브")?"올디브(기본)":null;
