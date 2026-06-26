@@ -1239,6 +1239,70 @@ JSON 객체 하나. 코드블록·설명·인사 금지. 첫 글자 {, 마지막
 16) quick_thoughts: 5~8줄 / "..." 끝 / 한국어 친근체 / 마지막 줄 확정형 / 8단계 대안 안내 필수 / 영어·내부 라벨 금지.
 `;
 
+const RECIPE_PROMPT_V2 = `[역할] 너는 동양인 모발 전문 마스터 헤어 컬러리스트다. 사진은 손님이 원하는 '목표색(결과)'이다. 아래 [밀본 약 목록]만으로 이 목표색을 내는 레시피를 짜라. 목록에 없는 약·이름·회사 넘버를 지어내지 마라.
+
+[20레벨 스케일·언더톤·보색]
+동양인 모발은 어두운 적갈에서 리프팅하며 잔류색소가 변한다: 적갈 → 주황 → 황갈(≈14) → 노랑(≈16) → 연노랑(≈18) → 백모.
+보색(중화): 적 ↔ 그린 / 주황 ↔ 블루 / 노랑 ↔ 보라.
+★"노랑·황갈이면 무조건 보라" 금지 — 주황쪽 잔류는 블루로, 노랑쪽은 보라로. 그리고 고른 약의 '부색'이 잔류를 이미 잡으면(예: 코발트 부색 보라 → 노랑 자체중화) 별도 보색약을 얹지 마라.
+
+[사고 단계]
+1) 목표색 관찰 — 웜/쿨, 채도(쨍/뮤트/파스텔), 무게감, 무슨 색감.
+2) 도달 언더톤 역추론 — 이 색을 내려면 몇 레벨까지 올려야 하나: 14(브라운 자산 살아있는 주황~황갈)·16(노랑)·18(연노랑·거의 빈 캔버스)·백모. 무탈색(자산 살림)이면 보통 14 언저리.
+3) 약 선택 — [밀본 약 목록]에서 목표색에 맞는 약을 '대표색(색상/채도)'으로 고른다. 직군(한색/보라/그린/무채/웜뉴트럴/적로즈) 안에서.
+4) 보색 판단 — 고른 약의 '부색'을 보고 위 보색 규칙대로. 필요 없으면 보색약 생략.
+5) 레벨(명도) — ★공식: 결과 명도 ≈ [잡힌 언더톤 명도] × [염모제 레벨 명도]. 더하기가 아니라 '곱'이다 — 브라운 자산(언더톤)이 남아 약과 겹쳐 빛이 둘 다 통과하니까(투과율의 곱·감산혼합). 낮은 레벨 = 염료 많음(=투과 적음·어두움·보색 강) / 높은 레벨 = 염료 적음(=투명·밝음·보색 약). 이 곱으로 5·7·9·11을 다채롭게 골라라(한 값으로 강제 X):
+   · 어두운 언더톤(14 등)에 낮은(어두운) 약 = 곱으로 급격히 어두워진다 → 14에서 9·7·5는 '타겟이 잿빛 세거나 무게감·딥'일 때만, 가볍고 투명한 톤인톤(보색만 살짝, 은은한 반사빛+브라운)이면 11(또는 11+9).
+   · 밝은 언더톤(16·18·탈색모)은 언더톤이 밝아 약이 그대로 발색 → 정말 파스텔·투명이면 11(+클리어), 비비드하거나 어둠이 있으면 9(또는 9·11). ★단독 9+보색은 탁해지니 11 메인+9 부로.
+   · 보색은 낮은 레벨일수록 강하지만 어두워지는 대가다 — 살짝만 중화·톤인톤이면 11로 가볍게, 강중화·깊은 발색이면 낮춰라.
+   · ⇒ "언더톤 어두움 × 약 어두움 = 결과 어두움(곱)"으로 계산해 레벨을 다채롭게. 레벨은 5·7·9·11 중에서만.
+6) 비율 — 메인/부/보색 비율(%).
+7) 컨트롤러·클리어 — 형광·비비드·찐한 색(직접염료라야 나는 표면 채도)은 [컨트롤러(직접염료)] 그룹을 산화염모제와 믹스해 얹는다(단독 X). 파스텔·투명·시스루는 클리어로 희석한다. 컨트롤러는 레벨 생략(ratio는 %). ★클리어 비율은 %가 아니라 '염모제 1제 : 클리어' 비율로 적어라 — ratio에 "1:1"(기본) / "1:2"(밝은·핑크·11레벨) / "1:3"(백모·극투명) 식으로. 클리어도 레벨 생략.
+8) 레시피 정확히 3개 — 이건 '레시피(경로) 3개'지 '한 레시피에 약 3개'가 절대 아니다. ★한 레시피 안의 약은 절제하라: 보통 메인 1개(+꼭 필요할 때만 부 1개), 산화염모제는 많아야 2개. 3개 이상 섞으면 채도가 죽는다(특히 그레이지·맑은 색일수록 약을 더 적게). 보색이 필요하면 산화염모제 3개째로 채우지 말고 컨트롤러(직접염료) 소량으로 얹어라. 세 레시피끼리는 약·결·비율을 실제로 다르게(재탕 금지).
+9) 게이지(권장 레시피만) — 현장 잔류에 따라: '주황쪽 잔류일 때'와 '황갈·노랑쪽 잔류일 때' 약·비율이 어떻게 바뀌는지 두 버전. 18 언더톤이면 게이지 생략(null).
+
+[출력 — JSON only, 설명·인사 금지]
+{
+ "target":"목표색 한 줄",
+ "undertone":"도달 언더톤 + 근거(왜 그 레벨까지)",
+ "recipes":[
+   {"label":"권장|대안1|대안2","dyes":[{"name":"약이름(목록 그대로)","level":9,"ratio":"NN%"}],"why":"이 조합이 목표를 내는 한 줄 근거"}
+ ],
+ "gauge":{ "orange":[{"name":"","level":9,"ratio":""}], "tan_yellow":[{"name":"","level":9,"ratio":""}] }
+}
+★★ recipes는 반드시 정확히 3개 (권장+대안1+대안2). 2개·1개 절대 금지 — 이게 가장 중요하다. dyes 이름은 목록에 있는 것만. level은 5·7·9·11만(컨트롤러·클리어는 level 생략). 18 언더톤이면 gauge는 null.
+
+[밀본 약 목록]
+[한색]
+- 코발트블루 │ 주색 블루 · 부색 보라(청자) │ #575e82(색상230/채도33,9lv) │ 청+보라 내장 → 노랑·주황 같이 잡아 단독 네이비 (사파이어보다 보라 덜 필요)
+- 사파이어 │ 주색 블루(순청) · 부색 없음 │ #536590(색상222/채도42,9lv) │ 맑은 순 블루(클린). 주황 잔류엔 단독 OK. ★노랑 언더톤엔 단독 시 매트(녹)로 빠짐 → 보라 소량 믹스해 네이비/클린 블루로
+- 모드네이비 │ 주색 네이비 · 부색 청 │ #646f8f(색상225/채도30,9lv) │ 딥 네이비(블루)
+[보라]
+- 애미시스트 │ 주색 바이올렛(순) · 부색 없음 │ #67528e(색상261/채도42,9lv) │ 순 보라(쿨·청보라)
+- 퍼플가넷 │ 주색 레드바이올렛 · 부색 청기 │ #75547e(색상287/채도33,9lv) │ 적보라(웜)·깊이
+[그린]
+- 에메랄드 │ 주색 그린 · 부색 약 청 │ #6b7463(색상92/채도15,9lv) │ 매트 그린(부청이라 애쉬카키 느낌) — 적색 중화(적↔그린)
+[무채]
+- 실버 │ 주색 애쉬(순 무채) · 부색 없음 │ #757481(색상245/채도10,9lv) │ 순 무채 — 고탈색서 클린 실버
+- 포기그레이지 │ 주색 애쉬(무채 그레이지) · 부색 미세 청 │ #757471(색상45/채도3,9lv) │ 무채 그레이지 — 저채라 색상은 노이즈
+[웜뉴트럴]
+- 스모키토파즈 │ 주색 베이지 · 부색 애쉬(약) │ #6f6156(색상26/채도23,9lv) │ 주황쪽 웜베이지 + 약애쉬 (자체완성)
+- 스모키앰버 │ 주색 베이지(핑크웜) · 부색 핑크 │ #71595b(색상355/채도21,9lv) │ 핑크쪽 웜(핑크기) (자체완성)
+- NB │ 주색 자연갈 · 부색 - │ #755854(색상7/채도28,9lv) │ 자연갈 본체 — ★저레벨=붉음, 고레벨=골드로 변함
+- CB │ 주색 쿨 회갈 · 부색 - │ #755c48(색상27/채도38,9lv) │ 쿨 회갈 본체(붉은빛 억제)
+- 헬시시나몬 │ 주색 베이지 · 부색 애쉬(강) │ #827464(색상32/채도23,9lv) │ 베이지 저채 → 16서 잿빛 애쉬로 보이나 실버(순무채) 아님, 베이지 섞인 미온 잿빛 (자체완성)
+- 헬시헤이즐 │ 주색 베이지 · 부색 핑크+애쉬 │ #84715c(색상31/채도30,9lv) │ 베이지 고채 → 진짜 웜 (자체완성)
+[적·로즈]
+- 보르도루비 │ 주색 레드(와인) · 부색 보라 │ #7f4c59(색상345/채도40,9lv) │ 와인레드 — 채도 보강
+- 시어모브핑크 │ 주색 모브핑크 · 부색 핑크 │ #996d81(색상333/채도29,9lv) │ 모브핑크(로즈)
+[컨트롤러(직접염료) — 형광·표면 채도. 산화염모제와 믹스(단독 X), 레벨 없음]
+- 블루 컨트롤러 │ #72829f │ 주황 강중화 + 표면 쨍한 청
+- 바이올렛 컨트롤러 │ #633c64 │ 노랑 강중화 + 표면 쨍한 보라
+- 레드 컨트롤러 │ #823a44 │ 채도 보강 + 표면 레드
+- 오렌지 컨트롤러 │ #b85837 │ 따뜻함 + 표면 주황
+- 레드바이올렛 컨트롤러 │ #743e69 │ 적보라 표면
+- 클리어 │ #f2ecca │ 색 없음 — 희석·파스텔·투명감(시스루). 비율=염모제:클리어 1:1(기본)·1:2(밝은/핑크/11레벨)·1:3(백모)`;
+
 const RECIPE_INSTR = `이 사진 속 모발 색감을 직접 관찰하여 조색 레시피를 역추론해. JSON 하나만 출력해(코드블록·설명·인사 금지). 아래 0~8 순서로 사고하라 — 앞 단계 결론이 뒤 단계 입력이다(관찰→언더톤→중화→메인결→명도→보조→갈래→금지). 각 카테고리 안에서는 원리를 먼저, 예시는 뒤에.
 
 /* ===== 0. 출력양식 (JSON·recipes 구조·reason 객체 — 글자 그대로 보존, 한 글자도 바꾸지 마라) ===== */
@@ -2398,7 +2462,8 @@ async function runBatch(){
       const aTxt=await callLLM("","",2048,ANALYSIS_PROMPT,[img,{type:"text",text:"이 사진 속 모발의 색감을 관찰하여 analysis JSON 하나만 출력해. 사고 과정·설명·인사 금지."}]);
       rec.analysis=parseJSON(aTxt);
       const hint="\n\n[참고 — 1차 분석]\n- color_name_ko: "+(rec.analysis.color_name_ko||"")+"\n- tone: "+(rec.analysis.tone||"")+"\n- elements: "+((rec.analysis.elements||[]).join(", "))+"\n- description: "+(rec.analysis.description||"");
-      const rTxt=await callLLM("","",12000,RECIPE_PROMPT,[img,{type:"text",text:RECIPE_INSTR+hint}]);
+      const __useV2=(COMPANY==="milbon");
+      const rTxt=await callLLM("","",__useV2?14000:12000, __useV2?RECIPE_PROMPT_V2:RECIPE_PROMPT, [img,{type:"text",text:__useV2?"이 사진의 목표색을 내는 밀본 레시피를 지침대로 JSON만 출력. ★코드블록·앞뒤 설명·인사 금지. undertone은 한 문장, 각 why는 20자 이내 핵심만. 절대 잘리지 않게 짧게.":(RECIPE_INSTR+hint)}]);
       rec.raw=parseJSON(rTxt);
     }catch(e){ rec.error=e.message||String(e); }
     RESULTS.push(rec); renderCard(rec,i);
@@ -2561,12 +2626,39 @@ function rxCard(v,reco,yellow){
   }
   return h+'</div>';
 }
+/* ── v2: 1층이 직접 고른 밀본 약을 계산 없이 그대로 렌더 (헥스매칭·levelFor·morph 계산 안 거침) ── */
+var MLBN_DYE_HEX={"코발트블루":"#575e82","사파이어":"#536590","모드네이비":"#646f8f","애미시스트":"#67528e","아메지스트":"#67528e","퍼플가넷":"#75547e","에메랄드":"#6b7463","실버":"#757481","포기그레이지":"#757471","스모키토파즈":"#6f6156","스모키앰버":"#71595b","스모키엠버":"#71595b","NB":"#755854","CB":"#755c48","헬시시나몬":"#827464","헬시헤이즐":"#84715c","보르도루비":"#7f4c59","시어모브핑크":"#996d81","블루 컨트롤러":"#72829f","바이올렛 컨트롤러":"#633c64","레드 컨트롤러":"#823a44","오렌지 컨트롤러":"#b85837","레드바이올렛 컨트롤러":"#743e69","클리어":"#e9e3c8"};
+function __dyeHex(n){ n=String(n||""); for(var k in MLBN_DYE_HEX){ if(n.indexOf(k)>=0) return MLBN_DYE_HEX[k]; } return "#6b6b6b"; }
+function __snapV2(l){ if(l==null||l==="") return ""; l=parseInt(l,10); if(isNaN(l)) return ""; var S=[5,7,9,11],b=S[0]; for(var i=1;i<S.length;i++){ if(Math.abs(S[i]-l)<Math.abs(b-l)) b=S[i]; } return b; }
+function __v2dyes(dyes){ return (dyes||[]).map(function(d){ var lv=__snapV2(d.level); return '<div style="display:flex;align-items:center;gap:8px;margin:5px 0"><span style="width:14px;height:14px;border-radius:3px;flex:0 0 auto;background:'+__dyeHex(d.name)+'"></span><b style="color:#ece7dd">'+(lv!==""?lv+'레벨 ':'')+esc(d.name)+'</b><span style="color:#9b948a;font-size:12px">'+esc(d.ratio||"")+'</span></div>'; }).join(''); }
+function __v2card(r,reco){ return '<div style="background:'+(reco?'#272318':'#1d1b15')+';border:1px solid '+(reco?'#d9b86a':'#33302a')+';border-radius:11px;padding:12px 14px;margin:8px 0"><div style="font-size:13px;font-weight:700;color:'+(reco?'#d9b86a':'#caa34a')+';margin-bottom:6px">'+esc(r.label||"")+'</div>'+__v2dyes(r.dyes)+(r.why?'<div style="font-size:12px;color:#9a8d77;margin-top:8px;line-height:1.55">'+esc(r.why)+'</div>':'')+'</div>'; }
+window.__v2g=window.__v2g||{};
+function __v2morph(gid,v){ var st=window.__v2g[gid]; if(!st) return; var el=document.getElementById(gid); if(!el) return; v=+v; var set=v<34?st.orange:(v>66?st.tan:st.mid); var zone=v<34?"주황쪽 잔류 — 블루로 중화":(v>66?"황갈·노랑쪽 잔류 — 보라로 중화":"중간 (권장)"); el.innerHTML='<div style="font-size:12px;color:#d9b86a;margin-bottom:4px">● '+zone+'</div>'+__v2dyes(set); }
+function renderMilbonV2(data){
+  var h='';
+  if(data.target) h+='<div style="font-size:15px;color:#fff;font-weight:600;margin:6px 0 2px">'+esc(data.target)+'</div>';
+  if(data.undertone) h+='<div style="font-size:12px;color:#9b948a;margin-bottom:10px">도달 언더톤 — '+esc(data.undertone)+'</div>';
+  var recs=(data.recipes||[]);
+  if(!recs.length){ return '<div style="background:#2a1a14;border:1px solid #a05a3a;border-radius:11px;padding:14px;color:#e0a080;font-size:13px">⚠ 1층 응답에 레시피 없음(형식 오류/잘림) — 재실행 필요. (밀본은 옛 엔진으로 안 떨어집니다)</div>'; }
+  if(recs.length<3) h+='<div style="font-size:11px;color:#caa34a;margin-bottom:6px">⚠ 레시피 '+recs.length+'개 (3개 미만 — 1층이 덜 줌)</div>';
+  h+=recs.map(function(r,k){return __v2card(r,k===0);}).join('');
+  var g=data.gauge;
+  if(g && (g.orange||g.tan_yellow)){
+    var rec0=recs[0]||{dyes:[]};
+    var states=[["주황 잔류 → 블루로", (g.orange&&g.orange.length?g.orange:rec0.dyes)],["중간 (권장)", rec0.dyes],["황갈·노랑 → 보라로", (g.tan_yellow&&g.tan_yellow.length?g.tan_yellow:rec0.dyes)]];
+    h+='<div style="background:#1d1b15;border:1px solid #33302a;border-radius:11px;padding:11px 13px;margin:8px 0"><div style="font-size:10.5px;font-weight:700;color:#9b948a;letter-spacing:.5px;margin-bottom:8px">잔류 게이지 — 현장 모발 따라 3상태 한눈에</div><div style="display:flex;gap:8px;flex-wrap:wrap">'+states.map(function(s){return '<div style="flex:1;min-width:170px;background:#15140f;border:1px solid #2a2820;border-radius:8px;padding:8px 10px"><div style="font-size:11px;color:#d9b86a;margin-bottom:5px">'+esc(s[0])+'</div>'+__v2dyes(s[1])+'</div>';}).join('')+'</div></div>';
+  } else {
+    h+='<div style="font-size:11px;color:#9b948a;margin:6px 0">게이지 없음 (18레벨·빈 캔버스)</div>';
+  }
+  return h;
+}
 function renderCard(rec,i){
   const c=document.createElement("div"); c.className="card";
   let h='<div class="chead"><span class="idx">#'+(i+1)+'</span>'+(rec.thumb?'<img class="thumb" src="'+rec.thumb+'">':'')+'<span class="fname">'+esc(rec.fname)+'</span></div>';
   if(rec.error){ h+='<div class="err">✗ 실패: '+esc(rec.error)+'</div>'; c.innerHTML=h; $("cards").appendChild(c); return; }
   const a=rec.analysis||{};
   h+='<div class="frozen"><div class="sw" style="background:'+esc(a.hex||"#444")+'"></div><div><div class="fz-name">'+esc(a.color_name_ko||"")+'</div><div class="fz-meta">'+esc(a.tone||"")+(a.hex?' · '+esc(a.hex):'')+'</div></div></div>';
+  if(COMPANY==="milbon"){ h+=renderMilbonV2(rec.raw||{}); c.innerHTML=h; $("cards").appendChild(c); return; }  // 밀본은 무조건 v2 — 옛 헥스/morph 경로로 절대 안 떨어진다
   let abs,V,VY;
   try{ abs=v1ToAbstract(rec.raw,rec.analysis); V=mapLLMRecipes(abs,COMPANY); VY=(abs.base==="lv14")?mapLLMRecipes(Object.assign({},abs,{paths:abs.pathsY}),COMPANY):[]; }
   catch(e){ h+='<div class="err">✗ 2층 매핑 실패: '+esc(e.message||e)+'</div>'; c.innerHTML=h; $("cards").appendChild(c); return; }
