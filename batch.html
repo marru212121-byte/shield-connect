@@ -2576,6 +2576,7 @@ function renderCard(rec,i){
   let abs,V,VY;
   try{ abs=v1ToAbstract(rec.raw,rec.analysis); V=mapLLMRecipes(abs,COMPANY); VY=(abs.base==="lv14")?mapLLMRecipes(Object.assign({},abs,{paths:abs.pathsY}),COMPANY):[]; }
   catch(e){ h+='<div class="err">✗ 2층 매핑 실패: '+esc(e.message||e)+'</div>'; c.innerHTML=h; $("cards").appendChild(c); return; }
+  if(COMPANY==="milbon" && abs.paths && abs.paths.length){ try{ var __vpp=abs.paths.slice(0,3).map(function(p){return mapLLMRecipes(Object.assign({},abs,{paths:[p]}),COMPANY)[0];}).filter(Boolean); if(__vpp.length) V=__vpp; }catch(_e){} }
   if(rec.raw.display_name) h+='<div class="dname">'+esc(rec.raw.display_name)+(rec.raw.reach?' — <span style="color:var(--dim)">'+esc(rec.raw.reach)+'</span>':'')+'</div>';
   if(rec.raw.quick_thoughts && rec.raw.quick_thoughts.length) h+='<div class="flow"><div class="flow-h">사고 흐름 (공용 색감)</div><div class="flow-b">'+rec.raw.quick_thoughts.map(function(t){return esc(t);}).join('<br>')+'</div></div>';
   const isLv14=abs.base==="lv14";
