@@ -1461,7 +1461,7 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
     function hueDiff(a,b){var d=Math.abs(a-b)%360;return Math.min(d,360-d);}
     function dist(t,p){var sg=Math.min(1,Math.min(t.chroma,p.chroma)/35);var dh=hueDiff(t.hue,p.hue)*sg;return Math.sqrt(Math.pow(dh*1.0,2)+Math.pow(Math.abs(t.chroma-p.chroma)*0.7,2)+Math.pow(Math.abs(t.val-p.val)*0.55,2));}
     var LADDER={14:{name:'14 적갈~황갈(브라운자산)',hue:30,chroma:45,val:35,strength:0.7,brownAsset:true},16:{name:'16 맑은노랑(샛노랑·피크)',hue:52,chroma:60,val:60,strength:0.95,brownAsset:false},18:{name:'18 연노랑·아이보리',hue:63,chroma:25,val:80,strength:0.4,brownAsset:false},white:{name:'백모(무채)',hue:0,chroma:0,val:95,strength:0.0,brownAsset:false}};
-    function flatten(){var pts=[];for(var grp in MILBON_HEX){var dyes=MILBON_HEX[grp];if(grp==='컨트롤러'){for(var n in dyes){var d=dyes[n];pts.push({grp:grp,name:n,level:null,hex:d.hex,hue:d.hue,chroma:d.sat,val:d.val,cc:true});}}else{for(var nm in dyes){var lvs=dyes[nm];for(var lv in lvs){var e=lvs[lv];pts.push({grp:grp,name:nm,level:+lv,hex:e.hex,hue:e.hue,chroma:e.sat,val:e.val,cc:false});}}}}return pts;}
+    function flatten(){var pts=[];for(var grp in MILBON_HEX){var dyes=MILBON_HEX[grp];if(grp==='컨트롤러'){for(var n in dyes){var d=dyes[n];pts.push({grp:grp,name:n,level:null,hex:d.hex,hue:d.hue,chroma:d.sat,val:d.val,cc:true});}}else{for(var nm in dyes){if(grp==="올디브(기본)"&&nm!=="NB"&&nm!=="CB")continue;var lvs=dyes[nm];for(var lv in lvs){var e=lvs[lv];pts.push({grp:grp,name:nm,level:+lv,hex:e.hex,hue:e.hue,chroma:e.sat,val:e.val,cc:false});}}}}return pts;}
     var PTS=flatten();
     function nearest(t,pool){return pool.map(function(p){return {p:p,d:dist(t,p)};}).sort(function(a,b){return a.d-b.d;});}
     // 타겟 헥스 → 밀본 약 후보 (line: '어딕시(고채도)'|'올디브(기본)'|'트렌드'|null=전체, cc:true면 컨트롤러만)
@@ -2579,62 +2579,77 @@ function renderCard(rec,i){
   if(rec.raw.display_name) h+='<div class="dname">'+esc(rec.raw.display_name)+(rec.raw.reach?' — <span style="color:var(--dim)">'+esc(rec.raw.reach)+'</span>':'')+'</div>';
   if(rec.raw.quick_thoughts && rec.raw.quick_thoughts.length) h+='<div class="flow"><div class="flow-h">사고 흐름 (공용 색감)</div><div class="flow-b">'+rec.raw.quick_thoughts.map(function(t){return esc(t);}).join('<br>')+'</div></div>';
   const isLv14=abs.base==="lv14";
-  let inner='';
-  if(isLv14 && V.length) inner+='<div class="branchhead">주황 갈래</div>';
-  inner+='<div class="cards-inner">'+V.map((v,k)=>rxCard(v,k===0,false)).join('')+'</div>';
-  if(VY.length) inner+='<div class="branchhead y">황갈 갈래</div><div class="cards-inner">'+VY.map((v,k)=>rxCard(v,k===0,true)).join('')+'</div>';
-  h+=inner;
-  h+=gaugeBlock(abs.base,(a.tone||""));
+  var __useMorph=(COMPANY==="milbon" && (abs.base==="lv14"||abs.base==="lv16"));
+  var __mg=0;
+  if(__useMorph){
+    __gid++; __mg=__gid; __mstate[__mg]={V:V, tone:(a.tone||""), base:abs.base};
+    h+=gaugeBlockTop(abs.base,(a.tone||""),__mg);
+    h+='<div class="cards-inner" id="mcards'+__mg+'"></div>';
+  } else {
+    let inner='';
+    if(isLv14 && V.length) inner+='<div class="branchhead">주황 갈래</div>';
+    inner+='<div class="cards-inner">'+V.map((v,k)=>rxCard(v,k===0,false)).join('')+'</div>';
+    if(VY.length) inner+='<div class="branchhead y">황갈 갈래</div><div class="cards-inner">'+VY.map((v,k)=>rxCard(v,k===0,true)).join('')+'</div>';
+    h+=inner;
+  }
   var vn=(rec.raw&&rec.raw.virgin_note)?String(rec.raw.virgin_note).trim():"";
   if(vn&&vn.toLowerCase()!=="none"){ h+='<div style="border-top:1px dashed var(--line);margin-top:11px;padding-top:9px;font-size:12px;color:#9a8d77;line-height:1.6"><b style="color:var(--gold);font-weight:700">버진모 참고</b> · '+esc(vn)+'</div>'; }
   h+='<div class="disc">※ 쉴드커넥트는 AI이며 실수할 수 있습니다. 도달 언더톤·각 회사 염모제 특징·명도 선택 근거를 다시 확인하여 레시피를 최종 결정하세요.</div>';
   if(COMPANY==="biscos"||COMPANY==="miel"||COMPANY==="amos"||COMPANY==="demi") h+='<div class="disc">※ 비스코스·미엘·아모스·데미는 2층 주입 직후(정답지 검수 전) 단계라 일부 칸 매핑이 조정될 수 있음.</div>';
   if(COMPANY==="hoyu") h+='<div class="disc">※ 호유는 공식 색번호 레시피가 앱게이트로 미확보 상태라 색상환 원리로만 추론 주입됨(미검증). 칸 매핑이 크게 조정될 수 있음.</div>';
   c.innerHTML=h; $("cards").appendChild(c);
+  if(__useMorph) redrawMilbon(__mg);
 }
 function __gaugeText(base,tone,v){
-  var cc=null,pct=0,zone="",extra="";
+  var warm=/warm/i.test(tone||""), cc=null,pct=0,zone="";
   if(base==="lv14"){
-    if(tone==="warm"){
-      zone=v<33?"노랑 약":v<66?"중간":"노랑 강";
-      cc="레드/오렌지 컨트롤러"; pct=Math.round(v/100*5)*10; if(pct<10){cc=null;}
-      extra="웜은 보색(블루·보라) 안 섞고 동계(레드/오렌지)로만";
-    } else {
-      zone=v<20?"주황기 강":v<40?"약 주황":v<=60?"무채":v<80?"약 황갈":"노랑 강";
-      if(v<40){cc="블루 컨트롤러";pct=Math.round((40-v)/40*2)*10;}
-      else if(v>60){cc="바이올렛 컨트롤러";pct=Math.round((v-60)/40*3)*10;}
-      if(pct<10){cc=null;}
+    if(warm){ zone=v<33?"노랑 약":v<66?"중간":"노랑 강"; cc="레드/오렌지"; pct=Math.round(v/100*5)*10; }
+    else { zone=v<25?"주황기 강":v<45?"약 주황":v<=55?"무채":v<75?"약 황갈":"노랑기 강";
+      if(v<45){cc="블루";pct=Math.round((45-v)/45*2)*10;} else if(v>55){cc="바이올렛";pct=Math.round((v-55)/45*3)*10;} }
+  } else { zone=v<33?"노랑 강":v<66?"중간":"노랑 연"; cc="바이올렛"; pct=Math.round((100-v)/100*2)*10; }
+  if(pct<10)cc=null;
+  return "● "+zone+" → "+(cc?cc+" 컨트롤러 "+pct+"% (10%↕)":"보색 거의 0");
+}
+var __mstate={}, __gid=0;
+function __rband(p){ return p>=40?"30~50%":p>=20?"10~20%":p>=10?"5~10%":"미량"; }
+function morphRecipe(v,gauge,tone,base){
+  var nv=JSON.parse(JSON.stringify(v)); var warm=/warm/i.test(tone||"");
+  nv.mapped=(nv.mapped||[]).map(function(m){
+    if(m.role==="cc"){
+      if(warm){ m.suppressed=false; m.code="레드/오렌지 컨트롤러"; m.name="레드/오렌지 컨트롤러"; m.hex="#b85837"; m.ratio=__rband(Math.round(gauge/100*5)*10); }
+      else if(base==="lv16"){ var p2=Math.round((100-gauge)/100*2)*10; if(p2<10){m.suppressed=true;m.reason="노랑 약 → 본체 소량+클리어로 맑게";} else {m.suppressed=false;m.code="C8-VL 바이올렛";m.name="바이올렛 컨트롤러";m.hex="#633c64";m.ratio=__rband(p2);} }
+      else { if(gauge<45){m.suppressed=false;m.code="C8-BL 블루";m.name="블루 컨트롤러";m.hex="#72829f";m.ratio=__rband(Math.round((45-gauge)/45*2)*10);}
+             else if(gauge>55){m.suppressed=false;m.code="C8-VL 바이올렛";m.name="바이올렛 컨트롤러";m.hex="#633c64";m.ratio=__rband(Math.round((gauge-55)/45*3)*10);}
+             else {m.suppressed=true;m.reason="무채 — 보색 거의 0";} }
     }
-  } else if(base==="lv16"){
-    zone=v<33?"노랑 강":v<66?"중간":"노랑 연";
-    cc="바이올렛 컨트롤러"; pct=Math.round((100-v)/100*2)*10;
-    if(pct<10){cc=null;extra="노랑 약 → 본체 소량 + 클리어로 맑게";}
-  }
-  var s="● "+zone+" → "+(cc?cc+" "+pct+"% (10%↕)":"보색 거의 0");
-  if(extra)s+=" · "+extra; return s;
+    if((m.role==="main"||m.role==="sub") && /실버|포기그레이지|Silver|Foggy/i.test((m.name||"")+(m.code||""))){
+      if(gauge>55){m.code="포기그레이지";m.name="포기그레이지";m.hex="#757471";} else {m.code="실버";m.name="실버";m.hex="#757481";}
+    }
+    return m;
+  });
+  return nv;
 }
-function updateGauge(el){
-  document.getElementById(el.getAttribute("data-out")).textContent=
-    __gaugeText(el.getAttribute("data-base"),el.getAttribute("data-tone"),+el.value);
+function redrawMilbon(gid){
+  var st=__mstate[gid]; if(!st) return;
+  var s=document.getElementById("mg"+gid); var gauge=s?+s.value:50;
+  var cont=document.getElementById("mcards"+gid); if(!cont) return;
+  cont.innerHTML=st.V.map(function(v,k){return rxCard(morphRecipe(v,gauge,st.tone,st.base),k===0,false);}).join('');
+  var ro=document.getElementById("gout"+gid); if(ro) ro.textContent=__gaugeText(st.base,st.tone,gauge);
 }
-var __gid=0;
-function gaugeBlock(base,tone){
-  if(base!=="lv14"&&base!=="lv16") return "";
-  var warm=/warm/i.test(tone||""); __gid++; var rid="gout"+__gid;
-  var copy,e0,e1,val,tn=warm?"warm":"cool";
-  if(base==="lv14"){
-    if(warm){copy="14레벨 — 브라운 자산 살림. 웜은 자체 발색이라 변동 작음. 노랑기 따라 레드/오렌지 컨트롤러 양·레벨만.";e0="노랑 약";e1="노랑 강";val=40;}
-    else{copy="14레벨 — 자산 살림(브라운 채움 X). 같은 14도 주황기↔황갈. 주황=블루·황갈=바이올렛, 10%씩. 사진은 목표색·잔류는 현장 모발로.";e0="주황기";e1="황갈·노랑";val=50;}
-  } else {copy="16레벨 — 맑은 노랑 잔류(빈 도화지 아님). 노랑 강도 따라 바이올렛 중화량, 약하면 클리어로 맑게.";e0="노랑 강";e1="노랑 연";val=40;}
-  var init=__gaugeText(base,tn,val);
-  return '<div style="background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:11px 13px;margin-top:12px">'
-    +'<div style="font-size:10.5px;font-weight:700;color:var(--dim);letter-spacing:.5px;margin-bottom:6px">잔류 게이지 — 현장 모발 보고 조정</div>'
-    +'<div style="font-size:11.5px;color:#9a8d77;line-height:1.6;margin-bottom:9px">'+copy+'</div>'
-    +'<input type="range" min="0" max="100" value="'+val+'" data-base="'+base+'" data-tone="'+tn+'" data-out="'+rid+'" oninput="updateGauge(this)" style="width:100%;accent-color:var(--gold)">'
-    +'<div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--dim);margin-top:2px"><span>'+e0+'</span><span>'+e1+'</span></div>'
-    +'<div id="'+rid+'" style="font-size:12.5px;font-weight:600;color:var(--gold);margin-top:8px">'+init+'</div>'
-    +'<div style="font-size:10.5px;color:var(--dim);margin-top:5px">밀본 컨트롤러 약함 → 타사(사사키·미엘) 권장 · 정확량은 디자이너</div>'
-    +'</div>';
+function gaugeBlockTop(base,tone,gid){
+  var warm=/warm/i.test(tone||""); var e0,e1,val,copy;
+  if(base==="lv14"){ if(warm){e0="노랑 약";e1="노랑 강";val=40;copy="14 — 자산 살림. 웜은 변동 작음. 노랑기 따라 레드/오렌지·희석만.";}
+    else{e0="주황기";e1="황갈·노랑";val=50;copy="14 — 자산 살림(브라운 채움X). 주황↔황갈에 따라 3 레시피의 보색·약·희석이 바뀜. 사진=목표색, 잔류는 현장 모발로.";} }
+  else { e0="노랑 강";e1="노랑 연";val=40;copy="16 — 맑은 노랑 잔류. 노랑 강도 따라 바이올렛량, 약하면 클리어로 맑게."; }
+  var init=__gaugeText(base,warm?"warm":"cool",val);
+  return '<div style="background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:11px 13px;margin:6px 0 12px">'
+   +'<div style="font-size:10.5px;font-weight:700;color:var(--dim);letter-spacing:.5px;margin-bottom:6px">잔류 게이지 — 현장 모발 보고 (3 레시피 동시 조정)</div>'
+   +'<div style="font-size:11.5px;color:#9a8d77;line-height:1.6;margin-bottom:9px">'+copy+'</div>'
+   +'<input id="mg'+gid+'" type="range" min="0" max="100" value="'+val+'" oninput="redrawMilbon('+gid+')" style="width:100%;accent-color:var(--gold)">'
+   +'<div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--dim);margin-top:2px"><span>'+e0+'</span><span>'+e1+'</span></div>'
+   +'<div id="gout'+gid+'" style="font-size:12.5px;font-weight:600;color:var(--gold);margin-top:8px">'+init+'</div>'
+   +'<div style="font-size:10.5px;color:var(--dim);margin-top:5px">밀본 컨트롤러 약함 → 타사(사사키·미엘) 권장 · 정확량 디자이너</div>'
+   +'</div>';
 }
 function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
 </script></body></html>
