@@ -2584,12 +2584,57 @@ function renderCard(rec,i){
   inner+='<div class="cards-inner">'+V.map((v,k)=>rxCard(v,k===0,false)).join('')+'</div>';
   if(VY.length) inner+='<div class="branchhead y">황갈 갈래</div><div class="cards-inner">'+VY.map((v,k)=>rxCard(v,k===0,true)).join('')+'</div>';
   h+=inner;
+  h+=gaugeBlock(abs.base,(a.tone||""));
   var vn=(rec.raw&&rec.raw.virgin_note)?String(rec.raw.virgin_note).trim():"";
   if(vn&&vn.toLowerCase()!=="none"){ h+='<div style="border-top:1px dashed var(--line);margin-top:11px;padding-top:9px;font-size:12px;color:#9a8d77;line-height:1.6"><b style="color:var(--gold);font-weight:700">버진모 참고</b> · '+esc(vn)+'</div>'; }
   h+='<div class="disc">※ 쉴드커넥트는 AI이며 실수할 수 있습니다. 도달 언더톤·각 회사 염모제 특징·명도 선택 근거를 다시 확인하여 레시피를 최종 결정하세요.</div>';
   if(COMPANY==="biscos"||COMPANY==="miel"||COMPANY==="amos"||COMPANY==="demi") h+='<div class="disc">※ 비스코스·미엘·아모스·데미는 2층 주입 직후(정답지 검수 전) 단계라 일부 칸 매핑이 조정될 수 있음.</div>';
   if(COMPANY==="hoyu") h+='<div class="disc">※ 호유는 공식 색번호 레시피가 앱게이트로 미확보 상태라 색상환 원리로만 추론 주입됨(미검증). 칸 매핑이 크게 조정될 수 있음.</div>';
   c.innerHTML=h; $("cards").appendChild(c);
+}
+function __gaugeText(base,tone,v){
+  var cc=null,pct=0,zone="",extra="";
+  if(base==="lv14"){
+    if(tone==="warm"){
+      zone=v<33?"노랑 약":v<66?"중간":"노랑 강";
+      cc="레드/오렌지 컨트롤러"; pct=Math.round(v/100*5)*10; if(pct<10){cc=null;}
+      extra="웜은 보색(블루·보라) 안 섞고 동계(레드/오렌지)로만";
+    } else {
+      zone=v<20?"주황기 강":v<40?"약 주황":v<=60?"무채":v<80?"약 황갈":"노랑 강";
+      if(v<40){cc="블루 컨트롤러";pct=Math.round((40-v)/40*2)*10;}
+      else if(v>60){cc="바이올렛 컨트롤러";pct=Math.round((v-60)/40*3)*10;}
+      if(pct<10){cc=null;}
+    }
+  } else if(base==="lv16"){
+    zone=v<33?"노랑 강":v<66?"중간":"노랑 연";
+    cc="바이올렛 컨트롤러"; pct=Math.round((100-v)/100*2)*10;
+    if(pct<10){cc=null;extra="노랑 약 → 본체 소량 + 클리어로 맑게";}
+  }
+  var s="● "+zone+" → "+(cc?cc+" "+pct+"% (10%↕)":"보색 거의 0");
+  if(extra)s+=" · "+extra; return s;
+}
+function updateGauge(el){
+  document.getElementById(el.getAttribute("data-out")).textContent=
+    __gaugeText(el.getAttribute("data-base"),el.getAttribute("data-tone"),+el.value);
+}
+var __gid=0;
+function gaugeBlock(base,tone){
+  if(base!=="lv14"&&base!=="lv16") return "";
+  var warm=/warm/i.test(tone||""); __gid++; var rid="gout"+__gid;
+  var copy,e0,e1,val,tn=warm?"warm":"cool";
+  if(base==="lv14"){
+    if(warm){copy="14레벨 — 브라운 자산 살림. 웜은 자체 발색이라 변동 작음. 노랑기 따라 레드/오렌지 컨트롤러 양·레벨만.";e0="노랑 약";e1="노랑 강";val=40;}
+    else{copy="14레벨 — 자산 살림(브라운 채움 X). 같은 14도 주황기↔황갈. 주황=블루·황갈=바이올렛, 10%씩. 사진은 목표색·잔류는 현장 모발로.";e0="주황기";e1="황갈·노랑";val=50;}
+  } else {copy="16레벨 — 맑은 노랑 잔류(빈 도화지 아님). 노랑 강도 따라 바이올렛 중화량, 약하면 클리어로 맑게.";e0="노랑 강";e1="노랑 연";val=40;}
+  var init=__gaugeText(base,tn,val);
+  return '<div style="background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:11px 13px;margin-top:12px">'
+    +'<div style="font-size:10.5px;font-weight:700;color:var(--dim);letter-spacing:.5px;margin-bottom:6px">잔류 게이지 — 현장 모발 보고 조정</div>'
+    +'<div style="font-size:11.5px;color:#9a8d77;line-height:1.6;margin-bottom:9px">'+copy+'</div>'
+    +'<input type="range" min="0" max="100" value="'+val+'" data-base="'+base+'" data-tone="'+tn+'" data-out="'+rid+'" oninput="updateGauge(this)" style="width:100%;accent-color:var(--gold)">'
+    +'<div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--dim);margin-top:2px"><span>'+e0+'</span><span>'+e1+'</span></div>'
+    +'<div id="'+rid+'" style="font-size:12.5px;font-weight:600;color:var(--gold);margin-top:8px">'+init+'</div>'
+    +'<div style="font-size:10.5px;color:var(--dim);margin-top:5px">밀본 컨트롤러 약함 → 타사(사사키·미엘) 권장 · 정확량은 디자이너</div>'
+    +'</div>';
 }
 function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
 </script></body></html>
