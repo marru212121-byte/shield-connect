@@ -2640,7 +2640,8 @@ function renderMilbonV2(data){
   if(data.target) h+='<div style="font-size:15px;color:#fff;font-weight:600;margin:6px 0 2px">'+esc(data.target)+'</div>';
   if(data.undertone) h+='<div style="font-size:12px;color:#9b948a;margin-bottom:10px">도달 언더톤 — '+esc(data.undertone)+'</div>';
   var recs=(data.recipes||[]);
-  if(recs.length<3) h+='<div style="font-size:11px;color:#caa34a;margin-bottom:6px">⚠ 레시피 '+recs.length+'개 (3개 미만 — 코드 재요청 대상)</div>';
+  if(!recs.length){ return '<div style="background:#2a1a14;border:1px solid #a05a3a;border-radius:11px;padding:14px;color:#e0a080;font-size:13px">⚠ 1층 응답에 레시피 없음(형식 오류/잘림) — 재실행 필요. (밀본은 옛 엔진으로 안 떨어집니다)</div>'; }
+  if(recs.length<3) h+='<div style="font-size:11px;color:#caa34a;margin-bottom:6px">⚠ 레시피 '+recs.length+'개 (3개 미만 — 1층이 덜 줌)</div>';
   h+=recs.map(function(r,k){return __v2card(r,k===0);}).join('');
   var g=data.gauge;
   if(g && (g.orange||g.tan_yellow)){
@@ -2658,7 +2659,7 @@ function renderCard(rec,i){
   if(rec.error){ h+='<div class="err">✗ 실패: '+esc(rec.error)+'</div>'; c.innerHTML=h; $("cards").appendChild(c); return; }
   const a=rec.analysis||{};
   h+='<div class="frozen"><div class="sw" style="background:'+esc(a.hex||"#444")+'"></div><div><div class="fz-name">'+esc(a.color_name_ko||"")+'</div><div class="fz-meta">'+esc(a.tone||"")+(a.hex?' · '+esc(a.hex):'')+'</div></div></div>';
-  if(COMPANY==="milbon" && rec.raw && Array.isArray(rec.raw.recipes) && rec.raw.recipes[0] && Array.isArray(rec.raw.recipes[0].dyes)){ h+=renderMilbonV2(rec.raw); c.innerHTML=h; $("cards").appendChild(c); return; }
+  if(COMPANY==="milbon"){ h+=renderMilbonV2(rec.raw||{}); c.innerHTML=h; $("cards").appendChild(c); return; }  // 밀본은 무조건 v2 — 옛 헥스/morph 경로로 절대 안 떨어진다
   let abs,V,VY;
   try{ abs=v1ToAbstract(rec.raw,rec.analysis); V=mapLLMRecipes(abs,COMPANY); VY=(abs.base==="lv14")?mapLLMRecipes(Object.assign({},abs,{paths:abs.pathsY}),COMPANY):[]; }
   catch(e){ h+='<div class="err">✗ 2층 매핑 실패: '+esc(e.message||e)+'</div>'; c.innerHTML=h; $("cards").appendChild(c); return; }
