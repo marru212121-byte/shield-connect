@@ -2541,7 +2541,7 @@ function rxCard(v,reco,yellow){
     var role=isCC?(m.roleLabel||"컨트롤러"):(m.roleLabel||"");
     // ★ 빼기 대안: 헥스매칭이 고른 약 옆, 산술적으로 가까운 다른 약(예: 블루펄↔사파이어)을 대안으로 표기
     var altHtml='';
-    if(COMPANY==="milbon" && m._viaHex && m.alts && m.alts.length){
+    if(false){
       altHtml='<div class="dalt">↔ 가까운 대안 '+m.alts.map(function(a){var L=mlbnLabel(a.name,a.level);return '<span>'+esc(L.call)+'</span>';}).join(', ')+'</div>';
     }
     return '<div class="dye"><span class="dchip" style="background:'+chipHex(m)+'"></span>'
