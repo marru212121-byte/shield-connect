@@ -2459,7 +2459,7 @@ async function runBatch(){
       rec.analysis=parseJSON(aTxt);
       const hint="\n\n[참고 — 1차 분석]\n- color_name_ko: "+(rec.analysis.color_name_ko||"")+"\n- tone: "+(rec.analysis.tone||"")+"\n- elements: "+((rec.analysis.elements||[]).join(", "))+"\n- description: "+(rec.analysis.description||"");
       const __useV2=(COMPANY==="milbon");
-      const rTxt=await callLLM("","",__useV2?6000:12000, __useV2?RECIPE_PROMPT_V2:RECIPE_PROMPT, [img,{type:"text",text:__useV2?"이 사진의 목표색을 내는 밀본 레시피를 지침대로 JSON만 출력.":(RECIPE_INSTR+hint)}]);
+      const rTxt=await callLLM("","",__useV2?9000:12000, __useV2?RECIPE_PROMPT_V2:RECIPE_PROMPT, [img,{type:"text",text:__useV2?"이 사진의 목표색을 내는 밀본 레시피를 지침대로 JSON만 출력. 설명 길게 쓰지 말고 why는 한 줄.":(RECIPE_INSTR+hint)}]);
       rec.raw=parseJSON(rTxt);
     }catch(e){ rec.error=e.message||String(e); }
     RESULTS.push(rec); renderCard(rec,i);
