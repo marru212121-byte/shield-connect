@@ -332,8 +332,6 @@ const RECIPE_PROMPT = `═══════════════════
 (3) 어두운 톤 염모제 (저명도): 염료+브라운 베이스 농도 가장 큼 / 리프팅 약 / 알칼리 약
    · 어둡고 깊은 발색 메인 (다크 매트, 다크 쿨, 딥 와인 등)
 
-★ 명도(레벨)는 이 버전에서 다루지 않는다 — 회사 레벨 숫자는 2층이 약 선택 후 따로 결정(별도 설계).
-
 (4) 컨트롤러 (CC): 형광 직접염료, 색소 100% 단일색 (BLUE=청100·RED=레드100·VIOLET=보라100·GREEN=그린100·PINK=핑크100·ASH=애쉬100). 큐티클 표면 흡착, 코르텍스 침투 X, 리프팅(밝히기) X — 단 착색은 함(명도 올라간 베이스·탈색모에서 보색·색채가 얹혀 잡힘)
    · ★ 반드시 산화염모제(기본 염모제)와 믹스해서 쓴다 — 단독 X. 디폴트 마커 "소량"
    · 쓰는 때: 잔류 보색(주황 잔류→블루 등)·채도 조절, 그리고 표면 흡착이라 쨍하고 선명한 컬러가 필요할 때
@@ -1969,6 +1967,8 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
     "잇츠에이블":  { light:11, mid:9,  dark:9,  deep:9 }, // 아모스 본체선(LOOK과 동일, 1~13)
     "트루싱크":    { light:11, mid:11, dark:7,  deep:2 }  // 아모스 고채도 부스터(deep=2 블루블랙급)
   };
+  // ★ 1층이 가끔 스케일(5·7·9·11·13) 벗어나 6·8 같은 값을 줄 때만 가장 가까운 단으로 스냅(순수 산수, 색 판단 아님). 정상값은 그대로.
+  function snapLevel(n){ if(n==null||isNaN(n)) return null; var S=[5,7,9,11,13],b=S[0]; for(var i=1;i<S.length;i++){ if(Math.abs(S[i]-n)<Math.abs(b-n)) b=S[i]; } return b; }
   function levelFor(line, depth, base, ratio){
     var d = (depth==="light"||depth==="mid"||depth==="dark"||depth==="deep") ? depth : "mid";
     // ★ 14 브라운 언더톤(자산이 이미 어두움): 메인은 오센틱=11 / 기본(LOOK)=9 고정(어두운 약을 메인으로 박으면 자산 위 무게감·탁).
@@ -2007,21 +2007,15 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
       if(brandKey==="milbon" && abstract.targetHex && typeof MHX!=="undefined" && (item.role==="main"||item.role==="sub"||item.role==="cc")){
         var _t=MHX.hexHSV(abstract.targetHex);
         if(item.role==="cc"){
-          // 제미나이 보색 결 → 색별 컨트롤러(딥블루 기계남발 폐기), 컨트롤러 없는 색은 동색 약
+          // ★ CC = 공용 1차색명만 (블루·바이올렛·핑크·레드·오렌지·그린). 1층 보색 결 그대로 — 약 코드 뒤지기·언더톤 보색 폴백 발명 금지.
           var _ccc=mlbnCcColor(item.dye);
-          // ★ 과중화 방지: 메인이 난색(웜)인데 cc가 쿨 보색(blue/violet)이면 따뜻함을 죽이니 억제(생략 표시).
+          if(!_ccc){ return; }  // 1층이 보색 결을 안 주면 컨트롤러 생략(헛것 만들지 않음)
+          // ★ 과중화 방지: 메인이 난색(웜)인데 cc가 쿨 보색(blue/violet)이면 따뜻함을 죽이니 억제.
           var _ms=out.filter(function(o){return o._viaHex && o.role!=="cc" && o.hex;})[0];
           if(_ms){ var _mh=MHX.hexHSV(_ms.hex).hue; if((_mh<60||_mh>330) && (_ccc==="blue"||_ccc==="violet")){
-            out.push({role:"cc",suppressed:true,code:(MLBN_CC_CTRL[_ccc]||_ccc),name:(MLBN_CC_CTRL[_ccc]||_ccc),reason:"메인이 난색(웜)이라 쿨 보색은 따뜻함을 죽임 → 생략"}); return; } }
-          var _ctrlName=MLBN_CC_CTRL[_ccc], _dyeName=MLBN_CC_DYE[_ccc];
-          if(_ctrlName){ var _cp=MHX.PTS.filter(function(p){return p.cc && p.name===_ctrlName;})[0];
-            if(_cp){ out.push({role:"cc",roleLabel:item.roleLabel||null,code:_cp.name,name:_cp.name,hex:_cp.hex,ratio:RATIO_BAND[item.ratio]||"",confirmed:true,_viaHex:true}); return; } }
-          if(_dyeName){ var _dp=MHX.PTS.filter(function(p){return !p.cc && p.name===_dyeName;}).sort(function(a,b){return Math.abs(a.val-_t.val)-Math.abs(b.val-_t.val);})[0];
-            if(_dp){ out.push({role:"cc",roleLabel:item.roleLabel||null,code:_dp.name,name:_dp.name,hex:_dp.hex,chroma:_dp.chroma,level:_dp.level,comp:(MLBN_NOTE[_dp.name]||""),ratio:RATIO_BAND[item.ratio]||"",confirmed:true,_viaHex:true}); return; } }
-          // 폴백: 언더톤 보색
-          var _bm0={lv14:14,lv16:16,lv18:18,white:"white",virgin:14,lv12_lift:14}, _base0=MHX.LADDER[_bm0[abstract.base]||14];
-          var _cc=MHX.nearest({hue:(_base0.hue+180)%360,chroma:80,val:50},MHX.PTS.filter(function(p){return p.cc;}))[0];
-          if(_cc){ out.push({role:"cc",roleLabel:item.roleLabel||null,code:_cc.p.name,name:_cc.p.name,hex:_cc.p.hex,ratio:RATIO_BAND[item.ratio]||"",confirmed:true,_viaHex:true}); return; }
+            out.push({role:"cc",suppressed:true,code:_ccc.toUpperCase(),name:_ccc.toUpperCase(),reason:"메인이 난색(웜)이라 쿨 보색은 따뜻함을 죽임 → 생략"}); return; } }
+          var _ccHex={blue:"#72829f",violet:"#633c64",red:"#823a44",orange:"#b85837",pink:"#b97a81",green:"#6b7463"};
+          out.push({role:"cc",roleLabel:item.roleLabel||null,code:_ccc.toUpperCase(),name:_ccc.toUpperCase(),hex:(_ccHex[_ccc]||"#888888"),ratio:RATIO_BAND[item.ratio]||"",confirmed:true,_viaHex:true}); return;
         } else {
           var _usedNames=out.filter(function(o){return o._viaHex && o.role!=="cc";}).map(function(o){return o.name;});
           var _fa=MLBN_FAMILY_HUE[item.dye];
@@ -2042,9 +2036,9 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
               var _lvT=Math.abs(p.level-(_llv!=null?_llv:levelFor((_lkP==="어딕시")?"어딕시":"올디브",item.depth,abstract.base,item.ratio)))*3.2;  // ★fix: 사진밝기(val) 폴백 폐지 → 라인×언더톤(levelFor)
               return {p:p, d: MHX.hueDiff(p.hue,_fa.hue)*_hueW + _lvT + Math.abs(p.chroma-_tgtC)*0.5 + pen};}).sort(function(a,b){return a.d-b.d;});
             var _bF=_mmA[0].p, _lkF=(_bF.grp==="어딕시(고채도)")?"어딕시":(_bF.grp==="올디브(기본)")?"올디브":"트렌드";
-            out.push({role:item.role, level:levelFor((_lkF==="어딕시")?"어딕시":"올디브",item.depth,abstract.base,item.ratio), code:_bF.name, name:_bF.name, hex:_bF.hex, chroma:_bF.chroma,
+            out.push({role:item.role, level:(item.llmLevel!=null?item.llmLevel:levelFor((_lkF==="어딕시")?"어딕시":"올디브",item.depth,abstract.base,item.ratio)), code:_bF.name, name:_bF.name, hex:_bF.hex, chroma:_bF.chroma,
               comp:(MLBN_NOTE[_bF.name]||""), roleLabel:item.roleLabel||null, ratio:RATIO_BAND[item.ratio]||"", line:_lkF, confirmed:true, nuance:item.nuance||null, _viaHex:true,
-              alts:_mmA.filter(function(a){return a.p.name!==_bF.name;}).slice(0,2).map(function(a){return {label:a.p.name,name:a.p.name,level:levelFor((_lkF==="어딕시")?"어딕시":"올디브",item.depth,abstract.base,item.ratio),confirmed:true};})});
+              alts:_mmA.filter(function(a){return a.p.name!==_bF.name;}).slice(0,2).map(function(a){return {label:a.p.name,name:a.p.name,level:(item.llmLevel!=null?item.llmLevel:levelFor((_lkF==="어딕시")?"어딕시":"올디브",item.depth,abstract.base,item.ratio)),confirmed:true};})});
             return;
           }
           // 결 매핑 없으면 기존 빼기 폴백 (안전망)
@@ -2060,9 +2054,9 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
           if(!_pool.length) _pool=MHX.PTS.filter(function(p){return !p.cc;});
           var _pool2=_pool.filter(function(p){return _usedNames.indexOf(p.name)<0;}); if(!_pool2.length) _pool2=_pool;
           var _mm=MHX.nearest(_tint,_pool2); var _best=_mm[0].p;
-          out.push({role:item.role, level:levelFor((_lk==="어딕시")?"어딕시":"올디브",item.depth,abstract.base,item.ratio), code:_best.name, name:_best.name, hex:_best.hex, chroma:_best.chroma,
+          out.push({role:item.role, level:(item.llmLevel!=null?item.llmLevel:levelFor((_lk==="어딕시")?"어딕시":"올디브",item.depth,abstract.base,item.ratio)), code:_best.name, name:_best.name, hex:_best.hex, chroma:_best.chroma,
             comp:(MLBN_NOTE[_best.name]||""), roleLabel:item.roleLabel||null, ratio:RATIO_BAND[item.ratio]||"", line:_lk, confirmed:true, nuance:item.nuance||null, _viaHex:true,
-            alts:_mm.filter(function(a){return a.p.name!==_best.name;}).slice(0,2).map(function(a){return {label:a.p.name,name:a.p.name,level:levelFor((_lk==="어딕시")?"어딕시":"올디브",item.depth,abstract.base,item.ratio),confirmed:true};})});
+            alts:_mm.filter(function(a){return a.p.name!==_best.name;}).slice(0,2).map(function(a){return {label:a.p.name,name:a.p.name,level:(item.llmLevel!=null?item.llmLevel:levelFor((_lk==="어딕시")?"어딕시":"올디브",item.depth,abstract.base,item.ratio)),confirmed:true};})});
           return;
         }
       }
@@ -2257,7 +2251,7 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
       if(role!=="main" && role!=="sub" && role!=="cc"){    // role 누락 시 등장순으로 추정
         role = mainSeen ? "sub" : "main";
       }
-      var lvl = (s.level!=null && s.level!=="" && !isNaN(parseInt(s.level,10))) ? parseInt(s.level,10) : null;  // ★fix: 1층 레벨이 문자열("9")이어도 받는다(숫자만 받아 버리던 버그)
+      var lvl = (s.level!=null && s.level!=="" && !isNaN(parseInt(s.level,10))) ? snapLevel(parseInt(s.level,10)) : null;  // ★fix: 1층 레벨 문자열 수용 + 스케일(5·7·9·11·13) 스냅(6·8 교정)
       var hx = (typeof s.hex==="string" && /^#?[0-9a-fA-F]{6}$/.test(s.hex)) ? (s.hex[0]==="#"?s.hex:"#"+s.hex) : null;
       var item = { role:role, dye:fam, nuance:s.nuance||null,
                    roleLabel: s.roleLabel||null,
@@ -2417,7 +2411,7 @@ async function runBatch(){
 function compText(m){
   if(m.role==="clear") return "클리어 · 농도조절";
   if(m.code==="BLUE BLACK") return "블랙 · 딥 네이비";
-  if(m.role==="cc"){const N={VIOLET:"보라",BLUE:"블루",GREEN:"그린",ASH:"애쉬",PINK:"핑크",RED:"레드","BLUE BLACK":"블루블랙"};var _c=String(m.code||"").replace(/^C\d+-\w+\s*/,"");return (N[_c]||_c)+" 컨트롤러";}
+  if(m.role==="cc"){const N={VIOLET:"바이올렛",BLUE:"블루",GREEN:"그린",ASH:"애쉬",PINK:"핑크",RED:"레드",ORANGE:"오렌지","BLUE BLACK":"블루블랙"};var _c=String(m.code||"").replace(/^C\d+-\w+\s*/,"");return (N[_c]||_c)+" 컨트롤러";}
   return [m.ju,m.bu].filter(x=>x&&x!=="—").join(" · ").replace(/\([^)]*\)/g,"");
 }
 function pill(m){
