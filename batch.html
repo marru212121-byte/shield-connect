@@ -2039,7 +2039,7 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
             // ★ 명도(레벨)는 1층(LLM)이 사고한 레벨을 존중한다 — 사진 어두움(val)에 맞춰 약을 과하게 어둡게(7·5) 고르던 버그 교정. (14로 톤업한 베이스엔 11이 표준, 7은 딥 변형.) llmLevel 없으면 기존 val매칭 폴백.
             var _llv=(item.llmLevel!=null)?item.llmLevel:null;
             var _mmA=_poolA.map(function(p){var pen=(_prefG && p.grp!==_prefG?8:0)+((_deep && p.grp==="올디브(기본)" && p.level<=8)?9:0);
-              var _lvT=(_llv!=null)?Math.abs(p.level-_llv)*3.2:Math.abs(p.val-_t.val)*0.6;
+              var _lvT=Math.abs(p.level-(_llv!=null?_llv:levelFor((_lkP==="어딕시")?"어딕시":"올디브",item.depth,abstract.base,item.ratio)))*3.2;  // ★fix: 사진밝기(val) 폴백 폐지 → 라인×언더톤(levelFor)
               return {p:p, d: MHX.hueDiff(p.hue,_fa.hue)*_hueW + _lvT + Math.abs(p.chroma-_tgtC)*0.5 + pen};}).sort(function(a,b){return a.d-b.d;});
             var _bF=_mmA[0].p, _lkF=(_bF.grp==="어딕시(고채도)")?"어딕시":(_bF.grp==="올디브(기본)")?"올디브":"트렌드";
             out.push({role:item.role, level:_bF.level, code:_bF.name, name:_bF.name, hex:_bF.hex, chroma:_bF.chroma,
@@ -2257,7 +2257,7 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
       if(role!=="main" && role!=="sub" && role!=="cc"){    // role 누락 시 등장순으로 추정
         role = mainSeen ? "sub" : "main";
       }
-      var lvl = (typeof s.level==="number") ? s.level : null;
+      var lvl = (s.level!=null && s.level!=="" && !isNaN(parseInt(s.level,10))) ? parseInt(s.level,10) : null;  // ★fix: 1층 레벨이 문자열("9")이어도 받는다(숫자만 받아 버리던 버그)
       var hx = (typeof s.hex==="string" && /^#?[0-9a-fA-F]{6}$/.test(s.hex)) ? (s.hex[0]==="#"?s.hex:"#"+s.hex) : null;
       var item = { role:role, dye:fam, nuance:s.nuance||null,
                    roleLabel: s.roleLabel||null,
