@@ -2042,7 +2042,7 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
               var _lvT=Math.abs(p.level-(_llv!=null?_llv:levelFor((_lkP==="어딕시")?"어딕시":"올디브",item.depth,abstract.base,item.ratio)))*3.2;  // ★fix: 사진밝기(val) 폴백 폐지 → 라인×언더톤(levelFor)
               return {p:p, d: MHX.hueDiff(p.hue,_fa.hue)*_hueW + _lvT + Math.abs(p.chroma-_tgtC)*0.5 + pen};}).sort(function(a,b){return a.d-b.d;});
             var _bF=_mmA[0].p, _lkF=(_bF.grp==="어딕시(고채도)")?"어딕시":(_bF.grp==="올디브(기본)")?"올디브":"트렌드";
-            out.push({role:item.role, level:_bF.level, code:_bF.name, name:_bF.name, hex:_bF.hex, chroma:_bF.chroma,
+            out.push({role:item.role, level:(item.llmLevel!=null?item.llmLevel:levelFor((_lkF==="어딕시")?"어딕시":"올디브",item.depth,abstract.base,item.ratio)), code:_bF.name, name:_bF.name, hex:_bF.hex, chroma:_bF.chroma,
               comp:(MLBN_NOTE[_bF.name]||""), roleLabel:item.roleLabel||null, ratio:RATIO_BAND[item.ratio]||"", line:_lkF, confirmed:true, nuance:item.nuance||null, _viaHex:true,
               alts:_mmA.filter(function(a){return a.p.name!==_bF.name;}).slice(0,2).map(function(a){return {label:a.p.name,name:a.p.name,level:a.p.level,confirmed:true};})});
             return;
@@ -2060,7 +2060,7 @@ var RATIO_BAND = { main:"잔량", sub:"30~50%", small:"10~20%", trace:"5~10%" };
           if(!_pool.length) _pool=MHX.PTS.filter(function(p){return !p.cc;});
           var _pool2=_pool.filter(function(p){return _usedNames.indexOf(p.name)<0;}); if(!_pool2.length) _pool2=_pool;
           var _mm=MHX.nearest(_tint,_pool2); var _best=_mm[0].p;
-          out.push({role:item.role, level:_best.level, code:_best.name, name:_best.name, hex:_best.hex, chroma:_best.chroma,
+          out.push({role:item.role, level:(item.llmLevel!=null?item.llmLevel:levelFor((_lk==="어딕시")?"어딕시":"올디브",item.depth,abstract.base,item.ratio)), code:_best.name, name:_best.name, hex:_best.hex, chroma:_best.chroma,
             comp:(MLBN_NOTE[_best.name]||""), roleLabel:item.roleLabel||null, ratio:RATIO_BAND[item.ratio]||"", line:_lk, confirmed:true, nuance:item.nuance||null, _viaHex:true,
             alts:_mm.filter(function(a){return a.p.name!==_best.name;}).slice(0,2).map(function(a){return {label:a.p.name,name:a.p.name,level:a.p.level,confirmed:true};})});
           return;
