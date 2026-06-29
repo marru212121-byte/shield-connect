@@ -2730,8 +2730,8 @@ function __realizeItems(dyes){ dyes=dyes||[]; var co=(typeof COMPANY!=="undefine
     if(/컨트롤러|클리어|CC/.test(nm)||d["결"]==="클리어"){ it.ctrl=/컨트롤러/.test(nm); it.hex=(__CTRL_HEX[nm]||__dyeHex(nm||"클리어")); it.name=nm||"클리어"; }
     else if(d["결"]){ var z=__realizeIntent(d["결"],d["티어"],d["역할"],co,d.level);
       if(z&&z.dye){ it.hex=z.hex; it.dye=z.dye; it.alts=z.alts||[]; var slv=__snapV2(d.level,z.dye.name); it.slv=slv;
-        if(co==="milbon"&&MILBON_NUM[z.dye.name]){ it.code=slv+"-"+MILBON_NUM[z.dye.name]; }
-        else { it.lv=slv; it.code=(z.dye.code&&z.dye.code!==z.dye.name)?z.dye.code:""; }
+        it.lv=slv;   /* ★레벨(LLM)=별도 라임 표기. 코드는 약 식별자만(9는 레벨이지 코드 아님) */
+        it.code=(co==="milbon"&&MILBON_NUM[z.dye.name])?MILBON_NUM[z.dye.name]:((z.dye.code&&z.dye.code!==z.dye.name)?z.dye.code:"");
         it.name=__koName(z.dye)+(z.viaG?" (이웃결·"+z.viaG+")":""); }
       else if(z){ it.hex=z.hex; it.name="["+d["결"]+"] 없음"; }
       else it.name="["+d["결"]+"] 없음"; }
@@ -2755,10 +2755,10 @@ function __formula(items){
 function __altsBlock(items){
   return items.filter(function(it){ return !it.ctrl && it.alts && it.alts.length; }).map(function(it){
     var cells=it.alts.slice(0,5).map(function(x){
-      var code=(it.co==="milbon"&&MILBON_NUM[x.name])?(it.slv+"-"+MILBON_NUM[x.name]):((x.code&&x.code!==x.name)?x.code:"");
-      var lv=(it.co==="milbon")?"":(it.slv||"");
+      var code=(it.co==="milbon"&&MILBON_NUM[x.name])?MILBON_NUM[x.name]:((x.code&&x.code!==x.name)?x.code:"");
+      var lv=it.slv||"";
       var trend=(it.co==="milbon"&&!__isPref(x))?' <span style="color:#7c6a3a">·트렌드</span>':'';
-      return '<span style="display:inline-flex;align-items:center;gap:4px">'+__chip(x.hex,false,false,12)+(lv?'<b style="color:#9aa583;'+__MONO+';font-size:11px">'+lv+'</b>':"")+(code?'<b style="color:#cdd2c0;'+__MONO+';font-size:11px">'+esc(code)+'</b>':"")+'<span style="color:#aeb6a0;font-size:12px">'+esc(__koName(x))+'</span>'+trend+'</span>'; }).join('<span style="color:#4d5a36;margin:0 3px">·</span>');
+      return '<span style="display:inline-flex;align-items:center;gap:4px">'+__chip(x.hex,false,false,12)+(lv?'<b style="color:#C7F050;'+__MONO+';font-size:11px">'+lv+'</b>':"")+(code?'<b style="color:#cdd2c0;'+__MONO+';font-size:11px">'+esc(code)+'</b>':"")+'<span style="color:#aeb6a0;font-size:12px">'+esc(__koName(x))+'</span>'+trend+'</span>'; }).join('<span style="color:#4d5a36;margin:0 3px">·</span>');
     return '<div style="margin-top:7px;display:flex;flex-wrap:wrap;align-items:center;gap:7px"><span style="font-size:10.5px;color:#6b7358;flex:0 0 auto">'+esc(it.name.replace(/ \(.*/,""))+' 대안 →</span>'+cells+'</div>'; }).join(''); }
 function __v2reason(rz){ if(!rz) return ''; var rows=[["컬러",rz.color],["언더톤 근거",rz.undertone_basis],["염모제",rz.dye],["명도",rz.level],["보색",rz.neutralize||rz.cc]]; var body=rows.filter(function(x){return x[1];}).map(function(x){return '<div style="display:flex;gap:9px"><span style="color:#5d6b3a;flex:0 0 62px">'+esc(x[0])+'</span><span style="color:#cdd2c0;flex:1">'+esc(x[1])+'</span></div>';}).join(''); if(!body) return ''; return '<div style="margin-top:11px;border-top:1px solid rgba(199,240,80,.14);padding-top:10px"><div style="font-size:9px;letter-spacing:1.5px;color:#7c8466;margin-bottom:8px">왜 이 조합</div><div style="display:grid;gap:7px;font-size:12px;line-height:1.5">'+body+'</div></div>'; }
 function __v2card(r,reco,rz){ var items=__realizeItems(r.dyes);
