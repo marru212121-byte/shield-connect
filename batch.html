@@ -2682,10 +2682,11 @@ function __realize(intent, company){
   var nb={}; nb[gt]=1; (NEIGHBOR2[gt]||[]).forEach(function(x){nb[x]=1;});
   var cands=pool.filter(function(d){return nb[d.gt];});
   if(!cands.length) return {dyes:[],note:"인접결+컨트롤러로 조합"};
-  function score(d){ var s=0; s+=(d.gt===gt?0:14); s+=(d.tier===tier?0:7);
+  var TR={"기본":0,"중":1,"고채도":2};
+  function score(d){ var s=(d.gt===gt?0:14)+Math.abs((TR[d.tier]||1)-(TR[tier]||1))*4;
     if(nuance && (d.bu+d.name).indexOf(nuance)>=0) s-=5; return s; }
-  cands=cands.map(function(d){return {d:d,s:score(d)};}).sort(function(a,b){return a.s-b.s;});
-  var best=cands[0].s; var out=cands.filter(function(x){return x.s<=best+7;}).slice(0,3).map(function(x){return x.d;});
+  cands=cands.map(function(d){return {d:d,s:score(d)};}).sort(function(a,b){return a.s-b.s || (TR[a.d.tier]||1)-(TR[b.d.tier]||1);});
+  var out=[cands[0].d];
   var notes=[];
   if(!out.some(function(c){return c.gt===gt;})) notes.push("이웃결 끌어옴(부염료 보정)");
   if(out.every(function(c){return c.tier!==tier;})) notes.push(tier==="고채도"?"쎈 라인 없음→컨트롤러 소량":(tier==="기본"?"여린 라인 없음→클리어 희석":""));
@@ -2700,8 +2701,7 @@ function __realize2(milbonName){
   if(!DYES2[COMPANY]) return {label:nm+" ("+COMPANY+" 미구축)", hex:"#555"};
   var r=__realize({gt:g.gt, tier:g.tier}, COMPANY);
   if(!r.dyes.length) return {label:"["+g.gt+"] "+(r.note||"조합 필요"), hex:"#555"};
-  var label=r.dyes.map(function(d){return d.name;}).join(" / ");
-  if(r.note) label+=" · "+r.note;
+  var label=r.dyes[0].name + (r.dyes[0].gt!==g.gt?" (이웃결)":"");
   return {label:label, hex:r.dyes[0].hex};
 }
 function __v2dyes(dyes){ return (dyes||[]).map(function(d){ var lv=__snapV2(d.level,d.name); var z=__realize2(d.name);
