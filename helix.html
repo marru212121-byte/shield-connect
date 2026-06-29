@@ -374,14 +374,15 @@ html,body{height:100%;background:var(--ink);overflow:hidden;
 .cg-htx{display:flex;flex-direction:column;line-height:1.12;text-align:left}
 .cg-hlv{font-size:13px;font-weight:800;color:var(--lime);text-shadow:0 0 8px rgba(199,240,80,.4)}
 .cg-hnm{font-size:8px;color:#cdd2c0;letter-spacing:.03em;margin-top:1px}
-/* 첫 진입 유도 가이드 (한 번 만지면 사라짐) */
-.cg-guide{position:absolute;right:calc(100% + 9px);top:50%;transform:translateY(-50%);
-  display:flex;align-items:center;padding:6px 9px;border-radius:9px;white-space:nowrap;
-  background:var(--lime);color:#10150a;font-size:10px;font-weight:800;letter-spacing:.02em;
-  box-shadow:0 4px 16px rgba(0,0,0,.45);animation:cgGuide 1.6s ease-in-out infinite}
-.cg-guide::after{content:'';position:absolute;right:-4px;top:50%;width:8px;height:8px;background:var(--lime);transform:translate(0,-50%) rotate(45deg)}
+/* 첫 진입 유도 가이드 (게이지 옆 중앙, 한 번 만지면 사라짐) */
+.cg-guide{position:absolute;right:calc(100% + 13px);top:50%;transform:translateY(-50%);z-index:9;
+  display:flex;flex-direction:column;align-items:flex-end;padding:8px 12px;border-radius:11px;white-space:nowrap;
+  background:var(--lime);color:#10150a;font-size:11px;font-weight:800;line-height:1.4;text-align:right;
+  box-shadow:0 6px 22px rgba(0,0,0,.5);animation:cgGuide 1.5s ease-in-out infinite}
+.cg-guide small{display:block;font-size:9px;font-weight:700;opacity:.72;letter-spacing:.02em}
+.cg-guide::after{content:'';position:absolute;right:-5px;top:50%;width:10px;height:10px;background:var(--lime);transform:translate(0,-50%) rotate(45deg)}
 .cg-guide.hide{opacity:0;transition:opacity .35s;pointer-events:none}
-@keyframes cgGuide{0%,100%{transform:translateY(-50%) translateX(0)}50%{transform:translateY(-50%) translateX(-4px)}}
+@keyframes cgGuide{0%,100%{transform:translateY(-50%) translateX(0)}50%{transform:translateY(-50%) translateX(-5px)}}
 /* HUD = 떠 있는 홀로그램 패널 */
 .cj-hud{position:absolute;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom,0) + 12px);z-index:8;
   padding:12px 14px 13px;border-radius:17px;transform-origin:50% 100%;transform:perspective(900px) rotateX(3.5deg);
@@ -4164,9 +4165,9 @@ function viewInfer(){
     <div class="cj-top"><div class="cj-lv" data-lvlabel>LV 5</div><div class="cj-short" data-short>BLACK</div></div>
     <div class="cj-pig"><div class="cp-cap">안에 숨은 색</div><div class="cp-sw" data-hsw style="background:#2A0806"></div><div class="cp-nm" data-hnm>분해 안 된 적색</div></div>
     <div class="cj-gauge" data-gauge>
+      <div class="cg-guide" data-guide>원하는 언더톤을 선택하세요<small>↕ 핸들을 위아래로 끌기</small></div>
       <div class="cg-track" data-track>${segs}</div>
       <div class="cg-handle" data-handle>
-        <div class="cg-guide" data-guide>↕ 끌어서 선택</div>
         <span class="cg-grip"><svg width="11" height="17" viewBox="0 0 11 17" fill="none"><path d="M5.5 1L9 5H2L5.5 1Z" fill="currentColor"/><path d="M5.5 16L2 12H9L5.5 16Z" fill="currentColor"/></svg></span>
         <span class="cg-hchip" data-hgsw></span>
         <span class="cg-htx"><span class="cg-hlv" data-hlv>LV 5</span><span class="cg-hnm" data-hgnm>검정</span></span>
