@@ -2743,9 +2743,9 @@ function renderMilbonV2(data){
   if(recs.length<3) h+='<div style="font-size:11px;color:#caa34a;margin-bottom:6px">⚠ 레시피 '+recs.length+'개</div>';
   h+=recs.map(function(r,k){return __v2card(r,k===0,data.reason);}).join('');
   var g=data.gauge;
-  if(g && (g.orange||g.tan_yellow)){
+  if(g && g.axis && String(g.axis)!=="none" && !/18/.test(String(g.axis)) && (g.left||g.right)){
     var rec0=recs[0]||{dyes:[]};
-    var states=[["주황 잔류 → 블루","#ffb347",(g.orange&&g.orange.length?g.orange:rec0.dyes)],["중간(권장)","#C7F050",rec0.dyes],["황갈·노랑 → 보라","#c8a0f0",(g.tan_yellow&&g.tan_yellow.length?g.tan_yellow:rec0.dyes)]];
+    var __L=(g.left&&g.left.recipes&&g.left.recipes[0]&&g.left.recipes[0].dyes)||rec0.dyes; var __R=(g.right&&g.right.recipes&&g.right.recipes[0]&&g.right.recipes[0].dyes)||rec0.dyes; var states=[[(g.left&&g.left.pos)||"좌 갈래","#ffb347",__L],["중간(권장)","#C7F050",rec0.dyes],[(g.right&&g.right.pos)||"우 갈래","#c8a0f0",__R]];
     h+='<div style="margin-top:4px;padding:11px 12px;border-radius:10px;background:rgba(8,12,6,.4);border:1px solid rgba(199,240,80,.14)"><div style="font-size:10px;letter-spacing:1.5px;color:#5d6b3a;margin-bottom:8px">잔류 게이지 · 3상태</div><div style="display:flex;gap:7px;flex-wrap:wrap">'+states.map(function(s){return '<div style="flex:1;min-width:150px;background:rgba(255,255,255,.02);border:1px solid rgba(199,240,80,.12);border-radius:8px;padding:8px 9px"><div style="font-size:10px;color:'+s[1]+';margin-bottom:4px">'+esc(s[0])+'</div>'+__v2dyes(s[2])+'</div>';}).join('')+'</div></div>';
   } else { h+='<div style="font-size:11px;color:#5d6b3a;margin:4px 0">게이지 없음 (18레벨·빈 캔버스)</div>'; }
   h+='</div></div>';
