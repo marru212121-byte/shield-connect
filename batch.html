@@ -2707,7 +2707,7 @@ function __realizeIntent(gyeol,tier,role,co,level){ var pool=DYES2[co]; if(!pool
   var ranked=__rankBucket(bucket,tier,role,level,base);
   var d=ranked[0]; if(!d) return null;
   function lab(x){ var nmd=x.name; if(/[A-Za-z]/.test(nmd)&&x.ko&&nmd.indexOf(x.ko)<0) nmd+=" ("+x.ko+")"; var cd=(x.code&&x.code!==x.name)?x.code+" ":""; return cd+nmd; }
-  return {label:lab(d)+(via?" (이웃결·"+via+")":""), hex:d.hex, dye:d, alts:ranked.slice(1), viaG:via}; }
+  return {label:lab(d), hex:d.hex, dye:d, alts:ranked.slice(1), viaG:via, reqG:gyeol}; }
 /* 밀본 카탈로그 넘버링(차트 실측 2026-06-29): 표시=레벨-코드. 어딕시/올디브/트렌드/틴트 전 라인 */
 var MILBON_NUM={"리프펄":"LE-Pearl","블루펄":"B-Pearl","라벤더펄":"LA-Pearl","그레이펄":"GrayPearl","코발트블루":"Cobalt-B","사파이어":"Sapphire","에메랄드":"Emerald","애미시스트":"Amethyst","퍼플가넷":"P-Garnet","실버":"Silver","스모키토파즈":"S-Topaz","스모키앰버":"S-Amber","보르도루비":"BO-Ruby","NB":"NB","CB":"CB","애쉬":"10","매트애쉬":"15","매트":"20","골드":"30","오렌지":"40","카퍼":"45","레드":"50","핑크":"55","퍼플":"60","화이티애쉬":"wAS","스모키매트애쉬":"sMA","멜티쇼콜라":"mCH","멜티메이플":"mML","펄그레쥬":"pGG","필그레쥬":"pGG","시어모브":"srMV","시어모브핑크":"srMP","머메이드애쉬":"mAS","머메이드라벤더애쉬":"mLA","이노센트아이스블루":"iIB","이노센트플래티나":"iPT","헬시시나몬":"hCN","헬시헤이즐":"hHZ","모드네이비":"mNV","모드매트네이비":"mMN","프렌치세미라애쉬":"fSA","프렌치모브애쉬":"fMA","포기그레쥬":"fGG","포기그레이지":"fGG","포기블루쥬":"fBG","네오빈티지카키":"nKH","네오빈티지그레이":"nGR","시크라베이지":"cLA","시크블루라베이지":"cBL","시스루아쿠아":"sAQ","시스루아쿠아민트":"sAM"};
 /* ★공용 컨트롤러 = 쨍한 표면 직접색(산화약 아님). 별도 vivid 스와치 */
@@ -2723,13 +2723,14 @@ function __codeSplit(label){ var s=String(label||""); var sp=s.indexOf(" ");
 function __chip(hex,ctrl,dim,sz){ sz=sz||15; return '<span style="width:'+sz+'px;height:'+sz+'px;border-radius:'+(ctrl?(sz/2)+"px":"4px")+';background:'+hex+';box-shadow:0 0 0 1px rgba(255,255,255,'+(ctrl?".4":".14")+')'+(ctrl?",0 0 6px "+hex:"")+';display:inline-block;flex:0 0 auto'+(dim?";opacity:.42":"")+'"></span>'; }
 function __koName(x){ var n=x.name; if(/[A-Za-z]/.test(n)&&x.ko&&n.indexOf(x.ko)<0) n+=" ("+x.ko+")"; return n; }
 function __realizeItems(dyes){ dyes=dyes||[]; var co=(typeof COMPANY!=="undefined")?COMPANY:"milbon";
-  var items=dyes.map(function(d){ var nm=String(d.name||""); var it={d:d,co:co,ctrl:false,lv:"",code:"",name:"",hex:"#555",dye:null,alts:[],slv:""};
+  var items=dyes.map(function(d){ var nm=String(d.name||""); var it={d:d,co:co,ctrl:false,lv:"",code:"",name:"",hex:"#555",dye:null,alts:[],slv:"",oldive:false};
     if(/컨트롤러|클리어|CC/.test(nm)||d["결"]==="클리어"){ it.ctrl=/컨트롤러/.test(nm); it.hex=(__CTRL_HEX[nm]||__dyeHex(nm||"클리어")); it.name=nm||"클리어"; }
     else if(d["결"]){ var z=__realizeIntent(d["결"],d["티어"],d["역할"],co,d.level);
       if(z&&z.dye){ it.hex=z.hex; it.dye=z.dye; it.alts=z.alts||[]; var slv=__snapV2(d.level,z.dye.name); it.slv=slv;
-        it.lv=slv;   /* ★레벨(LLM)=별도 라임 표기. 코드는 약 식별자만(9는 레벨이지 코드 아님) */
+        it.lv=slv;   /* ★레벨(LLM)=별도 라임 'NLv'. 코드는 약 식별자만 */
+        it.oldive=(co==="milbon"&&z.dye.tier==="기본");   /* 올디브=숫자코드라 레벨과 하이픈 결합 */
         it.code=(co==="milbon"&&MILBON_NUM[z.dye.name])?MILBON_NUM[z.dye.name]:((z.dye.code&&z.dye.code!==z.dye.name)?z.dye.code:"");
-        it.name=__koName(z.dye)+(z.viaG?" (이웃결·"+z.viaG+")":""); }
+        it.name=__koName(z.dye)+(z.viaG?" ("+z.reqG+" 없음 → "+z.viaG+"으로)":""); }
       else if(z){ it.hex=z.hex; it.name="["+d["결"]+"] 없음"; }
       else it.name="["+d["결"]+"] 없음"; }
     else { var z2=__realize2(nm,d.level); it.hex=z2.hex; it.lv=__snapV2(d.level,nm); var cs=__codeSplit(z2.label); it.code=cs.code; it.name=cs.name; }
@@ -2739,31 +2740,38 @@ function __realizeItems(dyes){ dyes=dyes||[]; var co=(typeof COMPANY!=="undefine
   return items; }
 function __roleOf(it){ if(it.ctrl) return "컨트롤러"; if(it.d["결"]==="클리어"||/클리어/.test(it.name)) return "클리어"; return it.d["역할"]||"메인"; }
 /* ★항상 보이는 레시피: 스와치+코드+이름 위 / 역할·비율 아래 (메인·부·보색·컨트롤러 다) */
+function __lvCode(lv,code,oldive,sz){ sz=sz||13;
+  if(lv===""&&!code) return "";
+  return '<span style="display:inline-flex;align-items:baseline">'
+    +(lv!==""?'<b style="color:#C7F050;'+__MONO+';font-size:'+sz+'px">'+esc(lv)+'Lv</b>':'')
+    +(code?'<b style="color:#e3ead4;'+__MONO+';font-size:'+sz+'px;'+(oldive?'':'margin-left:5px;')+'letter-spacing:.2px">'+(oldive?'-':'')+esc(code)+'</b>':'')+'</span>'; }
 function __formula(items){
   var cells=items.map(function(it){
-    var top='<div style="display:flex;align-items:center;gap:5px'+(it.cut?";opacity:.45;text-decoration:line-through":"")+'">'+__chip(it.hex,it.ctrl,it.cut)
-      +(it.lv!==""?'<b style="color:#C7F050;'+__MONO+'">'+it.lv+'</b>':'')
-      +(it.code?'<b style="color:#e3ead4;'+__MONO+';letter-spacing:.3px">'+esc(it.code)+'</b>':'')
-      +'<span style="color:#fff">'+esc(it.name)+'</span></div>';
-    var cap='<div style="font-size:11px;color:#8a9270;margin-top:4px'+(it.cut?";opacity:.5":"")+'">'+esc(__roleOf(it))+(it.d.ratio?' <b style="color:#dfe6cf;'+__MONO+'">'+esc(it.d.ratio)+'</b>':"")+(it.cut?' <span style="color:#8a7a4a">· 생략가능</span>':"")+'</div>';
+    var top='<div style="display:flex;align-items:center;gap:6px;font-size:16px'+(it.cut?";opacity:.45;text-decoration:line-through":"")+'">'+__chip(it.hex,it.ctrl,it.cut,20)+__lvCode(it.lv,it.code,it.oldive,15)+'<span style="color:#fff;font-weight:500">'+esc(it.name)+'</span></div>';
+    var cap='<div style="font-size:11.5px;color:#8a9270;margin-top:5px'+(it.cut?";opacity:.5":"")+'">'+esc(__roleOf(it))+(it.d.ratio?' <b style="color:#dfe6cf;'+__MONO+'">'+esc(it.d.ratio)+'</b>':"")+(it.cut?' <span style="color:#8a7a4a">· 생략가능</span>':"")+'</div>';
     return '<div style="display:flex;flex-direction:column;align-items:flex-start">'+top+cap+'</div>'; });
-  return '<div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px 12px;font-size:14px;margin-top:8px">'+cells.join('<span style="color:#5d6b3a;font-weight:700;align-self:flex-start;padding-top:1px">+</span>')+'</div>'; }
+  return '<div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px 14px;margin-top:10px">'+cells.join('<span style="color:#5d6b3a;font-weight:700;font-size:18px;align-self:flex-start;padding-top:2px">+</span>')+'</div>'; }
 /* ★펼쳤을 때 대안: 각 슬롯(메인·부)별로 스와치+이름 한 줄씩 (컨트롤러·보색은 대안 거의 없어 생략) */
 function __altsBlock(items){
-  return items.filter(function(it){ return !it.ctrl && it.alts && it.alts.length; }).map(function(it){
+  var slots=items.filter(function(it){ return !it.ctrl && it.alts && it.alts.length; });
+  if(!slots.length) return '';
+  var n=slots.reduce(function(a,it){return a+Math.min(5,it.alts.length);},0);
+  var boxes=slots.map(function(it){
     var cells=it.alts.slice(0,5).map(function(x){
       var code=(it.co==="milbon"&&MILBON_NUM[x.name])?MILBON_NUM[x.name]:((x.code&&x.code!==x.name)?x.code:"");
-      var lv=it.slv||"";
-      var trend=(it.co==="milbon"&&!__isPref(x))?' <span style="color:#7c6a3a">·트렌드</span>':'';
-      return '<span style="display:inline-flex;align-items:center;gap:4px">'+__chip(x.hex,false,false,12)+(lv?'<b style="color:#C7F050;'+__MONO+';font-size:11px">'+lv+'</b>':"")+(code?'<b style="color:#cdd2c0;'+__MONO+';font-size:11px">'+esc(code)+'</b>':"")+'<span style="color:#aeb6a0;font-size:12px">'+esc(__koName(x))+'</span>'+trend+'</span>'; }).join('<span style="color:#4d5a36;margin:0 3px">·</span>');
-    return '<div style="margin-top:7px;display:flex;flex-wrap:wrap;align-items:center;gap:7px"><span style="font-size:10.5px;color:#6b7358;flex:0 0 auto">'+esc(it.name.replace(/ \(.*/,""))+' 대안 →</span>'+cells+'</div>'; }).join(''); }
+      var old=(it.co==="milbon"&&x.tier==="기본");
+      return '<span style="display:inline-flex;align-items:center;gap:5px">'+__chip(x.hex,false,false,13)+__lvCode(it.slv||"",code,old,11)+'<span style="color:#c2c9b4;font-size:12.5px">'+esc(__koName(x))+'</span></span>';
+    }).join('<span style="color:#4d5a36;margin:0 4px">·</span>');
+    return '<div style="margin-top:9px"><div style="font-size:12px;color:#C7F050;font-weight:600;margin-bottom:6px">'+esc(it.name.replace(/ \(.*/,""))+' 대신 — 이 약도</div><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px">'+cells+'</div></div>';
+  }).join('');
+  return '<details style="margin-top:11px"><summary style="cursor:pointer;font-size:11px;color:#8a9270">▾ 다른 약으로 (대안 '+n+')</summary><div style="margin-top:5px;background:rgba(255,255,255,.02);border:1px solid rgba(199,240,80,.1);border-radius:9px;padding:11px 12px">'+boxes+'</div></details>'; }
 function __v2reason(rz){ if(!rz) return ''; var rows=[["컬러",rz.color],["언더톤 근거",rz.undertone_basis],["염모제",rz.dye],["명도",rz.level],["보색",rz.neutralize||rz.cc]]; var body=rows.filter(function(x){return x[1];}).map(function(x){return '<div style="display:flex;gap:9px"><span style="color:#5d6b3a;flex:0 0 62px">'+esc(x[0])+'</span><span style="color:#cdd2c0;flex:1">'+esc(x[1])+'</span></div>';}).join(''); if(!body) return ''; return '<div style="margin-top:11px;border-top:1px solid rgba(199,240,80,.14);padding-top:10px"><div style="font-size:9px;letter-spacing:1.5px;color:#7c8466;margin-bottom:8px">왜 이 조합</div><div style="display:grid;gap:7px;font-size:12px;line-height:1.5">'+body+'</div></div>'; }
 function __v2card(r,reco,rz){ var items=__realizeItems(r.dyes);
   var st=reco?'background:rgba(199,240,80,.05);border:1px solid rgba(199,240,80,.32)':'background:rgba(255,255,255,.025);border:1px solid rgba(199,240,80,.14)';
   var hasBody=(r.why||(items.some(function(it){return !it.ctrl&&it.alts&&it.alts.length;}))||reco);
   var head='<div style="display:flex;align-items:center;gap:7px"><span style="font-size:10px;letter-spacing:2px;font-weight:700;color:'+(reco?'#C7F050':'#9aa583')+'">'+(reco?'● ':'▸ ')+esc(r.label||"")+'</span>'+(hasBody&&!reco?'<span style="font-size:10px;color:#5d6b3a">펼쳐 보기 ▾</span>':'')+'</div>';
   var summary='<summary style="cursor:'+(hasBody?'pointer':'default')+';padding:12px 14px 13px">'+head+__formula(items)+'</summary>';
-  var body=(r.why?'<div style="font-size:12px;color:#9aa583;margin-top:2px;line-height:1.5">'+esc(r.why)+'</div>':'')+__altsBlock(items)+(reco?__v2reason(rz):'');
+  var body=(r.why?'<div style="font-size:12px;color:#9aa583;margin-top:2px;line-height:1.5">'+esc(r.why)+'</div>':'')+(reco?__v2reason(rz):'')+__altsBlock(items);
   return '<details '+(reco?'open':'')+' style="margin:0 0 9px;border-radius:11px;'+st+'">'+summary+(hasBody?'<div style="padding:0 14px 13px">'+body+'</div>':'')+'</details>'; }
 function __utSwatch(ut){ var s=String(ut||''); var c='#9a8a78'; if(/백모|18/.test(s)) c='#e6d692'; else if(/16/.test(s)) c='#d3b24e'; else if(/14/.test(s)) c='#b9823f'; else if(/12|13/.test(s)) c='#9a5026'; return '<div style="display:flex;align-items:center;gap:10px;margin:2px 0 12px"><span style="width:44px;height:24px;border-radius:6px;flex:0 0 auto;background:'+c+';box-shadow:0 0 0 1px rgba(199,240,80,.22)"></span><div><div style="font-size:10px;letter-spacing:1px;color:#5d6b3a">도달 언더톤</div><div style="font-size:12px;color:#cdd2c0">'+esc(s)+'</div></div></div>'; }
 function __toCommon(t){ if(t==null) return t; var s=String(t);
