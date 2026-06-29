@@ -2719,6 +2719,10 @@ var __CTRL_HEX={"블루 컨트롤러":"#2746d6","바이올렛 컨트롤러":"#6a
 function __buCovers(bu,gyeol){ bu=String(bu||""); gyeol=String(gyeol||"");
   var kw=/순청/.test(gyeol)?"청":(/그린|매트/.test(gyeol)?"그린":(/보라/.test(gyeol)?"보라":null));
   return kw?bu.indexOf(kw)>=0:false; }
+var __MONO="font-family:ui-monospace,'SF Mono','Roboto Mono',Menlo,monospace";
+function __codeSplit(label){ var s=String(label||""); var sp=s.indexOf(" ");
+  if(sp>0){ var head=s.slice(0,sp); if(/^\d+-/.test(head)||/^[A-Za-z][\w/.-]*$/.test(head)) return {code:head,name:s.slice(sp+1)}; }
+  return {code:"",name:s}; }
 function __v2dyes(dyes){ dyes=dyes||[]; var co=(typeof COMPANY!=="undefined")?COMPANY:"milbon";
   var items=dyes.map(function(d){ var nm=String(d.name||""); var z,lv,alt="";
     if(/컨트롤러|클리어|CC/.test(nm)||d["결"]==="클리어"){ z={label:nm||"클리어",hex:(__CTRL_HEX[nm]||__dyeHex(nm||"클리어")),ctrl:/컨트롤러/.test(nm)}; lv=""; }
@@ -2731,16 +2735,24 @@ function __v2dyes(dyes){ dyes=dyes||[]; var co=(typeof COMPANY!=="undefined")?CO
     else { lv=__snapV2(d.level,nm); z=__realize2(nm,d.level); }
     return {d:d,z:z,lv:lv,alt:alt}; });
   var mainBu=""; items.forEach(function(it){ if(it.d["역할"]==="메인"&&it.z.dye&&it.z.dye.bu) mainBu=String(it.z.dye.bu); });
-  return items.map(function(it){ var d=it.d,z=it.z,lv=it.lv,alt=it.alt;
-    var cut=(d["역할"]==="보색"&&d["결"]&&mainBu&&__buCovers(mainBu,d["결"]));
-    var nameStyle=cut?"color:#7a8068;text-decoration:line-through":"color:#fff";
-    return '<div style="margin:7px 0"><div style="display:flex;align-items:center;gap:10px"><span style="width:18px;height:18px;border-radius:'+(z.ctrl?"9px":"5px")+';flex:0 0 auto;background:'+z.hex+';box-shadow:0 0 0 1px rgba(255,255,255,'+(z.ctrl?".4":".12")+');opacity:'+(cut?".5":"1")+'"'+(z.ctrl?";box-shadow:0 0 0 1px rgba(255,255,255,.4),0 0 7px "+z.hex:"")+'></span>'
-     +(lv!==""?'<b style="font-size:15px;color:#C7F050;min-width:20px;opacity:'+(cut?".5":"1")+'">'+lv+'</b>':'<span style="min-width:20px;display:inline-block"></span>')
-     +'<span style="font-size:14px;flex:1;'+nameStyle+'">'+esc(z.label)+'</span><span style="font-size:13px;color:#bcc2b0">'+esc(d.ratio||"")+'</span></div>'
-     +(cut?'<div style="font-size:11px;color:#8a7a4a;margin:3px 0 0 28px">↳ 메인 부염료가 이미 중화 — 자기중화 회계상 생략 가능</div>':'')
-     +(alt&&!cut?'<div style="font-size:11px;color:#6b7358;margin:3px 0 0 28px">대안 · '+esc(alt)+'</div>':'')+'</div>'; }).join(''); }
+  items.forEach(function(it){ it.cut=(it.d["역할"]==="보색"&&it.d["결"]&&mainBu&&__buCovers(mainBu,it.d["결"])); });
+  var cells=items.map(function(it){ var z=it.z, cs=__codeSplit(z.label);
+    var chip='<span style="width:15px;height:15px;border-radius:'+(z.ctrl?"8px":"4px")+';background:'+z.hex+';box-shadow:0 0 0 1px rgba(255,255,255,'+(z.ctrl?".4":".14")+')'+(z.ctrl?",0 0 6px "+z.hex:"")+';display:inline-block;flex:0 0 auto"></span>';
+    var lvs=it.lv!==""?'<b style="color:#C7F050;'+__MONO+'">'+it.lv+'</b>':'';
+    var codes=cs.code?'<b style="color:#e3ead4;'+__MONO+';letter-spacing:.3px">'+esc(cs.code)+'</b>':'';
+    return '<span style="display:inline-flex;align-items:center;gap:5px'+(it.cut?";opacity:.42":"")+'">'+chip+lvs+codes+'<span style="color:#fff">'+esc(cs.name)+'</span></span>'; });
+  var formula='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14px;line-height:1.6">'+cells.join('<span style="color:#5d6b3a;font-weight:700">+</span>')+'</div>';
+  var roleOf=function(it){ if(it.z.ctrl) return "컨트롤러"; if(it.d["결"]==="클리어"||/클리어/.test(it.z.label||"")) return "클리어"; return it.d["역할"]||"메인"; };
+  var summ=items.map(function(it){ return '<span'+(it.cut?' style="opacity:.45;text-decoration:line-through"':'')+'>'+esc(roleOf(it))+(it.d.ratio?' <b style="color:#cdd2c0;'+__MONO+'">'+esc(it.d.ratio)+'</b>':'')+'</span>'; }).join('<span style="color:#3d4a2a;margin:0 4px">·</span>');
+  var summary='<div style="border-top:1px solid rgba(199,240,80,.14);margin-top:9px;padding-top:7px;font-size:11px;color:#8a9270">'+summ+'</div>';
+  var notes=""; items.forEach(function(it){ var nm=__codeSplit(it.z.label).name;
+    if(it.cut) notes+='<div style="font-size:10.5px;color:#8a7a4a;margin-top:4px">↳ '+esc(nm)+': 메인 부염료가 이미 중화 — 생략 가능</div>';
+    else if(it.alt) notes+='<div style="font-size:10.5px;color:#6b7358;margin-top:4px">↳ '+esc(nm)+' 대안 · '+esc(it.alt)+'</div>'; });
+  return formula+summary+notes; }
 function __v2reason(rz){ if(!rz) return ''; var rows=[["컬러",rz.color],["언더톤 근거",rz.undertone_basis],["염모제",rz.dye],["명도",rz.level],["보색",rz.neutralize||rz.cc]]; var body=rows.filter(function(x){return x[1];}).map(function(x){return '<div style="display:flex;gap:9px"><span style="color:#5d6b3a;flex:0 0 62px">'+esc(x[0])+'</span><span style="color:#cdd2c0;flex:1">'+esc(x[1])+'</span></div>';}).join(''); if(!body) return ''; return '<div style="margin-top:11px;border-top:1px solid rgba(199,240,80,.14);padding-top:10px"><div style="font-size:9px;letter-spacing:1.5px;color:#7c8466;margin-bottom:8px">왜 이 조합</div><div style="display:grid;gap:7px;font-size:12px;line-height:1.5">'+body+'</div></div>'; }
-function __v2card(r,reco,rz){ var hd='<div style="font-size:10px;letter-spacing:2px;font-weight:700;color:'+(reco?'#C7F050':'#7c8466')+';margin-bottom:9px">'+(reco?'● ':'')+esc(r.label||"")+'</div>'; var st=reco?'background:rgba(199,240,80,.05);border:1px solid rgba(199,240,80,.32);box-shadow:0 0 20px rgba(199,240,80,.06) inset':'background:rgba(255,255,255,.02);border:1px solid rgba(199,240,80,.1)'; return '<div style="margin:0 0 9px;padding:12px 13px;border-radius:11px;'+st+'">'+hd+__v2dyes(r.dyes)+(r.why?'<div style="font-size:12px;color:#9aa583;margin-top:8px;line-height:1.5">'+esc(r.why)+'</div>':'')+(reco?__v2reason(rz):'')+'</div>'; }
+function __v2card(r,reco,rz){ var st=reco?'background:rgba(199,240,80,.05);border:1px solid rgba(199,240,80,.32)':'background:rgba(255,255,255,.02);border:1px solid rgba(199,240,80,.1)';
+  var inner=__v2dyes(r.dyes)+(r.why?'<div style="font-size:12px;color:#9aa583;margin-top:9px;line-height:1.5">'+esc(r.why)+'</div>':'')+(reco?__v2reason(rz):'');
+  return '<details '+(reco?'open':'')+' style="margin:0 0 9px;border-radius:11px;'+st+'"><summary style="cursor:pointer;padding:11px 13px;font-size:10px;letter-spacing:2px;font-weight:700;color:'+(reco?'#C7F050':'#9aa583')+'">'+(reco?'● ':'▸ ')+esc(r.label||"")+(reco?'':' <span style="font-weight:400;letter-spacing:0;color:#6b7358">— 펼쳐 보기</span>')+'</summary><div style="padding:2px 13px 13px">'+inner+'</div></details>'; }
 function __utSwatch(ut){ var s=String(ut||''); var c='#9a8a78'; if(/백모|18/.test(s)) c='#e6d692'; else if(/16/.test(s)) c='#d3b24e'; else if(/14/.test(s)) c='#b9823f'; else if(/12|13/.test(s)) c='#9a5026'; return '<div style="display:flex;align-items:center;gap:10px;margin:2px 0 12px"><span style="width:44px;height:24px;border-radius:6px;flex:0 0 auto;background:'+c+';box-shadow:0 0 0 1px rgba(199,240,80,.22)"></span><div><div style="font-size:10px;letter-spacing:1px;color:#5d6b3a">도달 언더톤</div><div style="font-size:12px;color:#cdd2c0">'+esc(s)+'</div></div></div>'; }
 function __toCommon(t){ if(t==null) return t; var s=String(t);
   var M=[["코발트블루","청자 블루"],["사파이어","맑은 블루"],["모드네이비","네이비"],["애미시스트","청보라"],["퍼플가넷","적보라"],["에메랄드","매트 그린"],["리프펄","민트 청록"],["포기그레이지","잿빛 애쉬"],["실버","맑은 애쉬"],["스모키토파즈","웜 베이지"],["스모키앰버","핑크 베이지"],["헬시시나몬","잿빛 베이지"],["헬시헤이즐","웜 베이지"],["보르도루비","와인 레드"],["시어모브핑크","모브 핑크"],["블루 컨트롤러","블루 표면색"],["바이올렛 컨트롤러","보라 표면색"],["레드 컨트롤러","레드 표면색"],["오렌지 컨트롤러","주황 표면색"],["클리어","희석제"],["무채색","애쉬·잿빛"],["무채","애쉬·잿빛"],["고채도","쨍·선명"],["저채도","차분·탁"],["멜라닌색소","색소"],["멜라닌","색소"],["산화염모제","발색약"],["직접염료","표면색"]];
@@ -2760,7 +2772,7 @@ function renderMilbonV2(data){
   recs.forEach(function(r){ var ds=r.dyes||[]; for(var i=0;i<ds.length;i++){ if(ds[i]&&ds[i].level!=null&&!/컨트롤러|클리어|CC/.test(ds[i].name||"")){ ds[i].level=_mlv; break; } } });
   if(!recs.length){ return '<div style="background:#2a1a14;border:1px solid #a05a3a;border-radius:11px;padding:14px;color:#e0a080;font-size:13px;margin-top:8px">⚠ 1층 응답에 레시피 없음(형식 오류/잘림) — 재실행 필요.</div>'; }
   var h='<div style="background:linear-gradient(180deg,#0c1108,#070809);border:1px solid rgba(199,240,80,.22);border-radius:14px;margin-top:8px;overflow:hidden">';
-  h+='<style>.s-only,.b-only{display:none}body.sas .m-only,body.bsc .m-only{display:none}body.sas .s-only{display:inline}body.bsc .b-only{display:inline}.cotg{font-size:10px;font-weight:700;padding:3px 10px;border-radius:12px;border:1px solid rgba(199,240,80,.3);background:transparent;color:#9a8e6c;cursor:pointer;margin-left:4px}body:not(.sas):not(.bsc) .cotg.m,body.sas .cotg.s,body.bsc .cotg.b{background:#C7F050;color:#12100a;border-color:#C7F050}</style><div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-bottom:1px solid rgba(199,240,80,.14);background:rgba(199,240,80,.03)"><span style="font-size:10px;letter-spacing:2px;color:#C7F050;font-weight:600">◢ HELIX · '+(({milbon:'밀본',sasaki:'사사키',biscos:'비스코스',miel:'미엘',demi:'데미',hoyu:'호유',amos:'아모스'})[COMPANY]||COMPANY)+'</span></div>';
+  h+='<style>details>summary::-webkit-details-marker{display:none}details>summary{list-style:none}.s-only,.b-only{display:none}body.sas .m-only,body.bsc .m-only{display:none}body.sas .s-only{display:inline}body.bsc .b-only{display:inline}.cotg{font-size:10px;font-weight:700;padding:3px 10px;border-radius:12px;border:1px solid rgba(199,240,80,.3);background:transparent;color:#9a8e6c;cursor:pointer;margin-left:4px}body:not(.sas):not(.bsc) .cotg.m,body.sas .cotg.s,body.bsc .cotg.b{background:#C7F050;color:#12100a;border-color:#C7F050}</style><div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-bottom:1px solid rgba(199,240,80,.14);background:rgba(199,240,80,.03)"><span style="font-size:10px;letter-spacing:2px;color:#C7F050;font-weight:600">◢ HELIX · '+(({milbon:'밀본',sasaki:'사사키',biscos:'비스코스',miel:'미엘',demi:'데미',hoyu:'호유',amos:'아모스'})[COMPANY]||COMPANY)+'</span></div>';
   h+='<div style="padding:13px 14px">';
   if(data.target) h+='<div style="font-size:15px;color:#fff;font-weight:500">'+esc(data.target)+'</div>';
   var qt=data.quick_thoughts||[];
@@ -2768,12 +2780,6 @@ function renderMilbonV2(data){
   if(data.undertone) h+=__utSwatch(data.undertone);
   if(recs.length<3) h+='<div style="font-size:11px;color:#caa34a;margin-bottom:6px">⚠ 레시피 '+recs.length+'개</div>';
   h+=recs.map(function(r,k){return __v2card(r,k===0,data.reason);}).join('');
-  var g=data.gauge;
-  if(g && g.axis && String(g.axis)!=="none" && !/18/.test(String(g.axis)) && (g.left||g.right)){
-    var rec0=recs[0]||{dyes:[]};
-    var __L=(g.left&&g.left.recipes&&g.left.recipes[0]&&g.left.recipes[0].dyes)||rec0.dyes; var __R=(g.right&&g.right.recipes&&g.right.recipes[0]&&g.right.recipes[0].dyes)||rec0.dyes; var states=[[(g.left&&g.left.pos)||"좌 갈래","#ffb347",__L],["중간(권장)","#C7F050",rec0.dyes],[(g.right&&g.right.pos)||"우 갈래","#c8a0f0",__R]];
-    h+='<div style="margin-top:4px;padding:11px 12px;border-radius:10px;background:rgba(8,12,6,.4);border:1px solid rgba(199,240,80,.14)"><div style="font-size:10px;letter-spacing:1.5px;color:#5d6b3a;margin-bottom:8px">잔류 게이지 · 3상태</div><div style="display:flex;gap:7px;flex-wrap:wrap">'+states.map(function(s){return '<div style="flex:1;min-width:150px;background:rgba(255,255,255,.02);border:1px solid rgba(199,240,80,.12);border-radius:8px;padding:8px 9px"><div style="font-size:10px;color:'+s[1]+';margin-bottom:4px">'+esc(s[0])+'</div>'+__v2dyes(s[2])+'</div>';}).join('')+'</div></div>';
-  } else { h+='<div style="font-size:11px;color:#5d6b3a;margin:4px 0">게이지 없음 (18레벨·빈 캔버스)</div>'; }
   h+='</div></div>';
   return h;
 }
