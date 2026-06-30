@@ -2726,9 +2726,15 @@ function __codeSplit(label){ var s=String(label||""); var sp=s.indexOf(" ");
   return {code:"",name:s}; }
 function __chip(hex,ctrl,dim,sz){ sz=sz||15; return '<span style="width:'+sz+'px;height:'+sz+'px;border-radius:'+(ctrl?(sz/2)+"px":"4px")+';background:'+hex+';box-shadow:0 0 0 1px rgba(255,255,255,'+(ctrl?".4":".14")+')'+(ctrl?",0 0 6px "+hex:"")+';display:inline-block;flex:0 0 auto'+(dim?";opacity:.42":"")+'"></span>'; }
 function __koName(x){ var n=x.name; if(/[A-Za-z]/.test(n)&&x.ko&&n.indexOf(x.ko)<0) n+=" ("+x.ko+")"; return n; }
+/* ★컨트롤러 정규화: 영문(pink_controller)·약식(pink cc)·한글 다 → 표준 한글명. 클리어 별도 */
+function __normCtrl(nm){ var s=String(nm||"").toLowerCase();
+  if(/클리어|clear/.test(s)) return "클리어";
+  if(!/컨트롤러|controller|[_ ]cc\b|\bcc\b/.test(s)) return "";
+  var c=/핑크|pink/.test(s)?"핑크":(/레드.?바이올렛|red.?violet/.test(s)?"레드바이올렛":(/바이올렛|보라|violet|purple/.test(s)?"바이올렛":(/블루|blue|청/.test(s)?"블루":(/레드|red/.test(s)?"레드":(/오렌지|orange|주황/.test(s)?"오렌지":(/그린|green/.test(s)?"그린":""))))));
+  return c?c+" 컨트롤러":""; }
 function __realizeItems(dyes){ dyes=dyes||[]; var co=(typeof COMPANY!=="undefined")?COMPANY:"milbon";
-  var items=dyes.map(function(d){ var nm=String(d.name||""); var it={d:d,co:co,ctrl:false,lv:"",code:"",name:"",hex:"#555",dye:null,alts:[],slv:"",oldive:false};
-    if(/컨트롤러|클리어|CC/.test(nm)||d["결"]==="클리어"){ it.ctrl=/컨트롤러/.test(nm); it.hex=(__CTRL_HEX[nm]||__dyeHex(nm||"클리어")); it.name=nm||"클리어"; }
+  var items=dyes.map(function(d){ var nm=String(d.name||""); var it={d:d,co:co,ctrl:false,lv:"",code:"",name:"",hex:"#555",dye:null,alts:[],slv:"",oldive:false}; var cn=__normCtrl(nm);
+    if(cn||d["결"]==="클리어"){ var isC=(cn&&cn!=="클리어"); it.ctrl=isC; it.hex=isC?(__CTRL_HEX[cn]||"#888"):__dyeHex(nm||"클리어"); it.name=isC?cn:(nm||"클리어"); }
     else if(d["결"]){ var z=__realizeIntent(d["결"],d["티어"],d["역할"],co,d.level);
       if(z&&z.dye){ it.hex=z.hex; it.dye=z.dye; it.alts=z.alts||[]; var slv=__snapV2(d.level,z.dye.name); it.slv=slv;
         it.lv=slv;   /* ★레벨(LLM)=별도 라임 'NLv'. 코드는 약 식별자만 */
