@@ -2784,6 +2784,11 @@ function __altsBlock(items){
   return '<details style="margin-top:11px"><summary style="cursor:pointer;font-size:11px;color:#8a9270">▾ 다른 염색약으로 · 조금 다른 뉘앙스 ('+n+')</summary><div style="margin-top:5px;background:rgba(255,255,255,.02);border:1px solid rgba(199,240,80,.1);border-radius:9px;padding:11px 12px">'+boxes+'</div></details>'; }
 function __v2reason(rz){ if(!rz) return ''; var rows=[["컬러",rz.color],["언더톤 근거",rz.undertone_basis],["염모제",rz.dye],["명도",rz.level],["보색",rz.neutralize||rz.cc]]; var body=rows.filter(function(x){return x[1];}).map(function(x){return '<div style="display:flex;gap:9px"><span style="color:#5d6b3a;flex:0 0 62px">'+esc(x[0])+'</span><span style="color:#cdd2c0;flex:1">'+esc(x[1])+'</span></div>';}).join(''); if(!body) return ''; return '<div style="margin-top:11px;border-top:1px solid rgba(199,240,80,.14);padding-top:10px"><div style="font-size:9px;letter-spacing:1.5px;color:#7c8466;margin-bottom:8px">왜 이 조합</div><div style="display:grid;gap:7px;font-size:12px;line-height:1.5">'+body+'</div></div>'; }
 function __v2card(r,reco,rz){ var items=__realizeItems(r.dyes);
+  /* ★클리어 희석 꺼내기: 1층이 dilute 필드(발색약:클리어 1:1|1:2|1:3)에 클리어를 잡았는데 카드가 버리던 구멍 메움(슬롯 아닌 recipe 레벨). 결정론·1층 출력 충실표시. */
+  if(r.dilute && String(r.dilute).indexOf(":")>=0 && !items.some(function(it){return /클리어/.test(it.name);})){
+    var __dm={"1:1":"시어","1:2":"극 파스텔","1:3":"체인지"}; var __dr=String(r.dilute).trim();
+    items.push({d:{"역할":"클리어",ratio:__dr+" 희석"+(__dm[__dr]?" · "+__dm[__dr]:"")},co:(typeof COMPANY!=="undefined"?COMPANY:"milbon"),ctrl:false,lv:"",code:"",name:"클리어",hex:__dyeHex("클리어"),dye:null,alts:[],slv:"",oldive:false,cut:false});
+  }
   var st=reco?'background:rgba(199,240,80,.05);border:1px solid rgba(199,240,80,.32)':'background:rgba(255,255,255,.025);border:1px solid rgba(199,240,80,.14)';
   var hasBody=(r.why||reco);   /* 슬롯별 대안 폐기 — 3 레시피가 곧 다른 약 조합(변주는 거기) */
   var head='<div style="display:flex;align-items:center;gap:7px"><span style="font-size:10px;letter-spacing:2px;font-weight:700;color:'+(reco?'#C7F050':'#9aa583')+'">'+(reco?'● ':'▸ ')+esc(r.label||"")+'</span>'+(hasBody&&!reco?'<span style="font-size:10px;color:#5d6b3a">펼쳐 보기 ▾</span>':'')+'</div>';
